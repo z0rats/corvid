@@ -63,3 +63,25 @@ The Detection Rules module is a GUI for creating Sigma, Yara and Snort/Suricate 
 2. Navigate to the directory where the `docker-compose.yaml` file is located
 3. Run the following command: `docker-compose up -d`
 4. Once the container is running, you can access the application in your browser at http://localhost:4000
+
+
+## License
+
+OSINT Toolkit is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+You are free to use, modify, and distribute this software, provided that any
+modified versions or services built on it are also made available under AGPL-3.0,
+including when offered as a network service.
+
+### Commercial Licensing
+
+If AGPL-3.0 doesn't fit your use case — for example, if you want to integrate
+OSINT Toolkit into a proprietary product or offer it as a managed service without
+open-sourcing your modifications — a commercial license is available.
+
+Contact: [contact@osint-toolkit.com]
+
+### Prior Versions
+
+Versions up to and including v0.1.0 were released under the MIT License and
+remain available under those terms.
