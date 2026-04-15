@@ -1,538 +1,339 @@
-import requests
-import json
+import asyncio
 import logging
 from base64 import b64encode
-from typing import Dict, Any, Optional
+from typing import Any
+
+from app.core.config.settings import settings
+from .client_base import (
+    ServiceError,
+    ServiceAuthError,
+    ServiceRateLimitError,
+    ServiceUnavailableError,
+    get_client,
+    close_client,
+    handle_response,
+    _require_apikey,
+    _require_credentials,
+    _authenticate_oauth,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def handle_request_errors(service_name: str, response: requests.Response) -> Dict[str, Any]:
-    """
-    Centralized error handling for HTTP requests to external services.
-    
-    Args:
-        service_name: Name of the service being called
-        response: HTTP response object
-        
-    Returns:
-        Dictionary containing parsed response data or error information
-    """
-    try:
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.HTTPError as http_err:
-        status_code = http_err.response.status_code
-        
-        if status_code == 429:
-            retry_after = http_err.response.headers.get('Retry-After', 'unknown')
-            reset_time = http_err.response.headers.get('X-RateLimit-Reset', 'unknown')
-            remaining = http_err.response.headers.get('X-RateLimit-Remaining', 'unknown')
-            
-            error_detail = f"Rate limit exceeded."
-            if retry_after != 'unknown':
-                error_detail += f" Retry after: {retry_after} seconds."
-            if reset_time != 'unknown':
-                error_detail += f" Limit resets at: {reset_time}."
-            if remaining != 'unknown':
-                error_detail += f" Remaining requests: {remaining}."
-            
-            logger.warning(f"Rate limit hit for {service_name}: {error_detail}")
-            return {
-                "error": status_code, 
-                "message": f"{service_name} rate limit exceeded. Please try again later.",
-                "retry_after": retry_after,
-                "rate_limit_reset": reset_time,
-                "rate_limit_remaining": remaining,
-                "is_rate_limited": True
-            }
-        
-        error_detail = f"HTTP {status_code} Error"
-        
-        try:
-            if (http_err.response.content and 
-                http_err.response.headers.get('content-type', '').startswith('application/json')):
-                api_errors = http_err.response.json()
-                if 'errors' in api_errors and api_errors['errors']:
-                    error_detail = api_errors['errors'][0].get('detail', str(api_errors))
-                elif 'message' in api_errors:
-                    error_detail = api_errors['message']
-                elif 'error' in api_errors and isinstance(api_errors['error'], str):
-                    error_detail = api_errors['error']
-            else:
-                error_detail = http_err.response.text.strip() if http_err.response.text.strip() else f"HTTP {status_code} Error"
-        except (json.JSONDecodeError, ValueError, AttributeError):
-            error_detail = http_err.response.text.strip() if http_err.response.text.strip() else f"HTTP {status_code} Error"
+async def check_abuseipdb(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform IP reputation lookup using AbuseIPDB API"""
+    _require_apikey("AbuseIPDB", apikey)
+    logger.debug("Checking IP %s with AbuseIPDB", ioc)
 
-        logger.warning(f"HTTP error in {service_name}: {error_detail}")
-        return {"error": status_code, "message": f"{service_name} error: {error_detail}"}
-        
-    except requests.exceptions.RequestException as req_err:
-        logger.error(f"Request error in {service_name}: {req_err}")
-        return {"error": 503, "message": f"Could not connect to {service_name}: {req_err}"}
-    except json.JSONDecodeError as json_err:
-        logger.error(f"JSON decode error in {service_name}: {json_err}")
-        return {"error": 500, "message": f"Failed to parse response from {service_name}."}
-
-
-def abuseipdb_ip_check(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IP reputation lookup using AbuseIPDB API.
-    
-    Args:
-        ioc: IP address to check
-        apikey: AbuseIPDB API key
-        
-    Returns:
-        Dictionary containing lookup results or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "AbuseIPDB API key is missing."}
-    
-    logger.debug(f"Checking IP {ioc} with AbuseIPDB")
-    
-    response = requests.get(
+    client = get_client()
+    response = await client.get(
         url='https://api.abuseipdb.com/api/v2/check',
         params={'ipAddress': ioc, 'maxAgeInDays': '90', 'verbose': True},
         headers={'Accept': 'application/json', 'Key': apikey}
     )
-    return handle_request_errors("AbuseIPDB", response)
+    return await handle_response("AbuseIPDB", response)
 
 
-def alienvaultotx(ioc: str, type: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IOC lookup using AlienVault OTX API.
-    
-    Args:
-        ioc: IOC value to lookup
-        type: Type of IOC (ip, domain, url, hash)
-        apikey: AlienVault OTX API key
-        
-    Returns:
-        Dictionary containing lookup results or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "AlienVault OTX API key is missing."}
-    
+_ALIENVAULT_SECTIONS: dict[str, list[str]] = {
+    'ip': ['reputation', 'malware'],
+    'domain': ['malware'],
+    'url': ['url_list'],
+    'hash': ['analysis'],
+}
+
+
+async def _fetch_alienvault_section(
+    client, indicator_type: str, ioc: str, section: str, headers: dict[str, str]
+) -> tuple[str, dict[str, Any] | None]:
+    """Fetch a single OTX section with a tight timeout"""
+    try:
+        params = {'limit': 25} if section in ('passive_dns', 'malware', 'url_list') else {}
+        response = await client.get(
+            url=f'https://otx.alienvault.com/api/v1/indicators/{indicator_type}/{ioc}/{section}',
+            headers=headers,
+            params=params,
+            timeout=10.0,
+        )
+        response.raise_for_status()
+        return (section, response.json())
+    except Exception:
+        logger.warning("AlienVault OTX: failed to fetch section '%s' for %s", section, ioc)
+        return (section, None)
+
+
+async def check_alienvault(ioc: str, ioc_type: str, apikey: str) -> dict[str, Any]:
+    """Perform enriched IOC lookup using AlienVault OTX API with multiple sections"""
+    _require_apikey("AlienVault OTX", apikey)
+
     type_map = {'ip': 'IPv4', 'domain': 'domain', 'url': 'url', 'hash': 'file'}
-    indicator_type = type_map.get(type, 'IPv4')
-    
-    logger.debug(f"Checking {indicator_type} {ioc} with AlienVault OTX")
-    
-    response = requests.get(
-        url=f'https://otx.alienvault.com/api/v1/indicators/{indicator_type}/{ioc}/general',
-        headers={'X-OTX-API-KEY': apikey}
-    )
-    return handle_request_errors("AlienVault OTX", response)
+    indicator_type = type_map.get(ioc_type, 'IPv4')
+    headers = {'X-OTX-API-KEY': apikey}
+
+    logger.debug("Checking %s %s with AlienVault OTX", indicator_type, ioc)
+
+    client = get_client()
+    extra_sections = _ALIENVAULT_SECTIONS.get(ioc_type, [])
+
+    all_tasks = [
+        _fetch_alienvault_section(client, indicator_type, ioc, 'general', headers),
+        *[_fetch_alienvault_section(client, indicator_type, ioc, s, headers) for s in extra_sections],
+    ]
+    all_results = await asyncio.gather(*all_tasks)
+
+    general_section_name, general_data = all_results[0]
+    if general_data is None:
+        response = await client.get(
+            url=f'https://otx.alienvault.com/api/v1/indicators/{indicator_type}/{ioc}/general',
+            headers=headers,
+        )
+        general_data = await handle_response("AlienVault OTX", response)
+
+    result = general_data
+    for section_name, section_data in all_results[1:]:
+        if section_data is not None:
+            result[f'section_{section_name}'] = section_data
+
+    return result
 
 
-def check_bgpview(ioc: str) -> Dict[str, Any]:
-    """
-    Perform IP BGP information lookup using BGPView API.
-    
-    Args:
-        ioc: IP address to check
-        
-    Returns:
-        Dictionary containing BGP information or error information
-    """
-    logger.debug(f"Checking IP {ioc} with BGPView")
-    
-    response = requests.get(url=f'https://api.bgpview.io/ip/{ioc}')
-    return handle_request_errors("BGPView", response)
+async def check_checkphish(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform URL/domain phishing check using CheckPhish API"""
+    _require_apikey("CheckPhish", apikey)
+    logger.debug("Checking URL %s with CheckPhish", ioc)
 
-
-def checkphish_ai(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform URL/domain phishing check using CheckPhish API.
-    
-    Args:
-        ioc: URL or domain to check
-        apikey: CheckPhish API key
-        
-    Returns:
-        Dictionary containing scan results or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "CheckPhish API key is missing."}
-
-    logger.debug(f"Checking URL {ioc} with CheckPhish")
-    
-    response = requests.post(
+    client = get_client()
+    response = await client.post(
         url='https://developers.checkphish.ai/api/neo/scan',
         json={'apiKey': apikey, 'urlInfo': {'url': ioc}}
     )
-    return handle_request_errors("CheckPhish", response)
+    return await handle_response("CheckPhish", response)
 
 
-def crowdsec(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IP reputation lookup using CrowdSec CTI API.
-    
-    Args:
-        ioc: IP address to check
-        apikey: CrowdSec API key
-        
-    Returns:
-        Dictionary containing reputation data or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "CrowdSec API key is missing."}
-    
-    logger.debug(f"Checking IP {ioc} with CrowdSec")
-    
-    response = requests.get(
+async def check_crowdsec(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform IP reputation lookup using CrowdSec CTI API"""
+    _require_apikey("CrowdSec", apikey)
+    logger.debug("Checking IP %s with CrowdSec", ioc)
+
+    client = get_client()
+    response = await client.get(
         url=f'https://cti.api.crowdsec.net/v2/smoke/{ioc}',
         headers={'x-api-key': apikey}
     )
-    return handle_request_errors("CrowdSec", response)
+    return await handle_response("CrowdSec", response)
 
 
-def crowdstrike_indicators_lookup(ioc: str, client_id: str, client_secret: str) -> Dict[str, Any]:
-    """
-    Perform IOC lookup using CrowdStrike Falcon Intelligence API.
-    
-    Args:
-        ioc: IOC value to lookup
-        client_id: CrowdStrike client ID
-        client_secret: CrowdStrike client secret
-        
-    Returns:
-        Dictionary containing intelligence data or error information
-    """
-    if not client_id or not client_secret:
-        return {"error": 401, "message": "CrowdStrike credentials missing."}
+async def check_crowdstrike(ioc: str, client_id: str, client_secret: str) -> dict[str, Any]:
+    """Perform IOC lookup using CrowdStrike Falcon Intelligence API"""
+    _require_credentials("CrowdStrike", client_id=client_id, client_secret=client_secret)
+    logger.debug("Authenticating with CrowdStrike")
 
-    logger.debug(f"Authenticating with CrowdStrike")
-    
-    token_res = requests.post(
-        url='https://api.crowdstrike.com/oauth2/token',
+    access_token = await _authenticate_oauth(
+        "CrowdStrike",
+        'https://api.crowdstrike.com/oauth2/token',
         data={'client_id': client_id, 'client_secret': client_secret},
-        headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        headers={'Content-Type': 'application/x-www-form-urlencoded'},
     )
-    token_data = handle_request_errors("CrowdStrike Auth", token_res)
-    if 'error' in token_data:
-        return token_data
 
-    access_token = token_data.get('access_token')
-    if not access_token:
-        return {"error": 500, "message": "Failed to retrieve CrowdStrike access token."}
-    
-    logger.debug(f"Looking up IOC {ioc} with CrowdStrike")
-    
-    response = requests.get(
+    logger.debug("Looking up IOC %s with CrowdStrike", ioc)
+
+    client = get_client()
+    response = await client.get(
         url='https://api.crowdstrike.com/intel/combined/indicators/v1',
         params={'filter': f"indicator:'{ioc}'"},
         headers={'Authorization': f'Bearer {access_token}'}
     )
-    return handle_request_errors("CrowdStrike", response)
+    return await handle_response("CrowdStrike", response)
 
 
-def emailrep_email_check(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform email reputation lookup using EmailRep.io API.
-    
-    Args:
-        ioc: Email address to check
-        apikey: EmailRep.io API key
-        
-    Returns:
-        Dictionary containing email reputation data or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "EmailRep.io API key is missing."}
-    
-    logger.debug(f"Checking email {ioc} with EmailRep.io")
-    
-    response = requests.get(
+async def check_emailrep(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform email reputation lookup using EmailRep.io API"""
+    _require_apikey("EmailRep.io", apikey)
+    logger.debug("Checking email %s with EmailRep.io", ioc)
+
+    client = get_client()
+    response = await client.get(
         url=f'https://emailrep.io/{ioc}',
         headers={'Key': apikey, 'User-Agent': 'OSINT-Toolkit'}
     )
-    return handle_request_errors("EmailRep.io", response)
+    return await handle_response("EmailRep.io", response)
 
 
-def search_github(ioc: str, access_token: str) -> Dict[str, Any]:
-    """
-    Search for IOC mentions in GitHub code repositories.
-    
-    Args:
-        ioc: IOC value to search for
-        access_token: GitHub Personal Access Token
-        
-    Returns:
-        Dictionary containing search results or error information
-    """
-    if not access_token:
-        return {"error": 401, "message": "GitHub PAT is missing."}
-    
-    logger.debug(f"Searching for IOC {ioc} on GitHub")
-    
-    response = requests.get(
+async def search_github(ioc: str, access_token: str) -> dict[str, Any]:
+    """Search for IOC mentions in GitHub code repositories"""
+    _require_apikey("GitHub", access_token)
+    logger.debug("Searching for IOC %s on GitHub", ioc)
+
+    client = get_client()
+    response = await client.get(
         url='https://api.github.com/search/code',
         params={'q': f'"{ioc}"'},
         headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/vnd.github.v3+json'}
     )
-    return handle_request_errors("GitHub", response)
+    return await handle_response("GitHub", response)
 
 
-def haveibeenpwnd_email_check(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Check if email address appears in known data breaches using HIBP API.
-    
-    Args:
-        ioc: Email address to check
-        apikey: Have I Been Pwned API key
-        
-    Returns:
-        Dictionary containing breach information or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "HIBP API key is missing."}
-    
-    logger.debug(f"Checking email {ioc} with HIBP")
-    
-    response = requests.get(
+async def check_hibp(ioc: str, apikey: str) -> dict[str, Any]:
+    """Check if email address appears in known data breaches using HIBP API"""
+    _require_apikey("HIBP", apikey)
+    logger.debug("Checking email %s with HIBP", ioc)
+
+    client = get_client()
+    response = await client.get(
         url=f'https://haveibeenpwned.com/api/v3/breachedaccount/{ioc}',
         headers={'hibp-api-key': apikey, 'User-Agent': 'OSINT-Toolkit'}
     )
     if response.status_code == 404:
         return {"message": "Not found in any breaches."}
-    return handle_request_errors("HIBP", response)
+    return await handle_response("HIBP", response)
 
 
-def hunter_email_check(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Verify email address using Hunter.io API.
-    
-    Args:
-        ioc: Email address to verify
-        apikey: Hunter.io API key
-        
-    Returns:
-        Dictionary containing verification results or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "Hunter.io API key is missing."}
+async def check_hunter(ioc: str, apikey: str) -> dict[str, Any]:
+    """Verify email address using Hunter.io API"""
+    _require_apikey("Hunter.io", apikey)
+    logger.debug("Verifying email %s with Hunter.io", ioc)
 
-    logger.debug(f"Verifying email {ioc} with Hunter.io")
-    
-    response = requests.get(
-        url=f'https://api.hunter.io/v2/email-verifier',
+    client = get_client()
+    response = await client.get(
+        url='https://api.hunter.io/v2/email-verifier',
         params={'email': ioc, 'api_key': apikey}
     )
-    return handle_request_errors("Hunter.io", response)
+    return await handle_response("Hunter.io", response)
 
 
-def ipqualityscore_ip_check(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IP quality and fraud scoring using IPQualityScore API.
-    
-    Args:
-        ioc: IP address to check
-        apikey: IPQualityScore API key
-        
-    Returns:
-        Dictionary containing quality score data or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "IPQualityScore API key is missing."}
-    
-    logger.debug(f"Checking IP {ioc} with IPQualityScore")
-    
-    response = requests.get(url=f'https://www.ipqualityscore.com/api/json/ip/{apikey}/{ioc}')
-    return handle_request_errors("IPQualityScore", response)
+async def check_ipqualityscore(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform IP quality and fraud scoring using IPQualityScore API"""
+    _require_apikey("IPQualityScore", apikey)
+    logger.debug("Checking IP %s with IPQualityScore", ioc)
+
+    client = get_client()
+    response = await client.get(url=f'https://www.ipqualityscore.com/api/json/ip/{apikey}/{ioc}')
+    return await handle_response("IPQualityScore", response)
 
 
-def maltiverse_check(ioc: str, endpoint: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IOC lookup using Maltiverse API.
-    
-    Args:
-        ioc: IOC value to lookup
-        endpoint: API endpoint type (ip, hostname, url, sample)
-        apikey: Maltiverse API key
-        
-    Returns:
-        Dictionary containing threat intelligence data or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "Maltiverse API key is missing."}
-    
-    logger.debug(f"Checking {endpoint} {ioc} with Maltiverse")
-    
-    response = requests.get(
+async def check_maltiverse(ioc: str, endpoint: str, apikey: str) -> dict[str, Any]:
+    """Perform IOC lookup using Maltiverse API"""
+    _require_apikey("Maltiverse", apikey)
+    logger.debug("Checking %s %s with Maltiverse", endpoint, ioc)
+
+    client = get_client()
+    response = await client.get(
         url=f'https://api.maltiverse.com/{endpoint}/{ioc}',
         headers={'Authorization': f'Bearer {apikey}'}
     )
-    return handle_request_errors("Maltiverse", response)
+    return await handle_response("Maltiverse", response)
 
 
-def malwarebazaar_hash_check(ioc: str) -> Dict[str, Any]:
-    """
-    Perform hash lookup using MalwareBazaar API.
-    
-    Args:
-        ioc: File hash to lookup
-        
-    Returns:
-        Dictionary containing malware information or error information
-    """
-    logger.debug(f"Checking hash {ioc} with MalwareBazaar")
-    
-    response = requests.post(
+async def check_malwarebazaar(ioc: str) -> dict[str, Any]:
+    """Perform hash lookup using MalwareBazaar API"""
+    logger.debug("Checking hash %s with MalwareBazaar", ioc)
+
+    client = get_client()
+    response = await client.post(
         url='https://mb-api.abuse.ch/api/v1/',
         data={'query': 'get_info', 'hash': ioc}
     )
-    return handle_request_errors("MalwareBazaar", response)
+    return await handle_response("MalwareBazaar", response)
 
 
-def mandiant_ioc_lookup(ioc: str, ioc_type: str, api_key: str, api_secret: str) -> Dict[str, Any]:
-    """
-    Perform IOC lookup using Mandiant Advantage API.
-    
-    Args:
-        ioc: IOC value to lookup
-        ioc_type: Type of IOC (ip, domain, url, hash, email)
-        api_key: Mandiant API key
-        api_secret: Mandiant API secret
-        
-    Returns:
-        Dictionary containing threat intelligence data or error information
-    """
-    if not api_key or not api_secret:
-        return {"error": 401, "message": "Mandiant credentials missing."}
+async def check_mandiant(ioc: str, ioc_type: str, api_key: str, api_secret: str) -> dict[str, Any]:
+    """Perform IOC lookup using Mandiant Advantage API"""
+    _require_credentials("Mandiant", api_key=api_key, api_secret=api_secret)
+    logger.debug("Authenticating with Mandiant")
 
-    logger.debug(f"Authenticating with Mandiant")
-    
-    token_res = requests.post(
-        url='https://api.intelligence.mandiant.com/token',
-        data={'grant_type': 'client_credentials', 'client_id': api_key, 'client_secret': api_secret}
+    access_token = await _authenticate_oauth(
+        "Mandiant",
+        'https://api.intelligence.mandiant.com/token',
+        data={'grant_type': 'client_credentials', 'client_id': api_key, 'client_secret': api_secret},
     )
-    token_data = handle_request_errors("Mandiant Auth", token_res)
-    if 'error' in token_data:
-        return token_data
 
-    access_token = token_data.get('access_token')
-    if not access_token:
-        return {"error": 500, "message": "Failed to retrieve Mandiant access token."}
-    
-    logger.debug(f"Looking up {ioc_type} {ioc} with Mandiant")
-    
-    response = requests.post(
+    logger.debug("Looking up %s %s with Mandiant", ioc_type, ioc)
+
+    client = get_client()
+    response = await client.post(
         url='https://api.intelligence.mandiant.com/v4/indicator',
         headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json', 'Accept': 'application/json'},
         json={"requests": [{"type": ioc_type, "value": ioc}]}
     )
-    return handle_request_errors("Mandiant", response)
+    return await handle_response("Mandiant", response)
 
 
-def search_nist_nvd(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Search for CVE information using NIST NVD API.
-    
-    Args:
-        ioc: CVE identifier to lookup
-        apikey: NIST NVD API key
-        
-    Returns:
-        Dictionary containing CVE information or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "NIST NVD API key is missing."}
-    
-    logger.debug(f"Looking up CVE {ioc} with NIST NVD")
-    
-    response = requests.get(
-        url=f'https://services.nvd.nist.gov/rest/json/cves/2.0',
+async def search_nist_nvd(ioc: str, apikey: str) -> dict[str, Any]:
+    """Search for CVE information using NIST NVD API"""
+    _require_apikey("NIST NVD", apikey)
+    logger.debug("Looking up CVE %s with NIST NVD", ioc)
+
+    client = get_client()
+    response = await client.get(
+        url='https://services.nvd.nist.gov/rest/json/cves/2.0',
         params={'cveId': ioc},
         headers={'apiKey': apikey}
     )
-    return handle_request_errors("NIST NVD", response)
+    return await handle_response("NIST NVD", response)
 
 
-def check_pulsedive(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IOC lookup using Pulsedive API.
-    
-    Args:
-        ioc: IOC value to lookup
-        apikey: Pulsedive API key
-        
-    Returns:
-        Dictionary containing threat intelligence data or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "Pulsedive API key is missing."}
+async def check_pulsedive(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform IOC lookup using Pulsedive API"""
+    _require_apikey("Pulsedive", apikey)
+    logger.debug("Checking IOC %s with Pulsedive", ioc)
 
-    logger.debug(f"Checking IOC {ioc} with Pulsedive")
-    
-    response = requests.get(
+    client = get_client()
+    response = await client.get(
         url='https://pulsedive.com/api/info.php',
         params={'indicator': ioc, 'key': apikey, 'pretty': '1'}
     )
-    return handle_request_errors("Pulsedive", response)
+    return await handle_response("Pulsedive", response)
 
 
-def search_reddit(ioc: str, client_id: str, client_secret: str) -> Dict[str, Any]:
-    """
-    Search for IOC mentions on Reddit using Reddit API.
-    
-    Args:
-        ioc: IOC value to search for
-        client_id: Reddit client ID
-        client_secret: Reddit client secret
-        
-    Returns:
-        Dictionary containing search results or error information
-    """
-    if not client_id or not client_secret:
-        return {"error": 401, "message": "Reddit credentials missing."}
+async def search_reddit(ioc: str, client_id: str, client_secret: str) -> dict[str, Any]:
+    """Search for IOC mentions on Reddit using Reddit API"""
+    _require_credentials("Reddit", client_id=client_id, client_secret=client_secret)
+    logger.debug("Authenticating with Reddit")
 
-    logger.debug(f"Authenticating with Reddit")
-    
-    auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
-    token_res = requests.post(
-        url='https://www.reddit.com/api/v1/access_token',
+    access_token = await _authenticate_oauth(
+        "Reddit",
+        'https://www.reddit.com/api/v1/access_token',
         data={'grant_type': 'client_credentials'},
         headers={'User-Agent': 'OSINT-Toolkit/0.1'},
-        auth=auth
+        auth=(client_id, client_secret),
     )
-    token_data = handle_request_errors("Reddit Auth", token_res)
-    if 'error' in token_data:
-        return token_data
 
-    access_token = token_data.get('access_token')
-    if not access_token:
-        return {"error": 500, "message": "Failed to retrieve Reddit access token."}
+    logger.debug("Searching for IOC %s on Reddit", ioc)
 
-    logger.debug(f"Searching for IOC {ioc} on Reddit")
-    
-    response = requests.get(
+    client = get_client()
+    response = await client.get(
         url='https://oauth.reddit.com/search',
         params={'q': f'"{ioc}"', 'limit': 25},
         headers={'Authorization': f'bearer {access_token}', 'User-Agent': 'OSINT-Toolkit/0.1'}
     )
-    return handle_request_errors("Reddit", response)
+    raw = await handle_response("Reddit", response)
+
+    children = raw.get("data", {}).get("children", [])
+    posts = [
+        {
+            "id": child["data"].get("id"),
+            "title": child["data"].get("title"),
+            "author": child["data"].get("author"),
+            "subreddit": child["data"].get("subreddit_name_prefixed") or child["data"].get("subreddit"),
+            "score": child["data"].get("score", 0),
+            "num_comments": child["data"].get("num_comments", 0),
+            "created_utc": child["data"].get("created_utc"),
+            "message": child["data"].get("selftext") or None,
+            "url": f"https://www.reddit.com{child['data'].get('permalink', '')}",
+        }
+        for child in children
+        if child.get("data")
+    ]
+
+    return {"posts": posts, "count": raw.get("data", {}).get("dist", len(posts))}
 
 
-def safeBrowse_url_check(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Check URL safety using Google Safe Browsing API.
-    
-    Args:
-        ioc: URL to check
-        apikey: Google Safe Browsing API key
-        
-    Returns:
-        Dictionary containing safety information or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "Google Safe Browse API key is missing."}
-    
-    logger.debug(f"Checking URL {ioc} with Google Safe Browsing")
-    
+async def check_safe_browsing(ioc: str, apikey: str) -> dict[str, Any]:
+    """Check URL safety using Google Safe Browsing API"""
+    _require_apikey("Google Safe Browse", apikey)
+    logger.debug("Checking URL %s with Google Safe Browsing", ioc)
+
     payload = {
-        "client": {"clientId": "osint-toolkit", "clientVersion": "1.0.0"},
+        "client": {"clientId": "osint-toolkit", "clientVersion": settings.api.version},
         "threatInfo": {
             "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
             "platformTypes": ["ANY_PLATFORM"],
@@ -540,152 +341,102 @@ def safeBrowse_url_check(ioc: str, apikey: str) -> Dict[str, Any]:
             "threatEntries": [{"url": ioc}]
         }
     }
-    response = requests.post(
-        url=f'https://safeBrowse.googleapis.com/v4/threatMatches:find?key={apikey}',
+    client = get_client()
+    response = await client.post(
+        url='https://safebrowsing.googleapis.com/v4/threatMatches:find',
+        params={'key': apikey},
         json=payload
     )
-    return handle_request_errors("Google Safe Browse", response)
+    return await handle_response("Google Safe Browse", response)
 
 
-def check_shodan(ioc: str, method: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IP or domain lookup using Shodan API.
-    
-    Args:
-        ioc: IP address or domain to lookup
-        method: Lookup method ('ip' or 'domain')
-        apikey: Shodan API key
-        
-    Returns:
-        Dictionary containing host information or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "Shodan API key is missing."}
-    
+async def check_shodan(ioc: str, method: str, apikey: str) -> dict[str, Any]:
+    """Perform IP or domain lookup using Shodan API"""
+    _require_apikey("Shodan", apikey)
+
     endpoint = 'host' if method == 'ip' else 'dns/domain'
-    
-    logger.debug(f"Checking {method} {ioc} with Shodan")
-    
-    response = requests.get(
+
+    logger.debug("Checking %s %s with Shodan", method, ioc)
+
+    client = get_client()
+    response = await client.get(
         url=f'https://api.shodan.io/shodan/{endpoint}/{ioc}',
         params={'key': apikey}
     )
-    return handle_request_errors("Shodan", response)
+    return await handle_response("Shodan", response)
 
 
-def threatfox_ip_check(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IOC lookup using ThreatFox API.
-    
-    Args:
-        ioc: IOC value to lookup
-        apikey: ThreatFox API key
-        
-    Returns:
-        Dictionary containing threat information or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "ThreatFox API key is missing."}
-    
-    logger.debug(f"Checking IOC {ioc} with ThreatFox")
-    
-    response = requests.post(
+async def check_threatfox(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform IOC lookup using ThreatFox API"""
+    _require_apikey("ThreatFox", apikey)
+    logger.debug("Checking IOC %s with ThreatFox", ioc)
+
+    client = get_client()
+    response = await client.post(
         url='https://threatfox-api.abuse.ch/api/v1/',
         headers={'API-KEY': apikey},
         json={'query': 'search_ioc', 'search_term': ioc}
     )
-    return handle_request_errors("ThreatFox", response)
+    return await handle_response("ThreatFox", response)
 
 
-def search_twitter(ioc: str, apikey: str) -> Dict[str, Any]:
-    """
-    Search for IOC mentions on Twitter/X using Twitter API v2.
-    
-    Args:
-        ioc: IOC value to search for
-        apikey: Twitter Bearer Token
-        
-    Returns:
-        Dictionary containing search results or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "Twitter Bearer Token is missing."}
-    
-    logger.debug(f"Searching for IOC {ioc} on Twitter/X")
-    
-    response = requests.get(
+async def search_twitter(ioc: str, apikey: str) -> dict[str, Any]:
+    """Search for IOC mentions on Twitter/X using Twitter API v2"""
+    _require_apikey("Twitter/X", apikey)
+    logger.debug("Searching for IOC %s on Twitter/X", ioc)
+
+    client = get_client()
+    response = await client.get(
         url='https://api.twitter.com/2/tweets/search/recent',
         params={'query': f'"{ioc}" -is:retweet'},
         headers={'Authorization': f'Bearer {apikey}'}
     )
-    return handle_request_errors("Twitter/X", response)
+    return await handle_response("Twitter/X", response)
 
 
-def urlhaus_url_check(ioc: str) -> Dict[str, Any]:
-    """
-    Perform URL lookup using URLhaus API.
-    
-    Args:
-        ioc: URL to check
-        
-    Returns:
-        Dictionary containing URL information or error information
-    """
-    logger.debug(f"Checking URL {ioc} with URLhaus")
-    
-    response = requests.post(
+async def check_urlhaus(ioc: str) -> dict[str, Any]:
+    """Perform URL lookup using URLhaus API"""
+    logger.debug("Checking URL %s with URLhaus", ioc)
+
+    client = get_client()
+    response = await client.post(
         url='https://urlhaus-api.abuse.ch/v1/url/',
         data={'url': ioc}
     )
-    return handle_request_errors("URLhaus", response)
+    return await handle_response("URLhaus", response)
 
 
-def urlscanio(ioc: str) -> Dict[str, Any]:
-    """
-    Search for IOC information using URLScan.io API.
-    
-    Args:
-        ioc: IOC value to search for
-        
-    Returns:
-        Dictionary containing scan information or error information
-    """
-    logger.debug(f"Searching for IOC {ioc} on URLScan.io")
-    
-    response = requests.get(
+async def check_urlscan(ioc: str) -> dict[str, Any]:
+    """Search for IOC information using URLScan.io API"""
+    logger.debug("Searching for IOC %s on URLScan.io", ioc)
+
+    client = get_client()
+    response = await client.get(
         url='https://urlscan.io/api/v1/search/',
         params={'q': f'page.ip:"{ioc}" OR page.domain:"{ioc}"'}
     )
-    return handle_request_errors("URLScan.io", response)
+    return await handle_response("URLScan.io", response)
 
 
-def virustotal(ioc: str, type: str, apikey: str) -> Dict[str, Any]:
-    """
-    Perform IOC lookup using VirusTotal API v3.
-    
-    Args:
-        ioc: IOC value to lookup
-        type: Type of IOC (ip, domain, url, hash)
-        apikey: VirusTotal API key
-        
-    Returns:
-        Dictionary containing analysis results or error information
-    """
-    if not apikey:
-        return {"error": 401, "message": "VirusTotal API key is missing."}
+async def check_virustotal(ioc: str, ioc_type: str, apikey: str) -> dict[str, Any]:
+    """Perform IOC lookup using VirusTotal API v3"""
+    _require_apikey("VirusTotal", apikey)
 
     type_map = {'ip': 'ip_addresses', 'domain': 'domains', 'url': 'urls', 'hash': 'files'}
-    indicator_type = type_map.get(type, 'ip_addresses')
-    
+    indicator_type = type_map.get(ioc_type, 'ip_addresses')
+
     if indicator_type == 'urls':
         ioc_safe = b64encode(ioc.encode()).decode().strip("=")
     else:
         ioc_safe = ioc
-    
-    logger.debug(f"Checking {type} {ioc} with VirusTotal")
-        
-    response = requests.get(
+
+    logger.debug("Checking %s %s with VirusTotal", ioc_type, ioc)
+
+    client = get_client()
+    response = await client.get(
         url=f'https://www.virustotal.com/api/v3/{indicator_type}/{ioc_safe}',
         headers={'x-apikey': apikey}
     )
-    return handle_request_errors("VirusTotal", response)
+    if response.status_code == 404:
+        raise ServiceError("VirusTotal", "Not found on VirusTotal", status_code=404)
+    return await handle_response("VirusTotal", response)

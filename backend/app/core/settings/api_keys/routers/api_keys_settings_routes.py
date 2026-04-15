@@ -1,150 +1,174 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from app.core.dependencies import get_db
-from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey, get_apikeys, delete_existing_apikey, create_new_apikey
-from app.core.settings.api_keys.schemas.api_keys_settings_schemas import ApikeySchema, ApikeyStateResponse, DeleteApikeyResponse, ApikeyBulkLookupStateResponse
-from app.core.settings.api_keys.models.api_keys_settings_models import Apikey
-import logging
-from typing import Dict, Any, List
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Path, status
+
+from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.settings.api_keys.schemas.api_keys_settings_schemas import (
+    ApikeySchema,
+    ApikeyCreateRequest,
+    ApikeyUpdateRequest,
+    ApikeyStateResponse,
+    ApikeyBulkLookupStateResponse,
+    DeleteApikeyResponse,
+    UpdateActiveStatusRequest,
+    UpdateBulkLookupStatusRequest,
+)
+from app.core.settings.api_keys.service.api_keys_service import (
+    create_apikey_service,
+    delete_apikey_service,
+    get_all_apikeys_active_status,
+    get_apikey_active_status,
+    update_apikey_active_status,
+    get_all_apikeys_bulk_lookup_status,
+    get_apikey_bulk_lookup_status,
+    update_apikey_bulk_lookup_status,
+    upsert_apikey_bulk_lookup_status,
+    update_apikey_service,
+    get_all_apikeys_configured_status,
+)
 
 
-router = APIRouter()
+router = APIRouter(prefix="/api/apikeys", tags=["Settings"])
 
-# Create API key
-@router.post("/api/apikeys/", response_model=ApikeySchema, tags=["Settings"], status_code=status.HTTP_201_CREATED)
-def create_apikey(apikey: ApikeySchema, db: Session = Depends(get_db)):
-    """
-    Create a new API key.
-    - **name**: Name of the API key provider (e.g., "VirusTotal").
-    - **key**: The API key string.
-    - **is_active**: Set to true to enable the key for lookups.
-    - **bulk_ioc_lookup**: Set to true to enable the key for bulk lookups.
-    """
-    existing_apikey = get_apikey(db, apikey.name)
-    if existing_apikey['name'] == "None":
-        db_apikey = create_new_apikey(db, apikey)
-        logging.debug(f"Added API key: {apikey.name}")
-        return db_apikey.to_dict()
-    logging.error(f"Could not add API key. API key already exists: {apikey.name}")
-    raise HTTPException(status_code=409, detail="Apikey already exists")
+ApiKeyName = Annotated[str, Path(min_length=1, max_length=100, description="API key provider name")]
 
 
-# Delete API key by name
-@router.delete("/api/apikeys", response_model=DeleteApikeyResponse, tags=["Settings"])
-def delete_apikey(name: str, db: Session = Depends(get_db)):
-    """Delete an API key by its name."""
-    apikey = get_apikey(db, name)
-    if apikey['name'] == "None":
-        logging.error("Could not delete API key: API key not found")
-        raise HTTPException(status_code=404, detail="API key not found")
-    delete_existing_apikey(db=db, name=name)
-    logging.info(f"Deleted API key: {name}")
-    return DeleteApikeyResponse(apikey=ApikeySchema(**apikey), message="API key deleted successfully")
+# --- Collection routes (no path parameters) ---
+
+@router.post(
+    "",
+    response_model=ApikeySchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create API key",
+    description="Create a new API key entry for an external service",
+    responses={409: {"description": "API key already exists"}},
+)
+async def create_apikey(apikey: ApikeyCreateRequest, db: SessionDep) -> ApikeySchema:
+    result = await create_apikey_service(db, apikey)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="API key already exists")
+    return result
 
 
-# Get all API keys 
-"""
-@router.get("/api/apikeys/", response_model=list[ApikeySchema], tags=["Settings"])
-def read_apikeys(db: Session = Depends(get_db)):
-    apikeys = get_apikeys(db)
-    if not apikeys:
-        logging.error("Could not get API keys: No API keys found")
-        raise HTTPException(status_code=404, detail="No API keys found")
-    return [apikey.to_dict() for apikey in apikeys]
-"""
+@router.get(
+    "/is_active",
+    response_model=dict[str, bool],
+    summary="Get all API keys active status",
+    description="Get the active/inactive status for all API keys",
+)
+async def get_all_apikeys_is_active(db: ReadSessionDep) -> dict[str, bool]:
+    return await get_all_apikeys_active_status(db)
 
-# Get API key by name 
-"""
-@router.get("/api/apikeys", response_model=ApikeySchema, tags=["Settings"])
-def read_apikey(name: str, db: Session = Depends(get_db)):
-    apikey = get_apikey(db, name)
-    if apikey['name'] == "None":
-        logging.error(f"Could not get API key. API key not found: {name}")
-        raise HTTPException(status_code=404, detail="Apikey not found")
-    return apikey
-"""
 
-# Get all API keys 'is_active' state
-@router.get("/api/apikeys/is_active", response_model=Dict[str, bool], tags=["Settings"])
-def get_all_apikeys_is_active(db: Session = Depends(get_db)):
-    """Get the 'is_active' status for all API keys."""
-    apikeys = get_apikeys(db)
-    return {apikey.name: apikey.is_active for apikey in apikeys}
+@router.get(
+    "/bulk_ioc_lookup",
+    response_model=dict[str, bool],
+    summary="Get all API keys bulk lookup status",
+    description="Get the bulk lookup enabled/disabled status for all API keys, including keyless services",
+)
+async def get_all_apikeys_bulk_lookup(db: ReadSessionDep) -> dict[str, bool]:
+    from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_all_services
+    result = await get_all_apikeys_bulk_lookup_status(db)
+    for service_name, config in get_all_services().items():
+        if not config.get('api_key_name') and not config.get('api_key_names'):
+            result.setdefault(service_name, True)
+    return result
 
-# Get specific API key 'is_active' state
-@router.get("/api/apikeys/{name}/is_active", response_model=bool, tags=["Settings"])
-def get_apikey_is_active(name: str, db: Session = Depends(get_db)):
-    """Get the 'is_active' status for a specific API key."""
-    apikey_data = get_apikey(db, name)
-    if apikey_data['name'] == 'None':
-        raise HTTPException(status_code=404, detail="Apikey not found")
-    return apikey_data['is_active']
 
-# Change API key 'is_active' state
-@router.put("/api/apikeys/{name}/is_active", response_model=ApikeySchema, tags=["Settings"])
-def update_apikey_is_active(name: str, is_active: bool, db: Session = Depends(get_db)):
-    """Update the 'is_active' status for a specific API key."""
-    db_apikey = db.query(Apikey).filter(Apikey.name == name).first()
-    if not db_apikey:
-        raise HTTPException(status_code=404, detail="Apikey not found")
-    db_apikey.is_active = is_active
-    db.commit()
-    db.refresh(db_apikey)
-    return db_apikey.to_dict()
+@router.get(
+    "/configured",
+    response_model=dict[str, bool],
+    summary="Get all API keys configured status",
+    description="Get the configuration status (has actual key value) for all API keys",
+)
+async def get_all_apikeys_configured(db: ReadSessionDep) -> dict[str, bool]:
+    return await get_all_apikeys_configured_status(db)
 
-# Get all API keys 'bulk_ioc_lookup' state
-@router.get("/api/apikeys/bulk_ioc_lookup", response_model=Dict[str, bool], tags=["Settings"])
-def get_all_apikeys_bulk_lookup(db: Session = Depends(get_db)):
-    """Get the 'bulk_ioc_lookup' status for all API keys."""
-    apikeys = get_apikeys(db)
-    return {apikey.name: apikey.bulk_ioc_lookup for apikey in apikeys}
 
-# Get specific API key 'bulk_ioc_lookup' state
-@router.get("/api/apikeys/{name}/bulk_ioc_lookup", response_model=bool, tags=["Settings"])
-def get_apikey_bulk_lookup(name: str, db: Session = Depends(get_db)):
-    """Get the 'bulk_ioc_lookup' status for a specific API key."""
-    apikey_data = get_apikey(db, name)
-    if apikey_data['name'] == 'None':
-        raise HTTPException(status_code=404, detail="Apikey not found")
-    return apikey_data['bulk_ioc_lookup']
+# --- Item routes (with {name} path parameter) ---
 
-# Change API key 'bulk_ioc_lookup' state
-@router.put("/api/apikeys/{name}/bulk_ioc_lookup", response_model=ApikeySchema, tags=["Settings"])
-def update_apikey_bulk_lookup(name: str, bulk_ioc_lookup: bool, db: Session = Depends(get_db)):
-    """Update the 'bulk_ioc_lookup' status for a specific API key."""
-    db_apikey = db.query(Apikey).filter(Apikey.name == name).first()
-    if not db_apikey:
-        raise HTTPException(status_code=404, detail="Apikey not found")
-    db_apikey.bulk_ioc_lookup = bulk_ioc_lookup
-    db.commit()
-    db.refresh(db_apikey)
-    return db_apikey.to_dict()
+@router.get(
+    "/{name}/is_active",
+    response_model=ApikeyStateResponse,
+    summary="Get API key active status",
+    description="Get the active status for a specific API key",
+    responses={404: {"description": "API key not found"}},
+)
+async def get_apikey_is_active(name: ApiKeyName, db: ReadSessionDep) -> ApikeyStateResponse:
+    is_active = await get_apikey_active_status(db, name)
+    if is_active is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+    return ApikeyStateResponse(name=name, is_active=is_active)
 
-# Update API key (for clearing keys instead of deleting entries)
-@router.put("/api/apikeys/{name}", response_model=ApikeySchema, tags=["Settings"])
-def update_apikey(name: str, apikey: ApikeySchema, db: Session = Depends(get_db)):
-    """
-    Update an existing API key.
-    - **name**: Name of the API key provider.
-    - **apikey**: Updated API key data.
-    """
-    db_apikey = db.query(Apikey).filter(Apikey.name == name).first()
-    if not db_apikey:
-        raise HTTPException(status_code=404, detail="API key not found")
-    
-    # Update the fields
-    db_apikey.key = apikey.key
-    db_apikey.is_active = apikey.is_active
-    db_apikey.bulk_ioc_lookup = apikey.bulk_ioc_lookup
-    
-    db.commit()
-    db.refresh(db_apikey)
-    logging.info(f"Updated API key: {name}")
-    return db_apikey.to_dict()
 
-# Get all API keys with their configuration status
-@router.get("/api/apikeys/configured", response_model=Dict[str, bool], tags=["Settings"])
-def get_all_apikeys_configured(db: Session = Depends(get_db)):
-    """Get the configuration status (has actual key value) for all API keys."""
-    apikeys = get_apikeys(db)
-    return {apikey.name: bool(apikey.key and apikey.key.strip()) for apikey in apikeys}
+@router.patch(
+    "/{name}/is_active",
+    response_model=ApikeySchema,
+    summary="Update API key active status",
+    description="Update the active/inactive status for a specific API key",
+    responses={404: {"description": "API key not found"}},
+)
+async def update_apikey_is_active(name: ApiKeyName, data: UpdateActiveStatusRequest, db: SessionDep) -> ApikeySchema:
+    result = await update_apikey_active_status(db, name, data.is_active)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+    return result
+
+
+@router.get(
+    "/{name}/bulk_ioc_lookup",
+    response_model=ApikeyBulkLookupStateResponse,
+    summary="Get API key bulk lookup status",
+    description="Get the bulk lookup status for a specific API key",
+    responses={404: {"description": "API key not found"}},
+)
+async def get_apikey_bulk_lookup(name: ApiKeyName, db: ReadSessionDep) -> ApikeyBulkLookupStateResponse:
+    bulk_ioc_lookup = await get_apikey_bulk_lookup_status(db, name)
+    if bulk_ioc_lookup is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+    return ApikeyBulkLookupStateResponse(name=name, bulk_ioc_lookup=bulk_ioc_lookup)
+
+
+@router.patch(
+    "/{name}/bulk_ioc_lookup",
+    response_model=ApikeySchema,
+    summary="Update API key bulk lookup status",
+    description="Update the bulk lookup enabled/disabled status for a specific API key. Creates a record for keyless services if none exists.",
+)
+async def update_apikey_bulk_lookup(name: ApiKeyName, data: UpdateBulkLookupStatusRequest, db: SessionDep) -> ApikeySchema:
+    result = await update_apikey_bulk_lookup_status(db, name, data.bulk_ioc_lookup)
+    if result is not None:
+        return result
+    from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
+    service_config = get_service(name)
+    if service_config and not service_config.get('api_key_name') and not service_config.get('api_key_names'):
+        return await upsert_apikey_bulk_lookup_status(db, name, data.bulk_ioc_lookup)
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+
+
+@router.patch(
+    "/{name}",
+    response_model=ApikeySchema,
+    summary="Update API key",
+    description="Partially update an existing API key's value, active status, and bulk lookup setting",
+    responses={404: {"description": "API key not found"}},
+)
+async def update_apikey(name: ApiKeyName, apikey: ApikeyUpdateRequest, db: SessionDep) -> ApikeySchema:
+    result = await update_apikey_service(db, name, apikey)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+    return result
+
+
+@router.delete(
+    "/{name}",
+    response_model=DeleteApikeyResponse,
+    summary="Delete API key",
+    description="Delete an API key by its provider name",
+    responses={404: {"description": "API key not found"}},
+)
+async def delete_apikey(name: ApiKeyName, db: SessionDep) -> DeleteApikeyResponse:
+    result = await delete_apikey_service(db, name)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+    return result

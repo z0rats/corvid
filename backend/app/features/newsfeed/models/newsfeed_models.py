@@ -1,104 +1,84 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, Text, JSON
-from app.core.database import Base
 import datetime
-import json
 import uuid
 
-def generate_icon_id():
+from sqlalchemy import DateTime, ForeignKey, JSON, String, Text, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.sql import func
+
+from app.core.database import Base
+
+
+def generate_icon_id() -> str:
     return str(uuid.uuid4())
+
 
 class NewsfeedSettings(Base):
     __tablename__ = "newsfeed_settings"
-    name = Column(String, primary_key=True, index=True)
-    url = Column(String)
-    icon = Column(String, default='default.png')
-    icon_id = Column(String, default=generate_icon_id)
-    enabled = Column(Boolean, default=True)
 
-    def to_dict(self):
-        return {
-            'name': self.name,
-            'url': self.url,
-            'icon': self.icon,
-            'icon_id': self.icon_id,
-            'enabled': self.enabled
-        }
+    name: Mapped[str] = mapped_column(String, primary_key=True)
+    url: Mapped[str] = mapped_column(String)
+    icon: Mapped[str] = mapped_column(String, default='default.png')
+    icon_id: Mapped[str] = mapped_column(String, default=generate_icon_id)
+    enabled: Mapped[bool] = mapped_column(default=True)
+    deleted: Mapped[bool] = mapped_column(default=False)
+
+    articles: Mapped[list["NewsArticle"]] = relationship(back_populates="feed", passive_deletes=True)
+
 
 class NewsArticle(Base):
     __tablename__ = 'news_articles'
-    id = Column(Integer, primary_key=True, index=True)
-    feedname = Column(String)
-    icon = Column(String)
-    title = Column(String)
-    summary = Column(String)
-    full_text = Column(String)
-    date = Column(DateTime)
-    link = Column(String, unique=True, index=True)
-    fetched_at = Column(DateTime, default=datetime.datetime.utcnow)
-    matches = Column(Text, nullable=True)
-    iocs = Column(Text, nullable=True)
-    relevant_iocs = Column(Text, nullable=True)
-    analysis_result = Column(Text, nullable=True)
-    note = Column(Text, nullable=True)
-    tlp = Column(String, default="TLP:CLEAR")
-    read = Column(Boolean, default=False)
 
-    def to_dict(self):
-        if self.matches:
-            try:
-                matches_data = json.loads(self.matches)
-                if not isinstance(matches_data, list):
-                    matches_data = []
-            except json.JSONDecodeError:
-                matches_data = []
-        else:
-            matches_data = []
-        
-        if self.iocs:
-            try:
-                iocs_data = json.loads(self.iocs)
-                if not isinstance(iocs_data, dict):
-                    iocs_data = {}
-            except json.JSONDecodeError:
-                iocs_data = {}
-        else:
-            iocs_data = {}
+    id: Mapped[int] = mapped_column(primary_key=True)
+    feedname: Mapped[str] = mapped_column(String, ForeignKey("newsfeed_settings.name", ondelete="CASCADE"), index=True)
+    icon: Mapped[str] = mapped_column(String)
+    title: Mapped[str] = mapped_column(String)
+    summary: Mapped[str] = mapped_column(String)
+    full_text: Mapped[str | None] = mapped_column(String)
+    date: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), index=True)
+    link: Mapped[str] = mapped_column(String, unique=True, index=True)
+    fetched_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc)
+    )
+    matches: Mapped[list[str] | None] = mapped_column(JSON)
+    iocs: Mapped[dict[str, list[str]] | None] = mapped_column(JSON)
+    relevant_iocs: Mapped[list[str] | None] = mapped_column(JSON)
+    analysis_result: Mapped[str | None] = mapped_column(Text)
+    note: Mapped[str | None] = mapped_column(Text)
+    tlp: Mapped[str] = mapped_column(String, default="TLP:CLEAR")
+    read: Mapped[bool] = mapped_column(default=False)
 
-        return {
-            'id': self.id,
-            'feedname': self.feedname,
-            'icon': self.icon,
-            'title': self.title,
-            'summary': self.summary,
-            'full_text': self.full_text,
-            'date': self.date.isoformat() if self.date else None,
-            'link': self.link,
-            'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None,
-            'matches': matches_data,
-            'iocs': iocs_data,
-            'relevant_iocs': self.relevant_iocs,
-            'analysis_result': self.analysis_result,
-            'note': self.note,
-            'tlp': self.tlp,
-            'read': self.read
-        }
+    feed: Mapped["NewsfeedSettings"] = relationship(back_populates="articles")
 
 
 class NewsfeedConfig(Base):
     __tablename__ = 'newsfeed_config'
-    id = Column(Integer, primary_key=True, index=True)
-    retention_days = Column(Integer, default=7)
-    background_fetch_enabled = Column(Boolean, default=True)
-    fetch_interval_minutes = Column(Integer, default=60)
-    last_fetch_timestamp = Column(DateTime)
-    keyword_matching_enabled = Column(Boolean, default=False)
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'retention_days': self.retention_days,
-            'background_fetch_enabled': self.background_fetch_enabled,
-            'fetch_interval_minutes': self.fetch_interval_minutes,
-            'last_fetch_timestamp': self.last_fetch_timestamp,
-            'keyword_matching_enabled': self.keyword_matching_enabled
-        }
+    id: Mapped[int] = mapped_column(primary_key=True)
+    retention_days: Mapped[int] = mapped_column(default=0)
+    background_fetch_enabled: Mapped[bool] = mapped_column(default=True)
+    fetch_interval_minutes: Mapped[int] = mapped_column(default=60)
+    last_fetch_timestamp: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True))
+    keyword_matching_enabled: Mapped[bool] = mapped_column(default=False)
+
+
+class TrendsBlacklistEntry(Base):
+    """Blacklisted words and IOC values excluded from trends analytics"""
+    __tablename__ = 'trends_blacklist'
+    __table_args__ = (UniqueConstraint('value', 'type', name='uq_blacklist_value_type'),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    value: Mapped[str] = mapped_column(String(255), index=True)
+    type: Mapped[str] = mapped_column(String(10))
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    @validates('value')
+    def validate_value(self, key: str, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("Blacklist value cannot be empty")
+        return value.strip().lower()
+
+    @validates('type')
+    def validate_type(self, key: str, entry_type: str) -> str:
+        if entry_type not in ("word", "ioc"):
+            raise ValueError("Blacklist type must be 'word' or 'ioc'")
+        return entry_type

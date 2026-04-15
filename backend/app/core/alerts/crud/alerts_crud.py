@@ -1,52 +1,99 @@
-from sqlalchemy.orm import Session
-from database.models.alerts_model import Alert
-from database.schemas.alerts_schema import AlertCreateSchema, AlertUpdateSchema
-from datetime import datetime
+from datetime import datetime, timezone
 
-def get_all_alerts(db: Session):
-    return db.query(Alert).all()
+from sqlalchemy import select, update, delete, func
+from sqlalchemy.ext.asyncio import AsyncSession
 
-def get_alert_by_id(db: Session, alert_id: int):
-    return db.query(Alert).filter(Alert.id == alert_id).first()
+from ..models.alerts_models import Alert
 
-def create_alert(db: Session, alert_data: AlertCreateSchema):
+
+async def get_all_alerts(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[Alert]:
+    """Retrieve all alerts from the database with pagination"""
+    result = await db.execute(
+        select(Alert).order_by(Alert.timestamp.desc()).offset(skip).limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+async def get_alert_by_id(db: AsyncSession, alert_id: int) -> Alert | None:
+    """Retrieve a specific alert by ID"""
+    result = await db.execute(select(Alert).where(Alert.id == alert_id))
+    return result.scalar_one_or_none()
+
+
+async def get_alerts_by_module(db: AsyncSession, module: str, skip: int = 0, limit: int = 100) -> list[Alert]:
+    """Retrieve alerts for a specific module with pagination"""
+    result = await db.execute(
+        select(Alert)
+        .where(Alert.module == module)
+        .order_by(Alert.timestamp.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+async def create_alert(db: AsyncSession, module: str, title: str, message: str) -> Alert:
+    """Create a new alert"""
     new_alert = Alert(
-        module=alert_data.module,
-        title=alert_data.title,
-        message=alert_data.message,
+        module=module,
+        title=title,
+        message=message,
         read=False
     )
     db.add(new_alert)
-    db.commit()
-    db.refresh(new_alert)
+    await db.flush()
     return new_alert
 
-def mark_alert_as_read(db: Session, alert_id: int):
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
-    if alert:
-        alert.read = True
-        alert.timestamp_read = datetime.utcnow()
-        db.commit()
-        db.refresh(alert)
+
+async def update_alert_read_status(db: AsyncSession, alert_id: int, read: bool) -> Alert | None:
+    """Update the read status of an alert"""
+    alert = await get_alert_by_id(db, alert_id)
+    if not alert:
+        return None
+
+    alert.read = read
+    if read and not alert.timestamp_read:
+        alert.timestamp_read = datetime.now(timezone.utc)
+    elif not read:
+        alert.timestamp_read = None
+
+    await db.flush()
     return alert
 
-def mark_all_alerts_as_read(db: Session):
-    alerts = db.query(Alert).filter(Alert.read == False).all()
-    for alert in alerts:
-        alert.read = True
-        alert.timestamp_read = datetime.utcnow()
-    db.commit()
-    return alerts
 
-def delete_alert(db: Session, alert_id: int):
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
-    db.delete(alert)
-    db.commit()
+async def bulk_mark_all_alerts_read(db: AsyncSession) -> int:
+    """Mark all unread alerts as read in a single query"""
+    result = await db.execute(
+        update(Alert)
+        .where(Alert.read.is_(False))
+        .values(read=True, timestamp_read=datetime.now(timezone.utc))
+        .execution_options(synchronize_session=False)
+    )
+    await db.flush()
+    return result.rowcount
+
+
+async def delete_alert_by_id(db: AsyncSession, alert_id: int) -> Alert | None:
+    """Delete a specific alert"""
+    alert = await get_alert_by_id(db, alert_id)
+    if not alert:
+        return None
+
+    await db.delete(alert)
+    await db.flush()
     return alert
 
-def delete_all_alerts(db: Session):
-    alerts = db.query(Alert).all()
-    for alert in alerts:
-        db.delete(alert)
-    db.commit()
-    return alerts
+
+async def bulk_delete_all_alerts(db: AsyncSession) -> int:
+    """Delete all alerts in a single query"""
+    result = await db.execute(delete(Alert).execution_options(synchronize_session=False))
+    await db.flush()
+    return result.rowcount
+
+
+async def count_unread_alerts(db: AsyncSession) -> int:
+    """Count the number of unread alerts"""
+    result = await db.execute(
+        select(func.count()).select_from(Alert).where(Alert.read.is_(False))
+    )
+    return result.scalar_one()

@@ -1,0 +1,120 @@
+import React from 'react';
+import Autocomplete from '@mui/material/Autocomplete';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid2';
+
+import logSourceData from '../../data/LogsourceData.json';
+
+const categories = logSourceData.category;
+const products = logSourceData.product;
+const services = logSourceData.service;
+
+export default function LogSource({ logSource, handleLogSourceChange }) {
+
+  return (
+    <Box>
+      <Typography variant="subtitle2" gutterBottom>
+        Application and the type that is required in the detection. It consists of three attributes
+        that are evaluated automatically by the converters and an arbitrary number of optional
+        elements. We recommend using a "definition" value in cases in which further explanation is
+        necessary.
+      </Typography>
+      <Grid container spacing={2} sx={{ mt: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Grid container spacing={2} direction="column">
+            <Grid size={12}>
+              <Autocomplete
+                freeSolo
+                options={products}
+                value={logSource.product}
+                onChange={(event, newValue) => {
+                  handleLogSourceChange((prev) => ({ ...prev, product: newValue || '' }));
+                }}
+                onInputChange={(event, newInputValue) => {
+                  handleLogSourceChange((prev) => ({ ...prev, product: newInputValue }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Product"
+                    placeholder="Select or type to add"
+                    size="small"
+                    variant="outlined"
+                    helperText="e.g. linux, windows, cisco"
+                    fullWidth 
+                  />
+                )}
+              />
+            </Grid>
+            <Grid size={12}>
+              <Autocomplete
+                freeSolo
+                options={categories}
+                value={logSource.category}
+                onChange={(event, newValue) => {
+                  handleLogSourceChange((prev) => ({ ...prev, category: newValue || '' }));
+                }}
+                onInputChange={(event, newInputValue) => {
+                  handleLogSourceChange((prev) => ({ ...prev, category: newInputValue }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Category"
+                    placeholder="Select or type to add"
+                    size="small"
+                    variant="outlined"
+                    helperText="e.g. process_creation"
+                    fullWidth
+                  />
+                )}
+              />
+            </Grid>
+            <Grid size={12}>
+              <Autocomplete
+                freeSolo
+                options={services}
+                value={logSource.service}
+                onChange={(event, newValue) => {
+                  handleLogSourceChange((prev) => ({ ...prev, service: newValue || '' }));
+                }}
+                onInputChange={(event, newInputValue) => {
+                  handleLogSourceChange((prev) => ({ ...prev, service: newInputValue }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Service"
+                    placeholder="Select or type to add"
+                    size="small"
+                    variant="outlined"
+                    helperText="e.g. sysmon, ldapd, dhcp"
+                    fullWidth
+                  />
+                )}
+              />
+            </Grid>
+          </Grid>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="Definition"
+            value={logSource.definition}
+            onChange={(e) =>
+              handleLogSourceChange((prev) => ({ ...prev, definition: e.target.value }))
+            }
+            size="small"
+            variant="outlined"
+            placeholder="Enter definition"
+            multiline
+            rows={7} 
+            helperText="Describe the log source, including log verbosity level or configurations."
+          />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}

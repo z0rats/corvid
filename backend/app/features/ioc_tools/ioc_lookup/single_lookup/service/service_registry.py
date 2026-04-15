@@ -1,8 +1,8 @@
-from typing import Dict, Any, Optional
+from typing import Any
 from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import IOC_TYPES
 
 # Global service registry
-_services: Dict[str, Dict[str, Any]] = {}
+_services: dict[str, dict[str, Any]] = {}
 
 
 def register_services(ioc_lookup_service_module) -> None:
@@ -15,78 +15,56 @@ def register_services(ioc_lookup_service_module) -> None:
     global _services
     
     _services.update({
-        'virustotal': {
-            'func': ioc_lookup_service_module.virustotal,
-            'name': 'VirusTotal',
-            'api_key_name': 'virustotal',
-            'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], 
-                IOC_TYPES['URL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']
-            ],
-            'requires_type': True,
-            'ioc_type_param': 'type',
-            'type_map': {
-                IOC_TYPES['IPV4']: 'ip', IOC_TYPES['IPV6']: 'ip',
-                IOC_TYPES['DOMAIN']: 'domain', IOC_TYPES['URL']: 'url',
-                IOC_TYPES['MD5']: 'hash', IOC_TYPES['SHA1']: 'hash', IOC_TYPES['SHA256']: 'hash',
-            }
-        },
         'abuseipdb': {
-            'func': ioc_lookup_service_module.abuseipdb_ip_check,
+            'func': ioc_lookup_service_module.check_abuseipdb,
             'name': 'AbuseIPDB',
             'api_key_name': 'abuseipdb',
             'supported_ioc_types': [IOC_TYPES['IPV4']],
         },
         'alienvault': {
-            'func': ioc_lookup_service_module.alienvaultotx,
+            'func': ioc_lookup_service_module.check_alienvault,
             'name': 'AlienVault OTX',
             'api_key_name': 'alienvault',
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'],
                 IOC_TYPES['URL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']
             ],
             'requires_type': True,
-            'ioc_type_param': 'type',
+            'ioc_type_param': 'ioc_type',
             'type_map': {
                 IOC_TYPES['IPV4']: 'ip', IOC_TYPES['IPV6']: 'ip',
                 IOC_TYPES['DOMAIN']: 'domain', IOC_TYPES['URL']: 'url',
                 IOC_TYPES['MD5']: 'hash', IOC_TYPES['SHA1']: 'hash', IOC_TYPES['SHA256']: 'hash',
             }
         },
-        'bgpview': {
-            'func': ioc_lookup_service_module.check_bgpview,
-            'name': 'BGPView',
-            'api_key_name': 'bgpview',
-            'supported_ioc_types': [IOC_TYPES['IPV4'], IOC_TYPES['IPV6']],
-        },
         'checkphish': {
-            'func': ioc_lookup_service_module.checkphish_ai,
+            'func': ioc_lookup_service_module.check_checkphish,
             'name': 'CheckPhish',
             'api_key_name': 'checkphishai',
             'supported_ioc_types': [IOC_TYPES['IPV4'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL']],
         },
         'crowdsec': {
-            'func': ioc_lookup_service_module.crowdsec,
+            'func': ioc_lookup_service_module.check_crowdsec,
             'name': 'CrowdSec',
             'api_key_name': 'crowdsec',
             'supported_ioc_types': [IOC_TYPES['IPV4']],
         },
         'crowdstrike': {
-            'func': ioc_lookup_service_module.crowdstrike_indicators_lookup,
+            'func': ioc_lookup_service_module.check_crowdstrike,
             'name': 'CrowdStrike',
             'multi_key': True,
             'api_key_names': ['crowdstrike_client_id', 'crowdstrike_client_secret'],
             'api_key_params': {
-                'client_id': 'crowdstrike_client_id', 
+                'client_id': 'crowdstrike_client_id',
                 'client_secret': 'crowdstrike_client_secret'
             },
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
                 IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'], IOC_TYPES['EMAIL']
             ],
         },
         'emailrepio': {
-            'func': ioc_lookup_service_module.emailrep_email_check,
+            'func': ioc_lookup_service_module.check_emailrep,
             'name': 'EmailRep.io',
             'api_key_name': 'emailrepio',
             'supported_ioc_types': [IOC_TYPES['EMAIL']],
@@ -96,35 +74,35 @@ def register_services(ioc_lookup_service_module) -> None:
             'name': 'GitHub',
             'api_key_name': 'github_pat',
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
-                IOC_TYPES['EMAIL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
+                IOC_TYPES['EMAIL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'],
                 IOC_TYPES['CVE']
             ],
         },
         'haveibeenpwned': {
-            'func': ioc_lookup_service_module.haveibeenpwnd_email_check,
+            'func': ioc_lookup_service_module.check_hibp,
             'name': 'Have I Been Pwned',
             'api_key_name': 'hibp_api_key',
             'supported_ioc_types': [IOC_TYPES['EMAIL']],
         },
         'hunterio': {
-            'func': ioc_lookup_service_module.hunter_email_check,
+            'func': ioc_lookup_service_module.check_hunter,
             'name': 'Hunter.io',
             'api_key_name': 'hunterio_api_key',
             'supported_ioc_types': [IOC_TYPES['EMAIL']],
         },
         'ipqualityscore': {
-            'func': ioc_lookup_service_module.ipqualityscore_ip_check,
+            'func': ioc_lookup_service_module.check_ipqualityscore,
             'name': 'IPQualityScore',
             'api_key_name': 'ipqualityscore',
             'supported_ioc_types': [IOC_TYPES['IPV4']],
         },
         'maltiverse': {
-            'func': ioc_lookup_service_module.maltiverse_check,
+            'func': ioc_lookup_service_module.check_maltiverse,
             'name': 'Maltiverse',
             'api_key_name': 'maltiverse',
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
                 IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']
             ],
             'requires_type': True,
@@ -133,25 +111,25 @@ def register_services(ioc_lookup_service_module) -> None:
                 IOC_TYPES['IPV4']: 'ip',
                 IOC_TYPES['DOMAIN']: 'hostname',
                 IOC_TYPES['URL']: 'url',
-                IOC_TYPES['MD5']: 'sample',
-                IOC_TYPES['SHA1']: 'sample',
+                IOC_TYPES['MD5']: 'sample/md5',
+                IOC_TYPES['SHA1']: 'sample/sha1',
                 IOC_TYPES['SHA256']: 'sample',
             },
         },
         'malwarebazaar': {
-            'func': ioc_lookup_service_module.malwarebazaar_hash_check,
+            'func': ioc_lookup_service_module.check_malwarebazaar,
             'name': 'MalwareBazaar',
             'api_key_name': 'malwarebazaar',
             'supported_ioc_types': [IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']],
         },
         'mandiant': {
-            'func': ioc_lookup_service_module.mandiant_ioc_lookup,
+            'func': ioc_lookup_service_module.check_mandiant,
             'name': 'Mandiant',
             'multi_key': True,
             'api_key_names': ['mandiant_key', 'mandiant_secret'],
             'api_key_params': {'api_key': 'mandiant_key', 'api_secret': 'mandiant_secret'},
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
                 IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'], IOC_TYPES['EMAIL']
             ],
             'requires_type': True,
@@ -174,7 +152,7 @@ def register_services(ioc_lookup_service_module) -> None:
             'name': 'Pulsedive',
             'api_key_name': 'pulsedive',
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
                 IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']
             ],
         },
@@ -182,16 +160,16 @@ def register_services(ioc_lookup_service_module) -> None:
             'func': ioc_lookup_service_module.search_reddit,
             'name': 'Reddit',
             'multi_key': True,
-            'api_key_names': ['reddit_cid', 'reddit_cs'],
-            'api_key_params': {'client_id': 'reddit_cid', 'client_secret': 'reddit_cs'},
+            'api_key_names': ['reddit_client_id', 'reddit_client_secret'],
+            'api_key_params': {'client_id': 'reddit_client_id', 'client_secret': 'reddit_client_secret'},
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
-                IOC_TYPES['EMAIL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
+                IOC_TYPES['EMAIL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'],
                 IOC_TYPES['CVE']
             ],
         },
         'safeBrowse': {
-            'func': ioc_lookup_service_module.safeBrowse_url_check,
+            'func': ioc_lookup_service_module.check_safe_browsing,
             'name': 'Google Safe Browse',
             'api_key_name': 'safeBrowse',
             'supported_ioc_types': [IOC_TYPES['DOMAIN'], IOC_TYPES['URL']],
@@ -209,11 +187,11 @@ def register_services(ioc_lookup_service_module) -> None:
             }
         },
         'threatfox': {
-            'func': ioc_lookup_service_module.threatfox_ip_check,
+            'func': ioc_lookup_service_module.check_threatfox,
             'name': 'ThreatFox',
             'api_key_name': 'threatfox',
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
                 IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']
             ],
         },
@@ -222,27 +200,43 @@ def register_services(ioc_lookup_service_module) -> None:
             'name': 'Twitter/X',
             'api_key_name': 'twitter_bearer_token',
             'supported_ioc_types': [
-                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], 
-                IOC_TYPES['EMAIL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'], 
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
+                IOC_TYPES['EMAIL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'],
                 IOC_TYPES['CVE']
             ],
         },
         'urlhaus': {
-            'func': ioc_lookup_service_module.urlhaus_url_check,
+            'func': ioc_lookup_service_module.check_urlhaus,
             'name': 'URLhaus',
             'api_key_name': 'urlhaus',
             'supported_ioc_types': [IOC_TYPES['URL'], IOC_TYPES['DOMAIN'], IOC_TYPES['IPV4']],
         },
         'urlscanio': {
-            'func': ioc_lookup_service_module.urlscanio,
+            'func': ioc_lookup_service_module.check_urlscan,
             'name': 'URLScan.io',
             'api_key_name': None,
             'supported_ioc_types': [IOC_TYPES['DOMAIN'], IOC_TYPES['URL'], IOC_TYPES['IPV4']],
         },
+        'virustotal': {
+            'func': ioc_lookup_service_module.check_virustotal,
+            'name': 'VirusTotal',
+            'api_key_name': 'virustotal',
+            'supported_ioc_types': [
+                IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'],
+                IOC_TYPES['URL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']
+            ],
+            'requires_type': True,
+            'ioc_type_param': 'ioc_type',
+            'type_map': {
+                IOC_TYPES['IPV4']: 'ip', IOC_TYPES['IPV6']: 'ip',
+                IOC_TYPES['DOMAIN']: 'domain', IOC_TYPES['URL']: 'url',
+                IOC_TYPES['MD5']: 'hash', IOC_TYPES['SHA1']: 'hash', IOC_TYPES['SHA256']: 'hash',
+            }
+        },
     })
 
 
-def get_service(service_name: str) -> Optional[Dict[str, Any]]:
+def get_service(service_name: str) -> dict[str, Any] | None:
     """
     Get service configuration by name.
     
@@ -255,7 +249,7 @@ def get_service(service_name: str) -> Optional[Dict[str, Any]]:
     return _services.get(service_name)
 
 
-def get_all_services() -> Dict[str, Dict[str, Any]]:
+def get_all_services() -> dict[str, dict[str, Any]]:
     """
     Get all registered services.
     
@@ -276,29 +270,3 @@ def is_service_registered(service_name: str) -> bool:
         True if the service is registered, False otherwise
     """
     return service_name in _services
-
-
-# Compatibility wrapper for the old class-based approach
-class ServiceRegistry:
-    """
-    Compatibility wrapper for the old class-based service registry.
-    
-    This class provides backward compatibility while the codebase transitions
-    to the functional approach.
-    """
-    
-    @property
-    def services(self) -> Dict[str, Dict[str, Any]]:
-        """Get all services."""
-        return get_all_services()
-    
-    def register_services(self, ioc_lookup_service_module) -> None:
-        """Register services."""
-        register_services(ioc_lookup_service_module)
-    
-    def get_service(self, service_name: str) -> Optional[Dict[str, Any]]:
-        """Get a service by name."""
-        return get_service(service_name)
-
-
-service_registry = ServiceRegistry()

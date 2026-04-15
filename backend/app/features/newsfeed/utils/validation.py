@@ -6,15 +6,11 @@ import logging
 from urllib.parse import urlparse
 import feedparser
 import uuid
-from typing import Tuple, Optional, Dict, Any, TypedDict
+from typing import Any, TypedDict
 from functools import wraps
 import time
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
-)
 logger = logging.getLogger(__name__)
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -36,11 +32,11 @@ def log_execution_time(func):
         try:
             result = func(*args, **kwargs)
             execution_time = time.time() - start_time
-            logger.info(f"{func.__name__} completed in {execution_time:.2f} seconds")
+            logger.info("%s completed in %.2f seconds", func.__name__, execution_time)
             return result
         except Exception as e:
             execution_time = time.time() - start_time
-            logger.error(f"{func.__name__} failed after {execution_time:.2f} seconds: {str(e)}")
+            logger.error("%s failed after %.2f seconds: %s", func.__name__, execution_time, str(e))
             raise
     return wrapper
 
@@ -52,29 +48,29 @@ def generate_icon_filename() -> str:
     """
     return f"{uuid.uuid4()}.png"
 
-def validate_url_format(url: str) -> Tuple[bool, Optional[str]]:
+def validate_url_format(url: str) -> tuple[bool, str | None]:
     """Validate URL format
     
     Args:
         url: The URL to validate
         
     Returns:
-        Tuple[bool, Optional[str]]: (is_valid, error_message)
+        tuple[bool, str | None]: (is_valid, error_message)
     """
-    parsed_url = urlparse(url)
+    parsed_url = urlparse(str(url))
     if not all([parsed_url.scheme, parsed_url.netloc]):
-        logger.error(f"Invalid URL format: {url}")
+        logger.error("Invalid URL format: %s", url)
         return False, "Invalid URL format"
     return True, None
 
-def parse_feed_info(feed: feedparser.FeedParserDict) -> Optional[FeedInfo]:
+def parse_feed_info(feed: feedparser.FeedParserDict) -> FeedInfo | None:
     """Extract feed information from parsed feed
     
     Args:
         feed: Parsed feed dictionary
         
     Returns:
-        Optional[FeedInfo]: Feed information if valid, None otherwise
+        FeedInfo | None: Feed information if valid, None otherwise
     """
     if not feed.feed:
         return None
@@ -87,7 +83,7 @@ def parse_feed_info(feed: feedparser.FeedParserDict) -> Optional[FeedInfo]:
     }
 
 @log_execution_time
-def validate_feed(url: str) -> Tuple[bool, Optional[str], Optional[FeedInfo]]:
+def validate_feed(url: str) -> tuple[bool, str | None, FeedInfo | None]:
     """Validate and parse RSS/Atom feed
     
     Args:
@@ -96,47 +92,60 @@ def validate_feed(url: str) -> Tuple[bool, Optional[str], Optional[FeedInfo]]:
     Returns:
         Tuple containing:
         - Success status (bool)
-        - Error message if any (Optional[str])
-        - Feed information if successful (Optional[FeedInfo])
+        - Error message if any (str | None)
+        - Feed information if successful (FeedInfo | None)
     """
+    url = str(url)
     is_valid_url, url_error = validate_url_format(url)
     if not is_valid_url:
         return False, url_error, None
     
     try:
-        logger.info(f"Attempting to parse feed: {url}")
-        feed = feedparser.parse(url, sanitize_html=True)
+        logger.info("Attempting to parse feed: %s", url)
         
-        # Check for parsing errors
+        # Suppress encoding warnings from feedparser
+        import warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*document declared as.*")
+            warnings.filterwarnings("ignore", message=".*encoding.*")
+            feed = feedparser.parse(str(url), sanitize_html=True)
+        
+        # Check for parsing errors, but be more lenient with encoding issues
         if feed.get('bozo', 0) == 1:
             exception = feed.get('bozo_exception')
-            error_msg = str(exception) if exception else "Unknown feed parsing error"
-            if isinstance(exception, xml.sax._exceptions.SAXParseException):
-                error_msg = f"XML parsing error: {error_msg}"
-            logger.error(f"Feed parsing failed: {error_msg}")
-            return False, error_msg, None
+            if exception:
+                error_msg = str(exception)
+                # Don't fail on encoding warnings, only on serious parsing errors
+                if "encoding" in error_msg.lower() or "declared as" in error_msg.lower():
+                    logger.warning("Feed encoding warning (continuing): %s", error_msg)
+                elif isinstance(exception, xml.sax._exceptions.SAXParseException):
+                    logger.error("Feed parsing failed: XML parsing error: %s", error_msg)
+                    return False, f"XML parsing error: {error_msg}", None
+                else:
+                    logger.error("Feed parsing failed: %s", error_msg)
+                    return False, error_msg, None
         
         # Validate feed content
         if not feed.entries:
-            logger.warning(f"Feed contains no entries: {url}")
+            logger.warning("Feed contains no entries: %s", url)
             return False, "Feed contains no entries", None
         
         feed_info = parse_feed_info(feed)
         if not feed_info:
-            logger.error(f"Invalid feed structure: {url}")
+            logger.error("Invalid feed structure: %s", url)
             return False, "Invalid feed structure: missing feed information", None
         
-        logger.info(f"Successfully validated feed: {url}")
+        logger.info("Successfully validated feed: %s", url)
         return True, None, feed_info
         
     except Exception as e:
-        logger.error(f"Unexpected error validating feed: {str(e)}")
+        logger.error("Unexpected error validating feed: %s", str(e))
         return False, f"Feed validation error: {str(e)}", None
 
 def validate_image_metadata(
     file_content: bytes,
     original_filename: str
-) -> Tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """Validate image file metadata
     
     Args:
@@ -144,7 +153,7 @@ def validate_image_metadata(
         original_filename: Original filename of the image
         
     Returns:
-        Tuple[bool, Optional[str]]: (is_valid, error_message)
+        tuple[bool, str | None]: (is_valid, error_message)
     """
     if len(file_content) > MAX_FILE_SIZE:
         return False, f"File size too large (max {MAX_FILE_SIZE // 1024 // 1024}MB)"
@@ -177,7 +186,7 @@ def process_image(image: Image.Image) -> Image.Image:
 def validate_and_process_icon(
     file_content: bytes,
     original_filename: str
-) -> Tuple[bool, Optional[str], Optional[Tuple[bytes, str]]]:
+) -> tuple[bool, str | None, tuple[bytes, str] | None]:
     """Validate and process an icon image
     
     Args:
@@ -187,14 +196,14 @@ def validate_and_process_icon(
     Returns:
         Tuple containing:
         - Success status (bool)
-        - Error message if any (Optional[str])
-        - Processed image data and filename if successful (Optional[Tuple[bytes, str]])
+        - Error message if any (str | None)
+        - Processed image data and filename if successful (Tuple[bytes, str] | None)
     """
     try:
         # Validate metadata
         is_valid, error_msg = validate_image_metadata(file_content, original_filename)
         if not is_valid:
-            logger.warning(f"Validation error for {original_filename}: {error_msg}")
+            logger.warning("Validation error for %s: %s", original_filename, error_msg)
             return False, error_msg, None
 
         # Process image
@@ -215,5 +224,5 @@ def validate_and_process_icon(
             return True, None, (output_buffer.getvalue(), icon_id)
 
     except Exception as e:
-        logger.error(f"Error processing icon {original_filename}: {str(e)}")
+        logger.error("Error processing icon %s: %s", original_filename, str(e))
         return False, f"Invalid image file: {str(e)}", None

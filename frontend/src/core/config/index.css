@@ -1,0 +1,178 @@
+/* Font Faces */
+@font-face {
+  font-display: swap;
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../static/fonts/Nunito/nunito-v25-latin-regular.eot');
+  src: url('../static/fonts/Nunito/nunito-v25-latin-regular.eot?#iefix') format('embedded-opentype'),
+       url('../static/fonts/Nunito/nunito-v25-latin-regular.woff2') format('woff2'),
+       url('../static/fonts/Nunito/nunito-v25-latin-regular.woff') format('woff'),
+       url('../static/fonts/Nunito/nunito-v25-latin-regular.ttf') format('truetype'),
+       url('../static/fonts/Nunito/nunito-v25-latin-regular.svg#Nunito') format('svg');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../static/fonts/Poppins/poppins-v20-latin-regular.eot');
+  src: url('../static/fonts/Poppins/poppins-v20-latin-regular.eot?#iefix') format('embedded-opentype'),
+       url('../static/fonts/Poppins/poppins-v20-latin-regular.woff2') format('woff2'),
+       url('../static/fonts/Poppins/poppins-v20-latin-regular.woff') format('woff'),
+       url('../static/fonts/Poppins/poppins-v20-latin-regular.ttf') format('truetype'),
+       url('../static/fonts/Poppins/poppins-v20-latin-regular.svg#Poppins') format('svg');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../static/fonts/Roboto/roboto-v30-latin-regular.eot');
+  src: url('../static/fonts/Roboto/roboto-v30-latin-regular.eot?#iefix') format('embedded-opentype'),
+       url('../static/fonts/Roboto/roboto-v30-latin-regular.woff2') format('woff2'),
+       url('../static/fonts/Roboto/roboto-v30-latin-regular.woff') format('woff'),
+       url('../static/fonts/Roboto/roboto-v30-latin-regular.ttf') format('truetype'),
+       url('../static/fonts/Roboto/roboto-v30-latin-regular.svg#Roboto') format('svg');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Aldrich';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../static/fonts/Aldrich/aldrich-v17-latin-regular.eot');
+  src: url('../static/fonts/Aldrich/aldrich-v17-latin-regular.eot?#iefix') format('embedded-opentype'),
+       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.woff2') format('woff2'),
+       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.woff') format('woff'),
+       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.ttf') format('truetype'),
+       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.svg#Aldrich') format('svg');
+}
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+body[data-font="Nunito"] {
+  font-family: 'Nunito', sans-serif;
+}
+
+body[data-font="Poppins"] {
+  font-family: 'Poppins', sans-serif;
+}
+
+body[data-font="Helvetica"] {
+  font-family: 'Helvetica', sans-serif;
+}
+
+body[data-font="Roboto"] {
+  font-family: 'Roboto', sans-serif;
+}
+
+body[data-font="Arial"] {
+  font-family: 'Arial', sans-serif;
+}
+
+body[data-font="Aldrich"] {
+  font-family: 'Aldrich', sans-serif;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* MDXEditor dark mode */
+.dark-theme {
+  --basePageBg: #111113 !important;
+}
+
+/* MDXEditor list indentation */
+.mdxeditor ul,
+.mdxeditor ol {
+  padding-left: 1.5rem;
+}
+
+/* MDXEditor CodeMirror dark mode */
+.dark-theme .cm-editor {
+  background-color: #1e1e1e;
+}
+
+.dark-theme .cm-editor .cm-gutters {
+  background-color: #1e1e1e;
+  color: #858585;
+  border-right: 1px solid #333;
+}
+
+.dark-theme .cm-editor .cm-content {
+  color: #d4d4d4;
+}
+
+.dark-theme .cm-editor .cm-activeLine {
+  background-color: #2a2a2a;
+}
+
+.dark-theme .cm-editor .cm-activeLineGutter {
+  background-color: #2a2a2a;
+}
+
+.dark-theme [class*="codeMirrorWrapper"] {
+  border-color: #333;
+}
+
+/* MDXEditor: make content area fill wrapper height */
+.mdxeditor-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.mdxeditor-wrapper > .mdxeditor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Any intermediate wrapper divs between .mdxeditor and the content area */
+.mdxeditor-wrapper > .mdxeditor > div:not([class*="toolbar"]):not([class*="topArea"]) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mdxeditor-wrapper .mdxeditor-root-contenteditable {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mdxeditor-wrapper .mdxeditor-root-contenteditable > div {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mdxeditor-wrapper .mdxeditor-root-contenteditable > div > [contenteditable] {
+  flex: 1;
+  min-height: 0;
+}
+
+/* MDXEditor checklist vertical alignment */
+.mdxeditor li[class*="listItemChecked"]::before,
+.mdxeditor li[class*="listItemUnchecked"]::before {
+  top: 0.25em;
+}
+
+.mdxeditor li[class*="listItemChecked"]::after {
+  top: 0.3em;
+}
+

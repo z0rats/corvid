@@ -1,67 +1,123 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List
+"""
+API routes for keywords settings
+
+Contains FastAPI route definitions for keyword management endpoints.
+"""
+
+from fastapi import APIRouter, HTTPException, Query
 import logging
 
-from app.core.dependencies import get_db
-from app.core.settings.keywords.models.keywords_settings_models import Keyword
-from app.core.settings.keywords.schemas.keywords_settings_schemas import KeywordSchema
-from app.core.settings.keywords.crud.keywords_settings_crud import (
-    get_keywords as crud_get_keywords,
-    create_keyword as crud_create_keyword,
-    delete_keyword as crud_delete_keyword
+from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.settings.keywords.schemas.keywords_settings_schemas import (
+    KeywordResponse,
+    KeywordCreate,
+    KeywordUpdate,
+    KeywordListResponse,
+    KeywordDeleteResponse,
+)
+from app.core.settings.keywords.service.keywords_settings_service import (
+    get_all_keywords,
+    get_keyword_by_id_service,
+    create_keyword_service,
+    update_keyword_service,
+    delete_keyword_service
+)
+from app.core.settings.keywords.config.default_settings import (
+    get_default_pagination_limit,
+    validate_pagination_limit
 )
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/settings/keywords", tags=["Keywords Settings"])
 
-router = APIRouter()
 
-@router.get("/api/settings/keywords/", response_model=List[KeywordSchema], tags=["Settings"])
-def get_keywords_route(db: Session = Depends(get_db)):
-    """Retrieve all keywords"""
-    try:
-        keywords = crud_get_keywords(db=db)
-        logger.info("Retrieved list of keywords.")
-        return [keyword.to_dict() for keyword in keywords]
-    except Exception as e:
-        logger.error(f"Error retrieving keywords: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving keywords: {str(e)}")
+@router.get("", response_model=list[KeywordResponse], response_model_exclude_none=True)
+async def get_keywords_endpoint(
+    db: ReadSessionDep,
+    skip: int = Query(0, ge=0, description="Number of keywords to skip"),
+    limit: int = Query(None, ge=1, le=500, description="Maximum number of keywords to return"),
+) -> list[KeywordResponse]:
+    """
+    Retrieve all keywords with pagination
 
-@router.post("/api/settings/keywords/", response_model=KeywordSchema, tags=["Settings"])
-def create_keyword_route(keyword_data: KeywordSchema, db: Session = Depends(get_db)):
-    """Create a new keyword"""
-    try:
-        existing_keyword = db.query(Keyword).filter(
-            Keyword.keyword == keyword_data.keyword).first()
-        if existing_keyword:
-            logger.warning(
-                "Attempt to create an already existing keyword: %s.", keyword_data.keyword)
-            raise HTTPException(status_code=400, detail="Keyword already exists")
-        
-        keyword = crud_create_keyword(db=db, keyword=keyword_data.keyword)
-        logger.info("Created new keyword: %s.", keyword_data.keyword)
-        return keyword.to_dict()
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error creating keyword: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error creating keyword: {str(e)}")
+    - **skip**: Number of keywords to skip (default: 0)
+    - **limit**: Maximum number of keywords to return (default: 100, max: 500)
+    """
+    if limit is None:
+        limit = get_default_pagination_limit()
+    else:
+        limit = validate_pagination_limit(limit)
 
-@router.delete("/api/settings/keywords/{keyword_id}", tags=["Settings"])
-def delete_keyword_route(keyword_id: int, db: Session = Depends(get_db)):
-    """Delete a keyword by ID"""
-    try:
-        success = crud_delete_keyword(db=db, keyword_id=keyword_id)
-        if success:
-            logger.info("Deleted keyword with ID %d.", keyword_id)
-            return {"detail": "Keyword deleted successfully"}
-        else:
-            logger.error("Keyword with ID %d not found for deletion.", keyword_id)
-            raise HTTPException(status_code=404, detail="Keyword not found")
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting keyword: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error deleting keyword: {str(e)}")
+    return await get_all_keywords(db, skip=skip, limit=limit)
+
+
+@router.get(
+    "/{keyword_id}",
+    response_model=KeywordResponse,
+    response_model_exclude_none=True,
+    responses={404: {"description": "Keyword not found"}},
+)
+async def get_keyword_endpoint(
+    keyword_id: int,
+    db: ReadSessionDep
+) -> KeywordResponse:
+    """
+    Retrieve a specific keyword by ID
+
+    - **keyword_id**: The ID of the keyword to retrieve
+    """
+    return await get_keyword_by_id_service(db, keyword_id)
+
+
+@router.post(
+    "",
+    response_model=KeywordResponse,
+    response_model_exclude_none=True,
+    status_code=201,
+    responses={400: {"description": "Invalid keyword format or duplicate keyword"}},
+)
+async def create_keyword_endpoint(
+    keyword_data: KeywordCreate,
+    db: SessionDep
+) -> KeywordResponse:
+    """
+    Create a new keyword
+
+    - **keyword**: The keyword string to create (will be normalized)
+    """
+    return await create_keyword_service(db, keyword_data)
+
+
+@router.put(
+    "/{keyword_id}",
+    response_model=KeywordResponse,
+    response_model_exclude_none=True,
+    responses={
+        400: {"description": "Invalid keyword format or duplicate keyword"},
+        404: {"description": "Keyword not found"},
+    },
+)
+async def update_keyword_endpoint(
+    keyword_id: int,
+    keyword_data: KeywordUpdate,
+    db: SessionDep
+) -> KeywordResponse:
+    """
+    Update an existing keyword
+
+    - **keyword_id**: The ID of the keyword to update
+    - **keyword**: The new keyword string (will be normalized)
+    """
+    return await update_keyword_service(db, keyword_id, keyword_data)
+
+
+@router.delete(
+    "/{keyword_id}",
+    response_model=KeywordDeleteResponse,
+    responses={404: {"description": "Keyword not found"}},
+)
+async def delete_keyword_endpoint(
+    keyword_id: int,
+    db: SessionDep
+) -> KeywordDeleteResponse:
+    return await delete_keyword_service(db, keyword_id)

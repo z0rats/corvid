@@ -1,76 +1,29 @@
-import re
-from typing import List, Dict, Any
+import logging
+
 from app.features.ioc_tools.ioc_extractor.service.ioc_extractor_service import extract_iocs
+from app.features.ioc_tools.ioc_defanger.utils.defang_utils import (
+    apply_defang_patterns,
+    apply_fang_patterns,
+    split_ioc_text,
+    is_ioc_changed,
+    calculate_processing_stats
+)
+from app.features.ioc_tools.ioc_defanger.utils.validation_utils import (
+    validate_defang_operation,
+    validate_ioc_text,
+    sanitize_input_text
+)
+from app.features.ioc_tools.ioc_defanger.schemas.defang_schemas import (
+    ProcessedIOC,
+    DefangResponse
+)
+
+logger = logging.getLogger(__name__)
 
 
-DEFANG_PATTERNS = [
-    # Protocol defanging
-    {'defanged': re.compile(r'hxxp', re.IGNORECASE), 'fanged': 'http'},
-    {'defanged': re.compile(r'hxxps', re.IGNORECASE), 'fanged': 'https'},
-    {'defanged': re.compile(r'fxp', re.IGNORECASE), 'fanged': 'ftp'},
-    
-    # Dot defanging
-    {'defanged': re.compile(r'\[\.\]'), 'fanged': '.'},
-    {'defanged': re.compile(r'\(\.\)'), 'fanged': '.'},
-    {'defanged': re.compile(r'\{\.\}'), 'fanged': '.'},
-    {'defanged': re.compile(r'\[dot\]', re.IGNORECASE), 'fanged': '.'},
-    {'defanged': re.compile(r'\(dot\)', re.IGNORECASE), 'fanged': '.'},
-    {'defanged': re.compile(r'\{dot\}', re.IGNORECASE), 'fanged': '.'},
-    {'defanged': re.compile(r'\\\\.'), 'fanged': '.'},
-    {'defanged': re.compile(r' \. '), 'fanged': '.'},
-    {'defanged': re.compile(r' dot ', re.IGNORECASE), 'fanged': '.'},
-    
-    # Colon defanging
-    {'defanged': re.compile(r'\[:\]'), 'fanged': ':'},
-    {'defanged': re.compile(r'\(:\)'), 'fanged': ':'},
-    {'defanged': re.compile(r'\{:\}'), 'fanged': ':'},
-    
-    # Protocol separator defanging
-    {'defanged': re.compile(r'\[:\/\/\]'), 'fanged': '://'},
-    {'defanged': re.compile(r'\(:\/\/\)'), 'fanged': '://'},
-    {'defanged': re.compile(r'\{:\/\/\}'), 'fanged': '://'},
-    
-    # Slash defanging
-    {'defanged': re.compile(r'\[\/\]'), 'fanged': '/'},
-    {'defanged': re.compile(r'\(\/\)'), 'fanged': '/'},
-    {'defanged': re.compile(r'\{\/\}'), 'fanged': '/'},
-    
-    # At symbol defanging
-    {'defanged': re.compile(r'\[@\]'), 'fanged': '@'},
-    {'defanged': re.compile(r'\(@\)'), 'fanged': '@'},
-    {'defanged': re.compile(r'\{@\}'), 'fanged': '@'},
-    {'defanged': re.compile(r'\[at\]', re.IGNORECASE), 'fanged': '@'},
-    {'defanged': re.compile(r'\(at\)', re.IGNORECASE), 'fanged': '@'},
-    {'defanged': re.compile(r'\{at\}', re.IGNORECASE), 'fanged': '@'},
-    {'defanged': re.compile(r' at ', re.IGNORECASE), 'fanged': '@'},
-]
-
-FANG_PATTERNS = [
-    # Protocol fanging
-    {'fanged': re.compile(r'http', re.IGNORECASE), 'defanged': 'hxxp'},
-    {'fanged': re.compile(r'https', re.IGNORECASE), 'defanged': 'hxxps'},
-    {'fanged': re.compile(r'ftp', re.IGNORECASE), 'defanged': 'fxp'},
-    
-    # Dot fanging
-    {'fanged': re.compile(r'\.'), 'defanged': '[.]'},
-    
-    # Colon fanging (be careful with this one)
-    {'fanged': re.compile(r':(?!\/\/)'), 'defanged': '[:]'},
-    
-    # Protocol separator fanging
-    {'fanged': re.compile(r':\/\/'), 'defanged': '[://]'},
-    
-    # Slash fanging (only in URLs, be careful)
-    {'fanged': re.compile(r'\/(?=\w)'), 'defanged': '[/]'},
-    
-    # At symbol fanging
-    {'fanged': re.compile(r'@'), 'defanged': '[@]'},
-]
-
-
-def defang_ioc(ioc: str) -> str:
+def defang_single_ioc(ioc: str) -> str:
     """
-    Defang an IOC by replacing dangerous characters with safe alternatives
+    Defang a single IOC by replacing dangerous characters with safe alternatives
     
     Args:
         ioc: The IOC to defang
@@ -79,19 +32,15 @@ def defang_ioc(ioc: str) -> str:
         The defanged IOC
     """
     if not ioc or not isinstance(ioc, str):
+        logger.warning("Invalid IOC input: %s", type(ioc))
         return ioc
     
-    defanged = ioc.strip()
-    
-    for pattern in FANG_PATTERNS:
-        defanged = pattern['fanged'].sub(pattern['defanged'], defanged)
-    
-    return defanged
+    return apply_defang_patterns(ioc)
 
 
-def fang_ioc(defanged_ioc: str) -> str:
+def fang_single_ioc(defanged_ioc: str) -> str:
     """
-    Fang (refang) an IOC by restoring original dangerous characters
+    Fang (refang) a single IOC by restoring original dangerous characters
     
     Args:
         defanged_ioc: The defanged IOC to restore
@@ -100,52 +49,21 @@ def fang_ioc(defanged_ioc: str) -> str:
         The fanged (original) IOC
     """
     if not defanged_ioc or not isinstance(defanged_ioc, str):
+        logger.warning("Invalid defanged IOC input: %s", type(defanged_ioc))
         return defanged_ioc
     
-    fanged = defanged_ioc.strip()
-    
-    for pattern in DEFANG_PATTERNS:
-        fanged = pattern['defanged'].sub(pattern['fanged'], fanged)
-    
-    return fanged
+    return apply_fang_patterns(defanged_ioc)
 
 
-def process_iocs(text: str, processor_func) -> List[str]:
-    """
-    Process multiple IOCs from text input
-    
-    Args:
-        text: Text containing IOCs (one per line or separated by commas/spaces)
-        processor_func: Function to apply to each IOC (defang_ioc or fang_ioc)
-        
-    Returns:
-        Array of processed IOCs
-    """
-    if not text or not isinstance(text, str):
-        return []
-    
-    # Split by lines first, then by common separators
-    lines = text.split('\n')
-    iocs = []
-    
-    for line in lines:
-        # Split by commas, semicolons, or multiple spaces
-        line_iocs = re.split(r'[,;]\s*|\s{2,}', line)
-        line_iocs = [ioc.strip() for ioc in line_iocs if ioc.strip()]
-        iocs.extend(line_iocs)
-    
-    return [processor_func(ioc) for ioc in iocs if ioc]
-
-
-def get_ioc_types_from_extraction(extracted_data: Dict[str, Any]) -> Dict[str, List[str]]:
+def extract_ioc_types_from_data(extracted_data) -> dict[str, list[str]]:
     """
     Create a mapping of IOC values to their types from extraction data
     
     Args:
-        extracted_data: Data returned from extract_iocs
+        extracted_data: ExtractionResponse object from extract_iocs service
         
     Returns:
-        Dictionary mapping IOC values to their types
+        Dictionary mapping IOC values to their detected types
     """
     ioc_type_map = {}
     
@@ -160,8 +78,19 @@ def get_ioc_types_from_extraction(extracted_data: Dict[str, Any]) -> Dict[str, L
         'cves': 'CVE'
     }
     
-    # Extract all IOCs with their types
-    for key, values in extracted_data.items():
+    # Extract IOCs from the response object
+    ioc_data = {
+        'ips': extracted_data.ips,
+        'md5': extracted_data.md5,
+        'sha1': extracted_data.sha1,
+        'sha256': extracted_data.sha256,
+        'urls': extracted_data.urls,
+        'domains': extracted_data.domains,
+        'emails': extracted_data.emails,
+        'cves': extracted_data.cves
+    }
+    
+    for key, values in ioc_data.items():
         if isinstance(values, list) and key in type_mapping:
             for ioc in values:
                 if ioc not in ioc_type_map:
@@ -172,55 +101,134 @@ def get_ioc_types_from_extraction(extracted_data: Dict[str, Any]) -> Dict[str, L
     return ioc_type_map
 
 
-def batch_process_iocs(text: str, operation: str = 'defang') -> List[Dict[str, Any]]:
+def process_iocs_with_type_detection(
+    text: str,
+    operation: str
+) -> list[ProcessedIOC]:
     """
-    Batch process IOCs with type detection using the extractor service
+    Process IOCs with automatic type detection using the extractor service
     
     Args:
         text: Input text containing IOCs
         operation: 'defang' or 'fang'
         
     Returns:
-        Array of objects with original, processed, and detected types
+        List of ProcessedIOC objects with type information
     """
-    processor = defang_ioc if operation == 'defang' else fang_ioc
-    iocs = process_iocs(text, lambda x: x)
+    logger.info("Processing IOCs with operation: %s", operation)
     
-    if not iocs:
+    # Validate and sanitize input
+    if not validate_ioc_text(text):
+        logger.warning("No valid IOCs detected in input text")
         return []
     
+    sanitized_text = sanitize_input_text(text)
+    iocs = split_ioc_text(sanitized_text)
+    
+    if not iocs:
+        logger.warning("No IOCs found after text splitting")
+        return []
+    
+    # Select processor function
+    processor_func = defang_single_ioc if operation == 'defang' else fang_single_ioc
+    
     try:
-        fanged_iocs = [fang_ioc(ioc) for ioc in iocs]
+        # Get type information by fanging all IOCs first
+        fanged_iocs = [fang_single_ioc(ioc) for ioc in iocs]
         combined_text = '\n'.join(fanged_iocs)
         extracted_data = extract_iocs(combined_text)
-        ioc_type_map = get_ioc_types_from_extraction(extracted_data)
+        ioc_type_map = extract_ioc_types_from_data(extracted_data)
         
+        # Process each IOC
         results = []
         for original_ioc in iocs:
-            processed_ioc = processor(original_ioc)
-            fanged_ioc = fang_ioc(original_ioc)
-            types = ioc_type_map.get(fanged_ioc, ['Unknown'])
+            processed_ioc = processor_func(original_ioc)
+            fanged_ioc = fang_single_ioc(original_ioc)
+            detected_types = ioc_type_map.get(fanged_ioc, ['Unknown'])
             
-            results.append({
-                'original': original_ioc,
-                'processed': processed_ioc,
-                'types': types,
-                'changed': original_ioc != processed_ioc
-            })
+            results.append(ProcessedIOC(
+                original=original_ioc,
+                processed=processed_ioc,
+                types=detected_types,
+                changed=is_ioc_changed(original_ioc, processed_ioc)
+            ))
         
+        logger.info("Successfully processed %s IOCs", len(results))
         return results
         
     except Exception as e:
+        logger.error("Error during IOC processing with type detection: %s", str(e))
         # Fallback to basic processing without type detection
-        results = []
-        for original_ioc in iocs:
-            processed_ioc = processor(original_ioc)
-            
-            results.append({
-                'original': original_ioc,
-                'processed': processed_ioc,
-                'types': ['Unknown'],
-                'changed': original_ioc != processed_ioc
-            })
+        return process_iocs_without_type_detection(iocs, processor_func)
+
+
+def process_iocs_without_type_detection(
+    iocs: list[str],
+    processor_func
+) -> list[ProcessedIOC]:
+    """
+    Process IOCs without type detection as fallback
+    
+    Args:
+        iocs: List of IOC strings
+        processor_func: Function to apply to each IOC
         
-        return results
+    Returns:
+        List of ProcessedIOC objects without type information
+    """
+    logger.warning("Processing IOCs without type detection (fallback mode)")
+    
+    results = []
+    for original_ioc in iocs:
+        processed_ioc = processor_func(original_ioc)
+        
+        results.append(ProcessedIOC(
+            original=original_ioc,
+            processed=processed_ioc,
+            types=['Unknown'],
+            changed=is_ioc_changed(original_ioc, processed_ioc)
+        ))
+    
+    return results
+
+
+def batch_process_iocs(text: str, operation: str = 'defang') -> DefangResponse:
+    """
+    Main service function for batch processing IOCs with comprehensive response
+    
+    Args:
+        text: Input text containing IOCs
+        operation: 'defang' or 'fang'
+        
+    Returns:
+        DefangResponse with processed results and statistics
+        
+    Raises:
+        ValueError: If operation is invalid
+        RuntimeError: If processing fails completely
+    """
+    logger.info("Starting batch IOC processing with operation: %s", operation)
+    
+    # Validate operation
+    if not validate_defang_operation(operation):
+        raise ValueError(f"Invalid operation: {operation}. Must be 'defang' or 'fang'")
+    
+    try:
+        # Process IOCs
+        processed_iocs = process_iocs_with_type_detection(text, operation)
+        
+        # Calculate statistics
+        stats = calculate_processing_stats([ioc.model_dump() for ioc in processed_iocs])
+        
+        response = DefangResponse(
+            results=processed_iocs,
+            total_processed=stats['total_processed'],
+            total_changed=stats['total_changed']
+        )
+        
+        logger.info("Batch processing completed: %s processed, %s changed", stats['total_processed'], stats['total_changed'])
+        return response
+        
+    except Exception as e:
+        logger.error("Critical error in batch IOC processing: %s", str(e))
+        raise RuntimeError(f"Failed to process IOCs: {str(e)}")

@@ -1,58 +1,113 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.core.dependencies import get_db
-from app.core.settings.modules.schemas.modules_settings_schemas import ModuleSettingsCreateSchema, ModuleSettingsSchema
-from app.core.settings.modules.crud.modules_settings_crud import get_all_modules_settings, create_module_setting, disable_module, get_specific_module_setting, update_module_setting
+"""Module settings API routes"""
 
-router = APIRouter()
+from fastapi import APIRouter, status
 
-@router.get("/api/settings/modules/", response_model=list[ModuleSettingsSchema], tags=["Settings"])
-def read_module_settings(db: Session = Depends(get_db)):
-    settings = get_all_modules_settings(db)
-    if not settings:
-        raise HTTPException(status_code=404, detail="No settings found")
-    return [setting.to_dict() for setting in settings]
+from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.settings.modules.schemas.modules_settings_schemas import (
+    ModuleSettingsResponse,
+    ModuleSettingsCreate,
+    ModuleSettingsUpdate,
+    ModuleStatusUpdate
+)
+from app.core.settings.modules.service.modules_settings_service import (
+    get_all_modules_settings,
+    get_module_setting,
+    create_new_module_setting,
+    update_module_setting,
+    update_module_status,
+    delete_module_setting_by_name
+)
 
-@router.post("/api/settings/modules/", response_model=ModuleSettingsCreateSchema, tags=["Settings"])
-def create_module_setting(setting: ModuleSettingsCreateSchema, db: Session = Depends(get_db)):
-    return create_module_setting(db=db, settings=setting)
-
-@router.put("/api/settings/modules", response_model=ModuleSettingsSchema, tags=["Settings"])
-def update_module_setting(module_setting_input: ModuleSettingsCreateSchema, db: Session = Depends(get_db)):
-    module_setting = get_specific_module_setting(
-        db=db, module_name=module_setting_input.name)
-    if not module_setting:
-        # raise HTTPException(status_code=404, detail="Module setting not found")
-        return create_module_setting(db=db, settings=module_setting_input)
-    return update_module_setting(db=db, setting=module_setting, setting_input=module_setting_input)
+router = APIRouter(prefix="/api/settings/modules", tags=["Settings"])
 
 
-@router.post("/api/settings/modules/disable/", response_model=ModuleSettingsSchema, tags=["Settings"])
-def disable_setting(module_name: str, db: Session = Depends(get_db)):
-    module_setting = disable_module(db=db, module_name=module_name)
-    if not module_setting:
-        raise HTTPException(status_code=404, detail="Module setting not found")
-    module_setting.enabled = False
-    db.commit()
-    db.refresh(module_setting)
-    return module_setting.to_dict()
+@router.get(
+    "",
+    response_model=list[ModuleSettingsResponse],
+    summary="Get all module settings",
+    description="Retrieve all module settings from the database"
+)
+async def read_all_module_settings(db: ReadSessionDep) -> list[ModuleSettingsResponse]:
+    return await get_all_modules_settings(db)
 
 
-@router.post("/api/settings/modules/enable/", response_model=ModuleSettingsSchema, tags=["Settings"])
-def enable_setting(module_name: str, db: Session = Depends(get_db)):
-    module_setting = disable_module(db=db, module_name=module_name)
-    if not module_setting:
-        raise HTTPException(status_code=404, detail="Module setting not found")
-    module_setting.enabled = True
-    db.commit()
-    db.refresh(module_setting)
-    return module_setting.to_dict()
+@router.get(
+    "/{module_name}",
+    response_model=ModuleSettingsResponse,
+    summary="Get specific module setting",
+    description="Retrieve a specific module setting by name",
+    responses={
+        400: {"description": "Invalid module name format"},
+        404: {"description": "Module setting not found"},
+    },
+)
+async def read_module_setting(module_name: str, db: ReadSessionDep) -> ModuleSettingsResponse:
+    return await get_module_setting(db, module_name)
 
 
-@router.delete("/api/settings/modules/{module_name}", response_model=ModuleSettingsSchema, tags=["Settings"])
-def delete_module_setting(module_name: str, db: Session = Depends(get_db)):
-    module_setting = get_specific_module_setting(
-        db=db, module_name=module_name)
-    if not module_setting:
-        raise HTTPException(status_code=404, detail="Module setting not found")
-    return delete_setting(db=db, setting_name=module_name)
+@router.post(
+    "",
+    response_model=ModuleSettingsResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create new module setting",
+    description="Create a new module setting with specified configuration",
+    responses={
+        400: {"description": "Invalid module name or enabled status"},
+        409: {"description": "Module setting already exists"},
+    },
+)
+async def create_module_setting_endpoint(
+    module_data: ModuleSettingsCreate,
+    db: SessionDep
+) -> ModuleSettingsResponse:
+    return await create_new_module_setting(db, module_data)
+
+
+@router.put(
+    "/{module_name}",
+    response_model=ModuleSettingsResponse,
+    summary="Update module setting",
+    description="Update an existing module setting",
+    responses={
+        400: {"description": "Invalid module name or enabled status"},
+        404: {"description": "Module setting not found"},
+    },
+)
+async def update_module_setting_endpoint(
+    module_name: str,
+    update_data: ModuleSettingsUpdate,
+    db: SessionDep
+) -> ModuleSettingsResponse:
+    return await update_module_setting(db, module_name, update_data)
+
+
+@router.patch(
+    "/{module_name}/status",
+    response_model=ModuleSettingsResponse,
+    summary="Update module status",
+    description="Enable or disable a specific module",
+    responses={400: {"description": "Invalid module name format"}},
+)
+async def update_module_status_endpoint(
+    module_name: str,
+    status_data: ModuleStatusUpdate,
+    db: SessionDep
+) -> ModuleSettingsResponse:
+    return await update_module_status(db, module_name, status_data)
+
+
+@router.delete(
+    "/{module_name}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete module setting",
+    description="Delete a module setting from the database",
+    responses={
+        400: {"description": "Invalid module name format"},
+        404: {"description": "Module setting not found"},
+    },
+)
+async def delete_module_setting_endpoint(
+    module_name: str,
+    db: SessionDep
+) -> None:
+    await delete_module_setting_by_name(db, module_name)
