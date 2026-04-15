@@ -1,22 +1,14 @@
 import json
 import logging
-from typing import Any, Dict, List, Optional, Generator
+from typing import Any
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.runnables import RunnablePassthrough
-
-
-from app.features.newsfeed.crud.newsfeed_crud import (
+from app.features.newsfeed.crud.news_articles_crud import (
     get_recent_news_articles,
-    get_news_article_by_id
+    get_news_article_by_id,
 )
-
-from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
-from app.core.settings.cti_profile.crud.cti_profile_settings_crud import get_cti_settings
+from app.utils.llm_service import build_model_registry, execute_prompt, get_default_model_id
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 RANKING_PROMPT = """
 You are a very experienced cyber threat intelligence analyst specialized in analyzing large amounts of news articles for relevance.
-Below is a list of news article headlines. For each headline, consider how relevant it is for cybersecurity and threat intelligence. 
+Below is a list of news article headlines. For each headline, consider how relevant it is for cybersecurity and threat intelligence.
 News articles have a higher relevance, if there are more news article headlines about the same topic and / or if it describes about active threats or vulnerabilities.
 Your task:
 1. Identify the 10 most relevant articles from the list (if there are fewer than 10, select them all).
@@ -46,9 +38,9 @@ List of articles:
 """
 
 ANALYSIS_PROMPT = """
-You are a very experienced cyber threat intelligence analyst specialized in in creating best in class news article analysis. 
+You are a very experienced cyber threat intelligence analyst specialized in in creating best in class news article analysis.
 Below you will find news article data about a news artcicle.
-You will receive the article's title, feed name, and summary text. 
+You will receive the article's title, feed name, and summary text.
 Produce a comprehensive analysis in JSON format with the following fields:
 {{
   "Risk": "[High / Medium / Low / Informational]",
@@ -73,59 +65,63 @@ Article data:
 </news article data>
 """
 
-def _create_llm(api_key: str) -> ChatOpenAI:
-    """
-    Returns a LangChain ChatOpenAI LLM configured with your chosen model, temperature, etc.
-    NOTE: The warnings you see are due to an older version of LangChain.
-          Upgrade your langchain package or update these class references if needed.
-    """
-    return ChatOpenAI(
-        api_key=api_key,
-        model_name="gpt-4o",
-        temperature=0.7,
-        max_tokens=15000,
-    )
+REPORT_MAX_TOKENS = 15000
+REPORT_SYSTEM_PROMPT = "You are an experienced cyber threat intelligence analyst."
 
 
-def rank_recent_articles(db: Session) -> Optional[List[Dict[str, Any]]]:
-    recent_articles = get_recent_news_articles(db, time_filter="7d")
+def _parse_json_response(text: str) -> Any:
+    """Parse JSON from LLM response, stripping markdown fences if present"""
+    text = text.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+    return json.loads(text)
+
+
+async def rank_recent_articles(db: AsyncSession) -> list[dict[str, Any]] | None:
+    """Rank recent articles by cybersecurity relevance using an LLM"""
+    recent_articles = await get_recent_news_articles(db, time_filter="7d")
     if not recent_articles:
         logger.info("No recent articles found for ranking.")
         return []
 
-    articles_str_list = [f"- (ID: {a['id']}) {a['title']}" for a in recent_articles]
+    articles_str_list = [f"- (ID: {a.id}) {a.title}" for a in recent_articles]
     if not articles_str_list:
         logger.info("No article titles to process in rank_recent_articles.")
         return []
 
     articles_list_for_prompt = "\n".join(articles_str_list)
 
-    openai_api_key_obj = get_apikey(name="openai", db=db)
-    if not openai_api_key_obj:
-        logger.error("OpenAI API key not found in DB for ranking.")
+    models = await build_model_registry(db)
+    if not models:
+        logger.error("No LLM models available for ranking.")
         return []
 
-    openai_api_key = openai_api_key_obj.get("key")
+    model_id = await get_default_model_id(db, "newsfeed_report")
 
-    prompt = PromptTemplate(
-        template=RANKING_PROMPT,
-        input_variables=["articles_list"]
-    )
-    llm = _create_llm(openai_api_key)
-    
-    # Create chain using pipe syntax
-    chain = prompt | llm | JsonOutputParser()
-    
     try:
-        ranking_response = chain.invoke({"articles_list": articles_list_for_prompt})
-        return ranking_response[:10]  # Limit to 10 articles
+        user_prompt = RANKING_PROMPT.format(articles_list=articles_list_for_prompt)
+        result = await execute_prompt(
+            models,
+            model_id=model_id,
+            system_prompt=REPORT_SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            max_tokens=REPORT_MAX_TOKENS,
+        )
+        ranking_response = _parse_json_response(result)
+        return ranking_response[:10]
     except Exception as e:
         logger.exception("Error during LLM call for ranking:")
         return []
 
 
-def analyze_article(article_id: int, db: Session) -> Dict[str, Any]:
-    article = get_news_article_by_id(db, article_id)
+async def analyze_article(article_id: int, db: AsyncSession) -> dict[str, Any]:
+    """Analyze a single article using an LLM"""
+    article = await get_news_article_by_id(db, article_id)
     if not article:
         return {
             "Relevance": "Unknown",
@@ -144,31 +140,30 @@ def analyze_article(article_id: int, db: Session) -> Dict[str, Any]:
         "date": str(article.date),
     }
 
-    openai_api_key_obj = get_apikey(name="openai", db=db)
-    if not openai_api_key_obj:
-        logger.error("OpenAI API key not found for article analysis.")
+    models = await build_model_registry(db)
+    if not models:
+        logger.error("No LLM models available for article analysis.")
         return {
             "Relevance": "Unknown",
             "Summary": "",
-            "Analysis comment": "OpenAI API key missing.",
+            "Analysis comment": "No LLM API key configured.",
             "Action items": []
         }
-    
-    openai_api_key = openai_api_key_obj.get("key")
 
-    prompt = PromptTemplate(
-        template=ANALYSIS_PROMPT,
-        input_variables=["article_data"]
-    )
-    llm = _create_llm(openai_api_key)
-    
-    # Create chain using pipe syntax
-    chain = prompt | llm | JsonOutputParser()
-    
+    model_id = await get_default_model_id(db, "newsfeed_report")
+
     try:
-        return chain.invoke({"article_data": json.dumps(article_data, indent=2)})
+        user_prompt = ANALYSIS_PROMPT.format(article_data=json.dumps(article_data, indent=2))
+        result = await execute_prompt(
+            models,
+            model_id=model_id,
+            system_prompt=REPORT_SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            max_tokens=REPORT_MAX_TOKENS,
+        )
+        return _parse_json_response(result)
     except Exception as e:
-        logger.exception(f"Error during LLM call for article {article_id} analysis:")
+        logger.exception("Error during LLM call for article %s analysis:", article_id)
         return {
             "Relevance": "Unknown",
             "Summary": "",
@@ -178,34 +173,15 @@ def analyze_article(article_id: int, db: Session) -> Dict[str, Any]:
         }
 
 
-def analyze_and_rank_top_articles(db: Session) -> List[Dict[str, Any]]:
-    """
-    1) Rank top 10 articles.
-    2) Analyze each to get final data structure.
-    Returns a list of dicts:
-    [
-      {
-        "article_id": X,
-        "title": "...",
-        "relevance_score": X,
-        "reason_for_ranking": "...",
-        "analysis": {
-          "Relevance": "...",
-          "Summary": "...",
-          "Analysis comment": "...",
-          "Action items": [...]
-        }
-      },
-      ...
-    ]
-    """
+async def analyze_and_rank_top_articles(db: AsyncSession) -> list[dict[str, Any]]:
+    """Rank top 10 articles, then analyze each"""
     logger.info("Starting to rank and analyze the top articles.")
-    top_articles_ranking = rank_recent_articles(db)
+    top_articles_ranking = await rank_recent_articles(db)
     if not top_articles_ranking:
         logger.info("No articles returned from rank_recent_articles.")
         return []
 
-    logger.info(f"Ranked {len(top_articles_ranking)} articles. Beginning analysis.")
+    logger.info("Ranked %s articles. Beginning analysis.", len(top_articles_ranking))
 
     results = []
 
@@ -215,8 +191,8 @@ def analyze_and_rank_top_articles(db: Session) -> List[Dict[str, Any]]:
             logger.warning("Ranked article missing 'id' field; skipping.")
             continue
 
-        analysis = analyze_article(article_id, db)
-        logger.info(f"Analysis completed for article ID {article_id}.")
+        analysis = await analyze_article(article_id, db)
+        logger.info("Analysis completed for article ID %s.", article_id)
 
         result_entry = {
             "article_id": article_id,
@@ -227,21 +203,15 @@ def analyze_and_rank_top_articles(db: Session) -> List[Dict[str, Any]]:
         }
         results.append(result_entry)
 
-    # Sort by ascending relevance_score
     results.sort(key=lambda x: x["relevance_score"])
-    logger.info(f"All articles analyzed. Returning {len(results)} results.")
+    logger.info("All articles analyzed. Returning %s results.", len(results))
     return results
 
 
-def analyze_top_articles_stream(db: Session) -> Generator[str, None, None]:
-    """
-    Generator function (for SSE or similar streaming) that:
-    1) Yields the ranking results
-    2) Yields each article's analysis result
-    3) Yields a final "done" message
-    """
+async def analyze_top_articles_stream(db: AsyncSession):
+    """Async generator for SSE streaming of ranking + analysis"""
     logger.info("Starting SSE stream for top articles ranking + analysis.")
-    top_articles_ranking = rank_recent_articles(db)
+    top_articles_ranking = await rank_recent_articles(db)
 
     if not top_articles_ranking:
         yield json.dumps({
@@ -266,7 +236,7 @@ def analyze_top_articles_stream(db: Session) -> Generator[str, None, None]:
             logger.warning("Skipping article in SSE stream: missing ID.")
             continue
 
-        analysis = analyze_article(article_id, db)
+        analysis = await analyze_article(article_id, db)
         result_entry = {
             "article_id": article_id,
             "title": article_info.get("title", ""),

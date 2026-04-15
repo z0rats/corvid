@@ -1,25 +1,20 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+import datetime
+
+from sqlalchemy import String, DateTime
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
+
 from app.core.database import Base
 
-class Alert(Base):
-    __tablename__ = 'alerts'
-    
-    id = Column(Integer, primary_key=True)
-    module = Column(String, nullable=False)
-    title = Column(String, nullable=False)
-    message = Column(String, nullable=False)
-    read = Column(Boolean, default=False)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now())
-    timestamp_read = Column(DateTime(timezone=True), nullable=True)
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'module': self.module,
-            'title': self.title,
-            'message': self.message,
-            'read': self.read,
-            'timestamp': self.timestamp,
-            'timestamp_read': self.timestamp_read,
-        }
+class Alert(Base):
+    """Alert model for storing system notifications"""
+    __tablename__ = 'alerts'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    module: Mapped[str] = mapped_column(String(100), index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    message: Mapped[str] = mapped_column(String(1000))
+    read: Mapped[bool] = mapped_column(default=False, index=True)
+    timestamp: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    timestamp_read: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True))

@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional
+from typing import Any
 from dataclasses import dataclass, asdict
 from enum import Enum
 
@@ -11,17 +11,17 @@ class ServiceTier(str, Enum):
 class ServiceDefinition:
     """Service configuration definition"""
     name: str
-    key: str  # Internal key used for API calls
+    key: str 
     description: str
     documentation_url: str
-    supported_ioc_types: List[str]
-    required_keys: List[str]
+    supported_ioc_types: list[str]
+    required_keys: list[str]
     tier: ServiceTier
     category: str
     icon: str
     is_active: bool = True
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         return asdict(self)
 
@@ -57,17 +57,6 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.THREAT_INTELLIGENCE,
         icon="avotx_logo_small"
     ),
-    "bgpview": ServiceDefinition(
-        name="BGPView",
-        key="bgpview",
-        description="BGP routing information and ASN lookup service for network intelligence and IP address investigation.",
-        documentation_url="https://bgpview.docs.apiary.io/",
-        supported_ioc_types=["IPv4", "IPv6", "ASN"],
-        required_keys=["bgpview"], 
-        tier=ServiceTier.FREEMIUM,
-        category=ServiceCategory.NETWORK_INFRASTRUCTURE,
-        icon="bgpview_logo_small"
-    ),
     "checkphishai": ServiceDefinition(
         name="CheckPhish.ai",
         key="checkphish",
@@ -89,6 +78,17 @@ SERVICE_DEFINITIONS = {
         tier=ServiceTier.FREE,
         category=ServiceCategory.THREAT_INTELLIGENCE,
         icon="crowdsec_logo_small"
+    ),
+    "crowdstrike": ServiceDefinition(
+        name="CrowdStrike",
+        key="crowdstrike",
+        description="CrowdStrike Falcon Intelligence for comprehensive threat intelligence and IOC analysis.",
+        documentation_url="https://falcon.crowdstrike.com/",
+        supported_ioc_types=["IPv4", "IPv6", "Domain", "URL", "MD5", "SHA1", "SHA256", "Email"],
+        required_keys=["crowdstrike_client_id", "crowdstrike_client_secret"],
+        tier=ServiceTier.PAID,
+        category=ServiceCategory.THREAT_INTELLIGENCE,
+        icon="crowdstrike_logo"
     ),
     "emailrepio": ServiceDefinition(
         name="EmailRep.io",
@@ -112,7 +112,7 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.DEVELOPMENT_RESEARCH,
         icon="github_logo_small"
     ),
-    "safebrowse": ServiceDefinition(
+    "safeBrowse": ServiceDefinition(
         name="Google Safe Browsing",
         key="safeBrowse",
         description="Google's service protecting billions of devices by warning users about dangerous sites and malicious downloads.",
@@ -178,6 +178,17 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.THREAT_INTELLIGENCE,
         icon="malwarebazaar_logo_small"
     ),
+    "mandiant": ServiceDefinition(
+        name="Mandiant",
+        key="mandiant",
+        description="Enterprise threat intelligence platform providing comprehensive IOC analysis and threat attribution.",
+        documentation_url="https://docs.mandiant.com/home/mati-threat-intelligence-api",
+        supported_ioc_types=["IPv4", "IPv6", "Domain", "URL", "MD5", "SHA1", "SHA256", "Email"],
+        required_keys=["mandiant_key", "mandiant_secret"],
+        tier=ServiceTier.PAID,
+        category=ServiceCategory.THREAT_INTELLIGENCE,
+        icon="mandiant_logo"
+    ),
     "nistnvd": ServiceDefinition(
         name="NIST NVD",
         key="nistnvd",
@@ -188,6 +199,17 @@ SERVICE_DEFINITIONS = {
         tier=ServiceTier.FREE,
         category=ServiceCategory.DEVELOPMENT_RESEARCH,
         icon="nistnvd_logo_small"
+    ),
+    "anthropic": ServiceDefinition(
+        name="Anthropic",
+        key="anthropic",
+        description="Access to Claude language models for AI-powered features and intelligent analysis.",
+        documentation_url="https://console.anthropic.com/settings/keys",
+        supported_ioc_types=["AI Features"],
+        required_keys=["anthropic"],
+        tier=ServiceTier.PAID,
+        category=ServiceCategory.DEVELOPMENT_RESEARCH,
+        icon="anthropic_logo_small"
     ),
     "openai": ServiceDefinition(
         name="OpenAI",
@@ -217,7 +239,7 @@ SERVICE_DEFINITIONS = {
         description="Access Reddit's network of communities for threat intelligence and social media monitoring.",
         documentation_url="https://www.reddit.com/dev/api/",
         supported_ioc_types=["IPv4", "IPv6", "Domain", "URL", "Email", "MD5", "SHA1", "SHA256", "CVE"],
-        required_keys=["reddit_cid", "reddit_cs"],
+        required_keys=["reddit_client_id", "reddit_client_secret"],
         tier=ServiceTier.FREE,
         category=ServiceCategory.SOCIAL_MEDIA,
         icon="reddit_logo_small"
@@ -290,36 +312,36 @@ SERVICE_DEFINITIONS = {
     ),
 }
 
-def get_service_definition(service_key: str) -> Optional[ServiceDefinition]:
+def get_service_definition(service_key: str) -> ServiceDefinition | None:
     """Get a specific service definition by key"""
     return SERVICE_DEFINITIONS.get(service_key)
 
-def get_all_service_definitions() -> Dict[str, ServiceDefinition]:
+def get_all_service_definitions() -> dict[str, ServiceDefinition]:
     """Get all service definitions"""
     return SERVICE_DEFINITIONS
 
-def get_services_by_category(category: ServiceCategory) -> Dict[str, ServiceDefinition]:
+def get_services_by_category(category: ServiceCategory) -> dict[str, ServiceDefinition]:
     """Get all services in a specific category"""
     return {
         key: service for key, service in SERVICE_DEFINITIONS.items()
         if service.category == category
     }
 
-def get_services_by_tier(tier: ServiceTier) -> Dict[str, ServiceDefinition]:
+def get_services_by_tier(tier: ServiceTier) -> dict[str, ServiceDefinition]:
     """Get all services of a specific tier"""
     return {
         key: service for key, service in SERVICE_DEFINITIONS.items()
         if service.tier == tier
     }
 
-def get_services_for_ioc_type(ioc_type: str) -> Dict[str, ServiceDefinition]:
+def get_services_for_ioc_type(ioc_type: str) -> dict[str, ServiceDefinition]:
     """Get all services that support a specific IOC type"""
     return {
         key: service for key, service in SERVICE_DEFINITIONS.items()
         if ioc_type in service.supported_ioc_types
     }
 
-def get_required_keys_for_service(service_key: str) -> List[str]:
+def get_required_keys_for_service(service_key: str) -> list[str]:
     """Get required API keys for a specific service"""
     service = get_service_definition(service_key)
     return service.required_keys if service else []

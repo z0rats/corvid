@@ -1,137 +1,180 @@
 import asyncio
 import logging
-from typing import Dict, Any, List, AsyncGenerator
-from sqlalchemy.orm import Session
+from typing import Any, AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
+from collections import defaultdict
+import time
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.ioc_lookup_engine import (
     lookup_ioc, get_all_service_configs
 )
-from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import service_registry
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
+from app.features.ioc_tools.ioc_lookup.config.rate_limiting_config import (
+    get_service_rate_limit,
+    get_concurrency_limit,
+    get_timeout_config
+)
 
 logger = logging.getLogger(__name__)
 
-
-async def run_single_lookup(
-    service_name: str, 
-    ioc: str, 
-    ioc_type: str, 
-    db: Session
-) -> Dict[str, Any]:
-    """
-    Execute a single IOC lookup asynchronously.
-    
-    Args:
-        service_name: The service to query
-        ioc: The IOC value to lookup
-        ioc_type: The type of IOC
-        db: Database session
-        
-    Returns:
-        Dictionary containing lookup result or error information
-    """
-    try:
-        service_config = service_registry.get_service(service_name)
-        if not service_config:
-            logger.warning(f"Service not configured: {service_name}")
-            return {"error": f"Service '{service_name}' not configured"}
-        
-        if ioc_type not in service_config.get('supported_ioc_types', []):
-            logger.debug(f"Service {service_name} doesn't support IOC type {ioc_type}")
-            return {"error": f"Service '{service_name}' doesn't support {ioc_type}"}
-        
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(
-            None,
-            lambda: lookup_ioc(service_name, ioc, ioc_type, db)
-        )
-        
-        logger.debug(f"Completed lookup for {service_name}: {ioc}")
-        return result
-        
-    except Exception as e:
-        logger.error(f"Exception in {service_name} lookup for {ioc}: {str(e)}", exc_info=True)
-        return {"error": f"Exception in {service_name} lookup: {str(e)}"}
+_rate_limiters = defaultdict(lambda: {'last_request': 0.0, 'request_count': 0})
 
 
-async def process_bulk_lookups(
-    iocs: List[str],
-    services: List[str],
-    db: Session
-) -> AsyncGenerator[Dict[str, Any], None]:
-    """
-    Process bulk IOC lookups and yield results as they complete.
-    
-    Args:
-        iocs: List of IOC values to lookup
-        services: List of service names to query
-        db: Database session
-        
-    Yields:
-        Dictionary containing individual lookup results or errors
-    """
-    logger.info(f"Starting bulk lookup for {len(iocs)} IOCs across {len(services)} services")
-    
+async def apply_rate_limit(service_name: str) -> None:
+    """Apply rate limiting for a specific service"""
+    rate_limit = get_service_rate_limit(service_name)
+    min_interval = 1.0 / rate_limit
+
+    limiter = _rate_limiters[service_name]
+    current_time = time.time()
+
+    time_since_last = current_time - limiter['last_request']
+
+    if time_since_last < min_interval:
+        sleep_time = min_interval - time_since_last
+        logger.debug("Rate limiting %s: sleeping for %ss", service_name, sleep_time)
+        await asyncio.sleep(sleep_time)
+
+    limiter['last_request'] = time.time()
+    limiter['request_count'] += 1
+
+
+async def run_single_lookup_with_rate_limit(
+    service_name: str,
+    ioc: str,
+    ioc_type: str,
+    db: AsyncSession,
+    semaphore: asyncio.Semaphore
+) -> dict[str, Any]:
+    """Execute a single IOC lookup with rate limiting and concurrency control"""
+    async with semaphore:
+        try:
+            service_config = get_service(service_name)
+            if not service_config:
+                logger.warning("Service not configured: %s", service_name)
+                return {"error": f"Service '{service_name}' not configured"}
+
+            if ioc_type not in service_config.get('supported_ioc_types', []):
+                logger.debug("Service %s doesn't support IOC type %s", service_name, ioc_type)
+                return {"error": f"Service '{service_name}' doesn't support {ioc_type}"}
+
+            await apply_rate_limit(service_name)
+
+            result = await lookup_ioc(service_name, ioc, ioc_type, db)
+
+            logger.debug("Completed lookup for %s: %s", service_name, ioc)
+            if result.error:
+                return {"error": result.status.value, "message": result.error}
+            return result.data
+
+        except Exception as e:
+            logger.error("Exception in %s lookup for %s: %s", service_name, ioc, str(e), exc_info=True)
+            return {"error": f"Exception in {service_name} lookup: {str(e)}"}
+
+
+async def process_bulk_lookups_with_rate_limiting(
+    iocs: list[str],
+    services: list[str],
+    db: AsyncSession,
+    max_concurrent_requests: int | None = None
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Process bulk IOC lookups with rate limiting and yield results as they complete"""
+    if max_concurrent_requests is None:
+        max_concurrent_requests = get_concurrency_limit('max_concurrent_requests')
+
+    logger.info("Starting rate-limited bulk lookup for %s IOCs across %s services", len(iocs), len(services))
+    logger.info("Max concurrent requests: %s", max_concurrent_requests)
+
     from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import determine_ioc_type
-    
-    all_service_configs = get_all_service_configs(db)
-    
+
+    all_service_configs = await get_all_service_configs(db)
+
     enabled_and_requested_services = {
-        s['key'] for s in all_service_configs
-        if s['key'] in services and s['is_configured'] and s['is_bulk_enabled']
+        s.key for s in all_service_configs
+        if s.key in services and s.is_configured and s.is_bulk_enabled
     }
-    
+
     services_to_query = list(enabled_and_requested_services)
-    
+
     if not services_to_query:
         logger.warning("No services available for bulk lookup")
         yield {
             "error": "No selected services are available or enabled for bulk lookup.",
             "service": "system",
-            "available_services": [s['key'] for s in all_service_configs if s['is_configured']]
+            "available_services": [s.key for s in all_service_configs if s.is_configured]
         }
         return
-    
-    logger.info(f"Using services: {services_to_query}")
-    
+
+    logger.info("Using services: %s", services_to_query)
+    logger.info("Rate limits: %s", [(s, get_service_rate_limit(s)) for s in services_to_query])
+
+    semaphore = asyncio.Semaphore(max_concurrent_requests)
+
     tasks = []
     for ioc_value in iocs:
         ioc_type = determine_ioc_type(ioc_value)
         if ioc_type == "unknown":
-            logger.warning(f"Unknown IOC type for: {ioc_value}")
+            logger.warning("Unknown IOC type for: %s", ioc_value)
             yield {
                 "ioc": ioc_value,
                 "service": "system",
                 "error": "Unknown IOC type"
             }
             continue
-        
+
         for service_name in services_to_query:
-            coro = run_single_lookup(service_name, ioc_value, ioc_type, db)
+            service_config = get_service(service_name)
+            if not service_config or ioc_type not in service_config.get('supported_ioc_types', []):
+                logger.debug("Skipping %s for %s - doesn't support %s", service_name, ioc_value, ioc_type)
+                continue
+
+            coro = run_single_lookup_with_rate_limit(
+                service_name, ioc_value, ioc_type, db, semaphore
+            )
             task = asyncio.create_task(coro)
             tasks.append((ioc_value, service_name, task))
-    
-    logger.info(f"Created {len(tasks)} lookup tasks")
-    
+
+    logger.info("Created %s rate-limited lookup tasks", len(tasks))
+
     for ioc_value, service_name, task in tasks:
         try:
             result = await task
             if isinstance(result, dict) and 'error' in result:
                 yield {
-                    "ioc": ioc_value, 
-                    "service": service_name, 
-                    "error": result.get("message", "Service error")
+                    "ioc": ioc_value,
+                    "service": service_name,
+                    "error": result.get("message", result.get("error", "Service error"))
                 }
             else:
                 yield {
-                    "ioc": ioc_value, 
-                    "service": service_name, 
+                    "ioc": ioc_value,
+                    "service": service_name,
                     "data": result
                 }
         except Exception as e:
-            logger.error(f"Error awaiting task for {ioc_value}/{service_name}: {str(e)}")
+            logger.error("Error awaiting task for %s/%s: %s", ioc_value, service_name, str(e))
             yield {
                 "ioc": ioc_value,
                 "service": service_name,
                 "error": str(e)
             }
-    
-    logger.info("Completed bulk lookup processing")
+
+    logger.info("Completed rate-limited bulk lookup processing")
+
+
+def get_rate_limiter_stats() -> dict[str, dict[str, Any]]:
+    """Get statistics about rate limiter usage"""
+    stats = {}
+    for service_name, limiter in _rate_limiters.items():
+        stats[service_name] = {
+            'request_count': limiter['request_count'],
+            'last_request': limiter['last_request'],
+            'rate_limit': get_service_rate_limit(service_name)
+        }
+    return stats
+
+
+def reset_rate_limiters() -> None:
+    """Reset all rate limiters (useful for testing)"""
+    global _rate_limiters
+    _rate_limiters.clear()
+    logger.info("Rate limiters reset")

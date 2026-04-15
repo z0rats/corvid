@@ -1,253 +1,143 @@
-import logging
-import os
-from typing import List
 import asyncio
-import json
+import logging
+import time
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
-import app.core.config.fastapi_config as fastapi_config
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
-from app.core import healthcheck
-from app.core.database import SessionLocal, engine, Base
-from app.core.scheduler import start_scheduler, shutdown_scheduler
-from app.core.settings.api_keys.routers import api_keys_settings_routes, service_config_routes
-from app.core.settings.modules.routers import modules_settings_routes
-from app.core.settings.general.routers import general_settings_routes
-from app.core.settings.keywords.routers import keywords_settings_routes
-from app.core.settings.cti_profile.routers import cti_profile_settings_routes
-from app.core.settings.api_keys.crud import api_keys_settings_crud
+from app.core.config.body_limit_config import RequestBodyLimitMiddleware
+from app.core.config.fastapi_config import get_fastapi_config, get_cors_config
+from app.core.config.logging_config import setup_logging
+from app.core.config.rate_limit_config import limiter
+from app.core.config.request_id_config import RequestIdMiddleware
+from app.core.config.security_config import SecurityHeadersMiddleware
+from app.core.config.settings import settings
+from app.core.config.validation import ensure_required_directories, log_validation_results
+from app.core.database import Base, engine, managed_session, dispose_database_engine
+from app.core.exceptions import register_exception_handlers
+from app.core.scheduler import initialize_scheduler, stop_scheduler
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import close_client
+from app.utils.startup_service import initialize_application_defaults
+from app.utils.router_registry import register_all_routers
 
-from app.features.llm_templates.routers import internal_llm_templates_routes
-from app.features.llm_templates.schemas import AITemplateCreate
-from app.features.llm_templates.models import AITemplate
-from app.features.llm_templates.crud import create_template
-from app.features.llm_templates.utils import default_llm_templates
-from app.core.settings.api_keys.config.create_defaults import add_default_api_keys
-
-from app.features.domain_lookup.routers import external_domain_lookup_routes
-from app.features.email_analyzer.routers import internal_email_analyzer_routes
-from app.features.ioc_tools.ioc_extractor.routers import internal_ioc_extractor_routes
-from app.features.ioc_tools.ioc_defanger.routers import internal_defang_routes
-from app.features.ioc_tools.ioc_lookup.bulk_lookup.routers import bulk_ioc_lookup_routes
-from app.features.ioc_tools.ioc_lookup.single_lookup.routers import single_ioc_lookup_routes
-
-from app.features.newsfeed.routers import external_newsfeed_routes, internal_newsfeed_routes
-from app.features.newsfeed.service import newsfeed_service
-from app.features.newsfeed.models import newsfeed_models
-from app.features.newsfeed.schemas import newsfeed_schemas
-
-from app.core.settings.general.models.general_settings_models import Settings
-from app.core.settings.modules.models.modules_settings_models import ModuleSettings
-
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('data/app.log'),
-        logging.StreamHandler()
-    ]
-)
 logger = logging.getLogger(__name__)
 
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
+def configure_logging() -> None:
+    """Configure application logging with environment settings"""
+    setup_logging(
+        log_level=settings.logging.level,
+        log_dir=settings.logging.dir,
+        app_name=settings.logging.app_name,
+        enable_console=settings.logging.enable_console,
+        enable_file=settings.logging.enable_file
+    )
 
 
-# Create database tables
-try:
-    Base.metadata.create_all(bind=engine)
+async def _run_application_defaults() -> None:
+    """Initialize application defaults in a managed session"""
+    async with managed_session() as db:
+        await initialize_application_defaults(db)
+
+
+async def _create_database_tables() -> None:
+    """Create all database tables if they don't exist"""
+    import app.core.settings.general.models.general_settings_models
+    import app.core.settings.modules.models.modules_settings_models 
+    import app.core.settings.api_keys.models.api_keys_settings_models   
+    import app.core.settings.keywords.models.keywords_settings_models   
+    import app.core.settings.ai_settings.models.ai_settings_models
+    import app.core.settings.cti_profile.models.cti_profile_models
+    import app.core.alerts.models.alerts_models   
+    import app.features.newsfeed.models.newsfeed_models   
+    import app.features.llm_templates.models.llm_template_models   
+    import app.features.llm_templates.models.template_category_models   
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created successfully")
-except Exception as e:
-    logger.error(f"Failed to create database tables: {str(e)}")
-    raise
+
+
+async def _fetch_favicons_in_background() -> None:
+    """Fetch missing feed favicons in the background after startup"""
+    from app.features.newsfeed.service.icon_management_service import bulk_fetch_favicons_parallel
+
+    try:
+        async with managed_session() as db:
+            await bulk_fetch_favicons_parallel(db)
+    except Exception as e:
+        logger.error("Background favicon fetch failed: %s", e)
+
+
+async def handle_application_startup() -> None:
+    """Handle application startup tasks"""
+    logger.info("Application starting up...")
+    try:
+        await _create_database_tables()
+        await _run_application_defaults()
+        asyncio.create_task(_fetch_favicons_in_background())
+        await initialize_scheduler()
+        logger.info("Application startup completed successfully")
+    except Exception as e:
+        logger.error("Startup failed: %s", e)
+        raise
+
+
+async def handle_application_shutdown() -> None:
+    """Handle application shutdown tasks"""
+    logger.info("Application shutting down...")
+    try:
+        stop_scheduler()
+        await close_client()
+        await dispose_database_engine()
+        logger.info("Application shutdown completed successfully")
+    except Exception as e:
+        logger.error("Shutdown error: %s", e)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("Application starting up...")
-    db = SessionLocal()
-    try:
-        await initialize_defaults(db)
-        start_scheduler()
-        logger.info("Application startup completed successfully")
-    except Exception as e:
-        logger.error(f"Startup failed: {str(e)}")
-        raise
-    finally:
-        db.close()
-    
+    """Manage application lifespan events"""
+    app.state.startup_time = time.time()
+    await handle_application_startup()
     yield
-    
-    # Shutdown
-    logger.info("Application shutting down...")
-    try:
-        shutdown_scheduler()
-        logger.info("Application shutdown completed successfully")
-    except Exception as e:
-        logger.error(f"Shutdown error: {str(e)}")
+    await handle_application_shutdown()
 
 
-app = FastAPI(
-    title=fastapi_config.APP_TITLE,
-    description=fastapi_config.DESCRIPTION,
-    version=fastapi_config.APP_VERSION,
-    contact=fastapi_config.CONTACT_INFO,
-    license_info=fastapi_config.LICENSE_INFO,
-    openapi_tags=fastapi_config.TAGS_METADATA,
-    swagger_ui_parameters=fastapi_config.SWAGGER_UI_PARAMETERS,
-    lifespan=lifespan 
-)
+def create_fastapi_application() -> FastAPI:
+    """Create and configure FastAPI application instance"""
+    config = get_fastapi_config()
+    app = FastAPI(lifespan=lifespan, **config)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    cors_config = get_cors_config()
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.api.trusted_hosts)
+    app.add_middleware(CORSMiddleware, **cors_config)
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RequestBodyLimitMiddleware)
+    app.add_middleware(RequestIdMiddleware)
 
-# Router includes
-routers = [
-    healthcheck.router,
-    internal_llm_templates_routes.router,
-    external_domain_lookup_routes.router,
-    internal_email_analyzer_routes.router,
-    internal_ioc_extractor_routes.router,
-    internal_defang_routes.router,
-    #alerts_routes.router,
-    internal_newsfeed_routes.router,
-    external_newsfeed_routes.router,
-    api_keys_settings_routes.router,
-    service_config_routes.router,
-    general_settings_routes.router,
-    modules_settings_routes.router,
-    keywords_settings_routes.router,
-    cti_profile_settings_routes.router,
-    bulk_ioc_lookup_routes.router,
-    single_ioc_lookup_routes.router
-]
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-for router in routers:
-    app.include_router(router)
+    register_exception_handlers(app)
+    register_all_routers(app)
+
+    return app
 
 
+def initialize_application() -> FastAPI:
+    """Initialize the complete application"""
+    ensure_required_directories()
+    configure_logging()
+    log_validation_results()
+    return create_fastapi_application()
 
 
-async def add_default_general_settings(db: Session) -> None:
-    """Add default general settings if they don't exist."""
-    try:
-        existing_settings = db.query(Settings).filter(Settings.id == 0).first()
-        if not existing_settings:
-            default_settings = Settings(id=0, darkmode=True)
-            db.add(default_settings)
-            db.commit()
-            logger.info('Created default general settings')
-    except SQLAlchemyError as e:
-        logger.error(f'Failed to add default general settings: {str(e)}')
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to add default settings")
-
-async def add_default_module_settings(db: Session) -> None:
-    """Add default module settings if they don't exist."""
-    default_modules = [
-        ("Newsfeed", True),
-        ("IOC Tools", True),
-        ("Email Analyzer", True),
-        ("Domain Finder", True),
-        ("AI Templates", True),
-        ("CVSS Calculator", True),
-        ("Detection Rules", True)
-    ]
-    
-    try:
-        for name, enabled in default_modules:
-            existing = db.query(ModuleSettings).filter(ModuleSettings.name == name).first()
-            if not existing:
-                db.add(ModuleSettings(name=name, enabled=enabled))
-        
-        db.commit()
-        logger.info('Default module settings checked/created')
-    except SQLAlchemyError as e:
-        logger.error(f'Failed to add default module settings: {str(e)}')
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to add module settings")
-
-async def add_default_newsfeeds(db: Session) -> None:
-    """Add default newsfeeds if they don't exist."""
-    from app.features.newsfeed.utils.default_rss_feeds import DEFAULT_NEWSFEEDS
-    
-    try:
-        for feed_data in DEFAULT_NEWSFEEDS:
-            existing_feed = db.query(newsfeed_models.NewsfeedSettings).filter(
-                newsfeed_models.NewsfeedSettings.name == feed_data["name"]).first()
-            if not existing_feed:
-                db.add(newsfeed_models.NewsfeedSettings(
-                    name=feed_data["name"],
-                    url=feed_data["url"],
-                    icon=feed_data["icon"],
-                    enabled=feed_data["enabled"]
-                ))
-        db.commit()
-        logger.info('Created default newsfeeds')
-    except SQLAlchemyError as e:
-        logger.error(f'Failed to add default newsfeeds: {str(e)}')
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to add default newsfeeds")
-
-async def seed_default_llm_templates(db: Session) -> None:
-    """Seed default LLM templates if they don't exist."""
-    try:
-        # Check if templates already exist
-        existing_templates = db.query(AITemplate).first()
-        if not existing_templates:
-            logger.info("No existing templates found. Seeding default templates...")
-            
-            for template_data in default_llm_templates.DEFAULT_TEMPLATES:
-                # Make a copy to avoid modifying the original
-                template = dict(template_data)
-                
-                # Convert dictionaries to JSON strings for SQLite
-                if "payload_fields" in template:
-                    if not isinstance(template["payload_fields"], str):
-                        template["payload_fields"] = json.dumps(template["payload_fields"])
-                
-                if "static_contexts" in template:
-                    if not isinstance(template["static_contexts"], str):
-                        template["static_contexts"] = json.dumps(template["static_contexts"])
-                
-                if "web_contexts" in template:
-                    if not isinstance(template["web_contexts"], str):
-                        template["web_contexts"] = json.dumps(template["web_contexts"])
-                
-                # Create model instance directly
-                new_template = AITemplate(**template)
-                db.add(new_template)
-            
-            # Commit all template insertions at once
-            db.commit()
-            logger.info("Default templates seeded successfully")
-        else:
-            logger.info("Templates already exist, skipping seed")
-    except Exception as e:
-        logger.error(f"Failed to seed default templates: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to seed default templates: {str(e)}")
-
-async def initialize_defaults(db: Session) -> None:
-    """Initialize all default settings concurrently."""
-    try:
-        await asyncio.gather(
-            add_default_general_settings(db),
-            add_default_module_settings(db),
-            add_default_newsfeeds(db),
-            seed_default_llm_templates(db),
-            add_default_api_keys(db)
-        )
-    except Exception as e:
-        logger.error(f"Failed to initialize defaults: {str(e)}")
-        raise
+app = initialize_application()

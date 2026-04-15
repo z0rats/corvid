@@ -1,69 +1,48 @@
-from sqlalchemy.orm import Session
+"""Module settings CRUD operations"""
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.settings.modules.models.modules_settings_models import ModuleSettings
-from app.core.settings.modules.schemas.modules_settings_schemas import ModuleSettingsCreateSchema
+from app.core.settings.modules.config.default_settings import get_default_enabled_status
 
 
-def get_all_modules_settings(db: Session):
-    return db.query(ModuleSettings).all()
+async def get_all_module_settings(db: AsyncSession) -> list[ModuleSettings]:
+    """Retrieve all module settings from database"""
+    stmt = select(ModuleSettings)
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
 
 
-def get_specific_module_setting(db: Session, module_name: str):
-    return db.query(ModuleSettings).filter(ModuleSettings.name == module_name).first()
+async def get_module_setting_by_name(db: AsyncSession, module_name: str) -> ModuleSettings | None:
+    """Retrieve specific module setting by name"""
+    stmt = select(ModuleSettings).where(ModuleSettings.name == module_name)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
 
 
-def update_module_setting(db: Session, setting: ModuleSettings, setting_input: ModuleSettingsCreateSchema):
-    setting.enabled = setting_input.enabled
-    db.commit()
-    db.refresh(setting)
-    return setting
+def create_module_setting(db: AsyncSession, name: str, enabled: bool = None) -> ModuleSettings:
+    """Create new module setting record"""
+    if enabled is None:
+        enabled = get_default_enabled_status()
 
-
-def disable_module(db: Session, module_name: str):
-    setting = db.query(ModuleSettings).filter(
-        ModuleSettings.name == module_name).first()
-    setattr(setting, 'enabled', False)
+    setting = ModuleSettings(name=name, enabled=enabled)
     db.add(setting)
-    db.commit()
-    db.refresh(setting)
     return setting
 
 
-def create_module_setting(db: Session, settings: ModuleSettingsCreateSchema):
-    data = ModuleSettings(
-        name=settings.name,
-        description=settings.description,
-        enabled=True
-    )
-    db.add(data)
-    db.commit()
-    db.refresh(data)
-    return data.to_dict()
-
-
-def delete_setting(db: Session, setting_name: str):
-    setting = db.query(ModuleSettings).filter(
-        ModuleSettings.name == setting_name).first()
-    db.delete(setting)
-    db.commit()
+def update_module_setting_status(db: AsyncSession, setting: ModuleSettings, enabled: bool) -> ModuleSettings:
+    """Update module setting enabled status"""
+    setting.enabled = enabled
     return setting
 
-def get_keywords(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Keyword).offset(skip).limit(limit).all()
+
+async def delete_module_setting(db: AsyncSession, setting: ModuleSettings) -> None:
+    """Delete module setting from database"""
+    await db.delete(setting)
 
 
-def create_keyword(db: Session, keyword: str):
-    db_keyword = Keyword(keyword=keyword)
-    db.add(db_keyword)
-    db.commit()
-    db.refresh(db_keyword)
-    return db_keyword
-
-
-def delete_keyword(db: Session, keyword_id: int):
-    db_keyword = db.query(Keyword).filter(Keyword.id == keyword_id).first()
-    if db_keyword:
-        db.delete(db_keyword)
-        db.commit()
-        return True
-    else:
-        return false
+async def module_setting_exists(db: AsyncSession, module_name: str) -> bool:
+    """Check if module setting exists in database"""
+    stmt = select(ModuleSettings).where(ModuleSettings.name == module_name)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none() is not None

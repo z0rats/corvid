@@ -1,21 +1,21 @@
-// src/index.js
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { RecoilRoot } from 'recoil';
+import { Provider as JotaiProvider } from 'jotai';
 import { BrowserRouter } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 
-import './index.css';
+import './core/config/index.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <RecoilRoot>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </RecoilRoot>
+  <React.StrictMode>
+    <JotaiProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </JotaiProvider>
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
