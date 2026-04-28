@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import re
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.features.newsfeed.crud.news_articles_crud import get_news_article_by_id, update_news_article
 from app.features.newsfeed.models.newsfeed_models import NewsArticle
+from app.features.newsfeed.service.mitre_enrichment_service import enrich_article_with_mitre
 from app.core.settings.cti_profile.crud.cti_profile_crud import get_cti_settings
 from app.utils.llm_service import build_model_registry, execute_prompt
 
@@ -215,6 +217,72 @@ async def _load_cti_settings(db: AsyncSession):
         return None
 
 
+def _parse_stored_mitre_data(mitre_attack_str: str | None) -> dict | None:
+    """Parse stored mitre_attack JSON string, returning None if empty or invalid"""
+    if not mitre_attack_str:
+        return None
+    try:
+        return json.loads(mitre_attack_str)
+    except json.JSONDecodeError:
+        logger.warning("Could not parse stored mitre_attack data as JSON")
+        return None
+
+
+async def _run_concurrent_analysis(
+    models: dict,
+    model_id: str,
+    system_prompt: str,
+    user_prompt: str,
+    newsfeed_item: dict,
+    cti_profile_text: str,
+    temperature: float,
+    max_tokens: int,
+) -> tuple:
+    """Run general analysis and MITRE enrichment concurrently"""
+    analysis_task = execute_prompt(
+        models, model_id=model_id,
+        system_prompt=system_prompt, user_prompt=user_prompt,
+        temperature=temperature, max_tokens=max_tokens,
+    )
+    mitre_task = enrich_article_with_mitre(
+        models, model_id=model_id,
+        newsfeed_item=newsfeed_item, cti_profile_text=cti_profile_text,
+        temperature=temperature, max_tokens=max(max_tokens, 3000),
+    )
+    return await asyncio.gather(analysis_task, mitre_task, return_exceptions=True)
+
+
+async def _run_mitre_only(
+    models: dict,
+    model_id: str,
+    newsfeed_item: dict,
+    cti_profile_text: str,
+    temperature: float,
+    max_tokens: int,
+) -> dict | None:
+    """Run only the MITRE enrichment when general analysis is already cached"""
+    try:
+        result = await enrich_article_with_mitre(
+            models, model_id=model_id,
+            newsfeed_item=newsfeed_item, cti_profile_text=cti_profile_text,
+            temperature=temperature, max_tokens=max(max_tokens, 3000),
+        )
+        return result.model_dump() if result.has_mitre_data else None
+    except Exception as e:
+        logger.error("MITRE enrichment failed: %s", e)
+        return None
+
+
+def _resolve_mitre_result(mitre_result) -> dict | None:
+    """Extract MITRE enrichment dict from the gather result, handling errors"""
+    if isinstance(mitre_result, Exception):
+        logger.error("MITRE enrichment failed: %s", mitre_result)
+        return None
+    if not mitre_result.has_mitre_data:
+        return None
+    return mitre_result.model_dump()
+
+
 async def analyze_article_with_llm(
     db: AsyncSession,
     article_id: int,
@@ -223,48 +291,84 @@ async def analyze_article_with_llm(
     max_tokens: int,
     use_cti_settings: bool,
     force: bool,
+    mode: str = "all",
 ) -> dict:
     """Orchestrate LLM-based analysis of a news article"""
     logger.info(
-        "Starting analysis for article ID: %d with model %s, force=%s, use_cti_settings=%s",
-        article_id, model_id, force, use_cti_settings,
+        "Starting analysis for article ID: %d with model %s, force=%s, mode=%s",
+        article_id, model_id, force, mode,
     )
 
     news_article_record = await get_news_article_by_id(db=db, article_id=article_id)
     if not news_article_record:
         raise ValueError(f"Article with ID {article_id} not found")
 
-    if news_article_record.analysis_result and not force:
-        try:
-            return {
-                "message": "Analysis already completed",
-                "analysis_result": json.loads(news_article_record.analysis_result),
-            }
-        except json.JSONDecodeError:
-            logger.warning("Could not parse stored analysis result as JSON, forcing reanalysis")
+    run_analysis = mode in ("all", "analysis")
+    run_mitre = mode in ("all", "mitre")
+
+    has_cached_analysis = bool(news_article_record.analysis_result)
+    has_cached_mitre = bool(news_article_record.mitre_attack)
+
+    if not force:
+        analysis_cached = has_cached_analysis or not run_analysis
+        mitre_cached = has_cached_mitre or not run_mitre
+        if analysis_cached and mitre_cached:
+            try:
+                return {
+                    "message": "Analysis already completed",
+                    "analysis_result": json.loads(news_article_record.analysis_result) if has_cached_analysis else None,
+                    "mitre_attack": _parse_stored_mitre_data(news_article_record.mitre_attack),
+                }
+            except json.JSONDecodeError:
+                logger.warning("Could not parse stored results as JSON, forcing reanalysis")
 
     cti_settings = await _load_cti_settings(db) if use_cti_settings else None
     cti_profile_text = build_cti_profile_text(cti_settings)
-
     newsfeed_item = extract_article_content(news_article_record)
-    system_prompt, user_prompt = build_analysis_prompts(newsfeed_item, cti_profile_text)
-
     models = await build_model_registry(db)
-    analysis_text = await execute_prompt(
-        models,
-        model_id=model_id,
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        temperature=temperature,
-        max_tokens=max_tokens,
-    )
 
-    analysis_json = _parse_llm_json_response(analysis_text)
-    formatted_result = _build_formatted_result(analysis_json)
+    formatted_result = None
+    mitre_data = None
 
-    await update_news_article(db=db, article_id=article_id, analysis_result=json.dumps(formatted_result))
+    if run_analysis and run_mitre:
+        system_prompt, user_prompt = build_analysis_prompts(newsfeed_item, cti_profile_text)
+        analysis_result, mitre_result = await _run_concurrent_analysis(
+            models, model_id, system_prompt, user_prompt,
+            newsfeed_item, cti_profile_text, temperature, max_tokens,
+        )
+        if isinstance(analysis_result, Exception):
+            raise analysis_result
+        analysis_json = _parse_llm_json_response(analysis_result)
+        formatted_result = _build_formatted_result(analysis_json)
+        mitre_data = _resolve_mitre_result(mitre_result)
+    elif run_analysis:
+        system_prompt, user_prompt = build_analysis_prompts(newsfeed_item, cti_profile_text)
+        analysis_text = await execute_prompt(
+            models, model_id=model_id,
+            system_prompt=system_prompt, user_prompt=user_prompt,
+            temperature=temperature, max_tokens=max_tokens,
+        )
+        analysis_json = _parse_llm_json_response(analysis_text)
+        formatted_result = _build_formatted_result(analysis_json)
+    elif run_mitre:
+        mitre_data = await _run_mitre_only(
+            models, model_id, newsfeed_item, cti_profile_text, temperature, max_tokens,
+        )
 
-    response = {"message": "Analysis completed", "analysis_result": formatted_result}
+    update_kwargs = {}
+    if formatted_result is not None:
+        update_kwargs["analysis_result"] = json.dumps(formatted_result)
+    if run_mitre:
+        update_kwargs["mitre_attack"] = json.dumps(mitre_data) if mitre_data else None
+
+    if update_kwargs:
+        await update_news_article(db=db, article_id=article_id, **update_kwargs)
+
+    response = {
+        "message": "Analysis completed",
+        "analysis_result": formatted_result or (json.loads(news_article_record.analysis_result) if has_cached_analysis else None),
+        "mitre_attack": mitre_data or _parse_stored_mitre_data(news_article_record.mitre_attack),
+    }
     if use_cti_settings and cti_settings:
         response["cti_settings_used"] = True
 

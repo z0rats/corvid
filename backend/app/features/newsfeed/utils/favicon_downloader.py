@@ -32,18 +32,9 @@ class FaviconDownloader:
     def __init__(self) -> None:
         self._client = httpx.AsyncClient(
             timeout=self.TIMEOUT,
-            follow_redirects=True,
             headers={
-                'User-Agent': (
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
-                    'AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/124.0.0.0 Safari/537.36'
-                ),
-                'Accept': (
-                    'text/html,application/xhtml+xml,application/xml;q=0.9,'
-                    'image/avif,image/webp,image/apng,*/*;q=0.8'
-                ),
-                'Accept-Language': 'en-US,en;q=0.9',
+                'User-Agent': 'FaviconDownloader/1.0',
+                'Accept': 'image/*,application/json;q=0.8,text/html;q=0.5,*/*;q=0.3'
             }
         )
 
@@ -86,36 +77,9 @@ class FaviconDownloader:
             logger.error("Error saving favicon for %s: %s", site_url, e)
             return False, None, str(e)
 
-    async def _resolve_publisher_homepage(self, feed_url: str) -> str | None:
-        """Fetch the feed XML and return the publisher's <channel><link> URL."""
-        try:
-            resp = await self._client.get(feed_url)
-            if resp.status_code != 200:
-                return None
-            soup = BeautifulSoup(resp.text, 'lxml-xml')
-            channel = soup.find('channel') or soup.find('feed')
-            if not channel:
-                return None
-            for link in channel.find_all('link', recursive=False):
-                href = link.get('href') or (link.string and link.string.strip())
-                rel = link.get('rel')
-                if href and href.startswith('http') and rel != 'self':
-                    return href
-        except Exception as e:
-            logger.debug("Could not resolve publisher homepage from %s: %s", feed_url, e)
-        return None
-
     async def _download(self, site_url: str) -> tuple[bool, bytes | None, str | None]:
         """Try several strategies to locate and download favicon image data."""
         parsed = httpx.URL(site_url)
-        host = (parsed.host or '').lower()
-        aggregator_hosts = ('feedburner.com', 'feedproxy.google.com', 'feeds.feedburner.com')
-        if any(host == h or host.endswith('.' + h) for h in aggregator_hosts):
-            publisher = await self._resolve_publisher_homepage(site_url)
-            if publisher:
-                logger.info("Resolved publisher homepage for %s: %s", site_url, publisher)
-                parsed = httpx.URL(publisher)
-
         base = f"{parsed.scheme}://{parsed.host}"
         home = base + '/'
 
@@ -257,4 +221,3 @@ class FaviconDownloader:
         except Exception as e:
             logger.debug("Image processing error: %s", e)
             return None
-

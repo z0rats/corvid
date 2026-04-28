@@ -50,11 +50,11 @@ export const newsfeedSettingsApi = {
   },
 
   async enableNewsfeed(name) {
-    await api.patch(`/api/settings/modules/newsfeed/${encodeURIComponent(name)}/status`, { enabled: true });
+    await api.patch(`/api/settings/modules/newsfeed/${encodeURIComponent(name)}`, { enabled: true });
   },
 
   async disableNewsfeed(name) {
-    await api.patch(`/api/settings/modules/newsfeed/${encodeURIComponent(name)}/status`, { enabled: false });
+    await api.patch(`/api/settings/modules/newsfeed/${encodeURIComponent(name)}`, { enabled: false });
   },
 
   async validateFeed(feed) {

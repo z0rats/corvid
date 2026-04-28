@@ -11,7 +11,6 @@ from app.features.newsfeed.crud.newsfeed_settings_crud import (
     update_newsfeed_setting,
     toggle_feed_status,
 )
-from app.features.newsfeed.service.icon_management_service import icon_exists
 from app.features.newsfeed.crud.newsfeed_config_crud import (
     get_newsfeed_config as crud_get_config,
     update_newsfeed_config as crud_update_config,
@@ -45,14 +44,7 @@ async def read_newsfeed_settings(db: ReadSessionDep) -> list[NewsfeedSettingsSch
     settings = await get_all_newsfeed_settings(db)
     if not settings:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No settings found")
-
-    response = []
-    for s in settings:
-        schema = NewsfeedSettingsSchema.model_validate(s)
-        if schema.icon != "default.png" and not icon_exists(schema.icon):
-            schema.icon = "default.png"
-        response.append(schema)
-    return response
+    return [NewsfeedSettingsSchema.model_validate(s) for s in settings]
 
 
 @router.put(
@@ -70,7 +62,7 @@ async def update_settings(settings: NewsfeedSettingsSchema, db: SessionDep) -> N
 
 
 @router.patch(
-    "/modules/newsfeed/{feed_name}/status",
+    "/modules/newsfeed/{feed_name}",
     response_model=NewsfeedSettingsSchema,
     response_model_exclude_none=True,
     summary="Toggle newsfeed status",

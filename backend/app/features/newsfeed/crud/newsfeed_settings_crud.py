@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
@@ -158,15 +158,17 @@ async def get_feed_by_name(db: AsyncSession, name: str) -> NewsfeedSettings | No
 
 
 async def get_feeds_with_default_icon(db: AsyncSession) -> list[NewsfeedSettings]:
-    """Retrieve all active feeds that are using the default icon or have a stale icon reference"""
-    from app.features.newsfeed.service.icon_management_service import icon_exists
-
-    result = await db.execute(_active_feed_query())
-    feeds = list(result.scalars().all())
-    return [
-        f for f in feeds
-        if f.icon == "default.png" or not icon_exists(f.icon)
-    ]
+    """Retrieve all active feeds that are using the default icon"""
+    result = await db.execute(
+        _active_feed_query()
+        .where(
+            or_(
+                NewsfeedSettings.icon == "default.png",
+                NewsfeedSettings.icon_id == None,
+            )
+        )
+    )
+    return list(result.scalars().all())
 
 
 async def update_feed_icon(db: AsyncSession, feed_name: str, icon_id: str) -> NewsfeedSettings | None:

@@ -43,6 +43,7 @@ class NewsArticle(Base):
     iocs: Mapped[dict[str, list[str]] | None] = mapped_column(JSON)
     relevant_iocs: Mapped[list[str] | None] = mapped_column(JSON)
     analysis_result: Mapped[str | None] = mapped_column(Text)
+    mitre_attack: Mapped[str | None] = mapped_column(Text)
     note: Mapped[str | None] = mapped_column(Text)
     tlp: Mapped[str] = mapped_column(String, default="TLP:CLEAR")
     read: Mapped[bool] = mapped_column(default=False)

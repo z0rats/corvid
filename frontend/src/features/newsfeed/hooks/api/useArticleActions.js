@@ -9,12 +9,17 @@ export function useArticleActions(updateArticle, updateArticleField) {
   const [analyzing, setAnalyzing] = useState({});
   const [updatingTlp, setUpdatingTlp] = useState({});
 
-  const handleAnalyze = useCallback(async (item) => {
+  const handleAnalyze = useCallback(async (item, mode = "all") => {
     setAnalyzing(prev => ({ ...prev, [item.id]: true }));
     try {
-      const response = await newsfeedApi.analyzeArticle(item.id, !!item.analysis_result);
-      let analysisResult = parseAnalysisResult(response.analysis_result);
-      updateArticle({ ...item, analysis_result: analysisResult });
+      const hasExisting = mode === "all" ? !!(item.analysis_result || item.mitre_attack)
+        : mode === "analysis" ? !!item.analysis_result
+        : !!item.mitre_attack;
+      const response = await newsfeedApi.analyzeArticle(item.id, hasExisting, mode);
+      const updates = { ...item };
+      if (response.analysis_result) updates.analysis_result = parseAnalysisResult(response.analysis_result);
+      if (response.mitre_attack !== undefined) updates.mitre_attack = response.mitre_attack || null;
+      updateArticle(updates);
     } catch (error) {
       logger.error(`Error analyzing article ${item.id}:`, error);
     } finally {

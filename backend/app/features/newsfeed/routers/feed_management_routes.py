@@ -18,7 +18,7 @@ from app.features.newsfeed.crud.newsfeed_settings_crud import (
 )
 from app.features.newsfeed.service.icon_management_service import (
     sync_article_icons,
-    delete_feed_icon as delete_feed_icon_service,
+    delete_feed_icon_with_favicon_fallback,
     get_icon_path,
     refetch_feed_favicon,
     remove_existing_icon,
@@ -130,13 +130,13 @@ async def upload_feed_icon(
     "/settings/modules/newsfeed/{feed_name}/icon",
     response_model=dict[str, str],
     summary="Delete feed icon",
-    description="Delete a feed's custom icon and reset it to the default icon",
+    description="Delete a feed's custom icon and attempt to replace it with the site's favicon",
     responses={404: {"description": "Feed not found"}},
 )
 async def delete_feed_icon(feed_name: str, db: SessionDep) -> dict[str, str]:
-    """Delete a feed's icon and reset it to the default"""
+    """Delete a feed's icon and try to download favicon before using default"""
     decoded_name = _decode_feed_name(feed_name)
-    success, message = await delete_feed_icon_service(db, decoded_name)
+    success, message = await delete_feed_icon_with_favicon_fallback(db, decoded_name)
 
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)

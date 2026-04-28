@@ -68,7 +68,8 @@ async def update_news_article(
     note: str | None = None,
     tlp: str | None = None,
     read: bool | None = None,
-    analysis_result: str | None = None
+    analysis_result: str | None = None,
+    mitre_attack: str | None = None,
 ) -> NewsArticle | None:
     """Update specific fields of a news article"""
     result = await db.execute(select(NewsArticle).where(NewsArticle.id == article_id))
@@ -86,6 +87,8 @@ async def update_news_article(
         db_news_article.read = read
     if analysis_result is not None:
         db_news_article.analysis_result = analysis_result
+    if mitre_attack is not None:
+        db_news_article.mitre_attack = mitre_attack
 
     await db.flush()
     await db.refresh(db_news_article)

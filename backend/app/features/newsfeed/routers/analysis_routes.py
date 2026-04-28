@@ -53,4 +53,5 @@ async def analyze_news_article(
         max_tokens=params.max_tokens,
         use_cti_settings=params.use_cti_settings,
         force=params.force,
+        mode=params.mode,
     )

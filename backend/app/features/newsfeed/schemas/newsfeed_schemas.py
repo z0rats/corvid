@@ -37,6 +37,7 @@ class NewsArticleSchema(BaseModel):
     iocs: dict[str, list[str]] | None = Field(default=None, description="Extracted indicators of compromise")
     relevant_iocs: list[str] | None = Field(default=None, description="IOCs flagged as relevant")
     analysis_result: str | None = Field(default=None, description="LLM analysis result for this article")
+    mitre_attack: str | None = Field(default=None, description="MITRE ATT&CK enrichment JSON")
     note: str | None = Field(default=None, description="Analyst note attached to this article")
     tlp: str | None = Field(default="TLP:CLEAR", description="Traffic Light Protocol classification")
     read: bool = Field(default=False, description="Whether the article has been marked as read")
@@ -78,6 +79,64 @@ class NewsAnalysisParams(BaseModel):
     custom_focus: list[str] | None = Field(default=None, description="Custom analysis focus areas")
 
 
+class MitreThreatActor(BaseModel):
+    """Threat actor identified in the article with optional MITRE ATT&CK mapping"""
+    name: str = Field(..., description="Threat actor name")
+    aliases: list[str] = Field(default_factory=list, description="Known aliases")
+    mitre_group_id: str | None = Field(default=None, description="MITRE group ID, e.g. G0016")
+    mitre_url: str | None = Field(default=None, description="URL to MITRE ATT&CK group page")
+    attribution_confidence: Literal["low", "medium", "high"] | None = Field(default=None)
+
+
+class MitreSoftware(BaseModel):
+    """Software (tool or malware) identified in the article"""
+    name: str = Field(..., description="Software name")
+    type: Literal["tool", "malware"] = Field(..., description="Whether this is a tool or malware")
+    mitre_id: str | None = Field(default=None, description="MITRE software ID, e.g. S0154")
+    mitre_url: str | None = Field(default=None, description="URL to MITRE ATT&CK software page")
+
+
+class MitreTactic(BaseModel):
+    """MITRE ATT&CK tactic reference"""
+    name: str = Field(..., description="Tactic name, e.g. Initial Access")
+    id: str = Field(..., description="Tactic ID, e.g. TA0001")
+    url: str | None = Field(default=None, description="URL to MITRE ATT&CK tactic page")
+
+
+class MitreTechnique(BaseModel):
+    """MITRE ATT&CK technique or sub-technique reference"""
+    name: str = Field(..., description="Technique name, e.g. Phishing")
+    id: str = Field(..., description="Technique ID, e.g. T1566 or T1566.001")
+    url: str | None = Field(default=None, description="URL to MITRE ATT&CK technique page")
+
+
+class MitreTTP(BaseModel):
+    """A single TTP mapping from the article to MITRE ATT&CK"""
+    tactic: MitreTactic
+    technique: MitreTechnique
+    sub_technique: MitreTechnique | None = Field(default=None)
+    kill_chain_phase: str | None = Field(default=None, description="Kill chain phase, e.g. delivery")
+    behavior: str = Field(default="", description="Description of the observed behavior from the article")
+    procedure_example: str | None = Field(default=None, description="Concrete procedure example")
+    affected_platforms: list[str] = Field(default_factory=list)
+    data_sources: list[str] = Field(default_factory=list)
+    detection_opportunities: list[str] = Field(default_factory=list)
+
+
+class ThreatIntelEnrichment(BaseModel):
+    """Structured MITRE ATT&CK enrichment extracted from a news article"""
+    schema_version: str = Field(default="1.0")
+    has_mitre_data: bool = Field(default=False, description="False when article has no ATT&CK relevance")
+    threat_actors: list[MitreThreatActor] = Field(default_factory=list)
+    targeted_sectors: list[str] = Field(default_factory=list)
+    targeted_regions: list[str] = Field(default_factory=list)
+    software: list[MitreSoftware] = Field(default_factory=list)
+    ttps: list[MitreTTP] = Field(default_factory=list)
+
+
+AnalysisMode = Literal["all", "analysis", "mitre"]
+
+
 class ArticleAnalysisRequest(BaseModel):
     """Request body for LLM-based article analysis"""
     model_id: str | None = Field(default=None, description="LLM model ID to use for analysis (null = use configured default)")
@@ -85,12 +144,14 @@ class ArticleAnalysisRequest(BaseModel):
     max_tokens: int = Field(default=2000, ge=1, description="Maximum tokens in the response")
     use_cti_settings: bool = Field(default=True, description="Apply CTI profile settings to the analysis")
     force: bool = Field(default=False, description="Force re-analysis even if a result already exists")
+    mode: AnalysisMode = Field(default="all", description="Which analysis to run: all, analysis, or mitre")
 
 
 class AnalysisResultResponse(BaseModel):
     """Response for article analysis"""
     message: str = Field(..., description="Status message for the analysis operation")
-    analysis_result: dict[str, Any] = Field(..., description="LLM analysis output")
+    analysis_result: dict[str, Any] | None = Field(default=None, description="LLM analysis output")
+    mitre_attack: dict[str, Any] | None = Field(default=None, description="MITRE ATT&CK enrichment data")
     cti_settings_used: bool | None = Field(default=None, description="Whether CTI profile settings were applied")
 
 

@@ -94,9 +94,10 @@ async def sync_article_icons(db, feed_name: str, new_icon: str) -> None:
     logger.info("Updated icon to '%s' for %d articles of feed '%s'", new_icon, result.rowcount, feed_name)
 
 
-async def delete_feed_icon(db, feed_name: str) -> tuple[bool, str]:
-    """Delete a feed's icon file and reset it to the default icon"""
-    from app.features.newsfeed.models.newsfeed_models import NewsfeedSettings, generate_icon_id
+async def delete_feed_icon_with_favicon_fallback(db, feed_name: str) -> tuple[bool, str]:
+    """Delete a feed's icon file and attempt to restore it by downloading the site favicon"""
+    from app.features.newsfeed.models.newsfeed_models import NewsfeedSettings
+    from app.features.newsfeed.utils.favicon_downloader import FaviconDownloader
 
     result = await db.execute(select(NewsfeedSettings).where(NewsfeedSettings.name == feed_name))
     feed = result.scalar_one_or_none()
@@ -107,9 +108,23 @@ async def delete_feed_icon(db, feed_name: str) -> tuple[bool, str]:
     if feed.icon_id and feed.icon != "default.png":
         remove_existing_icon(get_icon_path(feed.icon_id))
 
+    logger.info("Attempting to download favicon for %s from %s", feed_name, feed.url)
+    try:
+        success, icon_filename, error = await FaviconDownloader.download_and_save_favicon(feed.url)
+        if success and icon_filename:
+            feed.icon = icon_filename
+            feed.icon_id = icon_filename
+            await sync_article_icons(db, feed_name, icon_filename)
+            await db.flush()
+            await db.refresh(feed)
+            logger.info("Successfully downloaded favicon for %s: %s", feed_name, icon_filename)
+            return True, f"Icon deleted and favicon downloaded: {icon_filename}"
+        logger.warning("Failed to download favicon for %s: %s", feed_name, error)
+    except Exception as e:
+        logger.error("Error downloading favicon for %s: %s", feed_name, str(e))
+
     feed.icon = "default.png"
-    feed.icon_id = generate_icon_id()
-    await db.flush()
+    feed.icon_id = None
     await sync_article_icons(db, feed_name, "default.png")
     await db.flush()
     await db.refresh(feed)

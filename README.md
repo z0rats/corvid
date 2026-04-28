@@ -64,6 +64,8 @@ The Detection Rules module is a GUI for creating Sigma, Yara and Snort/Suricate 
 3. Run the following command: `docker-compose up -d`
 4. Once the container is running, you can access the application in your browser at http://localhost:4000
 
+In case the database schema changed, run a migration before starting the container:
+`docker compose run --rm backend alembic upgrade head`
 
 ## License
 

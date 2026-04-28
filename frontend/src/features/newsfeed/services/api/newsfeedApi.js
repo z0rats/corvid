@@ -19,8 +19,8 @@ export const newsfeedApi = {
     return response.data;
   },
 
-  async analyzeArticle(articleId, force = false) {
-    const response = await api.post(`/api/newsfeed/analyze/${articleId}`, { force });
+  async analyzeArticle(articleId, force = false, mode = "all") {
+    const response = await api.post(`/api/newsfeed/analyze/${articleId}`, { force, mode });
     return response.data;
   },
 
