@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { SUPPORTED_DEFANGING_TECHNIQUES } from '../../constants/defangerConstants';
 
 const FeatureCard = ({ title, description }) => (

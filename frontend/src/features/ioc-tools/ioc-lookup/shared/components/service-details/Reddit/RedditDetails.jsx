@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import AccessTime from '@mui/icons-material/AccessTime';
-import ChatBubbleOutline from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleOutline from '@mui/icons-material/ChatBubbleOutlined';
 import Forum from '@mui/icons-material/Forum';
 import OpenInNew from '@mui/icons-material/OpenInNew';
 import Person from '@mui/icons-material/Person';
@@ -13,7 +13,7 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";

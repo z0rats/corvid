@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 
 import { useWordFrequency } from '../hooks/api/useTrendsApi';
 import { useArticlesByIds } from '../hooks/api/useNewsfeedApi';

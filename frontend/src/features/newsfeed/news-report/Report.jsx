@@ -17,7 +17,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 
 import { useReportAnalysis } from "../hooks/api/useReportAnalysis";
 import { generateMarkdown, downloadMarkdown } from "../utils/reportUtils";

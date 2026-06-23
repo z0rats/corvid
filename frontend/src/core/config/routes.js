@@ -8,6 +8,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 
 const CvssCalculator = lazy(() => import("../../features/cvss-calculator/CvssCalculator"));
 const EmailAnalyzer = lazy(() => import("../../features/email-analyzer/EmailAnalyzer"));
+const ImageTools = lazy(() => import("../../features/image-tools/ImageTools"));
 const IocTools = lazy(() => import("../../features/ioc-tools/IocTools"));
 const Newsfeed = lazy(() => import("../../features/newsfeed/Newsfeed"));
 const Settings = lazy(() => import("../../features/settings/Settings"));
@@ -31,6 +32,7 @@ export const AppRoutes = () => {
           <Route path="ai-templates/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><AiTemplates /></Suspense></ErrorBoundary>} />
           <Route path="ioc-tools/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><IocTools /></Suspense></ErrorBoundary>} />
           <Route path="email-analyzer/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><EmailAnalyzer /></Suspense></ErrorBoundary>} />
+          <Route path="image-tools/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><ImageTools /></Suspense></ErrorBoundary>} />
           <Route path="cvss-calculator/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><CvssCalculator /></Suspense></ErrorBoundary>} />
           <Route path="rules/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RuleCreator /></Suspense></ErrorBoundary>} />
           <Route path="*" element={<NotFound />} />

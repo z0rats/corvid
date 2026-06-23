@@ -4,7 +4,7 @@ import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 export default function KeywordsInput({ keywords, onAddKeyword, onDeleteKeyword }) {

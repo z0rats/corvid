@@ -5,7 +5,7 @@ import Card from '@mui/material/Card';
 import Divider from "@mui/material/Divider";
 import Grow from "@mui/material/Grow";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
-import MuiGrid from "@mui/material/Grid2";
+import MuiGrid from "@mui/material/Grid";
 import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 

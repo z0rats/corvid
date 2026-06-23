@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { processSourcesForDisplay } from './utils/mandiantDataUtils';
 
 const ROWS_PER_PAGE = 10;

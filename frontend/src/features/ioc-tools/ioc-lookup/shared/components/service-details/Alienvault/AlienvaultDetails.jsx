@@ -1,6 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import NoDetails from "../NoDetails";
 import GeneralInfoCard from "./GeneralInfoCard";
 import PulseInfoCard from "./PulseInfoCard";

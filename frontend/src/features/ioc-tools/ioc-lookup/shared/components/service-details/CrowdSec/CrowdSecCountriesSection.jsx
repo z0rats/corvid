@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { useTheme } from '@mui/material/styles';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveChoropleth } from '@nivo/geo';

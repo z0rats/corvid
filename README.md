@@ -40,6 +40,10 @@ The IOC Tools module helps you analyze different types of indicators of compromi
 The Email Analyzer module allows you to analyze .eml files for potential threats. Simply drag and drop an .eml file into the module, and it will parse the file, perform basic security checks, extract indicators of compromise (IOCs), and analyze messages with the help of AI. Analyze the IOCs using various open-source intelligence (OSINT) services, and enhance your organization's email security.
 
 
+### Image Tools
+The Image Tools module lets you inspect an image file for OSINT purposes. Upload a picture to see every piece of metadata it carries — EXIF camera/device info, capture timestamp, GPS location with a map link, embedded thumbnail, file properties, and MD5/SHA1/SHA256 hashes. You can also kick off a reverse image search without any API keys: provide the image's URL to get deep links straight into Google Lens, Yandex, Bing, and TinEye, or use the same buttons to open each engine for a manual upload.
+
+
 ### Domain Finder
 The Domain Finder module helps you to protect your organization from phishing attacks by searching for recently registered domains that match specific patterns. By utilizing the URLScan.io API, you can view screenshots of websites associated with domains without visiting them directly. Additionally, you can check each domain and its resolved IP against multiple threat intelligence services, further enhancing your organization's security.
 
@@ -61,7 +65,11 @@ The Detection Rules module is a GUI for creating Sigma, Yara and Snort/Suricate 
 ## Deploy with docker
 1. Download the repository and extract the files
 2. Navigate to the directory where the `docker-compose.yaml` file is located
-3. Run the following command: `docker-compose up -d`
+3. Start the application:
+   - `make up` — start backend and frontend without rebuilding
+   - `make rebuild` — rebuild images (e.g. after dependency or Dockerfile changes) and start
+   - `make up-backend` / `make up-frontend` — start a single service without rebuilding
+   - `make rebuild-backend` / `make rebuild-frontend` — rebuild and start a single service
 4. Once the container is running, you can access the application in your browser at http://localhost:4000
 
 In case the database schema changed, run a migration before starting the container:

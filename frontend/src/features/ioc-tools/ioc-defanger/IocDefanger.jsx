@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 
 import AppSnackbar from '../../../core/components/ui/AppSnackbar';
 import OperationControls from './components/ui/OperationControls';

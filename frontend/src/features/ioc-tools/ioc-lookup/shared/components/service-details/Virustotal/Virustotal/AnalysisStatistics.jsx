@@ -3,7 +3,7 @@ import { PieChart, Pie, ResponsiveContainer } from "recharts";
 
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import DataUsageIcon from "@mui/icons-material/DataUsage";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PeopleIcon from "@mui/icons-material/People";
@@ -17,7 +17,7 @@ import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import LinearProgress, {
   linearProgressClasses,
 } from "@mui/material/LinearProgress";

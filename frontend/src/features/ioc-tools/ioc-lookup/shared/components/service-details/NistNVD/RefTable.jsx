@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import LinkIcon from "@mui/icons-material/Link";
 import SourceIcon from "@mui/icons-material/Source";
 import Paper from '@mui/material/Paper';

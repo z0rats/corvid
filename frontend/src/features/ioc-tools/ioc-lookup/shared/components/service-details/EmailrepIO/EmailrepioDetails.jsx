@@ -6,7 +6,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import ContactsIcon from "@mui/icons-material/Contacts";
 import FacebookIcon from "@mui/icons-material/Facebook";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import InfoIcon from "@mui/icons-material/Info";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
