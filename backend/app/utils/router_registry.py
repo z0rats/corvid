@@ -11,6 +11,7 @@ from app.core.settings.modules.routers import modules_settings_routes
 from app.features.cvss_calculator.routers import cvss_routes
 from app.features.ioc_tools.domain_finder.routers import domain_routes
 from app.features.email_analyzer.routers import email_routes
+from app.features.image_tools.routers import image_routes
 from app.features.ioc_tools.ioc_defanger.routers import internal_defang_routes
 from app.features.ioc_tools.ioc_extractor.routers import internal_ioc_extractor_routes
 from app.features.ioc_tools.ioc_lookup.bulk_lookup.routers import bulk_ioc_lookup_routes
@@ -59,6 +60,7 @@ def get_feature_routers() -> list[APIRouter]:
         llm_template_routes.router,
         domain_routes.router,
         email_routes.router,
+        image_routes.router,
         internal_ioc_extractor_routes.router,
         internal_defang_routes.router,
         cvss_routes.router,

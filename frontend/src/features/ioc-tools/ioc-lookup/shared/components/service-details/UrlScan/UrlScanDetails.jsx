@@ -13,7 +13,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Pagination from '@mui/material/Pagination';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';

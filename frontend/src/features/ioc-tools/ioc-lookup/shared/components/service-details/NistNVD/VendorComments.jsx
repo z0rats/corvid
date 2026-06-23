@@ -4,7 +4,7 @@ import { useState } from "react";
 import BusinessIcon from "@mui/icons-material/Business";
 import Card from "@mui/material/Card";
 import CommentIcon from "@mui/icons-material/Comment";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import InfoIcon from "@mui/icons-material/Info";
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';

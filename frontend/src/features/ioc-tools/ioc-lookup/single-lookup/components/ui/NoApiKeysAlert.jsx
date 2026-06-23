@@ -5,7 +5,7 @@ import Card from '@mui/material/Card'
 import Divider from '@mui/material/Divider';
 import Grow from '@mui/material/Grow';
 import KeyIcon from '@mui/icons-material/Key';
-import MuiGrid from '@mui/material/Grid2';
+import MuiGrid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 

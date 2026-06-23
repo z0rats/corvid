@@ -2,7 +2,7 @@ import React from "react";
 
 import Card from "@mui/material/Card";
 import CategoryIcon from "@mui/icons-material/Category";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import InfoIcon from "@mui/icons-material/Info";
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';

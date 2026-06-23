@@ -5,7 +5,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent"; 
 import CategoryIcon from "@mui/icons-material/Category";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
 import InfoIcon from "@mui/icons-material/Info";
 import List from "@mui/material/List";

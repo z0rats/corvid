@@ -14,7 +14,7 @@ import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { styled } from '@mui/material/styles';
-import useTheme from '@mui/material/styles/useTheme';
+import { useTheme } from '@mui/material/styles';
 import ServiceRow from './ServiceRow';
 import { TLP_COLORS } from '../../../shared/utils/tlpUtils';
 import { SERVICE_DEFINITIONS } from '../../../shared/config/serviceConfig';

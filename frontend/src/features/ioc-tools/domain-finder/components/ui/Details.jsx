@@ -13,7 +13,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import CircleIcon from "@mui/icons-material/Circle";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import DomainVerificationIcon from "@mui/icons-material/DomainVerification";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import HttpIcon from "@mui/icons-material/Http";
 import LanIcon from "@mui/icons-material/Lan";
 import LanguageIcon from "@mui/icons-material/Language";

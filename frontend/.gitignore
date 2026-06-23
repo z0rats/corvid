@@ -5,6 +5,7 @@ logs/
 **/*.backup.*/
 **/*.back.*/
 build/
+.yarn/
 
 bower_components
 

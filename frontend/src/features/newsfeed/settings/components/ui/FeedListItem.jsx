@@ -10,7 +10,7 @@ import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Tooltip from "@mui/material/Tooltip";
 import Delete from "@mui/icons-material/Delete";
-import DeleteOutline from "@mui/icons-material/DeleteOutline";
+import DeleteOutline from "@mui/icons-material/DeleteOutlined";
 import Refresh from "@mui/icons-material/Refresh";
 
 import { getFeedIconUrl } from "../../../utils/urlUtils";

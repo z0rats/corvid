@@ -5,7 +5,7 @@ import Card from "@mui/material/Card";
 import CategoryIcon from "@mui/icons-material/Category";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';

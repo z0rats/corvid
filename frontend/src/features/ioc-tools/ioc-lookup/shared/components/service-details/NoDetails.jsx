@@ -3,7 +3,7 @@ import Card from '@mui/material/Card'
 import { styled } from '@mui/material/styles';
 import NotInterestedIcon from '@mui/icons-material/NotInterested';
 import Divider from '@mui/material/Divider';
-import MuiGrid from '@mui/material/Grid2';
+import MuiGrid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 
 const StyledGrid = styled(MuiGrid)(({ theme }) => ({

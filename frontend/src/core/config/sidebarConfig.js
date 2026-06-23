@@ -1,6 +1,7 @@
 import NewspaperIcon from "@mui/icons-material/Newspaper";
 import SearchIcon from "@mui/icons-material/Search";
 import MailIcon from "@mui/icons-material/Mail";
+import ImageIcon from "@mui/icons-material/Image";
 import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import PsychologyIcon from "@mui/icons-material/Psychology";
@@ -40,6 +41,12 @@ export const mainMenuItems = [
     icon: <MailIcon />,
     path: "/email-analyzer",
     moduleId: "email_analyzer",
+  },
+  {
+    name: "Image Tools",
+    icon: <ImageIcon />,
+    path: "/image-tools",
+    moduleId: "image_tools",
   },
   {
     name: "AI Templates",

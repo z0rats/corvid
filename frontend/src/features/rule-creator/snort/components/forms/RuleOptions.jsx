@@ -5,7 +5,7 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { SNORT_CONSTANTS } from '../../constants/snortConstants';
 import ReferencesSection from './ReferencesSection';
 import BasicMetadataSection from './BasicMetadataSection';

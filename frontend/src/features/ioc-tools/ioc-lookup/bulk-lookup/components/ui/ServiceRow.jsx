@@ -8,7 +8,7 @@ import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import useTheme from '@mui/material/styles/useTheme';
+import { useTheme } from '@mui/material/styles';
 import ServiceHeaderCell from '../../../shared/components/ServiceHeaderCell';
 import { getServiceIcon } from '../../../shared/utils/iconUtils';
 import { getTlpBackgroundColor } from '../../../shared/utils/tlpUtils';
