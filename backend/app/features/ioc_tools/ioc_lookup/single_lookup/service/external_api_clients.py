@@ -3,7 +3,14 @@ import logging
 from base64 import b64encode
 from typing import Any
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config.settings import settings
+from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models import (
+    BlacklistedAddress, BlacklistSource,
+)
+from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import normalize_address
 from .client_base import (
     ServiceError,
     ServiceAuthError,
@@ -440,3 +447,39 @@ async def check_virustotal(ioc: str, ioc_type: str, apikey: str) -> dict[str, An
     if response.status_code == 404:
         raise ServiceError("VirusTotal", "Not found on VirusTotal", status_code=404)
     return await handle_response("VirusTotal", response)
+
+
+async def check_blacklist(ioc: str, db: AsyncSession) -> dict[str, Any]:
+    """Check a crypto address against the locally-stored OFAC SDN + ScamSniffer blacklist.
+
+    Resolves instantly from the local DB (no external call), populated on a schedule
+    by blacklist_refresh_service.refresh_blacklist.
+    """
+    normalized = normalize_address(ioc)
+    logger.debug("Checking address %s against local blacklist", normalized)
+
+    result = await db.execute(
+        select(BlacklistedAddress).where(
+            BlacklistedAddress.address == normalized, BlacklistedAddress.is_active.is_(True)
+        )
+    )
+    matches = result.scalars().all()
+
+    ofac_match = next((m for m in matches if m.source == BlacklistSource.OFAC.value), None)
+    scamsniffer_match = next((m for m in matches if m.source == BlacklistSource.SCAMSNIFFER.value), None)
+
+    return {
+        "address": normalized,
+        "matched": bool(matches),
+        "sources": [m.source for m in matches],
+        "ofac": {
+            "entity_name": ofac_match.entity_name,
+            "program": ofac_match.label,
+            "chain": ofac_match.chain,
+            "remarks": (ofac_match.details or {}).get("remarks"),
+        } if ofac_match else None,
+        "scamsniffer": {
+            "chain": scamsniffer_match.chain,
+            "phishing_domain": (scamsniffer_match.details or {}).get("phishing_domain"),
+        } if scamsniffer_match else None,
+    }

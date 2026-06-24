@@ -15,7 +15,8 @@ from app.core.settings.keywords.models.keywords_settings_models import Keyword
 from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings 
 from app.features.newsfeed.models.newsfeed_models import NewsfeedSettings, NewsArticle, NewsfeedConfig, TrendsBlacklistEntry 
 from app.features.llm_templates.models.llm_template_models import AITemplate 
-from app.features.llm_templates.models.template_category_models import TemplateCategory 
+from app.features.llm_templates.models.template_category_models import TemplateCategory
+from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models import BlacklistedAddress
 
 config = context.config
 

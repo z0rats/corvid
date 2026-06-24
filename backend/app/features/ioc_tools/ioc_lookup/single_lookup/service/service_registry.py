@@ -37,6 +37,13 @@ def register_services(ioc_lookup_service_module) -> None:
                 IOC_TYPES['MD5']: 'hash', IOC_TYPES['SHA1']: 'hash', IOC_TYPES['SHA256']: 'hash',
             }
         },
+        'blacklist': {
+            'func': ioc_lookup_service_module.check_blacklist,
+            'name': 'Address Blacklist',
+            'api_key_name': None,
+            'requires_db': True,
+            'supported_ioc_types': [IOC_TYPES['EVM_ADDRESS'], IOC_TYPES['BITCOIN_ADDRESS']],
+        },
         'checkphish': {
             'func': ioc_lookup_service_module.check_checkphish,
             'name': 'CheckPhish',

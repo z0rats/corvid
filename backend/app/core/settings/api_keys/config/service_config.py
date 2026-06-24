@@ -57,6 +57,17 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.THREAT_INTELLIGENCE,
         icon="avotx_logo_small"
     ),
+    "blacklist": ServiceDefinition(
+        name="Address Blacklist (OFAC + ScamSniffer)",
+        key="blacklist",
+        description="Self-hosted address reputation/AML screening against the OFAC SDN sanctions list and ScamSniffer's open phishing-address blacklist. No API key, no external calls per lookup — both sources are refreshed daily into a local table.",
+        documentation_url="https://sanctionslistservice.ofac.treas.gov/",
+        supported_ioc_types=["EVMAddress", "BitcoinAddress"],
+        required_keys=[],
+        tier=ServiceTier.FREE,
+        category=ServiceCategory.THREAT_INTELLIGENCE,
+        icon="blacklist_logo_small"
+    ),
     "checkphishai": ServiceDefinition(
         name="CheckPhish.ai",
         key="checkphish",

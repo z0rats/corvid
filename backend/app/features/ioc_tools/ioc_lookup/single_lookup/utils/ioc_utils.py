@@ -10,6 +10,8 @@ IOC_TYPES = {
     'DOMAIN': 'Domain',
     'EMAIL': 'Email',
     'CVE': 'CVE',
+    'EVM_ADDRESS': 'EVMAddress',
+    'BITCOIN_ADDRESS': 'BitcoinAddress',
     'UNKNOWN': 'unknown',
 }
 
@@ -23,6 +25,8 @@ IOC_TYPE_PATTERNS = {
     IOC_TYPES['DOMAIN']: re.compile(r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$"),
     IOC_TYPES['EMAIL']: re.compile(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"),
     IOC_TYPES['CVE']: re.compile(r"^CVE-[0-9]{4}-[0-9]{4,}$", re.IGNORECASE),
+    IOC_TYPES['EVM_ADDRESS']: re.compile(r"^0x[a-f0-9]{40}$", re.IGNORECASE),
+    IOC_TYPES['BITCOIN_ADDRESS']: re.compile(r"^(1[a-zA-Z0-9]{25,34}|3[a-zA-Z0-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{25,90})$"),
 }
 
 def determine_ioc_type(ioc: str) -> str:
@@ -38,7 +42,12 @@ def determine_ioc_type(ioc: str) -> str:
         return IOC_TYPES['SHA1']
     if IOC_TYPE_PATTERNS[IOC_TYPES['SHA256']].match(ioc):
         return IOC_TYPES['SHA256']
-        
+
+    if IOC_TYPE_PATTERNS[IOC_TYPES['EVM_ADDRESS']].match(ioc):
+        return IOC_TYPES['EVM_ADDRESS']
+    if IOC_TYPE_PATTERNS[IOC_TYPES['BITCOIN_ADDRESS']].match(ioc):
+        return IOC_TYPES['BITCOIN_ADDRESS']
+
     if IOC_TYPE_PATTERNS[IOC_TYPES['IPV4']].match(ioc):
         return IOC_TYPES['IPV4']
     if IOC_TYPE_PATTERNS[IOC_TYPES['IPV6']].match(ioc):
@@ -56,3 +65,12 @@ def determine_ioc_type(ioc: str) -> str:
         return IOC_TYPES['EMAIL']
         
     return IOC_TYPES['UNKNOWN']
+
+
+def normalize_address(address: str) -> str:
+    """Normalize a crypto address for storage/lookup: lowercase EVM (case-insensitive hex),
+    leave other formats (e.g. Bitcoin Base58/bech32) as-is since they are case-sensitive."""
+    address = address.strip()
+    if IOC_TYPE_PATTERNS[IOC_TYPES['EVM_ADDRESS']].match(address):
+        return address.lower()
+    return address

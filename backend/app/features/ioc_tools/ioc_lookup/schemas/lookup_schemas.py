@@ -15,6 +15,9 @@ class IOCType(str, Enum):
     SHA1 = "sha1"
     SHA256 = "sha256"
     EMAIL = "email"
+    CVE = "cve"
+    EVM_ADDRESS = "evm_address"
+    BITCOIN_ADDRESS = "bitcoin_address"
     UNKNOWN = "unknown"
 
 

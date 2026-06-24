@@ -9,21 +9,25 @@ OSINT Toolkit is a self-hostable, on-demand analysis platform designed for secur
 
 
 ## Integrated services
-| IPs            | Domains       | URLs                 | Emails           | Hashes     | CVEs     |
-|----------------|---------------|----------------------|------------------|------------|----------|
-| AbuseIPDB      | Alienvault    | Alienvault           | Emailrep.io      | Alienvault | GitHub   |
-| Alienvault     | Checkphish.ai | Checkphish.ai        | GitHub           | GitHub     | NIST NVD |
-| Checkphish.ai  | GitHub        | GitHub               | Hunter.io        | Maltiverse |          |
-| CrowdSec       | Maltiverse    | Google Safe Browsing | Have I Been Pwnd | Pulsedive  |          |
-| GitHub         | Pulsedive     | Maltiverse           | Reddit           | Reddit     |          |
-| IPQualityScore | Shodan        | Pulsedive            | Twitter          | ThreatFox  |          |
-| Maltiverse     | ThreatFox     | Shodan               |                  | Twitter    |          |
-| Pulsedive      | Reddit        | ThreatFox            |                  | Virustotal |          |
-| Shodan         | Twitter       | Reddit               |                  |            |          |
-| Reddit         | URLScan       | Twitter              |                  |            |          |
-| ThreatFox      | Virustotal    | URLScan              |                  |            |          |
-| Twitter        |               | Virustotal           |                  |            |          |
-| Virustotal     |               |                      |                  |            |          |
+| IPs            | Domains       | URLs                 | Emails           | Hashes     | CVEs     | Crypto Addresses |
+|----------------|---------------|----------------------|------------------|------------|----------|------------------|
+| AbuseIPDB      | Alienvault    | Alienvault           | Emailrep.io      | Alienvault | GitHub   | OFAC SDN (self-hosted) |
+| Alienvault     | Checkphish.ai | Checkphish.ai        | GitHub           | GitHub     | NIST NVD | ScamSniffer (self-hosted) |
+| Checkphish.ai  | GitHub        | GitHub               | Hunter.io        | Maltiverse |          |          |
+| CrowdSec       | Maltiverse    | Google Safe Browsing | Have I Been Pwnd | Pulsedive  |          |          |
+| GitHub         | Pulsedive     | Maltiverse           | Reddit           | Reddit     |          |          |
+| IPQualityScore | Shodan        | Pulsedive            | Twitter          | ThreatFox  |          |          |
+| Maltiverse     | ThreatFox     | Shodan               |                  | Twitter    |          |          |
+| Pulsedive      | Reddit        | ThreatFox            |                  | Virustotal |          |          |
+| Shodan         | Twitter       | Reddit               |                  |            |          |          |
+| Reddit         | URLScan       | Twitter              |                  |            |          |          |
+| ThreatFox      | Virustotal    | URLScan              |                  |            |          |          |
+| Twitter        |               | Virustotal            |                  |            |          |          |
+| Virustotal     |               |                      |                  |            |          |          |
+
+> Crypto address checks (EVM and Bitcoin) run against a self-hosted blacklist built from the
+> OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset — no API key or
+> third-party calls required, refreshed daily in the background.
 
 ## Features
 ### Newsfeed
@@ -32,7 +36,7 @@ The Newsfeed module keeps you up to date about the latest cybersecurity news by 
 
 
 ### IOC Tools
-The IOC Tools module helps you analyze different types of indicators of compromise (IOCs) such as IP addresses, hashes, email addresses, domains, and URLs. It leverages services like VirusTotal, AlienVault, AbuseIPDB, and social media platforms like Reddit and Twitter to gather information about the IOCs. The module automatically detects the type of IOC being analyzed and utilizes the appropriate services to provide relevant information, enabling you to identify potential threats and take necessary actions to protect your organization. Analysis can be done individual per IOC or in bulk. Also fanging and defanging is possible for sharing IOCs safely.
+The IOC Tools module helps you analyze different types of indicators of compromise (IOCs) such as IP addresses, hashes, email addresses, domains, URLs, and crypto addresses (EVM and Bitcoin). It leverages services like VirusTotal, AlienVault, AbuseIPDB, and social media platforms like Reddit and Twitter to gather information about the IOCs. Crypto addresses are screened against a self-hosted reputation blacklist built from the OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset, refreshed daily — no API key or third-party calls needed for this check. The module automatically detects the type of IOC being analyzed and utilizes the appropriate services to provide relevant information, enabling you to identify potential threats and take necessary actions to protect your organization. Analysis can be done individual per IOC or in bulk. Also fanging and defanging is possible for sharing IOCs safely.
 <img width="1679" height="1102" alt="ioc_lookup" src="https://github.com/user-attachments/assets/40b1e656-ba6c-4f36-b8dd-beee0dca3fdd" />
 
 

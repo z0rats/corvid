@@ -24,7 +24,7 @@ export default function SingleLookup() {
     <>
       <SearchBar
         ref={inputRef}
-        placeholder="Enter an IOC to analyze (IP, Domain, URL, Email, Hash, CVE)..."
+        placeholder="Enter an IOC to analyze (IP, Domain, URL, Email, Hash, CVE, Crypto Address)..."
         buttonLabel="Analyze"
         onKeyDown={handleKeyPress}
         onSearchClick={handleSubmitSearch}
@@ -48,7 +48,7 @@ export default function SingleLookup() {
             <b>Invalid Input</b>
           </AlertTitle>
           Please enter a supported IOC type. The entered value does not match
-          known formats for IP, Domain, URL, Email, Hash, or CVE.
+          known formats for IP, Domain, URL, Email, Hash, CVE, or Crypto Address.
         </Alert>
       </Snackbar>
       <Box sx={{ mb: 2 }} />

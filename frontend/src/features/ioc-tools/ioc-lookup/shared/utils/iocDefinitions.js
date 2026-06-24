@@ -8,6 +8,8 @@ export const IOC_TYPES = {
     DOMAIN: 'Domain',
     EMAIL: 'Email',
     CVE: 'CVE',
+    EVM_ADDRESS: 'EVMAddress',
+    BITCOIN_ADDRESS: 'BitcoinAddress',
     UNKNOWN: 'unknown',
 };
 
@@ -21,6 +23,8 @@ export const IOC_TYPE_PATTERNS = {
     [IOC_TYPES.DOMAIN]: /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/,
     [IOC_TYPES.EMAIL]: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
     [IOC_TYPES.CVE]: /^CVE-[0-9]{4}-[0-9]{4,}$/i,
+    [IOC_TYPES.EVM_ADDRESS]: /^0x[a-f0-9]{40}$/i,
+    [IOC_TYPES.BITCOIN_ADDRESS]: /^(1[a-zA-Z0-9]{25,34}|3[a-zA-Z0-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{25,90})$/,
 };
 
 /**
@@ -36,6 +40,8 @@ export const determineIocType = (ioc) => {
         IOC_TYPES.MD5,
         IOC_TYPES.SHA1,
         IOC_TYPES.SHA256,
+        IOC_TYPES.EVM_ADDRESS,
+        IOC_TYPES.BITCOIN_ADDRESS,
         IOC_TYPES.IPV4,
         IOC_TYPES.IPV6,
         IOC_TYPES.CVE,

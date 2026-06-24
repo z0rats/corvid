@@ -9,10 +9,12 @@ from app.core.config.settings import settings
 from app.core.database import managed_session
 from app.features.newsfeed.crud.newsfeed_config_crud import get_newsfeed_config
 from app.features.newsfeed.service.feed_processing_service import fetch_and_store_news
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.blacklist_refresh_service import refresh_blacklist
 
 logger = logging.getLogger(__name__)
 
 NEWS_FETCH_JOB_ID = 'news_fetch'
+BLACKLIST_REFRESH_JOB_ID = 'blacklist_refresh'
 
 _scheduler: AsyncIOScheduler | None = None
 
@@ -33,6 +35,32 @@ async def execute_news_fetch_job() -> None:
         logger.debug("News fetch job completed successfully")
     except Exception as e:
         logger.error("Error in news fetch job: %s", e)
+
+
+async def execute_blacklist_refresh_job() -> None:
+    """Execute the address blacklist refresh with error handling to prevent scheduler job removal."""
+    try:
+        async with managed_session() as db:
+            summary = await refresh_blacklist(db)
+        logger.info("Blacklist refresh job completed: %s", summary)
+    except Exception as e:
+        logger.error("Error in blacklist refresh job: %s", e)
+
+
+def add_blacklist_refresh_job(interval_hours: int) -> None:
+    """Add the address blacklist refresh job to the scheduler with the given interval."""
+    try:
+        get_scheduler().add_job(
+            execute_blacklist_refresh_job,
+            IntervalTrigger(hours=interval_hours),
+            id=BLACKLIST_REFRESH_JOB_ID,
+            replace_existing=True,
+            max_instances=settings.scheduler.max_job_instances
+        )
+        logger.info("Blacklist refresh job scheduled with %s hour interval", interval_hours)
+    except Exception as e:
+        logger.error("Error adding blacklist refresh job: %s", e)
+        raise
 
 
 async def fetch_scheduler_configuration() -> tuple[bool, int]:
@@ -92,6 +120,7 @@ async def initialize_scheduler() -> None:
     try:
         enabled, interval = await fetch_scheduler_configuration()
         configure_news_scheduler(enabled, interval)
+        add_blacklist_refresh_job(settings.scheduler.blacklist_refresh_interval_hours)
 
         if not get_scheduler().running:
             get_scheduler().start()

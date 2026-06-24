@@ -56,8 +56,9 @@ async def _create_database_tables() -> None:
     import app.core.settings.cti_profile.models.cti_profile_models
     import app.core.alerts.models.alerts_models   
     import app.features.newsfeed.models.newsfeed_models   
-    import app.features.llm_templates.models.llm_template_models   
-    import app.features.llm_templates.models.template_category_models   
+    import app.features.llm_templates.models.llm_template_models
+    import app.features.llm_templates.models.template_category_models
+    import app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -75,6 +76,23 @@ async def _fetch_favicons_in_background() -> None:
         logger.error("Background favicon fetch failed: %s", e)
 
 
+async def _populate_blacklist_if_empty_in_background() -> None:
+    """On first-ever startup (empty table), populate the address blacklist immediately
+    in the background rather than waiting for the next scheduled refresh."""
+    from app.features.ioc_tools.ioc_lookup.single_lookup.service.blacklist_refresh_service import (
+        is_blacklist_empty, refresh_blacklist,
+    )
+
+    try:
+        async with managed_session() as db:
+            if await is_blacklist_empty(db):
+                logger.info("Address blacklist is empty; populating in the background")
+                summary = await refresh_blacklist(db)
+                logger.info("Initial blacklist populate completed: %s", summary)
+    except Exception as e:
+        logger.error("Background blacklist populate failed: %s", e)
+
+
 async def handle_application_startup() -> None:
     """Handle application startup tasks"""
     logger.info("Application starting up...")
@@ -82,6 +100,7 @@ async def handle_application_startup() -> None:
         await _create_database_tables()
         await _run_application_defaults()
         asyncio.create_task(_fetch_favicons_in_background())
+        asyncio.create_task(_populate_blacklist_if_empty_in_background())
         await initialize_scheduler()
         logger.info("Application startup completed successfully")
     except Exception as e:

@@ -51,6 +51,7 @@ class SchedulerSettings(BaseSettings):
 
     default_fetch_interval: int = Field(default=30, description="Default news fetch interval in minutes")
     max_job_instances: int = Field(default=1, description="Maximum concurrent instances per job")
+    blacklist_refresh_interval_hours: int = Field(default=24, description="Address blacklist refresh interval in hours")
 
 
 class AppSettings(BaseSettings):

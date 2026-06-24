@@ -78,6 +78,7 @@ def _prepare_function_args(
     ioc: str,
     ioc_type: str,
     api_keys: dict[str, str],
+    extra_args: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the argument dict for the service lookup function."""
     args: dict[str, Any] = {'ioc': ioc.strip()}
@@ -93,6 +94,9 @@ def _prepare_function_args(
                 args[param] = api_keys.get(key_name)
         elif service_config.get('api_key_name') and api_keys:
             args['apikey'] = next(iter(api_keys.values()))
+
+    if extra_args:
+        args.update(extra_args)
 
     return args
 
@@ -133,7 +137,8 @@ async def lookup_ioc(service_name: str, ioc: str, ioc_type: str, db: AsyncSessio
             status_code=401,
         )
 
-    func_args = _prepare_function_args(service_config, ioc, ioc_type, api_keys or {})
+    extra_args = {'db': db} if service_config.get('requires_db') else None
+    func_args = _prepare_function_args(service_config, ioc, ioc_type, api_keys or {}, extra_args)
 
     logger.debug("Calling %s lookup function with args: %s", service_name, list(func_args.keys()))
     try:

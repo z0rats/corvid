@@ -1,5 +1,6 @@
 import AbuseIpdbDetails from '../components/service-details/AbuseIPDB/AbuseIpdbDetails';
 import AlienvaultDetails from '../components/service-details/Alienvault/AlienvaultDetails';
+import BlacklistDetails from '../components/service-details/Blacklist/BlacklistDetails';
 import CheckphishDetails from '../components/service-details/Checkphish/CheckphishDetails';
 import CrowdSecDetailsComponent from '../components/service-details/CrowdSec/CrowdSecDetails';
 import CrowdStrikeDetailsComponent from '../components/service-details/CrowdStrike/CrowdStrike';
@@ -79,6 +80,22 @@ export const SERVICE_DEFINITIONS = {
         if (hasMalware) parts.push(`${responseData.section_malware.data.length} malware sample(s)`);
 
         return { summary: parts.join(', '), tlp, keyMetric: pulseCount };
+    })),
+  },
+  blacklist: {
+    name: 'Address Blacklist (OFAC + ScamSniffer)',
+    icon: 'blacklist_logo_small',
+    detailComponent: BlacklistDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['EVMAddress', 'BitcoinAddress'],
+    lookupEndpoint: createSingleEndpoint('blacklist'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+        if (!responseData?.matched) return { summary: 'No match — not listed', tlp: 'GREEN' };
+        if (responseData.sources?.includes('OFAC')) {
+            return { summary: `OFAC SANCTIONED: ${responseData.ofac?.entity_name || 'designated entity'}`, tlp: 'RED', keyMetric: 'OFAC' };
+        }
+        const domain = responseData.scamsniffer?.phishing_domain;
+        return { summary: `Phishing-associated address (ScamSniffer)${domain ? `: ${domain}` : ''}`, tlp: 'RED', keyMetric: 'ScamSniffer' };
     })),
   },
   checkphish: {

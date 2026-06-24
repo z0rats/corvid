@@ -11,6 +11,18 @@ const SUPPORTED_IOC_TYPES_INFO = [
   { title: "Email Addresses", description: "Known malicious or suspicious email addresses" },
   { title: "Hashes", description: "MD5, SHA1, and SHA256 file hashes" },
   { title: "CVEs", description: "Common Vulnerabilities and Exposures identifiers" },
+  { title: "Crypto Addresses", description: "EVM addresses (0x...) and Bitcoin addresses (legacy, P2SH, bech32)" },
+];
+
+const ADDRESS_REPUTATION_CHECKS_INFO = [
+  {
+    title: "OFAC SDN (Sanctions)",
+    description: "Checked against the U.S. Treasury's Specially Designated Nationals list, including digital currency addresses tied to sanctioned entities. Refreshed daily.",
+  },
+  {
+    title: "ScamSniffer (Phishing)",
+    description: "Checked against ScamSniffer's open-source blacklist of EVM addresses linked to known phishing scams. Refreshed daily.",
+  },
 ];
 
 const FeatureCard = ({ title, description }) => (
@@ -50,6 +62,19 @@ export default function WelcomeScreen() {
       </Typography>
       <Grid container spacing={1}>
         {SUPPORTED_IOC_TYPES_INFO.map(item => (
+          <FeatureCard key={item.title} title={item.title} description={item.description} />
+        ))}
+      </Grid>
+
+      <Typography variant="h6" component="h2" sx={{ mt: 4, mb: 2 }}>
+        Address Reputation Checks
+      </Typography>
+      <Typography variant="body2" color="text.secondary" paragraph>
+        Crypto addresses are screened against a self-hosted blacklist built from open,
+        no-key data sources — no third-party API calls are made for this check.
+      </Typography>
+      <Grid container spacing={1}>
+        {ADDRESS_REPUTATION_CHECKS_INFO.map(item => (
           <FeatureCard key={item.title} title={item.title} description={item.description} />
         ))}
       </Grid>
