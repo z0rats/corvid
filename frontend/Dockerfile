@@ -1,8 +1,9 @@
-FROM node:24-alpine as build
+FROM node:24-alpine AS build
 WORKDIR /app
 RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
-RUN yarn install --immutable
+RUN --mount=type=cache,target=/root/.yarn/berry/cache,sharing=locked \
+    yarn install --immutable
 COPY . .
 RUN yarn build
 

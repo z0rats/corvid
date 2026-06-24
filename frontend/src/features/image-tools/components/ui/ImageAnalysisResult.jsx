@@ -7,12 +7,10 @@ import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InfoIcon from '@mui/icons-material/Info';
 import PlaceIcon from '@mui/icons-material/Place';
-import ImageSearchIcon from '@mui/icons-material/ImageSearch';
 import ImagePreview from './ImagePreview';
 import FileMetadata from './FileMetadata';
 import ExifDetails from './ExifDetails';
 import GpsMap from './GpsMap';
-import ReverseSearchLinks from './ReverseSearchLinks';
 
 function Section({ icon, title, defaultExpanded, children }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -31,7 +29,7 @@ function Section({ icon, title, defaultExpanded, children }) {
   );
 }
 
-export default function ImageAnalysisResult({ result, previewUrl, imageUrl }) {
+export default function ImageAnalysisResult({ result, previewUrl }) {
   if (!result) {
     return null;
   }
@@ -50,10 +48,6 @@ export default function ImageAnalysisResult({ result, previewUrl, imageUrl }) {
 
       <Section icon={<InfoIcon />} title="EXIF metadata" defaultExpanded>
         <ExifDetails exif={result.exif} />
-      </Section>
-
-      <Section icon={<ImageSearchIcon />} title="Reverse image search" defaultExpanded>
-        <ReverseSearchLinks imageUrl={imageUrl} />
       </Section>
     </>
   );

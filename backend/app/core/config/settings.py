@@ -39,7 +39,7 @@ class APISettings(BaseSettings):
         description="API description"
     )
     debug: bool = Field(default=False, description="Enable debug mode")
-    max_request_body_bytes: int = Field(default=10 * 1024 * 1024, description="Maximum request body size in bytes")
+    max_request_body_bytes: int = Field(default=50 * 1024 * 1024, description="Maximum request body size in bytes")
     cors_origins: list[str] = Field(default=["http://localhost:3000"], description="CORS allowed origins")
     trusted_hosts: list[str] = Field(default=["localhost", "127.0.0.1"], description="Allowed Host header values")
     ws_secret_token: str = Field(default="", description="WebSocket auth token (empty = no auth enforced)")

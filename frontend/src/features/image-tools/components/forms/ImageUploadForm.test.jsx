@@ -12,8 +12,6 @@ describe('ImageUploadForm', () => {
     render(
       <ImageUploadForm
         onFileUpload={jest.fn()}
-        imageUrl=""
-        onImageUrlChange={jest.fn()}
         isLoading={false}
         uploadProgress={0}
         error={null}
@@ -30,8 +28,6 @@ describe('ImageUploadForm', () => {
     render(
       <ImageUploadForm
         onFileUpload={onFileUpload}
-        imageUrl=""
-        onImageUrlChange={jest.fn()}
         isLoading={false}
         uploadProgress={0}
         error={null}
@@ -52,32 +48,10 @@ describe('ImageUploadForm', () => {
     expect(onFileUpload.mock.calls[0][0].name).toBe('photo.jpg');
   });
 
-  it('calls onImageUrlChange when the image URL field is edited', async () => {
-    const onImageUrlChange = jest.fn();
-    const user = userEvent.setup();
-
-    render(
-      <ImageUploadForm
-        onFileUpload={jest.fn()}
-        imageUrl=""
-        onImageUrlChange={onImageUrlChange}
-        isLoading={false}
-        uploadProgress={0}
-        error={null}
-      />
-    );
-
-    await user.type(screen.getByLabelText(/image url/i), 'h');
-
-    expect(onImageUrlChange).toHaveBeenCalledWith('h');
-  });
-
   it('shows the error message when provided', () => {
     render(
       <ImageUploadForm
         onFileUpload={jest.fn()}
-        imageUrl=""
-        onImageUrlChange={jest.fn()}
         isLoading={false}
         uploadProgress={0}
         error="Invalid file type"
@@ -91,8 +65,6 @@ describe('ImageUploadForm', () => {
     render(
       <ImageUploadForm
         onFileUpload={jest.fn()}
-        imageUrl=""
-        onImageUrlChange={jest.fn()}
         isLoading
         uploadProgress={50}
         error={null}
