@@ -5,7 +5,6 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { IMAGE_CONSTANTS } from '../../constants/imageConstants';
@@ -13,8 +12,6 @@ import { imageUtils } from '../../utils/imageUtils';
 
 export default function ImageUploadForm({
   onFileUpload,
-  imageUrl,
-  onImageUrlChange,
   isLoading,
   uploadProgress,
   error
@@ -133,17 +130,6 @@ export default function ImageUploadForm({
           </Typography>
         </Box>
       )}
-
-      <TextField
-        label="Image URL (optional, enables reverse-search links)"
-        placeholder="https://example.com/photo.jpg"
-        value={imageUrl}
-        onChange={(e) => onImageUrlChange(e.target.value)}
-        size="small"
-        fullWidth
-        sx={{ mt: 2 }}
-        disabled={isLoading}
-      />
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
         <Button

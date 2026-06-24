@@ -10,7 +10,7 @@ export const IMAGE_CONSTANTS = {
   },
 
   FILE_UPLOAD: {
-    MAX_SIZE: 25 * 1024 * 1024, // 25MB
+    MAX_SIZE: 50 * 1024 * 1024, // 50MB
   },
 
   HASH_TYPES: {

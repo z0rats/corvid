@@ -26,6 +26,26 @@ describe('ImageTools', () => {
     expect(screen.getByText(/lets you inspect an image file/i)).toBeInTheDocument();
   });
 
+  it('shows reverse-search links as soon as a URL is typed, with no file uploaded', async () => {
+    const user = userEvent.setup();
+    render(<ImageTools />);
+
+    expect(screen.getByText(/no image url provided/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'TinEye' })).toHaveAttribute(
+      'href',
+      'https://tineye.com/'
+    );
+
+    await user.type(screen.getByLabelText(/image url/i), 'https://example.com/photo.jpg');
+
+    expect(screen.getByText(/open this image in a reverse-search engine/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'TinEye' })).toHaveAttribute(
+      'href',
+      'https://tineye.com/search?url=https%3A%2F%2Fexample.com%2Fphoto.jpg'
+    );
+    expect(imageAnalyzerApi.analyzeImage).not.toHaveBeenCalled();
+  });
+
   it('uploads an image and renders the analysis result', async () => {
     imageAnalyzerApi.analyzeImage.mockResolvedValue({
       file_info: {
