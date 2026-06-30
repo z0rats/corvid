@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApiKeys } from '../hooks/api/useApiKeys';
 import { useApiKeyFilters } from '../hooks/ui/useFilters';
 import { calculateCompletionPercentage, getConfiguredCount } from '../utils/settingsUtils';
@@ -18,6 +19,7 @@ import Grid from '@mui/material/Grid';
 import ErrorIcon from '@mui/icons-material/Error';
 
 export default function ApiKeys() {
+  const { t } = useTranslation('settings');
   const [servicesConfig, setServicesConfig] = useState({});
   const [headerExpanded, setHeaderExpanded] = useState(false);
   const [error, setError] = useState(null);
@@ -55,7 +57,7 @@ export default function ApiKeys() {
         <Stack spacing={2} alignItems="center">
           <CircularProgress size={48} />
           <Typography variant="h6" color="text.secondary">
-            Loading service configuration...
+            {t('apiKeys.loadingServices')}
           </Typography>
         </Stack>
       </Box>
@@ -66,7 +68,7 @@ export default function ApiKeys() {
     return (
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
         <Alert severity="error" icon={<ErrorIcon />}>
-          <AlertTitle>Configuration Error</AlertTitle>
+          <AlertTitle>{t('apiKeys.errorTitle')}</AlertTitle>
           {error}
         </Alert>
       </Box>
@@ -105,10 +107,10 @@ export default function ApiKeys() {
       {filteredServices.length === 0 && (
         <Paper elevation={0} sx={{ p: 4, textAlign: 'center', mt: '30px', borderRadius: 1 }}>
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            No services found
+            {t('apiKeys.noServicesFound')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Try adjusting your search or filter criteria.
+            {t('apiKeys.noServicesFoundHelper')}
           </Typography>
         </Paper>
       )}

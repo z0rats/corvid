@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -18,6 +19,7 @@ export default function Detection({
   conditionsList,
   handleConditionsListChange,
 }) {
+  const { t } = useTranslation('ruleCreator');
   const [keywords, setKeywords] = useState([]);
 
   const handleAddKeyword = (keyword) => {
@@ -39,31 +41,27 @@ export default function Detection({
   return (
     <Box>
       <Typography variant="caption" display="block" gutterBottom>
-        If your list consists of a single element, don't use a list.
+        {t('sigma.detection.helpNoSingleList')}
       </Typography>
       <Typography variant="caption" display="block" gutterBottom>
-        Use only lowercase identifiers.
+        {t('sigma.detection.helpLowercase')}
       </Typography>
       <Typography variant="caption" display="block" gutterBottom>
-        Put comments on lines if you like to (use 2 spaces to separate the expression
-        from your comment, e.g. - 'cmd.exe' # command line).
+        {t('sigma.detection.helpComments')}
       </Typography>
       <Typography variant="caption" display="block" gutterBottom>
-        Don't use regular expressions unless you really have to (e.g. instead of
-        CommandLine|re: '\\payload.*\skeyset' use CommandLine|contains|all with
-        the values \payload and keyset).
+        {t('sigma.detection.helpNoRegex')}
       </Typography>
       <Typography variant="caption" display="block" gutterBottom>
-        In new sources use the field names as they appear in the log source, remove
-        spaces and keep hyphens (e.g. SAM User Account becomes SAMUserAccount).
+        {t('sigma.detection.helpFieldNames')}
       </Typography>
       <Typography variant="caption" display="block" gutterBottom>
-        Don't use SIEM specific logic in your condition.
+        {t('sigma.detection.helpNoSiemLogic')}
       </Typography>
 
       {/* Keywords Section */}
       <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-        Keywords
+        {t('sigma.detection.keywordsHeader')}
       </Typography>
       <KeywordsInput
         keywords={keywords}
@@ -73,7 +71,7 @@ export default function Detection({
 
       {/* Selection Conditions Section */}
       <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-        Selection Conditions
+        {t('sigma.detection.selectionConditionsHeader')}
       </Typography>
       <SelectionConditions
         conditionsList={conditionsList}
@@ -86,27 +84,27 @@ export default function Detection({
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
-            label="Filter"
+            label={t('sigma.detection.filterLabel')}
             value={detections.filter}
             onChange={(e) =>
               handleDetectionsChange((prev) => ({ ...prev, filter: e.target.value }))
             }
             size="small"
             variant="outlined"
-            placeholder="e.g., selection and some_other_condition"
+            placeholder={t('sigma.detection.filterPlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
-            label="Timeframe"
+            label={t('sigma.detection.timeframeLabel')}
             value={detections.timeframe}
             onChange={(e) =>
               handleDetectionsChange((prev) => ({ ...prev, timeframe: e.target.value }))
             }
             size="small"
             variant="outlined"
-            placeholder="e.g., 1h, 30m"
+            placeholder={t('sigma.detection.timeframePlaceholder')}
           />
         </Grid>
       </Grid>
@@ -114,10 +112,10 @@ export default function Detection({
       {/* Condition Selection */}
       {(conditionsList.length > 0 || keywords.length > 0 || detections.filter || detections.timeframe) && (
         <FormControl fullWidth size="small" sx={{ mt: 2 }}>
-          <InputLabel>Condition</InputLabel>
+          <InputLabel>{t('sigma.detection.conditionLabel')}</InputLabel>
           <Select
             value={detections.condition}
-            label="Condition"
+            label={t('sigma.detection.conditionLabel')}
             onChange={(e) =>
               handleDetectionsChange((prev) => ({ ...prev, condition: e.target.value }))
             }

@@ -1,0 +1,167 @@
+{
+  "createForm": {
+    "basicInfo": "Основная информация",
+    "engineerTooltip": "Сгенерировать шаблон на основе названия и описания",
+    "optimizePromptAria": "Оптимизировать промпт",
+    "titleLabel": "Название",
+    "titleRequiredHelper": "Введите краткое название шаблона (обязательно)",
+    "titleHelper": "Уникальное имя для вашего шаблона.",
+    "modelLabel": "Модель LLM",
+    "groupLabel": "Группа",
+    "descriptionLabel": "Описание",
+    "descriptionHelper": "Кратко опишите назначение шаблона (опционально).",
+    "promptConfig": "Настройка промпта",
+    "agentRoleLabel": "Роль AI-агента",
+    "agentRoleRequiredHelper": "Опишите персону AI (обязательно)",
+    "agentRoleHelper": "Например: эксперт службы поддержки.",
+    "agentTaskLabel": "Задача AI-агента",
+    "agentTaskRequiredHelper": "Опишите задачу (обязательно)",
+    "agentTaskHelper": "Например: сформировать дружелюбный ответ.",
+    "payloadFieldsSection": "Поля данных",
+    "payloadFieldsHelper": "Задайте переменные для ввода пользователем и отметьте обязательные при необходимости.",
+    "staticContextsSection": "Статические контексты",
+    "staticContextsHelper": "Добавьте фиксированный контент, например инструкции или справочную информацию.",
+    "webContextsSection": "Веб-контексты",
+    "webContextsHelper": "Добавьте сайты, содержимое которых будет получено и включено при выполнении шаблона.",
+    "previewExampleSection": "Пример предпросмотра",
+    "previewExampleTopHelper": "Приведите пример, иллюстрирующий, как могут выглядеть ввод и вывод при использовании этого шаблона.",
+    "previewExampleBottomHelper": "Приведите пример ввода и вывода, чтобы помочь пользователям.",
+    "previewButton": "Предпросмотр",
+    "createButton": "Создать шаблон",
+    "creatingButton": "Создание…",
+    "promptEngineeredSuccess": "Промпт сгенерирован!",
+    "templateCreatedSuccess": "Шаблон создан!"
+  },
+  "editDialog": {
+    "title": "Редактировать шаблон",
+    "basicInfo": "Основная информация",
+    "titleLabel": "Название",
+    "modelLabel": "Модель LLM",
+    "descriptionLabel": "Описание",
+    "groupLabel": "Группа",
+    "aiAgentConfig": "Настройка AI-агента",
+    "agentRoleLabel": "Роль AI-агента",
+    "agentTaskLabel": "Задача AI-агента",
+    "exampleSection": "Пример (Markdown)",
+    "deleteButton": "Удалить",
+    "cancelButton": "Отмена",
+    "saveButton": "Сохранить изменения",
+    "deleteTemplateTitle": "Удалить шаблон",
+    "deleteTemplateMessage": "Вы уверены, что хотите удалить этот шаблон? Это действие нельзя отменить.",
+    "saveFailedAlert": "Не удалось сохранить шаблон"
+  },
+  "addCategoryDialog": {
+    "title": "Новая группа",
+    "nameLabel": "Название группы",
+    "cancelButton": "Отмена",
+    "createButton": "Создать"
+  },
+  "renameCategoryDialog": {
+    "title": "Переименовать группу",
+    "nameLabel": "Название группы",
+    "cancelButton": "Отмена",
+    "saveButton": "Сохранить"
+  },
+  "deleteCategoryDialog": {
+    "title": "Удалить группу",
+    "confirmMessagePrefix": "Вы уверены, что хотите удалить группу",
+    "containsTemplates_one": " В ней содержится {{count}} шаблон.",
+    "containsTemplates_other": " В ней содержится {{count}} шаблонов.",
+    "moveToDefault": "Переместить шаблоны в группу по умолчанию",
+    "deleteTemplatesInGroup": "Удалить все шаблоны в этой группе",
+    "cancelButton": "Отмена",
+    "deleteButton": "Удалить"
+  },
+  "exampleDialog": {
+    "temperatureLabel": "Температура: {{value}}",
+    "agentRole": "Роль агента",
+    "agentTask": "Задача агента",
+    "example": "Пример",
+    "noExample": "Пример не предоставлен",
+    "closeButton": "Закрыть"
+  },
+  "categorySection": {
+    "groupOptionsTooltip": "Параметры группы",
+    "renameMenuItem": "Переименовать",
+    "deleteMenuItem": "Удалить"
+  },
+  "templateCard": {
+    "viewExampleTooltip": "Посмотреть пример",
+    "viewExampleAria": "Посмотреть пример",
+    "editTemplateTooltip": "Редактировать шаблон",
+    "editTemplateAria": "Редактировать шаблон",
+    "deleteTemplateTooltip": "Удалить шаблон",
+    "deleteTemplateAria": "Удалить шаблон"
+  },
+  "detailPanel": {
+    "selectPrompt": "Выберите шаблон, чтобы начать",
+    "clearSearch": "Очистить поиск",
+    "removeFavorite": "Удалить из избранного",
+    "addFavorite": "Добавить в избранное",
+    "toggleFavoriteAria": "Переключить избранное",
+    "viewExampleTooltip": "Посмотреть пример",
+    "viewExampleAria": "Посмотреть пример",
+    "editTemplateTooltip": "Редактировать шаблон",
+    "editTemplateAria": "Редактировать шаблон",
+    "inputLabel": "Ввод",
+    "executeButton": "Выполнить шаблон",
+    "executingButton": "Выполнение…"
+  },
+  "executionResult": {
+    "resultHeading": "Результат",
+    "copyResultTooltip": "Скопировать результат",
+    "copyResultAria": "Скопировать результат"
+  },
+  "payloadFields": {
+    "helperText": "Поля данных — это поля, в которые пользователь вводит/вставляет данные, обрабатываемые шаблоном.",
+    "addFieldButton": "Добавить поле",
+    "emptyState": "Поля данных не заданы.",
+    "nameLabel": "Имя поля",
+    "nameRequiredHelper": "Обязательно",
+    "descriptionLabel": "Описание",
+    "deleteFieldAria": "Удалить поле"
+  },
+  "staticContexts": {
+    "helperText": "Статические контексты позволяют добавить постоянные данные, которые будут включены в промпт.",
+    "addContextButton": "Добавить контекст",
+    "emptyState": "Статические контексты не заданы.",
+    "nameLabel": "Название контекста",
+    "descriptionLabel": "Описание",
+    "contentLabel": "Содержимое",
+    "deleteContextAria": "Удалить контекст"
+  },
+  "webContexts": {
+    "helperText": "Веб-контексты позволяют получать содержимое сайтов при выполнении шаблона. Содержимое будет автоматически извлечено и включено в промпт.",
+    "addWebsiteButton": "Добавить сайт",
+    "emptyState": "Веб-контексты не заданы.",
+    "nameLabel": "Название контекста",
+    "nameRequiredHelper": "Обязательно",
+    "descriptionLabel": "Описание",
+    "descriptionPlaceholder": "Необязательное описание того, что предоставляет этот сайт",
+    "urlLabel": "URL сайта",
+    "urlRequiredHelper": "Обязательно — укажите корректный HTTP/HTTPS URL",
+    "urlHelper": "Содержимое сайта будет получено при выполнении шаблона",
+    "urlPlaceholder": "https://example.com/page",
+    "deleteContextAria": "Удалить контекст"
+  },
+  "sidebar": {
+    "searchPlaceholder": "Поиск шаблонов ({{count}})...",
+    "noSearchResults": "Шаблоны не найдены",
+    "addGroup": "Добавить группу"
+  },
+  "templatesView": {
+    "retryButton": "Повторить",
+    "noTemplatesAvailable": "Нет доступных шаблонов",
+    "templateExecutedSuccess": "Шаблон успешно выполнен!",
+    "templateDeletedSuccess": "Шаблон успешно удалён!",
+    "resultCopiedSuccess": "Результат скопирован в буфер обмена!",
+    "copyFailedError": "Не удалось скопировать в буфер обмена",
+    "templateUpdatedSuccess": "Шаблон успешно обновлён!",
+    "groupCreatedSuccess": "Группа создана!",
+    "groupRenamedSuccess": "Группа переименована!",
+    "groupDeletedSuccess": "Группа удалена!",
+    "orderUpdateFailedError": "Не удалось обновить порядок",
+    "deleteTemplateTitle": "Удалить шаблон",
+    "deleteTemplateMessage": "Вы уверены, что хотите удалить этот шаблон? Это действие нельзя отменить."
+  }
+}

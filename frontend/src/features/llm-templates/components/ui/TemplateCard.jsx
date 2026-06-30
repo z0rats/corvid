@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -10,6 +11,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 export default function TemplateCard({ template, selected, onSelect, onShowExample, onEdit, onDelete }) {
+  const { t } = useTranslation('llmTemplates');
   return (
     <Card
       variant="outlined"
@@ -55,14 +57,14 @@ export default function TemplateCard({ template, selected, onSelect, onShowExamp
             pl: 0.5,
           }}
         >
-          <IconButton size="small" onClick={e => { e.stopPropagation(); onShowExample(template); }} aria-label="View example">
-            <Tooltip title="View Example" arrow><VisibilityIcon fontSize="small" /></Tooltip>
+          <IconButton size="small" onClick={e => { e.stopPropagation(); onShowExample(template); }} aria-label={t('templateCard.viewExampleAria')}>
+            <Tooltip title={t('templateCard.viewExampleTooltip')} arrow><VisibilityIcon fontSize="small" /></Tooltip>
           </IconButton>
-          <IconButton size="small" onClick={e => { e.stopPropagation(); onEdit(template); }} aria-label="Edit template">
-            <Tooltip title="Edit Template" arrow><EditIcon fontSize="small" /></Tooltip>
+          <IconButton size="small" onClick={e => { e.stopPropagation(); onEdit(template); }} aria-label={t('templateCard.editTemplateAria')}>
+            <Tooltip title={t('templateCard.editTemplateTooltip')} arrow><EditIcon fontSize="small" /></Tooltip>
           </IconButton>
-          <IconButton size="small" onClick={e => { e.stopPropagation(); onDelete(template); }} aria-label="Delete template">
-            <Tooltip title="Delete Template" arrow><DeleteIcon fontSize="small" /></Tooltip>
+          <IconButton size="small" onClick={e => { e.stopPropagation(); onDelete(template); }} aria-label={t('templateCard.deleteTemplateAria')}>
+            <Tooltip title={t('templateCard.deleteTemplateTooltip')} arrow><DeleteIcon fontSize="small" /></Tooltip>
           </IconButton>
         </Stack>
       </Box>

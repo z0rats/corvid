@@ -1,12 +1,12 @@
 import asyncio
 import logging
 
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, File, Request, UploadFile, status
 from pydantic import BaseModel, Field
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep
-from app.core.exceptions import safe_error_detail
+from app.core.exceptions import AppHTTPException, safe_error_detail
 from ..config.email_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
 from ..schemas.email_schemas import EmailAnalysisResponse, EmailHealthResponse
 from ..service.email_ai_analysis_service import analyze_email_body
@@ -22,18 +22,30 @@ async def validate_uploaded_file(file: UploadFile) -> bytes:
     """Validate and read the uploaded email file, raising HTTPException on failure."""
     if not file.filename:
         logger.warning("File upload rejected: no filename provided")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No file provided",
+            error_code="EMAIL_NO_FILE",
+        )
 
     try:
         file_content = await file.read()
     except Exception as e:
         logger.error("Error reading uploaded file '%s': %s", file.filename, e)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading uploaded file")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error reading uploaded file",
+            error_code="EMAIL_FILE_READ_ERROR",
+        )
 
-    is_valid, error_message = validate_file_upload(file.filename, len(file_content))
+    is_valid, error_code, error_message = validate_file_upload(file.filename, len(file_content))
     if not is_valid:
         logger.warning("File upload rejected: %s", error_message)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_message,
+            error_code=error_code,
+        )
 
     logger.info("File validation passed for '%s' (%s bytes)", file.filename, len(file_content))
     return file_content
@@ -63,9 +75,10 @@ async def analyze_email_file(
         result = await asyncio.to_thread(analyze_email_content, file_content)
     except Exception as e:
         logger.error("Email analysis failed for '%s': %s", file.filename, e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=safe_error_detail(e, "Email analysis failed"),
+            error_code="EMAIL_ANALYSIS_FAILED",
         )
 
     logger.info("Email analysis completed successfully for '%s'", file.filename)
@@ -93,7 +106,11 @@ async def ai_analyze_email_body(
         result = await analyze_email_body(email_body=body.input, db=db)
     except ValueError as e:
         logger.error("AI email analysis failed: %s", e)
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise AppHTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+            error_code="EMAIL_AI_ANALYSIS_FAILED",
+        )
 
     return {"analysis_result": result}
 

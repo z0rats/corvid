@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import InputAdornment from '@mui/material/InputAdornment';
 import Paper from '@mui/material/Paper';
@@ -8,6 +9,8 @@ import TextField from '@mui/material/TextField';
 import SearchIcon from '@mui/icons-material/Search';
 
 export default function ApiKeysFilters({ searchFilter, showOnlyConfigured, onSearchChange, onToggleConfigured }) {
+  const { t } = useTranslation('settings');
+
   return (
     <Paper
       elevation={0}
@@ -15,7 +18,7 @@ export default function ApiKeysFilters({ searchFilter, showOnlyConfigured, onSea
     >
       <Stack direction="row" spacing={3} alignItems="center">
         <TextField
-          placeholder="Search services..."
+          placeholder={t('apiKeys.searchPlaceholder')}
           value={searchFilter}
           onChange={(e) => onSearchChange(e.target.value)}
           variant="outlined"
@@ -40,7 +43,7 @@ export default function ApiKeysFilters({ searchFilter, showOnlyConfigured, onSea
               sx={{ mr: 1 }}
             />
           }
-          label="Show only configured"
+          label={t('apiKeys.showOnlyConfigured')}
         />
       </Stack>
     </Paper>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
@@ -10,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import DescriptionIcon from "@mui/icons-material/Description";
 
 export default function Filenames(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       key="last_analysis_results_card"
@@ -21,7 +23,7 @@ export default function Filenames(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            Filenames
+            {t('providers.virustotal.filenames')}
           </Typography>
         </Grid>
       </Grid>

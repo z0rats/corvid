@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -16,43 +17,45 @@ import PublicIcon from '@mui/icons-material/Public';
 export default function StatisticsOverview({ 
   statistics, 
   onCopyAll, 
-  onExportAll 
+  onExportAll
 }) {
+  const { t } = useTranslation('iocTools');
+
   const duplicateStats = [
-    { 
-      label: 'Domains', 
-      value: statistics?.domains_removed_duplicates || 0, 
-      icon: <PublicIcon /> 
+    {
+      label: t('iocExtractor.statisticsOverview.duplicateLabels.domains'),
+      value: statistics?.domains_removed_duplicates || 0,
+      icon: <PublicIcon />
     },
-    { 
-      label: 'IP Addresses', 
-      value: statistics?.ips_removed_duplicates || 0, 
-      icon: <LanIcon /> 
+    {
+      label: t('iocExtractor.statisticsOverview.duplicateLabels.ipAddresses'),
+      value: statistics?.ips_removed_duplicates || 0,
+      icon: <LanIcon />
     },
-    { 
-      label: 'URLs', 
-      value: statistics?.urls_removed_duplicates || 0, 
-      icon: <LinkIcon /> 
+    {
+      label: t('iocExtractor.statisticsOverview.duplicateLabels.urls'),
+      value: statistics?.urls_removed_duplicates || 0,
+      icon: <LinkIcon />
     },
-    { 
-      label: 'Email Addresses', 
-      value: statistics?.emails_removed_duplicates || 0, 
-      icon: <AlternateEmailIcon /> 
+    {
+      label: t('iocExtractor.statisticsOverview.duplicateLabels.emailAddresses'),
+      value: statistics?.emails_removed_duplicates || 0,
+      icon: <AlternateEmailIcon />
     },
-    { 
-      label: 'MD5 Hashes', 
-      value: statistics?.md5_removed_duplicates || 0, 
-      icon: <InsertDriveFileIcon /> 
+    {
+      label: t('iocExtractor.statisticsOverview.duplicateLabels.md5Hashes'),
+      value: statistics?.md5_removed_duplicates || 0,
+      icon: <InsertDriveFileIcon />
     },
-    { 
-      label: 'SHA1 Hashes', 
-      value: statistics?.sha1_removed_duplicates || 0, 
-      icon: <InsertDriveFileIcon /> 
+    {
+      label: t('iocExtractor.statisticsOverview.duplicateLabels.sha1Hashes'),
+      value: statistics?.sha1_removed_duplicates || 0,
+      icon: <InsertDriveFileIcon />
     },
-    { 
-      label: 'SHA256 Hashes', 
-      value: statistics?.sha256_removed_duplicates || 0, 
-      icon: <InsertDriveFileIcon /> 
+    {
+      label: t('iocExtractor.statisticsOverview.duplicateLabels.sha256Hashes'),
+      value: statistics?.sha256_removed_duplicates || 0,
+      icon: <InsertDriveFileIcon />
     }
   ];
 
@@ -79,21 +82,21 @@ export default function StatisticsOverview({
           </Paper>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-              Extraction Complete
+              {t('iocExtractor.statisticsOverview.extractionComplete')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {statistics?.total_unique_iocs || 0} unique IOCs found and organized
+              {t('iocExtractor.statisticsOverview.uniqueIocsFound', { count: statistics?.total_unique_iocs || 0 })}
             </Typography>
           </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Copy all IOCs">
-            <IconButton onClick={onCopyAll} aria-label="Copy all">
+          <Tooltip title={t('iocExtractor.statisticsOverview.copyAllTooltip')}>
+            <IconButton onClick={onCopyAll} aria-label={t('iocExtractor.statisticsOverview.copyAllAriaLabel')}>
               <ContentCopyIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Export all IOCs">
-            <IconButton onClick={onExportAll} aria-label="Export all">
+          <Tooltip title={t('iocExtractor.statisticsOverview.exportAllTooltip')}>
+            <IconButton onClick={onExportAll} aria-label={t('iocExtractor.statisticsOverview.exportAllAriaLabel')}>
               <FileDownloadIcon />
             </IconButton>
           </Tooltip>
@@ -101,7 +104,7 @@ export default function StatisticsOverview({
       </Box>
 
       <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 500 }}>
-        Duplicates Removed
+        {t('iocExtractor.statisticsOverview.duplicatesRemoved')}
       </Typography>
       <Grid container spacing={1}>
         {duplicateStats.map((item, index) => (

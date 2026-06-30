@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useSetAtom } from 'jotai';
+import { useTranslation } from 'react-i18next';
 import { apiKeysState } from '../../../../core/state/atoms';
 import { settingsApi } from '../../services/api/settingsApi';
-import { NOTIFICATION_MESSAGES } from '../../constants/settingsConstants';
 import { createLogger } from '../../../../core/utils/logger';
 
 const logger = createLogger('ApiKeys');
@@ -11,6 +11,7 @@ const logger = createLogger('ApiKeys');
  * Hook for API keys operations
  */
 export function useApiKeys() {
+  const { t } = useTranslation('settings');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const setApiKeys = useSetAtom(apiKeysState);
@@ -33,13 +34,13 @@ export function useApiKeys() {
       const config = await settingsApi.getServicesConfig();
       return { success: true, data: config };
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || NOTIFICATION_MESSAGES.LOAD_ERROR;
+      const errorMessage = err.response?.data?.detail || t('notifications.loadError');
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const getKeyStatus = useCallback(async (keyName, relatedKeys = []) => {
     setLoading(true);
@@ -62,13 +63,13 @@ export function useApiKeys() {
         },
       };
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || NOTIFICATION_MESSAGES.LOAD_ERROR;
+      const errorMessage = err.response?.data?.detail || t('notifications.loadError');
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const saveApiKey = useCallback(async (name, key) => {
     setLoading(true);
@@ -84,15 +85,15 @@ export function useApiKeys() {
         }
       }
       await refreshApiKeys();
-      return { success: true, message: NOTIFICATION_MESSAGES.API_KEY_SAVED };
+      return { success: true, message: t('notifications.apiKeySaved') };
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || NOTIFICATION_MESSAGES.SAVE_ERROR;
+      const errorMessage = err.response?.data?.detail || t('notifications.saveError');
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, [refreshApiKeys]);
+  }, [refreshApiKeys, t]);
 
   const deleteApiKey = useCallback(async (name) => {
     setLoading(true);
@@ -100,15 +101,15 @@ export function useApiKeys() {
     try {
       await settingsApi.updateApiKey(name, '', false, false);
       await refreshApiKeys();
-      return { success: true, message: NOTIFICATION_MESSAGES.API_KEY_REMOVED };
+      return { success: true, message: t('notifications.apiKeyRemoved') };
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || NOTIFICATION_MESSAGES.SAVE_ERROR;
+      const errorMessage = err.response?.data?.detail || t('notifications.saveError');
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, [refreshApiKeys]);
+  }, [refreshApiKeys, t]);
 
   const toggleServiceActivation = useCallback(async (keyNames, currentStatus, serviceName) => {
     setLoading(true);
@@ -122,18 +123,18 @@ export function useApiKeys() {
 
       await refreshApiKeys();
       const message = targetIsActive
-        ? `${serviceName} ${NOTIFICATION_MESSAGES.API_KEY_ACTIVATED}`
-        : `${serviceName} ${NOTIFICATION_MESSAGES.API_KEY_DEACTIVATED}`;
+        ? t('notifications.serviceActivated', { service: serviceName })
+        : t('notifications.serviceDeactivated', { service: serviceName });
 
       return { success: true, message, isActive: targetIsActive };
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || NOTIFICATION_MESSAGES.SAVE_ERROR;
+      const errorMessage = err.response?.data?.detail || t('notifications.saveError');
       setError(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
-  }, [refreshApiKeys]);
+  }, [refreshApiKeys, t]);
 
   return {
     loading,

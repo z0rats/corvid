@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
@@ -25,13 +26,14 @@ const getCircleFillColor = (score, chart) => {
 };
 
 export default function AbuseIpdbDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const chart = theme.palette.chart;
 
   if (!result || !result.data) {
     const message = result && result.error
-        ? `Error fetching AbuseIPDB details: ${result.message || result.error}`
-        : "AbuseIPDB details are unavailable or still loading.";
+        ? t('providers.abuseipdb.errorFetching', { error: result.message || result.error })
+        : t('providers.abuseipdb.unavailable');
     return <NoDetails message={message} />;
   }
 
@@ -52,30 +54,30 @@ export default function AbuseIpdbDetails({ result, ioc }) {
     { name: "Score", value: score ?? 0 },
     { name: "Remaining", value: 100 - (score ?? 0), fill: chart.inactive }
   ];
-  
-  const lastReportedDate = data.lastReportedAt ? new Date(data.lastReportedAt).toLocaleDateString() : "N/A";
+
+  const lastReportedDate = data.lastReportedAt ? new Date(data.lastReportedAt).toLocaleDateString() : t('providers.common.notAvailable');
 
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
+    <Box sx={{
+      display: 'flex',
       flexDirection: { xs: 'column', md: 'row' },
       gap: 2,
-      p: 1 
+      p: 1
     }}>
-      <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 50%' } }}> 
+      <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 50%' } }}>
         <GeneralInfo
           data={transformedData}
         />
       </Box>
-      
+
       <Card  sx={{
         flex: { xs: '1 1 100%', md: '1 1 50%' },
         p: 2,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <DataUsageIcon />
-          <Typography variant="h6" component="h2">Confidence Score & Stats</Typography>
+          <Typography variant="h6" component="h2">{t('providers.abuseipdb.confidenceScoreAndStats')}</Typography>
         </Box>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={6}>
@@ -85,8 +87,8 @@ export default function AbuseIpdbDetails({ result, ioc }) {
                   <FileCopyIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Total Reports"
-                  secondary={data.totalReports ?? 'N/A'}
+                  primary={t('providers.abuseipdb.totalReports')}
+                  secondary={data.totalReports ?? t('providers.common.notAvailable')}
                 />
               </ListItem>
               <ListItem>
@@ -94,8 +96,8 @@ export default function AbuseIpdbDetails({ result, ioc }) {
                   <PeopleIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Distinct Users"
-                  secondary={data.numDistinctUsers ?? 'N/A'}
+                  primary={t('providers.abuseipdb.distinctUsers')}
+                  secondary={data.numDistinctUsers ?? t('providers.common.notAvailable')}
                 />
               </ListItem>
               <ListItem>
@@ -103,7 +105,7 @@ export default function AbuseIpdbDetails({ result, ioc }) {
                   <ScheduleIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Last Reported"
+                  primary={t('providers.abuseipdb.lastReported')}
                   secondary={lastReportedDate}
                 />
               </ListItem>
@@ -114,8 +116,8 @@ export default function AbuseIpdbDetails({ result, ioc }) {
                   />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Whitelisted"
-                  secondary={data.isWhitelisted ? "Yes" : "No"}
+                  primary={t('providers.abuseipdb.whitelisted')}
+                  secondary={data.isWhitelisted ? t('providers.common.yes') : t('providers.common.no')}
                 />
               </ListItem>
             </List>
@@ -151,10 +153,10 @@ export default function AbuseIpdbDetails({ result, ioc }) {
                     }}
                   >
                     <Typography variant="h3" sx={{ color: getCircleFillColor(score, chart) }} align="center">
-                      {score ?? 'N/A'}
+                      {score ?? t('providers.common.notAvailable')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" align="center">
-                      % malicious
+                      {t('providers.abuseipdb.percentMalicious')}
                     </Typography>
                   </Box>
                 </foreignObject>

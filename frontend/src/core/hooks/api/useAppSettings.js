@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useSetAtom } from 'jotai';
 import { settingsService } from '../../services/api/settingsService';
 import { createLogger } from '../../utils/logger';
+import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
 import {
   apiKeysState,
   modulesState,
@@ -50,6 +51,10 @@ export function useAppSettings() {
         setGeneralSettings(generalSettingsResponse);
         setAiSettings(aiSettingsResponse);
         document.body.setAttribute('data-font', generalSettingsResponse.font);
+
+        if (SUPPORTED_LANGUAGES.includes(generalSettingsResponse.language)) {
+          i18n.changeLanguage(generalSettingsResponse.language);
+        }
       } catch (error) {
         if (!ignore) {
           logger.error('Error fetching app settings:', error);

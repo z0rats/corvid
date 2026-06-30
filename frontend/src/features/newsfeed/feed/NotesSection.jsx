@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -29,6 +30,7 @@ export default function NotesSection({
   icon,
   isButton = false,
 }) {
+  const { t } = useTranslation('newsfeed');
   const theme = useTheme();
   const editorRef = useRef(null);
   const [noteContent, setNoteContent] = useState(item.note || "");
@@ -63,8 +65,8 @@ export default function NotesSection({
 
   if (isButton) {
     return (
-      <Tooltip title="Add or Edit Note" arrow>
-        <IconButton onClick={handleNoteEdit} sx={{ color: "primary.main" }} aria-label={item.note ? "Edit Note" : "Add Note"}>
+      <Tooltip title={t('feed.article.addOrEditNote')} arrow>
+        <IconButton onClick={handleNoteEdit} sx={{ color: "primary.main" }} aria-label={item.note ? t('feed.article.editNote') : t('feed.article.addNote')}>
           {icon}
         </IconButton>
       </Tooltip>
@@ -78,23 +80,23 @@ export default function NotesSection({
           <Stack direction="row" alignItems="center" spacing={1}>
             <EditNoteIcon />
             <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-              Note:
+              {t('feed.notes.label')}
             </Typography>
           </Stack>
           <Box sx={{ flexGrow: 1 }} />
           <Stack direction="row" spacing={0.5} sx={{ mr: 1 }}>
             {!item.editNote && (
-              <Tooltip title="Edit Note" arrow>
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleNoteEdit(); }} aria-label="Edit Note">
+              <Tooltip title={t('feed.notes.editNote')} arrow>
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleNoteEdit(); }} aria-label={t('feed.notes.editNote')}>
                   <EditIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}
-            <Tooltip title="Delete Note" arrow>
+            <Tooltip title={t('feed.notes.deleteNote')} arrow>
               <IconButton
                 size="small"
                 onClick={(e) => { e.stopPropagation(); setDeleteDialogOpen(true); }}
-                aria-label="Delete Note"
+                aria-label={t('feed.notes.deleteNote')}
                 sx={{ "&:hover": { color: "error.main" } }}
               >
                 <DeleteIcon fontSize="small" />
@@ -125,10 +127,10 @@ export default function NotesSection({
               </Box>
               <Stack direction="row" spacing={1}>
                 <Button variant="contained" disableElevation onClick={handleNoteSave}>
-                  Save Note
+                  {t('feed.notes.saveNote')}
                 </Button>
                 <Button variant="outlined" disableElevation onClick={handleCancel}>
-                  Cancel
+                  {t('feed.notes.cancel')}
                 </Button>
               </Stack>
             </Stack>
@@ -165,8 +167,8 @@ export default function NotesSection({
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Note"
-        message="Are you sure you want to delete this note? This action cannot be undone."
+        title={t('feed.notes.deleteDialogTitle')}
+        message={t('feed.notes.deleteDialogMessage')}
       />
     </>
   );

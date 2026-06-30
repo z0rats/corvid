@@ -1,0 +1,76 @@
+{
+  "nav": {
+    "newsfeed": "Новости",
+    "iocTools": "Инструменты IOC",
+    "emailAnalyzer": "Анализ Email",
+    "imageTools": "Инструменты для изображений",
+    "aiTemplates": "AI Шаблоны",
+    "cvssCalculator": "Калькулятор CVSS",
+    "detectionRules": "Правила обнаружения",
+
+    "aiTemplatesTabs": {
+      "templates": "Шаблоны",
+      "createTemplate": "Создать шаблон"
+    },
+
+    "iocToolsTabs": {
+      "singleLookup": "Одиночный поиск",
+      "bulkLookup": "Массовый поиск",
+      "domainFinder": "Поиск доменов",
+      "extractor": "Экстрактор",
+      "defangFang": "Defang/Fang"
+    },
+
+    "newsfeedTabs": {
+      "feed": "Лента",
+      "trends": "Тренды",
+      "headlineView": "Заголовки",
+      "newsReport": "Отчёт по новостям",
+      "settings": "Настройки",
+      "settingsGeneral": "Общие",
+      "manageFeeds": "Управление лентами",
+      "keywordMatching": "Совпадение по ключевым словам",
+      "ctiSettings": "Настройки CTI"
+    },
+
+    "settingsTabs": {
+      "apiKeys": "API ключи",
+      "aiSettings": "Настройки AI",
+      "modules": "Модули",
+      "about": "О программе"
+    },
+
+    "cvssTabs": {
+      "cvss31": "CVSS 3.1",
+      "cvss40": "CVSS 4.0"
+    },
+
+    "rulesTabs": {
+      "sigma": "Sigma",
+      "yara": "Yara",
+      "snort": "Snort"
+    }
+  },
+
+  "layout": {
+    "openMenu": "Открыть меню",
+    "toggleSidebar": "Свернуть/развернуть боковую панель",
+    "switchToLightMode": "Переключить на светлую тему",
+    "switchToDarkMode": "Переключить на тёмную тему",
+    "toggleDarkMode": "Переключить тёмный режим",
+    "settings": "Настройки"
+  },
+
+  "settings": {
+    "general": {
+      "title": "Общие",
+      "description": "Здесь настраиваются общие параметры приложения.",
+      "visual": "Внешний вид",
+      "darkMode": "Тёмный режим",
+      "customFont": "Шрифт",
+      "customFontHelper": "Изменить шрифт интерфейса OSINT Toolkit",
+      "language": "Язык",
+      "languageHelper": "Изменить язык интерфейса приложения"
+    }
+  }
+}

@@ -7,13 +7,15 @@ from app.core.settings.general.schemas.general_settings_schemas import (
     GeneralSettingsResponse,
     GeneralSettingsUpdate,
     DarkmodeUpdate,
-    FontUpdate
+    FontUpdate,
+    LanguageUpdate
 )
 from app.core.settings.general.service.general_settings_service import (
     get_general_settings,
     update_general_settings,
     update_darkmode_setting,
-    update_font_setting
+    update_font_setting,
+    update_language_setting
 )
 
 router = APIRouter(prefix="/api/settings/general", tags=["General Settings"])
@@ -66,3 +68,16 @@ async def update_font_endpoint(
     db: SessionDep
 ) -> GeneralSettingsResponse:
     return await update_font_setting(db, font_update)
+
+
+@router.put(
+    "/language",
+    response_model=GeneralSettingsResponse,
+    summary="Update language setting",
+    description="Update only the UI language preference setting"
+)
+async def update_language_endpoint(
+    language_update: LanguageUpdate,
+    db: SessionDep
+) -> GeneralSettingsResponse:
+    return await update_language_setting(db, language_update)

@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
@@ -16,6 +17,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 
 export default function LastAnalysisResults(props) {
+  const { t } = useTranslation('iocTools');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const theme = useTheme();
@@ -40,7 +42,7 @@ export default function LastAnalysisResults(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            Last analysis results
+            {t('providers.virustotal.lastAnalysisResults')}
           </Typography>
         </Grid>
       </Grid>
@@ -60,7 +62,7 @@ export default function LastAnalysisResults(props) {
                   fontWeight: "bold",
                 }}
               >
-                Engine
+                {t('providers.virustotal.engine')}
               </TableCell>
               <TableCell
                 sx={{
@@ -68,7 +70,7 @@ export default function LastAnalysisResults(props) {
                   fontWeight: "bold",
                 }}
               >
-                Category
+                {t('providers.virustotal.category')}
               </TableCell>
               <TableCell
                 sx={{
@@ -76,7 +78,7 @@ export default function LastAnalysisResults(props) {
                   fontWeight: "bold",
                 }}
               >
-                Result
+                {t('providers.virustotal.result')}
               </TableCell>
               <TableCell
                 sx={{
@@ -84,7 +86,7 @@ export default function LastAnalysisResults(props) {
                   fontWeight: "bold",
                 }}
               >
-                Method
+                {t('providers.virustotal.method')}
               </TableCell>
             </TableRow>
           </TableHead>

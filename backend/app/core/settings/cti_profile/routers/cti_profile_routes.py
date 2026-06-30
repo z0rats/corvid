@@ -6,9 +6,10 @@ FastAPI routes for CTI (Cyber Threat Intelligence) profile settings management.
 
 import logging
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from app.core.dependencies import SessionDep
+from app.core.exceptions import AppHTTPException
 from app.core.settings.cti_profile.schemas.cti_profile_schemas import (
     CTISettingsResponse,
     CTISettingsUpdate,
@@ -39,15 +40,17 @@ async def get_cti_settings(db: SessionDep) -> CTISettingsResponse:
         return await get_cti_profile_settings(db)
     except ValueError as e:
         logger.warning("Validation error retrieving CTI settings: %s", str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid settings data: {str(e)}"
+            detail=f"Invalid settings data: {str(e)}",
+            error_code="CTI_SETTINGS_INVALID",
         )
     except Exception as e:
         logger.error("Unexpected error retrieving CTI settings: %s", str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve CTI profile settings"
+            detail="Failed to retrieve CTI profile settings",
+            error_code="CTI_SETTINGS_RETRIEVE_FAILED",
         )
 
 
@@ -70,15 +73,17 @@ async def update_cti_settings(
         return await update_cti_profile_settings(db, settings_update)
     except ValueError as e:
         logger.warning("Validation error updating CTI settings: %s", str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid settings data: {str(e)}"
+            detail=f"Invalid settings data: {str(e)}",
+            error_code="CTI_SETTINGS_INVALID",
         )
     except Exception as e:
         logger.error("Unexpected error updating CTI settings: %s", str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update CTI profile settings"
+            detail="Failed to update CTI profile settings",
+            error_code="CTI_SETTINGS_UPDATE_FAILED",
         )
 
 
@@ -103,13 +108,15 @@ async def create_cti_settings(
         return await update_cti_profile_settings(db, settings_update)
     except ValueError as e:
         logger.warning("Validation error creating CTI settings: %s", str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid settings data: {str(e)}"
+            detail=f"Invalid settings data: {str(e)}",
+            error_code="CTI_SETTINGS_INVALID",
         )
     except Exception as e:
         logger.error("Unexpected error creating CTI settings: %s", str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create CTI profile settings"
+            detail="Failed to create CTI profile settings",
+            error_code="CTI_SETTINGS_CREATE_FAILED",
         )

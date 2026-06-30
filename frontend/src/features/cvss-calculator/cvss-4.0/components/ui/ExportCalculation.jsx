@@ -12,11 +12,13 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import { downloadBlob } from "../../../shared/utils/fileUtils";
 import { METRIC_MAPS } from "../../constants/exportMaps";
+import { useTranslation } from 'react-i18next';
 
 const mapMetric = (category, value) => METRIC_MAPS[category]?.[value] || "Unknown";
 
 export default function ExportCalculation({ metrics, scores, vectorString }) {
-  const options = ["Export as markdown", "Export as JSON"];
+  const { t } = useTranslation('cvssCalculator');
+  const options = [t('common.exportAsMarkdown'), t('common.exportAsJson')];
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [selectedIndex] = React.useState(0);
@@ -49,7 +51,7 @@ export default function ExportCalculation({ metrics, scores, vectorString }) {
     const cvssJson = {
       vectorString: vectorString,
       baseScore: scores?.base_score || 0,
-      baseSeverity: scores?.base_severity || "None",
+      baseSeverity: scores?.base_severity || t('common.severityNone'),
       baseMetrics: {
         attackVector: mapMetric("attack_vector", metrics.attack_vector),
         attackComplexity: mapMetric("attack_complexity", metrics.attack_complexity),
@@ -74,40 +76,41 @@ export default function ExportCalculation({ metrics, scores, vectorString }) {
   }
 
   function exportCalculationMarkdown() {
-    const cvssMarkdown = `# CVSS 4.0 Score
-Vector String: ${vectorString}
+    const baseSeverity = scores?.base_severity || t('common.severityNone');
+    const cvssMarkdown = `${t('cvss40.export.markdownTitle')}
+${t('common.vectorString', { vector: vectorString })}
 __________
-## Base Score: ${scores?.base_score || 0} (${scores?.base_severity || "None"})
+## ${t('cvss40.export.baseScoreHeading', { score: scores?.base_score || 0, severity: baseSeverity })}
 
-The Base metric group represents the intrinsic characteristics of a vulnerability that are constant over time and across user environments. It is composed of the Exploitability metrics and the Impact metrics.
+${t('cvss40.export.baseDescription')}
 
-### Exploitability Metrics
-- **Attack Vector (AV)**: ${mapMetric("attack_vector", metrics.attack_vector)}
-- **Attack Complexity (AC)**: ${mapMetric("attack_complexity", metrics.attack_complexity)}
-- **Attack Requirements (AT)**: ${mapMetric("attack_requirements", metrics.attack_requirements)}
-- **Privileges Required (PR)**: ${mapMetric("privileges_required", metrics.privileges_required)}
-- **User Interaction (UI)**: ${mapMetric("user_interaction", metrics.user_interaction)}
+### ${t('cvss40.export.exploitabilityMetricsHeading')}
+- ${t('cvss40.export.attackVector', { value: mapMetric("attack_vector", metrics.attack_vector) })}
+- ${t('cvss40.export.attackComplexity', { value: mapMetric("attack_complexity", metrics.attack_complexity) })}
+- ${t('cvss40.export.attackRequirements', { value: mapMetric("attack_requirements", metrics.attack_requirements) })}
+- ${t('cvss40.export.privilegesRequired', { value: mapMetric("privileges_required", metrics.privileges_required) })}
+- ${t('cvss40.export.userInteraction', { value: mapMetric("user_interaction", metrics.user_interaction) })}
 
-### Vulnerable System Impact
-- **Confidentiality (VC)**: ${mapMetric("vulnerable_system_confidentiality", metrics.vulnerable_system_confidentiality)}
-- **Integrity (VI)**: ${mapMetric("vulnerable_system_integrity", metrics.vulnerable_system_integrity)}
-- **Availability (VA)**: ${mapMetric("vulnerable_system_availability", metrics.vulnerable_system_availability)}
+### ${t('cvss40.export.vulnerableSystemImpactHeading')}
+- ${t('cvss40.export.vulnerableSystemConfidentiality', { value: mapMetric("vulnerable_system_confidentiality", metrics.vulnerable_system_confidentiality) })}
+- ${t('cvss40.export.vulnerableSystemIntegrity', { value: mapMetric("vulnerable_system_integrity", metrics.vulnerable_system_integrity) })}
+- ${t('cvss40.export.vulnerableSystemAvailability', { value: mapMetric("vulnerable_system_availability", metrics.vulnerable_system_availability) })}
 
-### Subsequent System Impact
-- **Confidentiality (SC)**: ${mapMetric("subsequent_system_confidentiality", metrics.subsequent_system_confidentiality)}
-- **Integrity (SI)**: ${mapMetric("subsequent_system_integrity", metrics.subsequent_system_integrity)}
-- **Availability (SA)**: ${mapMetric("subsequent_system_availability", metrics.subsequent_system_availability)}
-
-__________
-
-## Threat Metrics
-The Threat metrics measure the current state of exploit techniques or code availability.
-
-- **Exploit Maturity (E)**: ${mapMetric("exploit_maturity", metrics.exploit_maturity)}
+### ${t('cvss40.export.subsequentSystemImpactHeading')}
+- ${t('cvss40.export.subsequentSystemConfidentiality', { value: mapMetric("subsequent_system_confidentiality", metrics.subsequent_system_confidentiality) })}
+- ${t('cvss40.export.subsequentSystemIntegrity', { value: mapMetric("subsequent_system_integrity", metrics.subsequent_system_integrity) })}
+- ${t('cvss40.export.subsequentSystemAvailability', { value: mapMetric("subsequent_system_availability", metrics.subsequent_system_availability) })}
 
 __________
 
-# Overall Score: ${scores?.base_score || 0} (${scores?.base_severity || "None"})
+## ${t('cvss40.export.threatMetricsHeading')}
+${t('cvss40.export.threatMetricsDescription')}
+
+- ${t('cvss40.export.exploitMaturity', { value: mapMetric("exploit_maturity", metrics.exploit_maturity) })}
+
+__________
+
+# ${t('cvss40.export.overallScoreHeading', { score: scores?.base_score || 0, severity: baseSeverity })}
 `;
 
     const blob = new Blob([cvssMarkdown], { type: "text/markdown" });
@@ -118,7 +121,7 @@ __________
     <Box sx={{ display: "flex", justifyContent: "center", mt: 2.5, mb: 2 }}>
       <ButtonGroup variant="contained" ref={anchorRef} aria-label="split button">
         <Button onClick={handleClick} startIcon={<DownloadIcon />}>
-          Export calculation
+          {t('common.exportCalculation')}
         </Button>
         <Button
           size="small"

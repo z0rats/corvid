@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -12,6 +13,7 @@ import { createChartTheme } from "../../utils/chartTheme";
 import { modeValue } from "../../../../core/utils/themeUtils";
 
 export default function CveStatistics({ timeRange, refreshKey, onSelectArticleIds }) {
+  const { t } = useTranslation('newsfeed');
   const theme = useTheme();
   const { data, loading } = useTopCves(timeRange, refreshKey);
   const chartTheme = createChartTheme(theme);
@@ -38,7 +40,7 @@ export default function CveStatistics({ timeRange, refreshKey, onSelectArticleId
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6" color="text.primary">
-            Top Common Vulnerabilities and Exposures (CVEs)
+            {t('trends.cve.title')}
           </Typography>
         </Box>
 
@@ -60,13 +62,13 @@ export default function CveStatistics({ timeRange, refreshKey, onSelectArticleId
               axisLeft={{ tickSize: 5, tickPadding: 8, tickRotation: 0, legendPosition: "middle", legendOffset: -60 }}
               labelSkipWidth={12}
               labelSkipHeight={12}
-              onClick={(node) => onSelectArticleIds(node.data.article_ids || [], `CVE: ${node.data.value}`)}
+              onClick={(node) => onSelectArticleIds(node.data.article_ids || [], t('trends.cve.selectedTitle', { value: node.data.value }))}
               borderRadius={4}
               tooltip={({ value, indexValue }) => (
                 <Box bgcolor="background.paper" p={1.5} border={1} borderColor="divider" borderRadius={1}>
                   <Typography variant="body2" color="text.primary" fontWeight="medium">{indexValue}</Typography>
-                  <Typography variant="body2" color="text.secondary">{value} occurrences</Typography>
-                  <Typography variant="caption" color="text.secondary">Click to view articles</Typography>
+                  <Typography variant="body2" color="text.secondary">{t('trends.cve.occurrences', { count: value })}</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('trends.cve.clickToView')}</Typography>
                 </Box>
               )}
               role="application"
@@ -75,7 +77,7 @@ export default function CveStatistics({ timeRange, refreshKey, onSelectArticleId
           ) : (
             <Box display="flex" justifyContent="center" alignItems="center" height="100%">
               <Typography variant="body1" color="text.secondary">
-                No CVE data available for the selected time range.
+                {t('trends.cve.noData')}
               </Typography>
             </Box>
           )}

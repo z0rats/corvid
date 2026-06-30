@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -17,6 +18,7 @@ import { createLogger } from '../../../../../../core/utils/logger';
 const logger = createLogger('BulkLookupSettings');
 
 export default function BulkLookupSettings({ services, onSettingsChange, serviceDefinitions }) {
+  const { t } = useTranslation('iocTools');
   const [error, setError] = useState('');
 
   const handleToggle = useCallback((serviceName, currentValue) => {
@@ -40,9 +42,9 @@ export default function BulkLookupSettings({ services, onSettingsChange, service
       })
       .catch(err => {
         logger.error(`Failed to update setting for ${serviceName}:`, err);
-        setError(`Failed to update setting for ${serviceName}.`);
+        setError(t('bulkLookup.settings.errors.updateFailed', { serviceName }));
       });
-  }, [serviceDefinitions, onSettingsChange]);
+  }, [serviceDefinitions, onSettingsChange, t]);
 
   return (
     <Accordion sx={{ mb: 2, boxShadow: 1, '&:before': { display: 'none' } }}>
@@ -53,7 +55,7 @@ export default function BulkLookupSettings({ services, onSettingsChange, service
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <SettingsIcon sx={{ mr: 1, color: 'text.secondary' }} />
-          <Typography>Bulk IOC Lookup Settings</Typography>
+          <Typography>{t('bulkLookup.settings.title')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails>
@@ -69,7 +71,12 @@ export default function BulkLookupSettings({ services, onSettingsChange, service
                     onChange={() => handleToggle(name, is_bulk_lookup_enabled)}
                     checked={is_bulk_lookup_enabled}
                     slotProps={{
-                      input: { 'aria-labelledby': `switch-list-label-${name}` },
+                      input: {
+                        'aria-labelledby': `switch-list-label-${name}`,
+                        'aria-label': t('bulkLookup.settings.serviceToggleLabel', {
+                          serviceName: serviceDefinitions[name]?.name || name,
+                        }),
+                      },
                     }}
                   />
                 }>
@@ -82,7 +89,7 @@ export default function BulkLookupSettings({ services, onSettingsChange, service
           </List>
         ) : (
           <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
-            No services with API keys are configured. Please add keys in the main settings tab to enable them here.
+            {t('bulkLookup.settings.noServicesConfigured')}
           </Typography>
         )}
       </AccordionDetails>

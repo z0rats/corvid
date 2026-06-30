@@ -1,6 +1,7 @@
 import json
 import logging
 from fastapi import APIRouter, HTTPException, Request, status
+from app.core.exceptions import AppHTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from app.core.config.rate_limit_config import limiter
@@ -48,10 +49,10 @@ async def bulk_ioc_lookup(
     logger.info("Starting bulk lookup for %s IOCs across %s services", len(bulk_request.iocs), len(bulk_request.services))
     
     if not bulk_request.iocs:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No IOCs provided")
-    
+        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No IOCs provided", error_code="BULK_LOOKUP_NO_IOCS")
+
     if not bulk_request.services:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No services specified")
+        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No services specified", error_code="BULK_LOOKUP_NO_SERVICES")
 
     async def event_stream():
         """Generate Server-Sent Events stream for bulk lookup results."""

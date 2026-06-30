@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -12,6 +13,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTheme } from '@mui/material/styles';
 
 export default function ApiKeysHeader({ configuredCount, totalServices, completionPercentage, expanded, onToggle }) {
+  const { t } = useTranslation('settings');
   const theme = useTheme();
 
   return (
@@ -48,10 +50,10 @@ export default function ApiKeysHeader({ configuredCount, totalServices, completi
             <VpnKeyIcon sx={{ fontSize: 32, color: theme.palette.text.secondary }} />
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                API Key Management
+                {t('apiKeys.header.title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {configuredCount}/{totalServices} services configured ({completionPercentage}% complete)
+                {t('apiKeys.header.configuredOf', { configured: configuredCount, total: totalServices, percent: completionPercentage })}
               </Typography>
             </Box>
           </Box>
@@ -60,16 +62,16 @@ export default function ApiKeysHeader({ configuredCount, totalServices, completi
         <AccordionDetails sx={{ px: 2, pb: 2, pt: 0 }}>
           <Stack spacing={3}>
             <Typography variant="body1" color="text.secondary">
-              Configure your threat intelligence and security API keys to unlock the full potential of this platform.
+              {t('apiKeys.header.intro')}
             </Typography>
 
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Configuration Progress ({configuredCount}/{totalServices} services)
+                  {t('apiKeys.header.progress', { configured: configuredCount, total: totalServices })}
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {completionPercentage}% Complete
+                  {t('apiKeys.header.percentComplete', { percent: completionPercentage })}
                 </Typography>
               </Box>
               <LinearProgress
@@ -86,10 +88,10 @@ export default function ApiKeysHeader({ configuredCount, totalServices, completi
 
             <Box sx={{ p: 2, backgroundColor: theme.palette.action.hover, borderRadius: 1 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                Getting Started
+                {t('apiKeys.header.gettingStartedTitle')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                While initial setup requires generating multiple API keys, the enhanced security and intelligence capabilities make it worthwhile. Most services offer free tiers to get you started.
+                {t('apiKeys.header.gettingStartedBody')}
               </Typography>
             </Box>
           </Stack>

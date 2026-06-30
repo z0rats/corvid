@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -15,14 +16,15 @@ import RouteIcon from '@mui/icons-material/Route';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const HOP_COLUMNS = [
-  { key: 'number', label: 'Hop' },
-  { key: 'from', label: 'From', monospace: true },
-  { key: 'by', label: 'By', monospace: true },
-  { key: 'with', label: 'With' },
-  { key: 'date', label: 'Date / Time' },
+  { key: 'number', i18nKey: 'hop' },
+  { key: 'from', i18nKey: 'from', monospace: true },
+  { key: 'by', i18nKey: 'by', monospace: true },
+  { key: 'with', i18nKey: 'with' },
+  { key: 'date', i18nKey: 'date' },
 ];
 
 export default function Hops({ result }) {
+  const { t } = useTranslation('emailAnalyzer');
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -40,19 +42,19 @@ export default function Hops({ result }) {
         <Box display="flex" alignItems="center">
           <RouteIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
-            Hops ({result ? result.length : 0})
+            {t('hops.title', { count: result ? result.length : 0 })}
           </Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ p: 1 }}>
         {result ? (
           <TableContainer component={Paper} sx={{ maxWidth: '100%', boxShadow: 0, borderRadius: 1 }}>
-            <Table size="small" aria-label="hops table">
+            <Table size="small" aria-label={t('hops.tableAriaLabel')}>
               <TableHead>
                 <TableRow>
-                  {HOP_COLUMNS.map(({ key, label }) => (
+                  {HOP_COLUMNS.map(({ key, i18nKey }) => (
                     <TableCell key={key} align="left" sx={{ py: 1 }}>
-                      <Typography variant="body2" fontWeight="medium">{label}</Typography>
+                      <Typography variant="body2" fontWeight="medium">{t(`hops.columns.${i18nKey}`)}</Typography>
                     </TableCell>
                   ))}
                 </TableRow>
@@ -77,7 +79,7 @@ export default function Hops({ result }) {
           </TableContainer>
         ) : (
           <Typography variant="body2" sx={{ px: 1 }}>
-            Could not parse hops
+            {t('hops.empty')}
           </Typography>
         )}
       </AccordionDetails>

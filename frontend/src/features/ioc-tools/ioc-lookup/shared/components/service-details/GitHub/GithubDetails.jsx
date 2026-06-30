@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Grid from "@mui/material/Grid"; 
+import Grid from "@mui/material/Grid";
 import NoDetails from "../NoDetails";
 import Link from '@mui/material/Link';
 import Paper from '@mui/material/Paper';
@@ -18,7 +19,8 @@ import { useTheme } from '@mui/material/styles';
 import Typography from "@mui/material/Typography";
 import GitHubIcon from '@mui/icons-material/GitHub';
 
-export default function GithubDetails({ result, ioc }) { 
+export default function GithubDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
 
   const [page, setPage] = useState(0);
@@ -34,9 +36,9 @@ export default function GithubDetails({ result, ioc }) {
   };
 
   if (!result || result.error) {
-    const message = result && result.error 
-        ? `Error fetching GitHub details: ${result.message || result.error}` 
-        : "GitHub details are unavailable or the data is incomplete.";
+    const message = result && result.error
+        ? t('providers.github.errorFetching', { error: result.message || result.error })
+        : t('providers.github.unavailable');
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
         <NoDetails message={message} />
@@ -45,36 +47,36 @@ export default function GithubDetails({ result, ioc }) {
   }
 
   const items = Array.isArray(result.items) ? result.items : [];
-  const totalCount = result.total_count || 0; 
+  const totalCount = result.total_count || 0;
 
   if (items.length === 0) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`No GitHub mentions found for "${ioc}". (Total reported: ${totalCount})`} />
+        <NoDetails message={t('providers.github.noMentionsFound', { ioc, totalCount })} />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ margin: 1, mt:0 }}> 
+    <Box sx={{ margin: 1, mt:0 }}>
       <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
           <Grid container spacing={1} alignItems="center" mb={2}>
             <GitHubIcon color="action"/>
             <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-              GitHub Mentions ({totalCount} total)
+              {t('providers.github.mentionsTotal', { count: totalCount })}
             </Typography>
           </Grid>
           <TableContainer
             component={Paper}
-            elevation={0} 
+            elevation={0}
             sx={{
               borderRadius: 1,
-              border: '1px solid', 
+              border: '1px solid',
               borderColor: theme.palette.divider,
             }}
           >
-            <Table stickyHeader aria-label="github results table">
+            <Table stickyHeader aria-label={t('providers.github.tableAriaLabel')}>
               <TableHead>
                 <TableRow>
                   <TableCell
@@ -83,7 +85,7 @@ export default function GithubDetails({ result, ioc }) {
                       fontWeight: "bold",
                     }}
                   >
-                    Filename
+                    {t('providers.github.columns.filename')}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -91,7 +93,7 @@ export default function GithubDetails({ result, ioc }) {
                       fontWeight: "bold",
                     }}
                   >
-                    URL
+                    {t('providers.github.columns.url')}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -99,7 +101,7 @@ export default function GithubDetails({ result, ioc }) {
                       fontWeight: "bold",
                     }}
                   >
-                    Repository
+                    {t('providers.github.columns.repository')}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -110,7 +112,7 @@ export default function GithubDetails({ result, ioc }) {
                     page * rowsPerPage + rowsPerPage
                   )
                   .map((item, index) => (
-                    <TableRow 
+                    <TableRow
                         key={item.html_url || index}
                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                         hover
@@ -133,7 +135,7 @@ export default function GithubDetails({ result, ioc }) {
             <TablePagination
               rowsPerPageOptions={[3, 5, 10, 25, 50, 100]}
               component="div"
-              count={items.length} 
+              count={items.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}

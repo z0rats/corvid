@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
@@ -13,6 +14,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import LinkIcon from '@mui/icons-material/Link';
 
 export default function References({ references, handleReferencesChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentReference, setCurrentReference] = useState('');
 
   const handleAddReference = () => {
@@ -30,21 +32,21 @@ export default function References({ references, handleReferencesChange }) {
   return (
     <Box> 
       <Typography variant="subtitle2" gutterBottom>
-        Add references to web pages or documents that provide more context about the detected threat.
+        {t('sigma.references.helpText')}
       </Typography>
-      <Typography variant="body2" ml={2} gutterBottom component="div"> 
+      <Typography variant="body2" ml={2} gutterBottom component="div">
         <ul>
-          <li>Use links to web pages or documents only.</li>
-          <li>Do not link to EVTX files, PCAPs, or other raw content.</li>
-          <li>Do not include links to MITRE ATT&CK techniques (we use tags for that).</li>
+          <li>{t('sigma.references.guidanceLinksOnly')}</li>
+          <li>{t('sigma.references.guidanceNoRawContent')}</li>
+          <li>{t('sigma.references.guidanceNoMitreLinks')}</li>
         </ul>
       </Typography>
       <Typography variant="caption" gutterBottom>
-        Examples: blog posts, tweets, project pages, manual pages, advisories, discussions.
+        {t('sigma.references.examplesCaption')}
       </Typography>
       <TextField
         fullWidth
-        label="Reference"
+        label={t('sigma.references.label')}
         value={currentReference}
         onChange={(e) => setCurrentReference(e.target.value)}
         size="small"
@@ -55,16 +57,16 @@ export default function References({ references, handleReferencesChange }) {
             handleAddReference();
           }
         }}
-        placeholder="Enter reference and press Enter or click Add"
+        placeholder={t('sigma.references.placeholder')}
         slotProps={{
           input: {
             endAdornment: (
-              <Tooltip title="Add Reference">
+              <Tooltip title={t('sigma.references.addTooltip')}>
                 <IconButton
                   onClick={handleAddReference}
                   disabled={!currentReference.trim()}
                   size="small"
-                  aria-label="Add reference"
+                  aria-label={t('sigma.references.addAria')}
                 >
                   <AddCircleIcon fontSize="small" />
                 </IconButton>
@@ -85,7 +87,7 @@ export default function References({ references, handleReferencesChange }) {
                   edge="end"
                   onClick={() => handleDeleteReference(ref.id)}
                   size="small"
-                  aria-label="Delete reference"
+                  aria-label={t('sigma.references.deleteAria')}
                 >
                   <DeleteIcon fontSize="small" color="error" />
                 </IconButton>

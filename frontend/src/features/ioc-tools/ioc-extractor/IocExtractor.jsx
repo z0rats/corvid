@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import AppSnackbar from '../../../core/components/ui/AppSnackbar';
 import FileUploadZone from './components/ui/FileUploadZone';
@@ -10,6 +11,7 @@ import { IOC_CATEGORIES } from './constants/iocCategories';
 import { logger } from '../shared/utils/logger';
 
 export default function IocExtractor() {
+  const { t } = useTranslation('iocTools');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const {
@@ -30,10 +32,10 @@ export default function IocExtractor() {
   const handleFileUpload = async (file) => {
     try {
       await extractFromFile(file);
-      showSnackbar('IOC extraction completed successfully');
+      showSnackbar(t('iocExtractor.messages.extractionSuccess'));
     } catch (err) {
       logger.error('File upload failed', { error: err.message });
-      showSnackbar(err.message || 'Failed to extract IOCs from file', 'error');
+      showSnackbar(err.message || t('iocExtractor.messages.extractionFailed'), 'error');
     }
   };
 
@@ -42,7 +44,7 @@ export default function IocExtractor() {
       const result = await copyAllIOCs();
       showSnackbar(result.message);
     } catch (err) {
-      showSnackbar(err.message || 'Failed to copy IOCs', 'error');
+      showSnackbar(err.message || t('iocExtractor.messages.copyFailed'), 'error');
     }
   };
 
@@ -51,7 +53,7 @@ export default function IocExtractor() {
       const result = exportAllIOCs();
       showSnackbar(result.message);
     } catch (err) {
-      showSnackbar(err.message || 'Failed to export IOCs', 'error');
+      showSnackbar(err.message || t('iocExtractor.messages.exportFailed'), 'error');
     }
   };
 

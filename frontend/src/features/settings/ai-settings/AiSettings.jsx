@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
+import { useTranslation } from 'react-i18next';
 import { aiSettingsState } from '../../../core/state/atoms';
 import { useAiSettings } from '../hooks/api/useAiSettings';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
@@ -15,14 +16,15 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
-const MODULE_CONFIGS = [
-  { field: 'newsfeed_analysis_model', label: 'Newsfeed Article Analysis', description: 'Model used when analyzing individual news articles' },
-  { field: 'newsfeed_report_model', label: 'Newsfeed Report Generation', description: 'Model used for ranking and analyzing top articles in reports' },
-  { field: 'email_analyzer_model', label: 'Email Analyzer', description: 'Model used for AI-based email body analysis' },
-  { field: 'llm_templates_model', label: 'LLM Templates (new template default)', description: 'Default model for newly created templates' },
+const MODULE_CONFIG_FIELDS = [
+  'newsfeed_analysis_model',
+  'newsfeed_report_model',
+  'email_analyzer_model',
+  'llm_templates_model',
 ];
 
 function ModelSelector({ label, description, value, models, onChange, disabled, allowDefault = false }) {
+  const { t } = useTranslation('settings');
   const grouped = useMemo(
     () => Object.groupBy(models, m => m.provider),
     [models]
@@ -53,7 +55,7 @@ function ModelSelector({ label, description, value, models, onChange, disabled, 
           size="small"
           displayEmpty
         >
-          {allowDefault && <MenuItem value="">Use global default</MenuItem>}
+          {allowDefault && <MenuItem value="">{t('aiSettings.useGlobalDefault')}</MenuItem>}
           {Object.entries(grouped).flatMap(([provider, providerModels]) => [
             <ListSubheader key={provider}>{provider}</ListSubheader>,
             ...providerModels.map(m => (
@@ -67,6 +69,7 @@ function ModelSelector({ label, description, value, models, onChange, disabled, 
 }
 
 export default function AiSettings() {
+  const { t } = useTranslation('settings');
   const aiSettings = useAtomValue(aiSettingsState);
   const { loading, availableModels, updateAiSettings } = useAiSettings();
   const { notification, showNotification, hideNotification } = useNotification();
@@ -81,19 +84,18 @@ export default function AiSettings() {
       <Card elevation={0} sx={{ border: 'none' }}>
         <CardContent>
           <Typography variant="h5" sx={{ mb: 2 }}>
-            AI Settings
+            {t('aiSettings.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Configure which LLM models are used as defaults across the application.
-            Per-module overrides take priority over the global default.
+            {t('aiSettings.description')}
           </Typography>
 
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Global Default
+            {t('aiSettings.globalDefaultTitle')}
           </Typography>
           <ModelSelector
-            label="Default Model"
-            description="Fallback model used when no per-module override is set."
+            label={t('aiSettings.defaultModelLabel')}
+            description={t('aiSettings.defaultModelDescription')}
             value={aiSettings.default_model}
             models={availableModels}
             onChange={value => handleUpdate('default_model', value)}
@@ -101,14 +103,14 @@ export default function AiSettings() {
           />
 
           <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
-            Per-Module Overrides
+            {t('aiSettings.perModuleTitle')}
           </Typography>
           <Stack spacing={2}>
-            {MODULE_CONFIGS.map(({ field, label, description }) => (
+            {MODULE_CONFIG_FIELDS.map((field) => (
               <ModelSelector
                 key={field}
-                label={label}
-                description={description}
+                label={t(`aiSettings.modules.${field}.label`)}
+                description={t(`aiSettings.modules.${field}.description`)}
                 value={aiSettings[field]}
                 models={availableModels}
                 onChange={value => handleUpdate(field, value)}

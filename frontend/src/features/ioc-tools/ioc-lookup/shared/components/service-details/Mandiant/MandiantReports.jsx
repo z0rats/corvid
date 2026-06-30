@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
@@ -16,6 +17,8 @@ function openReportInNewTab(reportId) {
 }
 
 export default function MandiantReports({ reports, page, onPageChange }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const paginatedReports = reports.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
   const chunkedReports = [];
   for (let i = 0; i < paginatedReports.length; i += 2) {
@@ -41,19 +44,19 @@ export default function MandiantReports({ reports, page, onPageChange }) {
                     onClick={() => openReportInNewTab(report.report_id)}
                     sx={{ minWidth: 'auto', whiteSpace: 'nowrap' }}
                   >
-                    Open
+                    {t('providers.mandiant.open')}
                   </Button>
                 </Box>
                 <Box mt={1} display="flex" alignItems="center">
                   <CalendarTodayIcon fontSize="small" sx={{ mr: 1 }} />
                   <Typography variant="body2">
-                    Published: {new Date(report.publish_date).toLocaleDateString()}
+                    {t('providers.crowdstrike.published')} {new Date(report.publish_date).toLocaleDateString()}
                   </Typography>
                 </Box>
                 <Box mt={1} display="flex" flexWrap="wrap" alignItems="flex-start">
                   <Box display="flex" alignItems="center" sx={{ mr: 1 }}>
                     <CategoryIcon fontSize="small" sx={{ mr: 1 }} />
-                    <Typography variant="body2">Type: {report.report_type || 'N/A'}</Typography>
+                    <Typography variant="body2">{t('providers.crowdstrike.type')} {report.report_type || notAvailable}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {report.threat_scape?.map((scope, i) => (
@@ -63,7 +66,7 @@ export default function MandiantReports({ reports, page, onPageChange }) {
                 </Box>
                 <Box mt={1} sx={{ flexGrow: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Report ID: {report.report_id}
+                    {t('providers.mandiant.reportId')} {report.report_id}
                   </Typography>
                 </Box>
               </Box>

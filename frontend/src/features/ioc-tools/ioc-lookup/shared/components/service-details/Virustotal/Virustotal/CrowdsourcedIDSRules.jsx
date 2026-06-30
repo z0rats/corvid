@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
@@ -16,6 +17,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 
 export default function CrowdsourcedIDSRules(props) {
+  const { t } = useTranslation('iocTools');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(3);
   const theme = useTheme();
@@ -40,7 +42,7 @@ export default function CrowdsourcedIDSRules(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            Crowdsourced IDS rules
+            {t('providers.virustotal.crowdsourcedIdsRules')}
           </Typography>
         </Grid>
       </Grid>
@@ -62,7 +64,7 @@ export default function CrowdsourcedIDSRules(props) {
                   fontWeight: "bold",
                 }}
               >
-                Rule category
+                {t('providers.virustotal.ruleCategory')}
               </TableCell>
               <TableCell
                 sx={{
@@ -70,7 +72,7 @@ export default function CrowdsourcedIDSRules(props) {
                   fontWeight: "bold",
                 }}
               >
-                Alert severity
+                {t('providers.virustotal.alertSeverity')}
               </TableCell>
               <TableCell
                 sx={{
@@ -78,7 +80,7 @@ export default function CrowdsourcedIDSRules(props) {
                   fontWeight: "bold",
                 }}
               >
-                Rule message
+                {t('providers.virustotal.ruleMessage')}
               </TableCell>
               <TableCell
                 sx={{
@@ -86,7 +88,7 @@ export default function CrowdsourcedIDSRules(props) {
                   fontWeight: "bold",
                 }}
               >
-                Rule raw
+                {t('providers.virustotal.ruleRaw')}
               </TableCell>
               <TableCell
                 sx={{
@@ -94,7 +96,7 @@ export default function CrowdsourcedIDSRules(props) {
                   fontWeight: "bold",
                 }}
               >
-                Rule url
+                {t('providers.virustotal.ruleUrl')}
               </TableCell>
               <TableCell
                 sx={{
@@ -102,7 +104,7 @@ export default function CrowdsourcedIDSRules(props) {
                   fontWeight: "bold",
                 }}
               >
-                Rule source
+                {t('providers.virustotal.ruleSource')}
               </TableCell>
               <TableCell
                 sx={{
@@ -110,7 +112,7 @@ export default function CrowdsourcedIDSRules(props) {
                   fontWeight: "bold",
                 }}
               >
-                Rule ID
+                {t('providers.virustotal.ruleId')}
               </TableCell>
             </TableRow>
           </TableHead>

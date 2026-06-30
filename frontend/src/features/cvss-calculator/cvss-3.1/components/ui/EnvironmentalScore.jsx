@@ -13,11 +13,13 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MetricSelect from "../../../shared/components/MetricSelect";
 import { getSeverityColor } from "../../../shared/utils/scoreUtils";
 import { environmentalExploitabilityMetrics, environmentalImpactMetrics, impactSubscoreModifiers } from "../../constants/metricsConfig";
+import { useTranslation } from 'react-i18next';
 
 export default function EnvironmentalScore() {
   const theme = useTheme();
   const chart = theme.palette.chart;
   const { state, updateMetric } = useCvss31();
+  const { t } = useTranslation('cvssCalculator');
 
   const handleSelectChange = (key) => (e) => {
     const value = e.target.value === "X" ? null : e.target.value;
@@ -57,20 +59,14 @@ export default function EnvironmentalScore() {
       >
         <Box display="flex" alignItems="center">
           <ForestIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Environmental Score Metrics</Typography>
+          <Typography variant="subtitle2">{t('cvss31.environmental.accordionTitle')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
         <Grid container spacing={2} sx={{ alignItems: "stretch" }}>
           <Box sx={{ m: 1, p: 1, flex: 1, minWidth: 0 }}>
             <Typography variant="body1" paragraph>
-              These metrics enable the analyst to customize the CVSS score
-              depending on the importance of the affected IT asset to a user's
-              organization, measured in terms of complementary/alternative
-              security controls in place, Confidentiality, Integrity, and
-              Availability. The metrics are the modified equivalent of base
-              metrics and are assigned metrics value based on the component
-              placement in organization infrastructure.
+              {t('cvss31.environmental.description')}
             </Typography>
           </Box>
           
@@ -108,21 +104,21 @@ export default function EnvironmentalScore() {
           <Grid container spacing={2} sx={{ alignItems: "stretch" }}>
             <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="h6" align="center" gutterBottom>
-                Exploitability Metrics
+                {t('cvss31.environmental.exploitabilityMetrics')}
               </Typography>
               {renderMetricSelect(environmentalExploitabilityMetrics)}
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="h6" align="center" gutterBottom>
-                Impact Metrics
+                {t('cvss31.environmental.impactMetrics')}
               </Typography>
               {renderMetricSelect(environmentalImpactMetrics)}
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="h6" align="center" gutterBottom>
-                Impact Subscore Modifiers
+                {t('cvss31.environmental.impactSubscoreModifiers')}
               </Typography>
               {renderMetricSelect(impactSubscoreModifiers)}
             </Grid>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -30,6 +31,7 @@ import { createLogger } from "../../../core/utils/logger";
 const logger = createLogger("NewsfeedFilters");
 
 export default function Filters({ filters, setFilters, applyFilters, resetFilters, refreshData }) {
+  const { t } = useTranslation('newsfeed');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (event) => {
@@ -71,10 +73,10 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
         <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1 }}>
           <TuneIcon />
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            Advanced Options
+            {t('feed.filters.advancedOptions')}
           </Typography>
         </Stack>
-        <Tooltip title="Refresh Feed">
+        <Tooltip title={t('feed.filters.refreshFeed')}>
           <IconButton
             component="div"
             role="button"
@@ -82,7 +84,7 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
             size="small"
             onClick={handleRefresh}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleRefresh(e); }}
-            aria-label="Refresh"
+            aria-label={t('feed.filters.refresh')}
             sx={(theme) => ({ ml: 1, mr: 1, "&:hover": { backgroundColor: theme.palette.grey[200] } })}
           >
             <RefreshIcon />
@@ -93,7 +95,7 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
-              label="Start Date"
+              label={t('feed.filters.startDate')}
               type="date"
               name="start_date"
               value={filters.start_date}
@@ -104,7 +106,7 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <TextField
-              label="End Date"
+              label={t('feed.filters.endDate')}
               type="date"
               name="end_date"
               value={filters.end_date}
@@ -115,8 +117,8 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth>
-              <InputLabel id="tlp-label">TLP</InputLabel>
-              <Select labelId="tlp-label" name="tlp" value={filters.tlp} label="TLP" onChange={handleChange}>
+              <InputLabel id="tlp-label">{t('feed.filters.tlp')}</InputLabel>
+              <Select labelId="tlp-label" name="tlp" value={filters.tlp} label={t('feed.filters.tlp')} onChange={handleChange}>
                 {TLP_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
@@ -130,11 +132,11 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
             <FormGroup>
               <FormControlLabel
                 control={<Checkbox checked={filters.has_matches === true} onChange={handleChange} name="has_matches" />}
-                label="Has Keyword Matches"
+                label={t('feed.filters.hasKeywordMatches')}
               />
               <FormControlLabel
                 control={<Checkbox checked={filters.has_iocs === true} onChange={handleChange} name="has_iocs" />}
-                label="Has IOCs"
+                label={t('feed.filters.hasIocs')}
               />
             </FormGroup>
           </Grid>
@@ -143,11 +145,11 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
             <FormGroup>
               <FormControlLabel
                 control={<Checkbox checked={filters.has_analysis === true} onChange={handleChange} name="has_analysis" />}
-                label="Has Analysis"
+                label={t('feed.filters.hasAnalysis')}
               />
               <FormControlLabel
                 control={<Checkbox checked={filters.has_note === true} onChange={handleChange} name="has_note" />}
-                label="Has Note"
+                label={t('feed.filters.hasNote')}
               />
             </FormGroup>
           </Grid>
@@ -155,7 +157,7 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
           <Grid size={{ xs: 12, md: 4 }} sx={{ display: "flex", alignItems: "center" }}>
             <Stack direction="row" spacing={2}>
               <Button variant="outlined" color="inherit" startIcon={<RestartAltIcon />} onClick={resetFilters}>
-                Reset Filters
+                {t('feed.filters.resetFilters')}
               </Button>
               <Button
                 variant="outlined"
@@ -165,7 +167,7 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
                 disabled={isLoading}
               >
                 {isLoading && <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />}
-                {isLoading ? "Fetching..." : "Fetch News"}
+                {isLoading ? t('feed.filters.fetching') : t('feed.filters.fetchNews')}
               </Button>
             </Stack>
           </Grid>

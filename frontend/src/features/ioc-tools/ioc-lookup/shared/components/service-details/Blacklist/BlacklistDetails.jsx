@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
@@ -24,8 +25,10 @@ function DetailItem({ label, value }) {
 }
 
 export default function BlacklistDetails({ result }) {
+  const { t } = useTranslation('iocTools');
+
   if (!result || !result.data) {
-    return <NoDetails message="Address blacklist details are unavailable or still loading." />;
+    return <NoDetails message={t('providers.blacklist.unavailable')} />;
   }
 
   const { data } = result;
@@ -36,7 +39,7 @@ export default function BlacklistDetails({ result }) {
       <Card sx={{ p: 2, m: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
-          <Typography variant="h6">No match — not listed in OFAC SDN or ScamSniffer</Typography>
+          <Typography variant="h6">{t('providers.blacklist.noMatch')}</Typography>
         </Box>
       </Card>
     );
@@ -48,14 +51,14 @@ export default function BlacklistDetails({ result }) {
         <Card sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <GavelIcon color="error" />
-            <Typography variant="h6">OFAC Sanctioned</Typography>
+            <Typography variant="h6">{t('providers.blacklist.ofacSanctioned')}</Typography>
             <Chip label="SDN" color="error" size="small" />
           </Box>
           <List dense disablePadding>
-            <DetailItem label="Entity" value={ofac.entity_name} />
-            <DetailItem label="Program" value={ofac.program} />
-            <DetailItem label="Chain" value={ofac.chain} />
-            <DetailItem label="Remarks" value={ofac.remarks} />
+            <DetailItem label={t('providers.blacklist.entity')} value={ofac.entity_name} />
+            <DetailItem label={t('providers.blacklist.program')} value={ofac.program} />
+            <DetailItem label={t('providers.blacklist.chain')} value={ofac.chain} />
+            <DetailItem label={t('providers.blacklist.remarks')} value={ofac.remarks} />
           </List>
         </Card>
       )}
@@ -64,12 +67,12 @@ export default function BlacklistDetails({ result }) {
         <Card sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <WarningAmberIcon color="error" />
-            <Typography variant="h6">Phishing-Associated Address</Typography>
+            <Typography variant="h6">{t('providers.blacklist.phishingAssociated')}</Typography>
             <Chip label="ScamSniffer" color="error" size="small" />
           </Box>
           <List dense disablePadding>
-            <DetailItem label="Chain" value={scamsniffer.chain} />
-            <DetailItem label="Phishing domain" value={scamsniffer.phishing_domain} />
+            <DetailItem label={t('providers.blacklist.chain')} value={scamsniffer.chain} />
+            <DetailItem label={t('providers.blacklist.phishingDomain')} value={scamsniffer.phishing_domain} />
           </List>
         </Card>
       )}

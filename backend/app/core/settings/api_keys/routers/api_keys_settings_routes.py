@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, status
+from fastapi import APIRouter, Path, status
 
 from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.exceptions import AppHTTPException
 from app.core.settings.api_keys.schemas.api_keys_settings_schemas import (
     ApikeySchema,
     ApikeyCreateRequest,
@@ -46,7 +47,11 @@ ApiKeyName = Annotated[str, Path(min_length=1, max_length=100, description="API 
 async def create_apikey(apikey: ApikeyCreateRequest, db: SessionDep) -> ApikeySchema:
     result = await create_apikey_service(db, apikey)
     if result is None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="API key already exists")
+        raise AppHTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="API key already exists",
+            error_code="API_KEY_ALREADY_EXISTS",
+        )
     return result
 
 
@@ -97,7 +102,11 @@ async def get_all_apikeys_configured(db: ReadSessionDep) -> dict[str, bool]:
 async def get_apikey_is_active(name: ApiKeyName, db: ReadSessionDep) -> ApikeyStateResponse:
     is_active = await get_apikey_active_status(db, name)
     if is_active is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found",
+            error_code="API_KEY_NOT_FOUND",
+        )
     return ApikeyStateResponse(name=name, is_active=is_active)
 
 
@@ -111,7 +120,11 @@ async def get_apikey_is_active(name: ApiKeyName, db: ReadSessionDep) -> ApikeySt
 async def update_apikey_is_active(name: ApiKeyName, data: UpdateActiveStatusRequest, db: SessionDep) -> ApikeySchema:
     result = await update_apikey_active_status(db, name, data.is_active)
     if result is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found",
+            error_code="API_KEY_NOT_FOUND",
+        )
     return result
 
 
@@ -125,7 +138,11 @@ async def update_apikey_is_active(name: ApiKeyName, data: UpdateActiveStatusRequ
 async def get_apikey_bulk_lookup(name: ApiKeyName, db: ReadSessionDep) -> ApikeyBulkLookupStateResponse:
     bulk_ioc_lookup = await get_apikey_bulk_lookup_status(db, name)
     if bulk_ioc_lookup is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found",
+            error_code="API_KEY_NOT_FOUND",
+        )
     return ApikeyBulkLookupStateResponse(name=name, bulk_ioc_lookup=bulk_ioc_lookup)
 
 
@@ -143,7 +160,11 @@ async def update_apikey_bulk_lookup(name: ApiKeyName, data: UpdateBulkLookupStat
     service_config = get_service(name)
     if service_config and not service_config.get('api_key_name') and not service_config.get('api_key_names'):
         return await upsert_apikey_bulk_lookup_status(db, name, data.bulk_ioc_lookup)
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+    raise AppHTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="API key not found",
+        error_code="API_KEY_NOT_FOUND",
+    )
 
 
 @router.patch(
@@ -156,7 +177,11 @@ async def update_apikey_bulk_lookup(name: ApiKeyName, data: UpdateBulkLookupStat
 async def update_apikey(name: ApiKeyName, apikey: ApikeyUpdateRequest, db: SessionDep) -> ApikeySchema:
     result = await update_apikey_service(db, name, apikey)
     if result is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found",
+            error_code="API_KEY_NOT_FOUND",
+        )
     return result
 
 
@@ -170,5 +195,9 @@ async def update_apikey(name: ApiKeyName, apikey: ApikeyUpdateRequest, db: Sessi
 async def delete_apikey(name: ApiKeyName, db: SessionDep) -> DeleteApikeyResponse:
     result = await delete_apikey_service(db, name)
     if result is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found",
+            error_code="API_KEY_NOT_FOUND",
+        )
     return result

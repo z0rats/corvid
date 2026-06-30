@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useYaraRuleState } from './hooks/state/useYaraRuleState';
@@ -12,6 +13,7 @@ import ActionButtons from '../shared/components/ui/ActionButtons';
 import RulePreview from '../shared/components/ui/RulePreview';
 
 export default function Yara() {
+  const { t } = useTranslation('ruleCreator');
   const ruleState = useYaraRuleState();
   const actions = useYaraRuleActions(ruleState);
 
@@ -30,7 +32,7 @@ export default function Yara() {
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h5" align="center" gutterBottom>
-        YARA Rule Builder
+        {t('yara.title')}
       </Typography>
 
       <MetadataForm
@@ -75,14 +77,14 @@ export default function Yara() {
         onReset={handleReset}
         canPreview={isValidForPreview()}
         canExport={isValidForExport()}
-        ruleType="YARA"
+        ruleType={t('common.ruleTypeLabels.yara')}
       />
 
       <RulePreview
         open={previewOpen}
         onClose={handleClosePreview}
         rulePreview={rulePreview}
-        title="YARA Rule Preview"
+        title={t('common.preview.yaraTitle')}
       />
     </Box>
   );

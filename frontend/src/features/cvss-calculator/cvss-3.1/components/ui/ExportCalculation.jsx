@@ -12,11 +12,13 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import { downloadBlob, round } from "../../../shared/utils/fileUtils";
 import { METRIC_MAPS } from "../../constants/exportMaps";
+import { useTranslation } from 'react-i18next';
 
 const mapMetric = (category, value) => METRIC_MAPS[category]?.[value] || value || 'Not Defined';
 
 export default function ExportCalculation({ cvssScores, vectorString }) {
-  const options = ["Export as markdown", "Export as JSON"];
+  const { t } = useTranslation('cvssCalculator');
+  const options = [t('common.exportAsMarkdown'), t('common.exportAsJson')];
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
   const [selectedIndex] = React.useState(0);
@@ -93,56 +95,56 @@ export default function ExportCalculation({ cvssScores, vectorString }) {
   }
 
   function exportCalculationMarkdown() {
-    const cvssMarkdown = `# CVSS 3.1 score
-Vector String: ${vectorString}
+    const cvssMarkdown = `${t('cvss31.export.markdownTitle')}
+${t('common.vectorString', { vector: vectorString })}
 __________
-## Base Score Metrics (Score: ${scores.base.baseScore})
-The Base metric group represents the intrinsic characteristics of a vulnerability that are constant over time and across user environments. It is composed of two sets of metrics: the Exploitability metrics and the Impact metrics. The Exploitability metrics reflect the ease and technical means by which the vulnerability can be exploited. That is, they represent characteristics of the thing that is vulnerable, which we refer to formally as the vulnerable component. On the other hand, the Impact metrics reflect the direct consequence of a successful exploit, and represent the consequence to the thing that suffers the impact, which we refer to formally as the impacted component.
+## ${t('cvss31.export.baseScoreMetricsHeading', { score: scores.base.baseScore })}
+${t('cvss31.base.description')}
 
-###  Exploitability Metrics (Score: ${round(scores.base.exploitabilityScore)})
-- Attack Vector (AV): ${mapMetric('attackVector', metrics.base.attackVector)}
-- Attack Complexity (AC): ${mapMetric('attackComplexity', metrics.base.attackComplexity)}
-- Privileges Required (PR): ${mapMetric('privilegesRequired', metrics.base.privilegesRequired)}
-- User Interaction (UI): ${mapMetric('userInteraction', metrics.base.userInteraction)}
+### ${t('cvss31.export.exploitabilityMetricsHeading', { score: round(scores.base.exploitabilityScore) })}
+- ${t('cvss31.export.attackVector', { value: mapMetric('attackVector', metrics.base.attackVector) })}
+- ${t('cvss31.export.attackComplexity', { value: mapMetric('attackComplexity', metrics.base.attackComplexity) })}
+- ${t('cvss31.export.privilegesRequired', { value: mapMetric('privilegesRequired', metrics.base.privilegesRequired) })}
+- ${t('cvss31.export.userInteraction', { value: mapMetric('userInteraction', metrics.base.userInteraction) })}
 
-### Impact Metrics (Score: ${round(scores.base.impactScore)})
-- Confidentiality Impact (CI): ${mapMetric('confidentialityImpact', metrics.base.confidentialityImpact)}
-- Integrity Impact (I): ${mapMetric('integrityImpact', metrics.base.integrityImpact)}
-- Availability Impact (AI): ${mapMetric('availabilityImpact', metrics.base.availabilityImpact)}
+### ${t('cvss31.export.impactMetricsHeading', { score: round(scores.base.impactScore) })}
+- ${t('cvss31.export.confidentialityImpact', { value: mapMetric('confidentialityImpact', metrics.base.confidentialityImpact) })}
+- ${t('cvss31.export.integrityImpact', { value: mapMetric('integrityImpact', metrics.base.integrityImpact) })}
+- ${t('cvss31.export.availabilityImpact', { value: mapMetric('availabilityImpact', metrics.base.availabilityImpact) })}
 
-#### Scope (S): ${mapMetric('scope', metrics.base.scope)}
-__________
-
-## Temporal Score Metrics (Score: ${round(scores.temporal.temporalScore)})
-The Temporal metrics measure the current state of exploit techniques or code availability, the existence of any patches or workarounds, or the confidence that one has in the description of a vulnerability. Temporal metrics will almost certainly change over time.
-
-- Exploit Code Maturity (E): ${mapMetric('exploitCodeMaturity', metrics.temporal.exploitCodeMaturity)}
-- Remediation Level (RL): ${mapMetric('remediationLevel', metrics.temporal.remediationLevel)}
-- Report Confidence (RC): ${mapMetric('reportConfidence', metrics.temporal.reportConfidence)}
+#### ${t('cvss31.export.scopeHeading', { value: mapMetric('scope', metrics.base.scope) })}
 __________
 
-## Environmental Score Metrics (Score: ${round(scores.environmental.environmentalScore)})
-These metrics enable the analyst to customize the CVSS score depending on the importance of the affected IT asset to a user's organization, measured in terms of complementary/alternative security controls in place, Confidentiality, Integrity, and Availability. The metrics are the modified equivalent of base metrics and are assigned metrics value based on the component placement in organization infrastructure.
+## ${t('cvss31.export.temporalScoreHeading', { score: round(scores.temporal.temporalScore) })}
+${t('cvss31.temporal.description')}
 
-### Exploitability Metrics (Score: ${round(scores.environmental.modifiedExploitabilityScore)})
-- Attack Vector (MAV): ${mapMetric('modifiedAttackVector', metrics.environmental.modifiedAttackVector)}
-- Attack Complexity (MAC): ${mapMetric('modifiedAttackComplexity', metrics.environmental.modifiedAttackComplexity)}
-- Privileges Required (MPR): ${mapMetric('modifiedPrivilegesRequired', metrics.environmental.modifiedPrivilegesRequired)}
-- User Interaction (MUI): ${mapMetric('modifiedUserInteraction', metrics.environmental.modifiedUserInteraction)}
-- Scope (MS): ${mapMetric('modifiedScope', metrics.environmental.modifiedScope)}
-
-### Impact Metrics (Score: ${round(scores.environmental.modifiedImpactScore)})
-- Confidentiality Impact (MC): ${mapMetric('modifiedConfidentialityImpact', metrics.environmental.modifiedConfidentialityImpact)}
-- Integrity Impact (MI): ${mapMetric('modifiedIntegrityImpact', metrics.environmental.modifiedIntegrityImpact)}
-- Availability Impact (MAI): ${mapMetric('modifiedAvailabilityImpact', metrics.environmental.modifiedAvailabilityImpact)}
-
-### Impact Subscore Modifiers (Score: ${round(scores.environmental.modifiedImpactSubScore)})
-- Confidentiality Requirement (CR): ${mapMetric('confidentialityRequirement', metrics.environmental.confidentialityRequirement)}
-- Integrity Requirement (IR): ${mapMetric('integrityRequirement', metrics.environmental.integrityRequirement)}
-- Availability Requirement (AR): ${mapMetric('availabilityRequirement', metrics.environmental.availabilityRequirement)}
+- ${t('cvss31.export.exploitCodeMaturity', { value: mapMetric('exploitCodeMaturity', metrics.temporal.exploitCodeMaturity) })}
+- ${t('cvss31.export.remediationLevel', { value: mapMetric('remediationLevel', metrics.temporal.remediationLevel) })}
+- ${t('cvss31.export.reportConfidence', { value: mapMetric('reportConfidence', metrics.temporal.reportConfidence) })}
 __________
 
-# Overall Score: ${round(scores.environmental.environmentalScore)}
+## ${t('cvss31.export.environmentalScoreHeading', { score: round(scores.environmental.environmentalScore) })}
+${t('cvss31.environmental.description')}
+
+### ${t('cvss31.export.exploitabilityMetricsHeading', { score: round(scores.environmental.modifiedExploitabilityScore) })}
+- ${t('cvss31.export.modifiedAttackVector', { value: mapMetric('modifiedAttackVector', metrics.environmental.modifiedAttackVector) })}
+- ${t('cvss31.export.modifiedAttackComplexity', { value: mapMetric('modifiedAttackComplexity', metrics.environmental.modifiedAttackComplexity) })}
+- ${t('cvss31.export.modifiedPrivilegesRequired', { value: mapMetric('modifiedPrivilegesRequired', metrics.environmental.modifiedPrivilegesRequired) })}
+- ${t('cvss31.export.modifiedUserInteraction', { value: mapMetric('modifiedUserInteraction', metrics.environmental.modifiedUserInteraction) })}
+- ${t('cvss31.export.modifiedScope', { value: mapMetric('modifiedScope', metrics.environmental.modifiedScope) })}
+
+### ${t('cvss31.export.impactMetricsHeading', { score: round(scores.environmental.modifiedImpactScore) })}
+- ${t('cvss31.export.modifiedConfidentialityImpact', { value: mapMetric('modifiedConfidentialityImpact', metrics.environmental.modifiedConfidentialityImpact) })}
+- ${t('cvss31.export.modifiedIntegrityImpact', { value: mapMetric('modifiedIntegrityImpact', metrics.environmental.modifiedIntegrityImpact) })}
+- ${t('cvss31.export.modifiedAvailabilityImpact', { value: mapMetric('modifiedAvailabilityImpact', metrics.environmental.modifiedAvailabilityImpact) })}
+
+### ${t('cvss31.export.impactSubscoreModifiersHeading', { score: round(scores.environmental.modifiedImpactSubScore) })}
+- ${t('cvss31.export.confidentialityRequirement', { value: mapMetric('confidentialityRequirement', metrics.environmental.confidentialityRequirement) })}
+- ${t('cvss31.export.integrityRequirement', { value: mapMetric('integrityRequirement', metrics.environmental.integrityRequirement) })}
+- ${t('cvss31.export.availabilityRequirement', { value: mapMetric('availabilityRequirement', metrics.environmental.availabilityRequirement) })}
+__________
+
+# ${t('cvss31.export.overallScoreHeading', { score: round(scores.environmental.environmentalScore) })}
 `;
 
     const blob = new Blob([cvssMarkdown], { type: "text/markdown" });
@@ -153,7 +155,7 @@ __________
     <Box sx={{ display: "flex", justifyContent: "center", mt: 2.5, mb: 2 }}>
       <ButtonGroup variant="contained" ref={anchorRef} aria-label="split button">
         <Button onClick={handleClick} startIcon={<DownloadIcon />}>
-          Export calculation
+          {t('common.exportCalculation')}
         </Button>
         <Button
           size="small"

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -11,6 +12,7 @@ import { useIocDistribution } from "../../hooks/api/useTrendsApi";
 import { createChartTheme } from "../../utils/chartTheme";
 
 export default function IocDistributionChart({ timeRange, refreshKey }) {
+  const { t } = useTranslation('newsfeed');
   const theme = useTheme();
   const { data, loading } = useIocDistribution(timeRange, refreshKey);
   const chartTheme = createChartTheme(theme);
@@ -27,7 +29,7 @@ export default function IocDistributionChart({ timeRange, refreshKey }) {
     <Card sx={{ minHeight: "450px", height: "100%" }}>
       <CardContent>
         <Typography variant="h6" color="text.primary" mb={2}>
-          IOC Type Distribution
+          {t('trends.iocDistribution.title')}
         </Typography>
         <Box height="400px">
           {data.length > 0 ? (
@@ -73,7 +75,7 @@ export default function IocDistributionChart({ timeRange, refreshKey }) {
               tooltip={({ datum: { id, value, label } }) => (
                 <Box bgcolor="background.paper" p={1.5} border={1} borderColor="divider" borderRadius={1}>
                   <Typography variant="body2" color="text.primary" fontWeight="medium">{label}</Typography>
-                  <Typography variant="body2" color="text.secondary">{value} total occurrences</Typography>
+                  <Typography variant="body2" color="text.secondary">{t('trends.iocDistribution.totalOccurrences', { count: value })}</Typography>
                 </Box>
               )}
               role="application"
@@ -83,7 +85,7 @@ export default function IocDistributionChart({ timeRange, refreshKey }) {
           ) : (
             <Box display="flex" justifyContent="center" alignItems="center" height="100%">
               <Typography variant="body1" color="text.secondary">
-                No IOC type distribution data available for the selected time range.
+                {t('trends.iocDistribution.noData')}
               </Typography>
             </Box>
           )}

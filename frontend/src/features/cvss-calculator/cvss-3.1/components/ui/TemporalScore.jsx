@@ -13,11 +13,13 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MetricSelect from "../../../shared/components/MetricSelect";
 import { getSeverityColor } from "../../../shared/utils/scoreUtils";
 import { temporalMetrics } from "../../constants/metricsConfig";
+import { useTranslation } from 'react-i18next';
 
 export default function TemporalScore() {
   const theme = useTheme();
   const chart = theme.palette.chart;
   const { state, updateMetric } = useCvss31();
+  const { t } = useTranslation('cvssCalculator');
 
   const handleSelectChange = (key) => (e) => {
     updateMetric('temporal', key, e.target.value);
@@ -57,18 +59,14 @@ export default function TemporalScore() {
       >
         <Box display="flex" alignItems="center">
           <TimerIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Temporal Score Metrics</Typography>
+          <Typography variant="subtitle2">{t('cvss31.temporal.accordionTitle')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
         <Grid container spacing={2} sx={{ alignItems: "stretch" }}>
           <Box sx={{ m: 1, p: 1, flex: 1, minWidth: 0 }}>
             <Typography variant="body1" paragraph>
-              The Temporal metrics measure the current state of exploit techniques
-              or code availability, the existence of any patches or workarounds,
-              or the confidence that one has in the description of a
-              vulnerability. Temporal metrics will almost certainly change over
-              time.
+              {t('cvss31.temporal.description')}
             </Typography>
           </Box>
           
@@ -97,7 +95,7 @@ export default function TemporalScore() {
               gutterBottom
               sx={{ display: "block", marginBottom: 1, color: getSeverityColor(state.scores.temporal.temporalScore, chart) }}
             >
-              {state.scores.temporal.temporalSeverity || "None"}
+              {state.scores.temporal.temporalSeverity || t('common.severityNone')}
             </Typography>
           </Box>
         </Grid>

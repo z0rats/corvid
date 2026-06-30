@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
@@ -20,11 +21,12 @@ import LinkIcon from '@mui/icons-material/Link';
 import { SNORT_CONSTANTS } from '../../constants/snortConstants';
 
 export default function ReferencesSection({ references, onReferencesChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentReference, setCurrentReference] = useState({ type: 'url', value: '' });
 
   const handleAdd = () => {
     if (!currentReference.value.trim()) {
-      alert('Reference value is required.');
+      alert(t('snort.referencesSection.requiredAlert'));
       return;
     }
     onReferencesChange([...references, { id: crypto.randomUUID(), ...currentReference, value: currentReference.value.trim() }]);
@@ -38,15 +40,15 @@ export default function ReferencesSection({ references, onReferencesChange }) {
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="subtitle2" gutterBottom>
-        References
+        {t('snort.referencesSection.header')}
       </Typography>
       <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>Type</InputLabel>
+            <InputLabel>{t('snort.referencesSection.typeLabel')}</InputLabel>
             <Select
               value={currentReference.type}
-              label="Type"
+              label={t('snort.referencesSection.typeLabel')}
               onChange={(e) => setCurrentReference(prev => ({ ...prev, type: e.target.value }))}
             >
               {SNORT_CONSTANTS.REFERENCE_TYPES.map((type) => (
@@ -60,12 +62,12 @@ export default function ReferencesSection({ references, onReferencesChange }) {
         <Grid size={{ xs: 12, sm: 7 }}>
           <TextField
             fullWidth
-            label="Reference Value"
+            label={t('snort.referencesSection.valueLabel')}
             value={currentReference.value}
             onChange={(e) => setCurrentReference(prev => ({ ...prev, value: e.target.value }))}
             size="small"
             variant="outlined"
-            placeholder="URL, CVE ID, etc."
+            placeholder={t('snort.referencesSection.valuePlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
@@ -77,7 +79,7 @@ export default function ReferencesSection({ references, onReferencesChange }) {
             size="small"
             fullWidth
           >
-            Add
+            {t('common.actions.add')}
           </Button>
         </Grid>
       </Grid>
@@ -88,8 +90,8 @@ export default function ReferencesSection({ references, onReferencesChange }) {
             <ListItem
               key={ref.id}
               secondaryAction={
-                <Tooltip title="Delete Reference">
-                  <IconButton edge="end" onClick={() => handleDelete(ref.id)} size="small" aria-label="Delete reference">
+                <Tooltip title={t('snort.referencesSection.deleteTooltip')}>
+                  <IconButton edge="end" onClick={() => handleDelete(ref.id)} size="small" aria-label={t('snort.referencesSection.deleteAria')}>
                     <DeleteIcon fontSize="small" color="error" />
                   </IconButton>
                 </Tooltip>

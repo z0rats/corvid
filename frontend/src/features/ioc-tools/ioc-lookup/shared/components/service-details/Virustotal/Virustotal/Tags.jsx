@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
@@ -8,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import TagIcon from "@mui/icons-material/Tag";
 
 export default function Tags(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       key="tags_card"
@@ -19,7 +21,7 @@ export default function Tags(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            Tags
+            {t('providers.virustotal.tags')}
           </Typography>
         </Grid>
       </Grid>
@@ -33,7 +35,7 @@ export default function Tags(props) {
           ))}
         </>
       ) : (
-        <Typography>None</Typography>
+        <Typography>{t('providers.virustotal.none')}</Typography>
       )}
     </Card>
   );

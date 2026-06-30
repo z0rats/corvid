@@ -1,7 +1,10 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { useTranslation } from 'react-i18next';
 
 export default function ChartTooltip({ active, payload, label }) {
+  const { t } = useTranslation('cvssCalculator');
+
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
@@ -19,10 +22,10 @@ export default function ChartTooltip({ active, payload, label }) {
           {label}
         </Typography>
         <Typography variant="body2" color="primary">
-          Score: {data.normalizedScore.toFixed(2)}/10
+          {t('chart.score', { score: data.normalizedScore.toFixed(2) })}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Value: {data.displayValue}
+          {t('chart.value', { value: data.displayValue })}
         </Typography>
       </Box>
     );

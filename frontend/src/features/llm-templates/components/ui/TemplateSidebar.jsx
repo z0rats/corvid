@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -46,6 +47,7 @@ export default function TemplateSidebar({
   onDeleteCategory,
   onAddCategory,
 }) {
+  const { t } = useTranslation('llmTemplates');
   const templatesByCategory = useMemo(() => {
     const grouped = {};
     for (const cat of categories) {
@@ -81,7 +83,7 @@ export default function TemplateSidebar({
         <TextField
           size="small"
           fullWidth
-          placeholder={`Search templates (${totalCount})...`}
+          placeholder={t('sidebar.searchPlaceholder', { count: totalCount })}
           value={search}
           onChange={e => onSearchChange(e.target.value)}
           slotProps={{
@@ -97,7 +99,7 @@ export default function TemplateSidebar({
           <>
             {searchResults.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-                No templates match your search
+                {t('sidebar.noSearchResults')}
               </Typography>
             ) : (
               <Droppable droppableId="search-results" type="template" isDropDisabled>
@@ -174,7 +176,7 @@ export default function TemplateSidebar({
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
               <AddIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
               <Typography variant="subtitle2" color="text.secondary">
-                Add Group
+                {t('sidebar.addGroup')}
               </Typography>
             </Box>
           </Box>

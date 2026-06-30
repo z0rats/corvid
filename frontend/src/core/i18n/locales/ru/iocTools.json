@@ -1,0 +1,880 @@
+{
+  "bulkLookup": {
+    "title": "Массовый поиск IOC",
+    "form": {
+      "errors": {
+        "invalidFileType": "Неверный тип файла. Пожалуйста, перетащите файл CSV, MD или TXT.",
+        "fileReadError": "Ошибка чтения файла: {{fileName}}"
+      },
+      "iocInput": {
+        "heading": "Ввод IOC",
+        "label": "Введите IOC (по одному на строку)"
+      },
+      "fileUpload": {
+        "heading": "Загрузка файла",
+        "dropHint": "Перетащите файлы сюда",
+        "allowedExtensions": "(.txt, .csv, .md)"
+      },
+      "submitButton": {
+        "idle": "Анализировать IOC",
+        "loading": "Поиск..."
+      },
+      "noServicesEnabled": "Включите хотя бы один сервис в настройках выше"
+    },
+    "results": {
+      "progress": "Готово на {{percent}}%",
+      "tabsAriaLabel": "вкладки типов IOC",
+      "emptyTab": "Нет IOC типа {{type}} для отображения на этой вкладке."
+    },
+    "settings": {
+      "errors": {
+        "updateFailed": "Не удалось обновить настройку для {{serviceName}}."
+      },
+      "title": "Настройки массового поиска IOC",
+      "serviceToggleLabel": "Переключить {{serviceName}}",
+      "noServicesConfigured": "Сервисы с API-ключами не настроены. Добавьте ключи на главной вкладке настроек, чтобы включить их здесь."
+    },
+    "iocCard": {
+      "showMoreAriaLabel": "показать больше",
+      "serviceResultsAriaLabel": "результаты сервисов",
+      "tableHeaders": {
+        "service": "Сервис",
+        "result": "Результат"
+      },
+      "noServicesConfigured": "Нет настроенных сервисов или результатов для этого типа IOC."
+    },
+    "serviceRow": {
+      "expandRowAriaLabel": "развернуть строку",
+      "noSummary": "Нет сводки",
+      "tlpTitle": "TLP: {{tlp}}",
+      "tlpNotAvailable": "Н/Д"
+    },
+    "welcomeScreen": {
+      "title": "Массовый поиск IOC",
+      "intro": "Этот инструмент обрабатывает IOC партиями, автоматически классифицирует их по типу и предоставляет данные threat intelligence от различных сервисов безопасности.",
+      "instructions": "Вставьте ваши IOC (по одному на строку) или загрузите файл, чтобы начать. Система автоматически определит типы IOC и параллельно запросит соответствующие источники threat intelligence для быстрого анализа.",
+      "supportedTypesHeading": "Поддерживаемые типы IOC",
+      "supportedTypes": {
+        "ipAddresses": { "title": "IP-адреса", "description": "Адреса IPv4 и IPv6 для анализа угроз" },
+        "domains": { "title": "Домены", "description": "Доменные имена и поддомены" },
+        "urls": { "title": "URL", "description": "Веб-адреса и эндпоинты" },
+        "emailAddresses": { "title": "Email-адреса", "description": "Известные вредоносные или подозрительные email-адреса" },
+        "hashes": { "title": "Хеши", "description": "Хеши файлов MD5, SHA1 и SHA256" },
+        "cves": { "title": "CVE", "description": "Идентификаторы общих уязвимостей и угроз" }
+      }
+    }
+  },
+  "singleLookup": {
+    "searchBar": {
+      "placeholder": "Введите IOC для анализа (IP, домен, URL, Email, хеш, CVE, крипто-адрес)...",
+      "buttonLabel": "Анализировать"
+    },
+    "invalidInputAlert": {
+      "title": "Некорректный ввод",
+      "message": "Введите поддерживаемый тип IOC. Введённое значение не соответствует известным форматам IP, домена, URL, Email, хеша, CVE или крипто-адреса."
+    },
+    "noApiKeysAlert": {
+      "title": "Нет доступных API-ключей для этого действия",
+      "message": "Вам нужно добавить API-ключи на вкладке настроек, чтобы использовать эту функцию."
+    },
+    "resultTable": {
+      "columns": {
+        "service": "Сервис",
+        "result": "Результат"
+      }
+    },
+    "serviceFetcherRow": {
+      "unknownService": "Неизвестный сервис"
+    },
+    "serviceResultRow": {
+      "errors": {
+        "serviceDetailsMissing": "Ошибка: отсутствуют сведения о сервисе для этой строки.",
+        "noFurtherDetails": "Дополнительные сведения об этой ошибке отсутствуют.",
+        "quotaConsumed": "Квота израсходована. Больше API-запросов не осталось.",
+        "retryAfter": "Повторить через: {{seconds}} секунд",
+        "limitResetsAt": "Лимит сбросится: {{time}}",
+        "remainingRequests": "Осталось запросов: {{count}}",
+        "notFound": "Запрошенный элемент не найден сервисом.",
+        "genericError": "Произошла ошибка ({{code}}).",
+        "noDetailsComponent": "Нет компонента с подробностями для этого результата."
+      },
+      "rawJsonLabel": "Необработанные данные JSON:",
+      "expandRowAriaLabel": "развернуть строку",
+      "tlpTooltip": "TLP: {{tlp}}"
+    },
+    "welcomeScreen": {
+      "title": "Одиночный поиск IOC",
+      "intro": "Исследуйте различные индикаторы компрометации (IOC), используя несколько источников threat intelligence, таких как VirusTotal, AlienVault, AbuseIPDB и другие, чтобы получить подробную информацию о потенциальных угрозах безопасности.",
+      "description": "Инструмент автоматически определяет тип IOC и сопоставляет данные из соответствующих источников, позволяя быстро оценивать угрозы и принимать обоснованные решения по безопасности.",
+      "supportedIocTypesTitle": "Поддерживаемые типы IOC",
+      "iocTypes": {
+        "ipAddresses": { "title": "IP-адреса", "description": "Адреса IPv4 и IPv6 для анализа угроз" },
+        "domains": { "title": "Домены", "description": "Доменные имена и поддомены" },
+        "urls": { "title": "URL", "description": "Веб-адреса и эндпоинты" },
+        "emailAddresses": { "title": "Email-адреса", "description": "Известные вредоносные или подозрительные email-адреса" },
+        "hashes": { "title": "Хеши", "description": "Хеши файлов MD5, SHA1 и SHA256" },
+        "cves": { "title": "CVE", "description": "Идентификаторы общих уязвимостей и угроз" },
+        "cryptoAddresses": { "title": "Крипто-адреса", "description": "EVM-адреса (0x...) и Bitcoin-адреса (legacy, P2SH, bech32)" }
+      },
+      "addressReputationChecksTitle": "Проверки репутации адресов",
+      "addressReputationChecksIntro": "Крипто-адреса проверяются по самостоятельно размещённому чёрному списку, построенному из открытых источников без ключей — для этой проверки не выполняются запросы к сторонним API.",
+      "addressReputationChecks": {
+        "ofacSdn": { "title": "OFAC SDN (Санкции)", "description": "Проверка по списку особо обозначенных граждан Минфина США (SDN), включая адреса цифровой валюты, связанные с санкционированными организациями. Обновляется ежедневно." },
+        "scamSniffer": { "title": "ScamSniffer (Фишинг)", "description": "Проверка по открытому чёрному списку ScamSniffer EVM-адресов, связанных с известными фишинговыми схемами. Обновляется ежедневно." }
+      }
+    }
+  },
+  "domainFinder": {
+    "errors": {
+      "title": "Ошибка",
+      "invalidPattern": "Введите шаблон домена для поиска"
+    },
+    "searchForm": {
+      "placeholder": "Введите шаблон домена для поиска...",
+      "buttonLabel": "Поиск"
+    },
+    "details": {
+      "screenshot": "Скриншот",
+      "noScreenshot": "Скриншот недоступен",
+      "notAvailable": "Н/Д",
+      "fields": {
+        "ip": "IP",
+        "country": "Страна",
+        "url": "URL",
+        "result": "Результат",
+        "statusCode": "Код статуса",
+        "server": "Сервер",
+        "mimeType": "MIME-тип",
+        "asnName": "Название ASN",
+        "tlsValidDays": "Дней действия TLS",
+        "tlsAgeDays": "Возраст TLS в днях",
+        "tlsValidFrom": "TLS действителен с",
+        "tlsIssuer": "Издатель TLS"
+      },
+      "actions": {
+        "analyzeIp": "Анализировать IP",
+        "analyzeDomain": "Анализировать домен"
+      }
+    },
+    "noResults": {
+      "title": "Нет результатов",
+      "message": "Нет результатов по вашему запросу: «{{searchTerm}}»"
+    },
+    "resultTable": {
+      "expandRow": "развернуть строку",
+      "ariaLabel": "таблица результатов",
+      "columns": {
+        "domain": "Домен",
+        "statusCode": "Код статуса",
+        "found": "Найдено"
+      },
+      "noData": "Нет данных"
+    },
+    "welcomeScreen": {
+      "title": "Domain Finder",
+      "intro": "Domain Finder — это модуль, который помогает защитить вашу организацию от фишинговых атак, позволяя искать недавно зарегистрированные домены, соответствующие определённому шаблону. Это помогает выявлять потенциальные угрозы заранее.",
+      "description": "Используя API URLScan.io, модуль позволяет просматривать скриншоты сайтов, чтобы увидеть, что скрывается за доменом, без необходимости посещать сайт и подвергать себя риску. Кроме того, одним нажатием вы можете проверить каждый домен и его IP по нескольким сервисам threat intelligence для дополнительной защиты организации.",
+      "example": "Например, вы можете искать домены, начинающиеся с «google-», используя шаблон поиска «google-*».",
+      "featuresTitle": "Возможности",
+      "features": {
+        "patternMatching": { "title": "Поиск по шаблону", "description": "Поиск недавно зарегистрированных доменов по определённым шаблонам" },
+        "safePreview": { "title": "Безопасный просмотр", "description": "Просмотр скриншотов сайтов через интеграцию с URLScan.io" },
+        "threatIntelligence": { "title": "Threat Intelligence", "description": "Проверка доменов и IP по нескольким сервисам безопасности" },
+        "proactiveDefense": { "title": "Превентивная защита", "description": "Выявление потенциальных фишинговых угроз до их активации" }
+      }
+    }
+  },
+  "iocDefanger": {
+    "howToUse": {
+      "title": "Как использовать",
+      "defang": {
+        "title": "Defang IOC",
+        "subtitle": "Сделать IOC безопасными для передачи",
+        "description": "Defang заменяет опасные символы в IOC, чтобы предотвратить случайное выполнение:"
+      },
+      "fang": {
+        "title": "Fang IOC",
+        "subtitle": "Восстановить исходные IOC для анализа",
+        "description": "Fang восстанавливает обезвреженные IOC в исходную форму для анализа:"
+      }
+    },
+    "inputForm": {
+      "labelDefang": "Введите IOC для defang (по одному на строку)",
+      "labelFang": "Введите IOC для fang (по одному на строку)",
+      "helperText": "Поддерживает домены, IP, URL, email, имена файлов. Введено строк: {{count}}.",
+      "copyAllResults": "Скопировать все результаты",
+      "downloadCsv": "Скачать CSV",
+      "clear": "Очистить",
+      "defangButton": "Defang",
+      "fangButton": "Fang"
+    },
+    "operationControls": {
+      "defangOption": "Defang (Обезвредить)",
+      "fangOption": "Fang (Восстановить исходные)"
+    },
+    "resultsTable": {
+      "title": "Результаты ({{filteredCount}} из {{totalCount}} IOC)",
+      "showOnlyChanged": "Показывать только изменённые ({{count}})",
+      "noChanges": {
+        "defang": "Ни один IOC не был изменён. Возможно, они уже обезврежены или не распознаны как IOC.",
+        "fang": "Ни один IOC не был изменён. Возможно, они уже восстановлены или не содержат обезвреженных шаблонов."
+      },
+      "columns": {
+        "original": "Исходный",
+        "defanged": "Обезвреженный",
+        "fanged": "Восстановленный",
+        "types": "Тип(ы)",
+        "status": "Статус",
+        "actions": "Действия"
+      },
+      "status": {
+        "modified": "Изменён",
+        "unchanged": "Без изменений"
+      },
+      "copyResultTooltip": "Скопировать результат"
+    },
+    "welcomeScreen": {
+      "title": "Инструмент Defang/Fang для IOC",
+      "subtitle": "Поддерживаемые методы Defang",
+      "description": "Безопасно обезвреживайте IOC для передачи или восстанавливайте обезвреженные IOC для анализа. Этот инструмент автоматически определяет типы IOC и применяет методы fang или defang."
+    }
+  },
+  "iocExtractor": {
+    "messages": {
+      "extractionSuccess": "Извлечение IOC успешно завершено",
+      "extractionFailed": "Не удалось извлечь IOC из файла",
+      "copyFailed": "Не удалось скопировать IOC",
+      "exportFailed": "Не удалось экспортировать IOC"
+    },
+    "analysisModal": {
+      "analysisFor": "Анализ для:"
+    },
+    "fileUploadZone": {
+      "title": "Загрузка файла",
+      "dragDropText": "Перетащите файл сюда или нажмите для выбора файла",
+      "acceptedFormats": "(Принимаются только файлы .txt и .csv)",
+      "extractButton": "Извлечь"
+    },
+    "noData": {
+      "title": "IOC не найдены",
+      "message": "Нет элементов для этого типа IOC."
+    },
+    "resultRows": {
+      "copyFailed": "Не удалось скопировать в буфер обмена",
+      "exportFailed": "Не удалось экспортировать в файл",
+      "copyAllTooltip": "Скопировать все {{type}}",
+      "copyAllAriaLabel": "Скопировать все",
+      "exportAllTooltip": "Экспортировать все {{type}}",
+      "exportAllAriaLabel": "Экспортировать все",
+      "columns": {
+        "ioc": "IOC",
+        "actions": "Действия"
+      },
+      "analyzeButton": "Анализировать"
+    },
+    "statisticsOverview": {
+      "duplicateLabels": {
+        "domains": "Домены",
+        "ipAddresses": "IP-адреса",
+        "urls": "URL",
+        "emailAddresses": "Email-адреса",
+        "md5Hashes": "Хеши MD5",
+        "sha1Hashes": "Хеши SHA1",
+        "sha256Hashes": "Хеши SHA256"
+      },
+      "extractionComplete": "Извлечение завершено",
+      "uniqueIocsFound": "Найдено и упорядочено {{count}} уникальных IOC",
+      "copyAllTooltip": "Скопировать все IOC",
+      "copyAllAriaLabel": "Скопировать все",
+      "exportAllTooltip": "Экспортировать все IOC",
+      "exportAllAriaLabel": "Экспортировать все",
+      "duplicatesRemoved": "Удалено дубликатов"
+    },
+    "welcomeScreen": {
+      "title": "IOC Extractor",
+      "intro": "IOC Extractor — это модуль, который позволяет извлекать и упорядочивать индикаторы компрометации (IOC) из неструктурированных файлов с помощью регулярных выражений (Regex). Модуль автоматически удаляет дубликаты, так что вам не придётся вручную просматривать одни и те же IOC несколько раз.",
+      "usage": "Просто перетащите файл с IOC в инструмент, и он сделает всю работу за вас. Одним нажатием можно проанализировать каждый обнаруженный IOC, избавив себя от необходимости вручную создавать таблицы Excel для извлечения IOC из файлов.",
+      "keyFeatures": "Ключевые возможности",
+      "features": {
+        "automatedExtraction": { "title": "Автоматическое извлечение", "description": "Извлекает IOC из неструктурированных файлов с помощью регулярных выражений" },
+        "duplicateRemoval": { "title": "Удаление дубликатов", "description": "Автоматически удаляет повторяющиеся IOC из результатов" },
+        "simpleInterface": { "title": "Простой интерфейс", "description": "Перетащите файлы и получите результат без какой-либо настройки" },
+        "oneClickAnalysis": { "title": "Анализ в один клик", "description": "Анализируйте каждый обнаруженный IOC одним нажатием" }
+      }
+    }
+  },
+  "iocLookupShared": {
+    "dialog": {
+      "title": "Поиск IOC: {{ioc}}",
+      "close": "Закрыть"
+    },
+    "serviceHeaderCell": {
+      "iconAlt": "значок {{serviceName}}"
+    }
+  },
+  "providers": {
+    "common": {
+      "loading": "Загрузка...",
+      "errorLoadingInfo": "Ошибка загрузки информации",
+      "notAvailable": "Н/Д",
+      "yes": "Да",
+      "no": "Нет",
+      "noDetailsTitle": "Подробности недоступны",
+      "noDetailsMessage": "Дополнительные сведения для этого элемента отсутствуют.",
+      "generalInformation": "Общая информация",
+      "networkInformation": "Сетевая информация",
+      "ipAddress": "IP",
+      "ipType": "Тип IP",
+      "ipRange": "Диапазон IP",
+      "reverseDns": "Обратный DNS",
+      "domainInformation": "Информация о домене",
+      "domain": "Домен",
+      "hostnames": "Имена хостов",
+      "type": "Тип",
+      "locationInformation": "Информация о местоположении",
+      "country": "Страна",
+      "countryCode": "Код страны",
+      "region": "Регион",
+      "city": "Город",
+      "organizationInformation": "Информация об организации",
+      "organisation": "Организация",
+      "isp": "Интернет-провайдер",
+      "asnInformation": "Информация об ASN",
+      "asn": "ASN",
+      "asOwner": "Владелец AS",
+      "asnCidr": "ASN CIDR",
+      "asnCountry": "Страна ASN",
+      "asnDate": "Дата ASN",
+      "asnRegistry": "Реестр ASN"
+    },
+    "abuseipdb": {
+      "errorFetching": "Ошибка получения данных AbuseIPDB: {{error}}",
+      "unavailable": "Данные AbuseIPDB недоступны или ещё загружаются.",
+      "confidenceScoreAndStats": "Индекс достоверности и статистика",
+      "totalReports": "Всего отчётов",
+      "distinctUsers": "Уникальных пользователей",
+      "lastReported": "Последний отчёт",
+      "whitelisted": "В белом списке",
+      "percentMalicious": "% вредоносности"
+    },
+    "blacklist": {
+      "unavailable": "Данные чёрного списка адресов недоступны или ещё загружаются.",
+      "noMatch": "Совпадений нет — не указан в OFAC SDN или ScamSniffer",
+      "ofacSanctioned": "Санкции OFAC",
+      "phishingAssociated": "Адрес связан с фишингом",
+      "entity": "Организация",
+      "program": "Программа",
+      "chain": "Сеть",
+      "remarks": "Примечания",
+      "phishingDomain": "Фишинговый домен"
+    },
+    "checkphish": {
+      "unavailable": "Данные Checkphish недоступны или сканирование не завершено.",
+      "errorFetching": "Ошибка получения данных Checkphish: {{error}}",
+      "scanStatus": "Статус сканирования Checkphish: {{status}}. Подождите завершения.",
+      "scanDetails": "Детали сканирования",
+      "jobId": "ID задачи",
+      "scannedUrl": "Просканированный URL",
+      "urlSha256": "SHA256 URL",
+      "jobStatus": "Статус задачи",
+      "scanStart": "Начало сканирования",
+      "scanEnd": "Конец сканирования",
+      "disposition": "Заключение",
+      "detectedBrand": "Обнаруженный бренд",
+      "insights": "Инсайты",
+      "screenshot": "Скриншот",
+      "screenshotAlt": "Скриншот сайта"
+    },
+    "googleSafeBrowsing": {
+      "loading": "Загрузка данных Google Safe Browse...",
+      "errorFetching": "Ошибка получения данных Google Safe Browse: {{error}}",
+      "match": "Совпадение {{number}}: {{threatType}}",
+      "platformType": "Тип платформы:",
+      "threatEntryType": "Тип записи угрозы:",
+      "matchedUrlPattern": "Совпавший шаблон URL:",
+      "cacheDuration": "Длительность кэша:",
+      "analysisFor": "Анализ Google Safe Browse для:",
+      "threatsReported": "Для запрошенного IOC были обнаружены следующие угрозы:",
+      "noThreatsFound": "Google Safe Browse не обнаружил угроз. По данным этой проверки IOC выглядит безопасным."
+    },
+    "github": {
+      "errorFetching": "Ошибка получения данных GitHub: {{error}}",
+      "unavailable": "Данные GitHub недоступны или неполны.",
+      "noMentionsFound": "Упоминания на GitHub для «{{ioc}}» не найдены. (Всего сообщено: {{totalCount}})",
+      "mentionsTotal": "Упоминания на GitHub (всего {{count}})",
+      "tableAriaLabel": "таблица результатов github",
+      "columns": {
+        "filename": "Имя файла",
+        "url": "URL",
+        "repository": "Репозиторий"
+      }
+    },
+    "emailrepio": {
+      "errorFetching": "Ошибка получения данных Emailrep.io: {{error}}",
+      "unavailable": "Данные Emailrep.io недоступны или неполны.",
+      "reputationAndDetails": "Репутация и детали",
+      "onlineProfiles": "Онлайн-профили",
+      "onlineProfilesHelper": "Социальные и онлайн-профили, связанные с этим email-адресом.",
+      "noProfilesFound": "Профили не найдены.",
+      "fields": {
+        "email": "Email",
+        "reputation": "Репутация",
+        "suspicious": "Подозрительный",
+        "references": "Источники",
+        "blacklisted": "В чёрном списке",
+        "maliciousActivity": "Вредоносная активность",
+        "recentMaliciousActivity": "Недавняя вредоносная активность",
+        "credentialsLeaked": "Утечка учётных данных",
+        "dataBreaches": "Утечки данных",
+        "firstSeen": "Впервые замечен",
+        "lastSeen": "Последний раз замечен",
+        "domainExists": "Домен существует",
+        "domainReputation": "Репутация домена",
+        "newDomain": "Новый домен",
+        "daysSinceDomainCreation": "Дней с момента создания домена",
+        "suspiciousTld": "Подозрительный TLD",
+        "spam": "Спам",
+        "freeProvider": "Бесплатный провайдер",
+        "disposable": "Временный адрес",
+        "deliverable": "Доставляемость",
+        "acceptAll": "Accept All (домен)",
+        "validMx": "Корректная запись MX (домен)",
+        "spoofable": "Подделываемый",
+        "spfStrict": "Строгий SPF",
+        "dmarcEnforced": "DMARC применяется"
+      },
+      "helpers": {
+        "references": "— Общее число источников репутации (может включать репутацию домена).",
+        "blacklisted": "— Считается вредоносным или спамерским.",
+        "maliciousActivity": "— Замечен в фишинге или мошенничестве.",
+        "recentMaliciousActivity": "— Вредоносная активность за последние 90 дней.",
+        "credentialsLeaked": "— Утечка учётных данных за последние 90 дней.",
+        "dataBreaches": "— Фигурировал в утечке данных.",
+        "firstSeen": "— Впервые замечен в утечке или вредоносной активности.",
+        "lastSeen": "— Последний раз замечен в утечке или вредоносной активности.",
+        "domainReputation": "— (high/medium/low/н/д)",
+        "newDomain": "— Домен создан в течение последнего года.",
+        "suspiciousTld": "— например, .tk, .xyz",
+        "spam": "— Замечен в спамерском поведении.",
+        "disposable": "— Использует временный почтовый сервис.",
+        "acceptAll": "— Почтовый сервер принимает любые адреса (catch-all).",
+        "spoofable": "— Слабый SPF или DMARC не применяется."
+      }
+    },
+    "hunterio": {
+      "errorFetching": "Ошибка получения данных Hunter.io: {{error}}",
+      "unavailable": "Данные Hunter.io недоступны или неполны.",
+      "emailVerificationDetails": "Детали проверки email",
+      "sourcesCount": "Источники ({{count}})",
+      "sourcesHelper": "Веб-страницы, на которых был найден этот email-адрес. Ограничено самыми свежими источниками Hunter.io.",
+      "noSourcesFound": "Публичные источники для этого email-адреса не найдены.",
+      "fields": {
+        "queriedEmail": "Запрошенный email:",
+        "verificationResult": "Результат проверки:",
+        "status": "Статус:",
+        "score": "Оценка:",
+        "regexpValid": "Соответствие шаблону:",
+        "gibberish": "Бессмысленный (авто-сгенерированный):",
+        "disposable": "Временный email:",
+        "webmail": "Веб-почта (например, Gmail):",
+        "mxRecords": "Найдены MX-записи:",
+        "smtpServer": "Подключение к SMTP-серверу:",
+        "smtpCheck": "Проверка SMTP (без отказа):",
+        "acceptAll": "Домен принимает все адреса:",
+        "block": "Проверка SMTP блокирована:"
+      },
+      "columns": {
+        "domain": "Домен",
+        "uri": "URI",
+        "extracted": "Извлечено",
+        "lastSeen": "Последний раз замечен",
+        "stillOnPage": "Всё ещё на странице"
+      }
+    },
+    "ipqualityscore": {
+      "errorFetching": "Ошибка получения данных IPQualityScore: {{error}}",
+      "unavailable": "Данные IPQualityScore недоступны или неполны.",
+      "fraudScoreAndIndicators": "Оценка мошенничества и индикаторы",
+      "proxy": "Proxy",
+      "vpn": "VPN",
+      "tor": "Tor",
+      "active": "(Активен)",
+      "recentAbuse": "Недавние злоупотребления",
+      "botStatus": "Статус бота",
+      "mobileConnection": "Мобильное соединение",
+      "fraudRisk": "риск мошенничества"
+    },
+    "maltiverse": {
+      "errorFetching": "Ошибка получения данных Maltiverse: {{error}}",
+      "unavailable": "Данные Maltiverse недоступны или неполны.",
+      "insufficientData": "Недостаточно данных от Maltiverse.",
+      "threatProfileAndIpCharacteristics": "Профиль угрозы и характеристики IP",
+      "classification": "Классификация",
+      "vpnNode": "VPN-узел",
+      "openProxy": "Открытый прокси",
+      "torNode": "Tor-узел",
+      "cnc": "Командный сервер (C&C)",
+      "distributingMalware": "Распространяет вредоносное ПО",
+      "cdnNode": "CDN-узел",
+      "hostingService": "Хостинг-сервис",
+      "webServer": "Веб-сервер",
+      "webHosting": "Веб-хостинг",
+      "knownScanner": "Известный сканер",
+      "webSpider": "Веб-паук",
+      "blacklistMentions": "Упоминания в чёрных списках ({{count}})",
+      "noBlacklistEntries": "Записей в чёрных списках не найдено.",
+      "columns": {
+        "description": "Описание",
+        "firstSeen": "Впервые замечен",
+        "lastSeen": "Последний раз замечен",
+        "source": "Источник"
+      }
+    },
+    "malwarebazaar": {
+      "loading": "Загрузка данных MalwareBazaar...",
+      "errorFetching": "Ошибка получения данных MalwareBazaar: {{error}}",
+      "malwareSampleIdentified": "Обнаружен образец вредоносного ПО",
+      "hashAssociated": "Этот хеш связан с известным образцом вредоносного ПО в базе данных MalwareBazaar.",
+      "keyDetails": "Ключевые сведения первого совпадения (полный детальный вид появится позже):",
+      "sha256": "SHA256:",
+      "signature": "Сигнатура:",
+      "fileNames": "Имя(ена) файла:",
+      "mimeType": "MIME-тип:",
+      "tags": "Теги:",
+      "furtherDetails": "Дополнительные сведения (ссылки на скачивание, полный анализ) будут реализованы позже.",
+      "hashNotFound": "Хеш не найден",
+      "hashNotFoundMessage": "Хеш ({{ioc}}) не найден в базе данных MalwareBazaar.",
+      "queryError": "Ошибка запроса",
+      "statusCheckFormat": "Статус: {{status}}. Проверьте формат хеша.",
+      "unknown": "Неизвестно",
+      "status": "Статус: {{status}}",
+      "couldNotRetrieve": "Не удалось получить конкретные сведения по этому хешу от MalwareBazaar в данный момент."
+    },
+    "pulsedive": {
+      "loading": "Загрузка данных Pulsedive...",
+      "errorFetching": "Ошибка получения данных Pulsedive: {{error}}",
+      "notFound": "Индикатор «{{ioc}}» не найден или нет данных в Pulsedive.",
+      "analysisFor": "Анализ Pulsedive для:",
+      "riskLevel": "Уровень риска",
+      "timestamps": "Временные метки",
+      "added": "Добавлено:",
+      "updated": "Обновлено:",
+      "lastSeen": "Последний раз замечен:",
+      "properties": "Свойства:",
+      "dnsPtr": "DNS PTR",
+      "geolocation": "Геолокация",
+      "country": "Страна:",
+      "city": "Город:",
+      "organization": "Организация:",
+      "httpProperties": "Свойства HTTP",
+      "contentType": "Тип содержимого:",
+      "statusCode": "Код статуса:",
+      "noProperties": "Особых свойств не найдено."
+    },
+    "reddit": {
+      "noTitle": "Без названия",
+      "openOnReddit": "Открыть на Reddit",
+      "readLess": "Скрыть",
+      "readMore": "Читать далее",
+      "loading": "Загрузка упоминаний на Reddit...",
+      "errorFetching": "Ошибка получения упоминаний Reddit: {{error}}",
+      "noMentionsFound": "Упоминания на Reddit для «{{ioc}}» не найдены.",
+      "mentionsCount": "Упоминания на Reddit ({{count}})"
+    },
+    "threatfox": {
+      "loading": "Загрузка данных ThreatFox...",
+      "errorFetching": "Ошибка получения данных ThreatFox: {{error}}",
+      "queryStatus": "Статус запроса ThreatFox: {{status}}.",
+      "unknownError": "Неизвестная ошибка",
+      "notFound": "IOC «{{ioc}}» не найден в базе данных ThreatFox.",
+      "foundNoEntries": "ThreatFox нашёл IOC, но не вернул конкретных записей данных.",
+      "foundNoEntriesHint": "(Это может означать устаревшую или минимальную информацию по этому индикатору.)",
+      "intelligenceFor": "Данные ThreatFox для:",
+      "displayingRecords": "Отображено {{count}} записей из ThreatFox.",
+      "entryIdConfidence": "ID записи: {{id}} (Достоверность: {{confidence}}%)",
+      "iocValue": "Значение IOC",
+      "iocType": "Тип IOC",
+      "threatType": "Тип угрозы",
+      "malware": "Вредоносное ПО",
+      "genericUnknown": "Общее/Неизвестно",
+      "alias": "Псевдоним:",
+      "malpediaEntry": "Запись в Malpedia",
+      "timeline": "Хронология",
+      "firstSeen": "Впервые замечен:",
+      "lastSeen": "Последний раз замечен:",
+      "reporter": "Источник",
+      "reference": "Ссылка",
+      "tags": "Теги"
+    },
+    "twitter": {
+      "loading": "Загрузка упоминаний в Twitter...",
+      "errorFetching": "Ошибка получения упоминаний Twitter: {{error}}",
+      "noTweetsFound": "Недавних твитов с упоминанием «{{ioc}}» не найдено.",
+      "recentTweetsMentioning": "Недавние твиты с упоминанием:",
+      "totalReported": "(всего сообщено: {{count}})",
+      "unknownAuthor": "Неизвестный автор",
+      "viewOnTwitter": "Открыть в Twitter"
+    },
+    "shodan": {
+      "loading": "Загрузка данных Shodan...",
+      "unknownError": "Неизвестная ошибка",
+      "errorFetching": "Ошибка получения данных Shodan: {{error}}",
+      "noInfoFound": "Подробная информация Shodan для «{{ip}}» не найдена.",
+      "location": "Местоположение",
+      "organizationAsn": "Организация / ASN",
+      "isp": "Интернет-провайдер",
+      "lastUpdate": "Последнее обновление",
+      "ipReportFor": "Отчёт Shodan по IP для:",
+      "openPorts": "Открытые порты ({{count}})",
+      "domainsAndHostnames": "Домены и хосты",
+      "domainsCount": "Домены ({{count}}):",
+      "hostnamesCount": "Хосты ({{count}}):",
+      "tagsCount": "Теги ({{count}})",
+      "serviceBanners": "Баннеры сервисов / Подробные данные ({{count}})",
+      "vulnerabilities": "Уязвимости ({{count}})"
+    },
+    "hibp": {
+      "loading": "Загрузка данных Have I Been Pwned...",
+      "errorFetching": "Ошибка получения данных HIBP: {{error}}",
+      "noResultsFound": "Утечек или вставок (pastes) для «{{ioc}}» по данным Have I Been Pwned не найдено.",
+      "breaches": "Утечки",
+      "noBreachesFound": "Утечек для этого email-адреса не найдено.",
+      "breachesCount": "Утечки ({{count}})",
+      "searchBreaches": "Поиск утечек",
+      "breachesHelper": "Инциденты, при которых данные оказались случайно раскрыты в уязвимых системах.",
+      "verified": "(Подтверждено)",
+      "domain": "Домен:",
+      "noMatchingBreaches": "Подходящих утечек по запросу не найдено.",
+      "exportList": "Экспортировать список",
+      "pastes": "Вставки (Pastes)",
+      "noPastesFound": "Вставок для этого email-адреса не найдено.",
+      "pastesCount": "Вставки ({{count}})",
+      "searchPastes": "Поиск вставок",
+      "pastesHelper": "Информация, «вставленная» на публичные сервисы — часто ранний индикатор утечки.",
+      "noTitleAvailable": "Заголовок недоступен",
+      "noTitle": "Без заголовка",
+      "source": "Источник:",
+      "date": "Дата:",
+      "emailCount": "Количество email:",
+      "noMatchingPastes": "Подходящих вставок по запросу не найдено."
+    },
+    "urlscan": {
+      "noInfoFound": "Информация urlscan.io для этого индикатора не найдена.",
+      "totalScans": "Всего сканирований",
+      "uniqueApexDomains": "Уникальных корневых доменов",
+      "uniqueIps": "Уникальных IP",
+      "scanResults": "Результаты сканирования ({{count}})",
+      "screenshotAlt": "Скриншот {{url}}",
+      "viewFullReport": "Открыть полный отчёт",
+      "scanTime": "Время сканирования",
+      "scannedUrl": "Просканированный URL",
+      "visibility": "Видимость",
+      "pageDetails": "Детали страницы",
+      "finalUrl": "Итоговый URL",
+      "title": "Заголовок",
+      "ipAddress": "IP-адрес",
+      "country": "Страна",
+      "asn": "ASN",
+      "server": "Сервер",
+      "status": "Статус",
+      "mimeType": "MIME-тип"
+    },
+    "crowdstrike": {
+      "noInfoFound": "Сведения аналитики для этого индикатора в CrowdStrike не найдены",
+      "confidenceLevel": "Уровень достоверности",
+      "threatActors": "Злоумышленники",
+      "malwareFamilies": "Семейства вредоносного ПО",
+      "threatTypes": "Типы угроз",
+      "killChainPhases": "Фазы Kill Chain",
+      "killChainPhaseLabels": {
+        "reconnaissance": "Разведка",
+        "weaponization": "Вооружение",
+        "delivery": "Доставка",
+        "exploitation": "Эксплуатация",
+        "installation": "Установка",
+        "command_and_control": "Командование и контроль",
+        "actions_on_objectives": "Действия по целям"
+      },
+      "observedTimes": "{{chain}} (замечено {{count}} раз(а))",
+      "detailsNotAvailable": "Сведения для этой фазы недоступны.",
+      "indicatorsCount": "Индикаторы ({{count}})",
+      "type": "Тип:",
+      "confidence": "Достоверность:",
+      "unknown": "Неизвестно",
+      "published": "Опубликовано:",
+      "lastUpdated": "Обновлено:",
+      "threatActorsLabel": "Злоумышленники:",
+      "malwareFamiliesLabel": "Семейства вредоносного ПО:",
+      "killChainPhasesRaw": "Фазы Kill Chain (исходные):",
+      "threatTypesLabel": "Типы угроз:"
+    },
+    "alienvault": {
+      "unavailable": "Подробная информация AlienVault OTX недоступна или ещё загружается.",
+      "indicator": "Индикатор",
+      "location": "Местоположение",
+      "reputationScore": "Оценка репутации",
+      "validation": "Валидация",
+      "pulseInformation": "Информация о Pulse",
+      "pulse": "Pulse",
+      "pulses": "Pulses",
+      "uniqueCount": "(уникальных: {{count}})",
+      "referencedPulses": "Связанные Pulse:",
+      "noDetections": "Обнаружений нет",
+      "malwareSamples": "Образцы вредоносного ПО ({{count}})",
+      "hash": "Хеш",
+      "detections": "Обнаружения",
+      "date": "Дата",
+      "fileAnalysis": "Анализ файла",
+      "fileType": "Тип файла",
+      "status": "Статус",
+      "malwareFamily": "Семейство вредоносного ПО"
+    },
+    "crowdsec": {
+      "errorFetching": "Ошибка получения данных CrowdSec: {{error}}",
+      "notFound": "IP не найден в CrowdSec CTI.",
+      "unavailable": "Данные CrowdSec недоступны.",
+      "insufficientData": "Получено недостаточно данных от CrowdSec CTI.",
+      "behaviours": "Поведения",
+      "attackDetails": "Детали атаки",
+      "references": "Ссылки",
+      "referenceNumber": "Ссылка {{number}}",
+      "noDescription": "Нет описания",
+      "targetCountriesByReportCount": "Целевые страны по количеству отчётов",
+      "ipReputationDetails": "Детали репутации IP ({{ip}})",
+      "ipRangeScore": "Оценка диапазона IP",
+      "asName": "Имя AS",
+      "remediation": "Рекомендации",
+      "scoreInfoTitle": "Информация об оценке CTI",
+      "scoreInfoText": "Оценки отражают степень злонамеренности IP во времени (всего, за последний день, неделю, месяц).\n\n- Агрессивность: интенсивность атак (число сообщений).\n- Уровень угрозы: серьёзность заявленных типов атак (например, сканирование vs эксплойт).\n- Доверие: уверенность в источниках отчётов (репутация, разнообразие).\n- Аномалия: признаки в статическом описании IP.\n- Всего: агрегация этих компонентов (0 = низкая, 5 = высокая злонамеренность).",
+      "ctiScoresBreakdown": "Разбивка оценок CTI",
+      "showScoreInfo": "Показать информацию об оценке",
+      "period": "Период",
+      "score": "Оценка"
+    },
+    "mandiant": {
+      "noInfoFound": "Подробная аналитика по этому индикатору в Mandiant не найдена.",
+      "reportsCount": "Отчёты ({{count}})",
+      "threatCategories": "Категории угроз",
+      "noThreatCategories": "Категории угроз недоступны",
+      "observationsTimeline": "Хронология наблюдений",
+      "month": "Месяц",
+      "indicatorsAxisLabel": "Индикаторы",
+      "noTimelineData": "Данные хронологии недоступны",
+      "averageRiskScore": "Средняя оценка риска",
+      "indicatorsFound": "Найдено индикаторов",
+      "relatedReports": "Связанные отчёты",
+      "riskScore": "Оценка риска:",
+      "sources": "Источники:",
+      "open": "Открыть",
+      "reportId": "ID отчёта:"
+    },
+    "nistnvd": {
+      "simpleTable": "простая таблица",
+      "vulnerable": "Уязвимо",
+      "criteria": "Критерий",
+      "versionFrom": "Версия от",
+      "versionTo": "Версия до",
+      "criteriaId": "ID критерия",
+      "cvssMetrics": "Метрики CVSS 3.1",
+      "vectorString": "Вектор",
+      "source": "Источник",
+      "baseScore": "Базовая оценка",
+      "exploitabilityScore": "Эксплуатируемость (Оценка: {{score}})",
+      "attackVector": "Вектор атаки (AV)",
+      "attackComplexity": "Сложность атаки (AC)",
+      "privilegesRequired": "Требуемые привилегии (PR)",
+      "userInteraction": "Взаимодействие с пользователем (UI)",
+      "scope": "Область применения (S)",
+      "impactScore": "Воздействие (Оценка: {{score}})",
+      "confidentialityImpact": "Влияние на конфиденциальность (CI)",
+      "integrityImpact": "Влияние на целостность (II)",
+      "availabilityImpact": "Влияние на доступность (AI)",
+      "details": "Подробности",
+      "sourceIdentifier": "Идентификатор источника",
+      "lastModified": "Последнее изменение",
+      "vulnerabilityStatus": "Статус уязвимости",
+      "description": "Описание",
+      "loading": "Загрузка данных NIST NVD...",
+      "errorFetching": "Ошибка получения данных NIST NVD: {{error}}",
+      "noInfoFound": "Подробная информация об уязвимости для CVE ID: {{ioc}} не найдена.",
+      "notFound": "CVE ID: {{ioc}} не найден в NIST NVD.",
+      "referencesDisclaimer": "Ссылки на рекомендации, решения и инструменты. Переходя по этим ссылкам, вы можете покидать веб-пространство NIST. NIST не обязательно поддерживает мнения или продукты, упомянутые на этих сайтах.",
+      "affectedConfigurations": "Затронутые конфигурации (CPE)",
+      "configurationsDisclaimer": "Утверждения о применимости CVE, указывающие, какие продукты связаны с уязвимостью.",
+      "configurationNumber": "Конфигурация №{{number}}",
+      "operator": "(Оператор: {{operator}})",
+      "negated": "— Инвертировано",
+      "organization": "Организация",
+      "comment": "Комментарий",
+      "vendorComments": "Комментарии вендоров",
+      "vendorCommentsDisclaimer": "Официальный комментарий вендора по CVE. NVD предоставляет сервис, позволяющий организациям отправлять официальные комментарии по CVE, связанным с их продуктами. Организации могут использовать этот сервис по-разному: предоставлять рекомендации по настройке и устранению, уточнять применимость уязвимости, давать более глубокий анализ, оспаривать сторонние данные об уязвимости или объяснять её влияние. Официальные комментарии вендоров можно отправить в NVD по email на nvd@nist.gov.",
+      "weaknesses": "Слабые места",
+      "weaknessesDisclaimer": "Этот объект содержит информацию о конкретных слабых местах, считающихся причиной уязвимости. Источник указывает организацию, предоставившую информацию о слабом месте, а тип — является ли организация первичным или вторичным источником. К первичным источникам относятся NVD и CNA, достигшие уровня provider в CVMAP. 10% заявок уровня provider проверяются NVD. Если заявка была проверена, NVD будет указан как первичный источник, а CNA уровня provider — как вторичный."
+    },
+    "virustotal": {
+      "filenames": "Имена файлов",
+      "typeTags": "Теги типа",
+      "none": "Нет",
+      "tags": "Теги",
+      "readLess": "Свернуть",
+      "readMore": "Развернуть",
+      "crowdsourcedContext": "Краудсорсинговый контекст",
+      "title": "Заголовок:",
+      "timestamp": "Метка времени:",
+      "detail": "Подробности:",
+      "severity": "Серьёзность:",
+      "popularityRanks": "Рейтинги популярности",
+      "popularityRanksHelper": "Позиция домена в рейтингах популярности, таких как Alexa, Quantcast, Statvoo и др.",
+      "popularThreatClassification": "Популярная классификация угроз",
+      "threatClassificationHelper": "Человеко-читаемые имена, извлечённые из вердиктов антивирусов и кластеризации хешей",
+      "suggestedThreatLabel": "Предполагаемая метка угрозы",
+      "popularThreatCategory": "Популярная категория угроз",
+      "popularThreatName": "Популярное имя угрозы",
+      "crowdsourcedIdsRules": "Краудсорсинговые правила IDS",
+      "ruleCategory": "Категория правила",
+      "alertSeverity": "Серьёзность",
+      "ruleMessage": "Сообщение правила",
+      "ruleRaw": "Исходный текст правила",
+      "ruleUrl": "URL правила",
+      "ruleSource": "Источник правила",
+      "ruleId": "ID правила",
+      "lastAnalysisResults": "Результаты последнего анализа",
+      "engine": "Антивирус",
+      "category": "Категория",
+      "result": "Результат",
+      "method": "Метод",
+      "detectedAsMalicious": "Обнаружено как вредоносное {{count}} антивирус(ами)",
+      "internetRegistry": "Интернет-регистратор",
+      "network": "Сеть",
+      "asOwner": "Владелец AS",
+      "typeExtension": "Расширение типа",
+      "magic": "Magic",
+      "uniqueSources": "Уникальные источники",
+      "elfInformation": "Информация ELF (Executable and Linkable Format)",
+      "header": "Заголовок",
+      "sectionList": "Список секций",
+      "name": "Имя",
+      "sectionType": "Тип секции",
+      "virtualAddress": "Виртуальный адрес",
+      "physicalOffset": "Физическое смещение",
+      "flags": "Флаги",
+      "size": "Размер",
+      "segmentList": "Список сегментов",
+      "analysisStatistics": "Статистика анализа",
+      "harmless": "Безопасно",
+      "malicious": "Вредоносно",
+      "suspicious": "Подозрительно",
+      "undetected": "Не обнаружено",
+      "timeout": "Тайм-аут",
+      "community": "Сообщество",
+      "reputation": "Репутация",
+      "votedMalicious": "Голосов «вредоносно»",
+      "lastModification": "Последнее изменение",
+      "votedHarmless": "Голосов «безопасно»",
+      "loading": "Загрузка данных VirusTotal...",
+      "notFound": "IOC «{{ioc}}» не найден в VirusTotal",
+      "errorFetching": "Ошибка получения данных VirusTotal: {{error}}",
+      "noAttributesFound": "Подробные атрибуты VirusTotal для «{{ioc}}» не найдены. Возможно, ответ API неполный или IOC не найден."
+    }
+  }
+}

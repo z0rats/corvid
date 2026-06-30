@@ -14,11 +14,13 @@ import InfoModal from "../../../shared/components/InfoModal";
 import MetricSelect from "../../../shared/components/MetricSelect";
 import { getSeverityColor } from "../../../shared/utils/scoreUtils";
 import { exploitabilityMetrics, impactMetrics } from "../../constants/metricsConfig";
+import { useTranslation } from 'react-i18next';
 
 export default function BaseScore() {
   const theme = useTheme();
   const chart = theme.palette.chart;
   const { state, updateMetric } = useCvss31();
+  const { t } = useTranslation('cvssCalculator');
   const [openModal, setOpenModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", text: "" });
 
@@ -74,7 +76,7 @@ export default function BaseScore() {
       >
         <Box display="flex" alignItems="center">
           <BarChartIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Base Score Metrics (required)</Typography>
+          <Typography variant="subtitle2">{t('cvss31.base.accordionTitle')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
@@ -88,17 +90,7 @@ export default function BaseScore() {
             }}
           >
             <Typography variant="body1">
-              The Base metric group represents the intrinsic characteristics of a
-              vulnerability that are constant over time and across user
-              environments. It is composed of two sets of metrics: the
-              Exploitability metrics and the Impact metrics. The Exploitability
-              metrics reflect the ease and technical means by which the
-              vulnerability can be exploited. That is, they represent
-              characteristics of the thing that is vulnerable, which we refer to
-              formally as the vulnerable component. On the other hand, the Impact
-              metrics reflect the direct consequence of a successful exploit, and
-              represent the consequence to the thing that suffers the impact,
-              which we refer to formally as the impacted component.
+              {t('cvss31.base.description')}
             </Typography>
           </Box>
           <Box
@@ -130,7 +122,7 @@ export default function BaseScore() {
               align="center"
               gutterBottom
             >
-              {state.scores.base.baseSeverity || "None"}
+              {state.scores.base.baseSeverity || t('common.severityNone')}
             </Typography>
           </Box>
         </Grid>
@@ -142,26 +134,26 @@ export default function BaseScore() {
         >
           <Grid container spacing={2}>
             {renderCard(
-              "Exploitability Metrics",
+              t('cvss31.base.exploitabilityMetrics'),
               exploitabilityMetrics
             )}
             {renderCard(
-              "Impact Metrics",
+              t('cvss31.base.impactMetrics'),
               impactMetrics
             )}
             <Box sx={{ mx: "auto", width: "40%" }}>
               <MetricSelect
-                label="Scope (S)"
+                label={t('cvss31.base.scopeLabel')}
                 value={state.metrics.base.scope}
                 options={[
-                  { value: "U", label: "Unchanged" },
-                  { value: "C", label: "Changed" },
+                  { value: "U", label: t('cvss31.base.scopeUnchanged') },
+                  { value: "C", label: t('cvss31.base.scopeChanged') },
                 ]}
                 onChange={handleSelectChange("scope")}
                 onInfoClick={() =>
                   handleOpenModal(
-                    "Scope (S)",
-                    "The Scope metric captures whether a vulnerability in one vulnerable component impacts resources in components beyond its security scope. The Base Score is greatest when a scope change occurs."
+                    t('cvss31.base.scopeLabel'),
+                    t('cvss31.base.scopeInfo')
                   )
                 }
               />

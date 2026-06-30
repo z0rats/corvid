@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -20,6 +21,7 @@ import AddFeedDialog from "./components/modals/AddFeedDialog";
 import FeedListItem from "./components/ui/FeedListItem";
 
 export default function ManageNewsfeeds() {
+  const { t } = useTranslation('newsfeed');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [bulkRefetchLoading, setBulkRefetchLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -37,18 +39,18 @@ export default function ManageNewsfeeds() {
 
   const handleFeedAdd = useCallback(async ({ name, url, iconFile }) => {
     const result = await addFeed({ name, url }, iconFile);
-    if (result.success) showSuccess("Feed added successfully");
+    if (result.success) showSuccess(t('settings.feeds.feedAddedSuccess'));
     return result;
-  }, [addFeed, showSuccess]);
+  }, [addFeed, showSuccess, t]);
 
   const handleToggle = useCallback(async (feedName) => {
     const result = await toggleFeed(feedName);
     if (result.success) {
-      showSuccess(`Feed ${result.enabled ? "enabled" : "disabled"} successfully`);
+      showSuccess(result.enabled ? t('settings.feeds.feedEnabledSuccess') : t('settings.feeds.feedDisabledSuccess'));
     } else {
-      showError("Failed to toggle feed");
+      showError(t('settings.feeds.feedToggleError'));
     }
-  }, [toggleFeed, showSuccess, showError]);
+  }, [toggleFeed, showSuccess, showError, t]);
 
   const handleDelete = useCallback((name) => {
     setFeedToDelete(name);
@@ -60,29 +62,29 @@ export default function ManageNewsfeeds() {
     const result = await deleteFeed(feedToDelete);
     setFeedToDelete(null);
     if (result.success) {
-      showSuccess("Feed deleted successfully");
+      showSuccess(t('settings.feeds.feedDeletedSuccess'));
     } else {
-      showError("Error deleting feed");
+      showError(t('settings.feeds.feedDeleteError'));
     }
-  }, [deleteFeed, feedToDelete, showSuccess, showError]);
+  }, [deleteFeed, feedToDelete, showSuccess, showError, t]);
 
   const handleIconDelete = useCallback(async (feedName) => {
     const result = await deleteIcon(feedName);
     if (result.success) {
-      showSuccess(result.message || "Icon deleted successfully");
+      showSuccess(result.message || t('settings.feeds.iconDeletedSuccess'));
     } else {
-      showError(result.error?.response?.data?.detail || "Error deleting icon");
+      showError(result.error?.response?.data?.detail || t('settings.feeds.iconDeleteError'));
     }
-  }, [deleteIcon, showSuccess, showError]);
+  }, [deleteIcon, showSuccess, showError, t]);
 
   const handleRefetchIcon = useCallback(async (feedName) => {
     const result = await refetchIcon(feedName);
     if (result.success) {
-      showSuccess(result.message || "Icon refreshed");
+      showSuccess(result.message || t('settings.feeds.iconRefreshedSuccess'));
     } else {
-      showError(result.message || result.error?.response?.data?.detail || "Failed to refresh icon");
+      showError(result.message || result.error?.response?.data?.detail || t('settings.feeds.iconRefreshError'));
     }
-  }, [refetchIcon, showSuccess, showError]);
+  }, [refetchIcon, showSuccess, showError, t]);
 
   const handleBulkRefetch = useCallback(async () => {
     setBulkRefetchLoading(true);
@@ -90,21 +92,21 @@ export default function ManageNewsfeeds() {
     setBulkRefetchLoading(false);
     if (result.success) {
       if (result.succeeded > 0) {
-        showSuccess(`Fetched ${result.succeeded} of ${result.total} missing icons`);
+        showSuccess(t('settings.feeds.bulkFetchSuccess', { succeeded: result.succeeded, total: result.total }));
       } else {
-        showError("No favicons could be downloaded");
+        showError(t('settings.feeds.bulkFetchNoneError'));
       }
     } else {
-      showError("Error fetching missing icons");
+      showError(t('settings.feeds.bulkFetchError'));
     }
-  }, [refetchAllMissingIcons, showSuccess, showError]);
+  }, [refetchAllMissingIcons, showSuccess, showError, t]);
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 1, p: 2, maxWidth: "100%", height: "90vh", display: "flex", flexDirection: "column" }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h6" component="h2">Manage Newsfeeds</Typography>
+        <Typography variant="h6" component="h2">{t('settings.feeds.title')}</Typography>
         <Stack direction="row" spacing={1}>
-          <Tooltip title={hasMissingIcons ? "Fetch favicons for feeds with missing icons" : "All feeds have icons"}>
+          <Tooltip title={hasMissingIcons ? t('settings.feeds.fetchMissingIconsTooltip') : t('settings.feeds.allFeedsHaveIcons')}>
             <span>
               <Button
                 variant="outlined"
@@ -113,12 +115,12 @@ export default function ManageNewsfeeds() {
                 onClick={handleBulkRefetch}
                 disabled={bulkRefetchLoading || !hasMissingIcons}
               >
-                Fetch Missing Icons
+                {t('settings.feeds.fetchMissingIcons')}
               </Button>
             </span>
           </Tooltip>
           <Button variant="contained" size="small" startIcon={<Add />} onClick={() => setAddDialogOpen(true)}>
-            Add Feed
+            {t('settings.feeds.addFeed')}
           </Button>
         </Stack>
       </Stack>
@@ -133,7 +135,7 @@ export default function ManageNewsfeeds() {
         ) : feedEntries.length === 0 ? (
           <Box display="flex" justifyContent="center" alignItems="center" p={4}>
             <Typography variant="body2" color="text.secondary">
-              No feeds configured. Click "Add Feed" to get started.
+              {t('settings.feeds.noFeedsConfigured')}
             </Typography>
           </Box>
         ) : (
@@ -171,8 +173,8 @@ export default function ManageNewsfeeds() {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Feed"
-        message="Are you sure you want to delete this feed? This action cannot be undone."
+        title={t('settings.feeds.deleteDialogTitle')}
+        message={t('settings.feeds.deleteDialogMessage')}
       />
     </Card>
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -14,41 +15,42 @@ export default function ThreatActorTab({
   onAttackTypePriorityChange,
   renderAutocomplete,
 }) {
+  const { t } = useTranslation('newsfeed');
   const threatConfig = ctiSettings.threat_actor_and_attack_type || {};
 
   return (
     <Box sx={{ p: 1 }}>
       {renderAutocomplete(
-        "Relevant Threat Actors",
+        t('settings.cti.threatActor.relevantThreatActors'),
         [],
         threatConfig.relevant_threat_actors,
         (e, newValue) => onInputChange("threat_actor_and_attack_type", "relevant_threat_actors", newValue),
-        "Add threat actor names"
+        t('settings.cti.threatActor.relevantThreatActorsPlaceholder')
       )}
       {renderAutocomplete(
-        "Known Threat Actor Names",
+        t('settings.cti.threatActor.knownThreatActorNames'),
         [],
         threatConfig.known_threat_actor_names,
         (e, newValue) => onInputChange("threat_actor_and_attack_type", "known_threat_actor_names", newValue),
-        "Add known threat actor names"
+        t('settings.cti.threatActor.knownThreatActorNamesPlaceholder')
       )}
       {renderAutocomplete(
-        "Attack Types of Interest",
+        t('settings.cti.threatActor.attackTypesOfInterest'),
         CTI_OPTIONS.attackTypes,
         threatConfig.attack_types_of_interest,
         (e, newValue) => onInputChange("threat_actor_and_attack_type", "attack_types_of_interest", newValue),
-        "Add or select attack types"
+        t('settings.cti.threatActor.attackTypesOfInterestPlaceholder')
       )}
 
       {threatConfig.attack_types_of_interest?.map((attackType) => (
         <Box key={attackType} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
           <Typography sx={{ mr: 2 }}>{attackType}</Typography>
           <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Priority</InputLabel>
+            <InputLabel>{t('settings.cti.threatActor.priority')}</InputLabel>
             <Select
               value={threatConfig.attack_type_priorities?.[attackType] || ""}
               onChange={(e) => onAttackTypePriorityChange(attackType, e.target.value)}
-              label="Priority"
+              label={t('settings.cti.threatActor.priority')}
             >
               {CTI_OPTIONS.priorities.map((priority) => (
                 <MenuItem key={priority} value={priority}>{priority}</MenuItem>
@@ -59,11 +61,11 @@ export default function ThreatActorTab({
       ))}
 
       {renderAutocomplete(
-        "Motivation Filters",
+        t('settings.cti.threatActor.motivationFilters'),
         CTI_OPTIONS.motivations,
         threatConfig.motivation_filters,
         (e, newValue) => onInputChange("threat_actor_and_attack_type", "motivation_filters", newValue),
-        "Add or select motivations"
+        t('settings.cti.threatActor.motivationFiltersPlaceholder')
       )}
     </Box>
   );

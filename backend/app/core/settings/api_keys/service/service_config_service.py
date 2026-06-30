@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import AppHTTPException
 from app.core.settings.api_keys.config.service_config import (
     ServiceDefinition,
     ServiceCategory,
@@ -54,15 +55,17 @@ async def get_services_configuration(
 
     except SQLAlchemyError as e:
         logger.error("Database error retrieving service configuration: %s", e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve service configuration"
+            detail="Failed to retrieve service configuration",
+            error_code="SERVICE_CONFIG_DB_ERROR",
         )
     except Exception as e:
         logger.error("Unexpected error retrieving service configuration: %s", e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
+            error_code="SERVICE_CONFIG_ERROR",
         )
 
 
@@ -72,9 +75,10 @@ async def get_single_service_configuration(db: AsyncSession, service_key: str) -
         service = get_service_definition(service_key)
         if not service:
             logger.error("Service not found: %s", service_key)
-            raise HTTPException(
+            raise AppHTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Service '{service_key}' not found"
+                detail=f"Service '{service_key}' not found",
+                error_code="SERVICE_NOT_FOUND",
             )
 
         api_keys = await get_apikeys(db)
@@ -91,15 +95,17 @@ async def get_single_service_configuration(db: AsyncSession, service_key: str) -
         raise
     except SQLAlchemyError as e:
         logger.error("Database error retrieving service configuration for %s: %s", service_key, e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve service configuration"
+            detail="Failed to retrieve service configuration",
+            error_code="SERVICE_CONFIG_DB_ERROR",
         )
     except Exception as e:
         logger.error("Unexpected error retrieving service configuration for %s: %s", service_key, e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
+            error_code="SERVICE_CONFIG_ERROR",
         )
 
 
@@ -111,9 +117,10 @@ def get_service_categories() -> list[str]:
         return categories
     except Exception as e:
         logger.error("Error retrieving service categories: %s", e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve service categories"
+            detail="Failed to retrieve service categories",
+            error_code="SERVICE_CATEGORIES_ERROR",
         )
 
 
@@ -125,9 +132,10 @@ def get_service_tiers() -> list[str]:
         return tiers
     except Exception as e:
         logger.error("Error retrieving service tiers: %s", e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve service tiers"
+            detail="Failed to retrieve service tiers",
+            error_code="SERVICE_TIERS_ERROR",
         )
 
 
@@ -142,9 +150,10 @@ def get_supported_ioc_types() -> list[str]:
         return ioc_types_list
     except Exception as e:
         logger.error("Error retrieving supported IOC types: %s", e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve supported IOC types"
+            detail="Failed to retrieve supported IOC types",
+            error_code="IOC_TYPES_ERROR",
         )
 
 
@@ -171,15 +180,17 @@ async def get_services_for_ioc_type_service(db: AsyncSession, ioc_type: str) -> 
 
     except SQLAlchemyError as e:
         logger.error("Database error retrieving services for IOC type %s: %s", ioc_type, e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve services for IOC type"
+            detail="Failed to retrieve services for IOC type",
+            error_code="SERVICE_CONFIG_DB_ERROR",
         )
     except Exception as e:
         logger.error("Unexpected error retrieving services for IOC type %s: %s", ioc_type, e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
+            error_code="SERVICE_CONFIG_ERROR",
         )
 
 

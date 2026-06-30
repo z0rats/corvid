@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -10,6 +11,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShowAiAnswer from './ShowAiAnswer';
 
 export default function MessageBody({ result }) {
+  const { t } = useTranslation('emailAnalyzer');
   const [expanded, setExpanded] = useState(true);
 
   const lines = useMemo(() => String(result ?? '').split('\n'), [result]);
@@ -30,7 +32,7 @@ export default function MessageBody({ result }) {
         <Box display="flex" alignItems="center">
           <ChatIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
-            Message body
+            {t('messageBody.title')}
           </Typography>
         </Box>
       </AccordionSummary>

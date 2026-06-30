@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -29,8 +30,9 @@ export default function TagsForm({
   onCurrentTagChange, 
   onAddTag, 
   onDeleteTag,
-  canAddTag 
+  canAddTag
 }) {
+  const { t } = useTranslation('ruleCreator');
   const handleKeyPress = (event) => {
     if (event.key === 'Enter' && canAddTag) {
       event.preventDefault();
@@ -57,13 +59,13 @@ export default function TagsForm({
       >
         <Box display="flex" alignItems="center">
           <FingerprintIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Tags</Typography>
+          <Typography variant="subtitle2">{t('yara.tagsForm.header')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
         <Stack spacing={1}>
           <TextField
-            label="Add Tag"
+            label={t('yara.tagsForm.addLabel')}
             value={currentTag}
             onChange={handleCurrentTagChange}
             onKeyPress={handleKeyPress}
@@ -72,12 +74,12 @@ export default function TagsForm({
             slotProps={{
               input: {
                 endAdornment: (
-                  <Tooltip title="Add Tag">
+                  <Tooltip title={t('yara.tagsForm.addTooltip')}>
                     <IconButton
                       onClick={onAddTag}
                       disabled={!canAddTag}
                       size="small"
-                      aria-label="Add tag"
+                      aria-label={t('yara.tagsForm.addAria')}
                     >
                       <AddCircleIcon fontSize="small" />
                     </IconButton>
@@ -85,7 +87,7 @@ export default function TagsForm({
                 ),
               },
             }}
-            placeholder="Enter tag and press Enter or click Add"
+            placeholder={t('yara.tagsForm.addPlaceholder')}
           />
           
           {/* Tags display */}
@@ -106,8 +108,7 @@ export default function TagsForm({
           
           {/* Help text */}
           <Typography variant="caption" color="text.secondary">
-            Tags help categorize and identify rules. Common tags include malware family names, 
-            attack techniques, or file types.
+            {t('yara.tagsForm.helpText')}
           </Typography>
         </Stack>
       </AccordionDetails>

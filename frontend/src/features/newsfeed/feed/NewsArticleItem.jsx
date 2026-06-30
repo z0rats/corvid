@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useAtomValue } from "jotai";
+import { useTranslation } from "react-i18next";
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -50,6 +51,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
   analyzing,
   updatingTlp,
 }) {
+  const { t } = useTranslation('newsfeed');
   const hasLlmKey = useAtomValue(hasLlmKeyAtom);
   const [tlpAnchorEl, setTlpAnchorEl] = useState(null);
   const [analyzeOpen, setAnalyzeOpen] = useState(false);
@@ -93,12 +95,12 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
           </Stack>
 
           <Stack direction="row" spacing={1} alignItems="center">
-            <Tooltip title="Change TLP" arrow>
+            <Tooltip title={t('feed.article.changeTlp')} arrow>
               <span>
                 <IconButton
                   onClick={(e) => setTlpAnchorEl(e.currentTarget)}
                   sx={{ color: tlpColors[item.tlp || "CLEAR"] }}
-                  aria-label="Change TLP Level"
+                  aria-label={t('feed.article.changeTlpLevel')}
                   disabled={updatingTlp}
                 >
                   {updatingTlp ? <CircularProgress size={24} color="inherit" /> : <CircleIcon />}
@@ -122,7 +124,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
               isButton
             />
 
-            <Tooltip title={"View Original Article on " + item.feedname} arrow>
+            <Tooltip title={t('feed.article.viewOriginalOn', { feedName: item.feedname })} arrow>
               {isValidUrl(item.link) ? (
                 <Button
                   disableElevation
@@ -131,9 +133,9 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
                   href={item.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Open Original Article"
+                  aria-label={t('feed.article.openOriginalArticle')}
                 >
-                  Original
+                  {t('feed.article.original')}
                 </Button>
               ) : (
                 <span>
@@ -142,9 +144,9 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
                     size="small"
                     startIcon={<OpenInNewIcon />}
                     disabled
-                    aria-label="Invalid article URL"
+                    aria-label={t('feed.article.invalidArticleUrl')}
                   >
-                    Original
+                    {t('feed.article.original')}
                   </Button>
                 </span>
               )}
@@ -152,7 +154,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
 
             {hasLlmKey && (
               <>
-                <Tooltip title={analyzeOpen ? "" : "Analyze Article Using AI"} arrow>
+                <Tooltip title={analyzeOpen ? "" : t('feed.article.analyzeUsingAi')} arrow>
                   <ButtonGroup variant="text" disableElevation ref={analyzeRef} size="small">
                     <Button
                       startIcon={<AutoAwesomeIcon />}
@@ -161,13 +163,13 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
                     >
                       {analyzing ? (
                         <>
-                          Analyzing...
+                          {t('feed.article.analyzing')}
                           <CircularProgress size={16} sx={{ ml: 1 }} color="inherit" />
                         </>
                       ) : (item.analysis_result || item.mitre_attack) ? (
-                        "Re-analyze"
+                        t('feed.article.reanalyze')
                       ) : (
-                        "Analyze"
+                        t('feed.article.analyze')
                       )}
                     </Button>
                     <Button
@@ -186,11 +188,11 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
                         <MenuList>
                           <MenuItem onClick={() => { setAnalyzeOpen(false); onAnalyze && onAnalyze(item, "analysis"); }}>
                             <ListItemIcon><AutoAwesomeIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText>AI Analysis</ListItemText>
+                            <ListItemText>{t('feed.article.aiAnalysisMenuItem')}</ListItemText>
                           </MenuItem>
                           <MenuItem onClick={() => { setAnalyzeOpen(false); onAnalyze && onAnalyze(item, "mitre"); }}>
                             <ListItemIcon><ShieldIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText>MITRE ATT&CK Mapping</ListItemText>
+                            <ListItemText>{t('feed.article.mitreMappingMenuItem')}</ListItemText>
                           </MenuItem>
                         </MenuList>
                       </ClickAwayListener>
@@ -206,7 +208,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
           {item.title}
         </Typography>
         <Typography sx={{ mb: 2 }}>
-          {item.summary ? he.decode(item.summary) : "No summary available for this article."}
+          {item.summary ? he.decode(item.summary) : t('feed.noSummary')}
         </Typography>
 
         {item.analysis_result && <AnalyzeSection item={item} />}

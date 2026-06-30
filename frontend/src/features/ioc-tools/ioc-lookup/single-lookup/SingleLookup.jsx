@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
@@ -9,6 +10,7 @@ import WelcomeScreen from './components/ui/WelcomeScreen';
 import { useSingleLookup } from './hooks/ui/useSingleLookup';
 
 export default function SingleLookup() {
+  const { t } = useTranslation('iocTools');
   const {
     searchValue,
     currentIocType,
@@ -24,8 +26,8 @@ export default function SingleLookup() {
     <>
       <SearchBar
         ref={inputRef}
-        placeholder="Enter an IOC to analyze (IP, Domain, URL, Email, Hash, CVE, Crypto Address)..."
-        buttonLabel="Analyze"
+        placeholder={t('singleLookup.searchBar.placeholder')}
+        buttonLabel={t('singleLookup.searchBar.buttonLabel')}
         onKeyDown={handleKeyPress}
         onSearchClick={handleSubmitSearch}
         size="medium"
@@ -45,10 +47,9 @@ export default function SingleLookup() {
           elevation={6}
         >
           <AlertTitle>
-            <b>Invalid Input</b>
+            <b>{t('singleLookup.invalidInputAlert.title')}</b>
           </AlertTitle>
-          Please enter a supported IOC type. The entered value does not match
-          known formats for IP, Domain, URL, Email, Hash, CVE, or Crypto Address.
+          {t('singleLookup.invalidInputAlert.message')}
         </Alert>
       </Snackbar>
       <Box sx={{ mb: 2 }} />

@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, status
+from app.core.exceptions import AppHTTPException
 
 from app.core.dependencies import ReadSessionDep, SessionDep
 from app.core.scheduler import update_scheduler_configuration
@@ -43,7 +44,7 @@ async def read_newsfeed_settings(db: ReadSessionDep) -> list[NewsfeedSettingsSch
     """Get all newsfeed settings"""
     settings = await get_all_newsfeed_settings(db)
     if not settings:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No settings found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No settings found", error_code="NEWSFEED_SETTINGS_NOT_FOUND")
     return [NewsfeedSettingsSchema.model_validate(s) for s in settings]
 
 
@@ -77,7 +78,7 @@ async def update_feed_status(
     """Enable or disable a newsfeed"""
     feed = await toggle_feed_status(db, feed_name, update.enabled)
     if not feed:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Newsfeed not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Newsfeed not found", error_code="NEWSFEED_NOT_FOUND")
     action = "Enabled" if update.enabled else "Disabled"
     logger.info("%s newsfeed %s.", action, feed_name)
     return NewsfeedSettingsSchema.model_validate(feed)

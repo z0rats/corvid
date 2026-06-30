@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
@@ -8,15 +9,16 @@ import Grid from '@mui/material/Grid';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 export default function CustomTagsSection({ tags, onTagsChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentTag, setCurrentTag] = useState('');
 
   const handleAdd = () => {
     if (!currentTag.trim()) {
-      alert('Tag is required.');
+      alert(t('snort.customTagsSection.requiredAlert'));
       return;
     }
     if (tags.some((tag) => tag.value === currentTag.trim())) {
-      alert('Tag already exists.');
+      alert(t('snort.customTagsSection.duplicateAlert'));
       return;
     }
     onTagsChange([...tags, { id: crypto.randomUUID(), value: currentTag.trim() }]);
@@ -30,13 +32,13 @@ export default function CustomTagsSection({ tags, onTagsChange }) {
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="subtitle2" gutterBottom>
-        Custom Tags
+        {t('snort.customTagsSection.header')}
       </Typography>
       <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, sm: 10 }}>
           <TextField
             fullWidth
-            label="Add Tag"
+            label={t('snort.customTagsSection.addLabel')}
             value={currentTag}
             onChange={(e) => setCurrentTag(e.target.value)}
             onKeyDown={(e) => {
@@ -47,7 +49,7 @@ export default function CustomTagsSection({ tags, onTagsChange }) {
             }}
             size="small"
             variant="outlined"
-            placeholder="Enter custom tag"
+            placeholder={t('snort.customTagsSection.addPlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
@@ -59,7 +61,7 @@ export default function CustomTagsSection({ tags, onTagsChange }) {
             size="small"
             fullWidth
           >
-            Add
+            {t('common.actions.add')}
           </Button>
         </Grid>
       </Grid>

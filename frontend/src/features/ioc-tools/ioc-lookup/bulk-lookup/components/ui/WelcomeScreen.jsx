@@ -1,16 +1,17 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 
-const SUPPORTED_IOC_TYPES_INFO = [
-  { title: "IP Addresses", description: "IPv4 and IPv6 addresses for threat analysis" },
-  { title: "Domains", description: "Domain names and subdomains" },
-  { title: "URLs", description: "Web addresses and endpoints" },
-  { title: "Email Addresses", description: "Known malicious or suspicious email addresses" },
-  { title: "Hashes", description: "MD5, SHA1, and SHA256 file hashes" },
-  { title: "CVEs", description: "Common Vulnerabilities and Exposures identifiers" },
+const SUPPORTED_IOC_TYPE_KEYS = [
+  'ipAddresses',
+  'domains',
+  'urls',
+  'emailAddresses',
+  'hashes',
+  'cves',
 ];
 
 const FeatureCard = ({ title, description }) => (
@@ -27,29 +28,32 @@ const FeatureCard = ({ title, description }) => (
 );
 
 export default function WelcomeScreen() {
+  const { t } = useTranslation('iocTools');
+
   return (
     <Paper sx={{ p: { xs: 2, sm: 3 }, mt: 2 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" component="h1" gutterBottom>
-          Bulk IOC Lookup
+          {t('bulkLookup.welcomeScreen.title')}
         </Typography>
         <Typography paragraph>
-          This tool processes IOCs in batches, automatically categorizes them by type,
-          and provides threat intelligence data from various security services.
+          {t('bulkLookup.welcomeScreen.intro')}
         </Typography>
         <Typography>
-          Paste your IOCs (one per line) or upload a file to get started. The system will
-          automatically detect IOC types and query relevant threat intelligence sources in parallel
-          for fast analysis.
+          {t('bulkLookup.welcomeScreen.instructions')}
         </Typography>
       </Box>
 
       <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-        Supported IOC Types
+        {t('bulkLookup.welcomeScreen.supportedTypesHeading')}
       </Typography>
       <Grid container spacing={1}>
-        {SUPPORTED_IOC_TYPES_INFO.map(item => (
-          <FeatureCard key={item.title} title={item.title} description={item.description} />
+        {SUPPORTED_IOC_TYPE_KEYS.map(key => (
+          <FeatureCard
+            key={key}
+            title={t(`bulkLookup.welcomeScreen.supportedTypes.${key}.title`)}
+            description={t(`bulkLookup.welcomeScreen.supportedTypes.${key}.description`)}
+          />
         ))}
       </Grid>
     </Paper>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
@@ -8,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
 export default function TypeTags(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       key="tags_card"
@@ -19,7 +21,7 @@ export default function TypeTags(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            Type tags
+            {t('providers.virustotal.typeTags')}
           </Typography>
         </Grid>
       </Grid>
@@ -34,7 +36,7 @@ export default function TypeTags(props) {
           ))}
         </>
       ) : (
-        <Typography>None</Typography>
+        <Typography>{t('providers.virustotal.none')}</Typography>
       )}
     </Card>
   );

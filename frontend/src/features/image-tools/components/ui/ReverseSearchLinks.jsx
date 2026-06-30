@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -6,14 +7,15 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { REVERSE_SEARCH_ENGINES } from '../../constants/imageConstants';
 
 export default function ReverseSearchLinks({ imageUrl }) {
+  const { t } = useTranslation('imageTools');
   const hasUrl = Boolean(imageUrl && imageUrl.trim());
 
   return (
     <Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
         {hasUrl
-          ? 'Open this image in a reverse-search engine:'
-          : 'No image URL provided — these will open each engine so you can upload the file manually.'}
+          ? t('reverseSearch.withUrlHint')
+          : t('reverseSearch.noUrlHint')}
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         {REVERSE_SEARCH_ENGINES.map((engine) => (

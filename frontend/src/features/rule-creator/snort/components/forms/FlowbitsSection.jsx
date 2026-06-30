@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
@@ -20,11 +21,12 @@ import FlowIcon from '@mui/icons-material/AccountTree';
 import { SNORT_CONSTANTS } from '../../constants/snortConstants';
 
 export default function FlowbitsSection({ flowbitsList, onFlowbitsChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentFlowbit, setCurrentFlowbit] = useState({ action: 'set', name: '' });
 
   const handleAdd = () => {
     if (!currentFlowbit.name.trim()) {
-      alert('Flowbit name is required.');
+      alert(t('snort.flowbitsSection.requiredAlert'));
       return;
     }
     onFlowbitsChange([...flowbitsList, {
@@ -42,15 +44,15 @@ export default function FlowbitsSection({ flowbitsList, onFlowbitsChange }) {
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant="subtitle2" gutterBottom>
-        Flowbits
+        {t('snort.flowbitsSection.header')}
       </Typography>
       <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>Action</InputLabel>
+            <InputLabel>{t('snort.flowbitsSection.actionLabel')}</InputLabel>
             <Select
               value={currentFlowbit.action}
-              label="Action"
+              label={t('snort.flowbitsSection.actionLabel')}
               onChange={(e) => setCurrentFlowbit(prev => ({ ...prev, action: e.target.value }))}
             >
               {SNORT_CONSTANTS.FLOWBIT_ACTIONS.map((action) => (
@@ -64,12 +66,12 @@ export default function FlowbitsSection({ flowbitsList, onFlowbitsChange }) {
         <Grid size={{ xs: 12, sm: 7 }}>
           <TextField
             fullWidth
-            label="Flowbit Name"
+            label={t('snort.flowbitsSection.nameLabel')}
             value={currentFlowbit.name}
             onChange={(e) => setCurrentFlowbit(prev => ({ ...prev, name: e.target.value }))}
             size="small"
             variant="outlined"
-            placeholder="flowbit_name"
+            placeholder={t('snort.flowbitsSection.namePlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
@@ -81,7 +83,7 @@ export default function FlowbitsSection({ flowbitsList, onFlowbitsChange }) {
             size="small"
             fullWidth
           >
-            Add
+            {t('common.actions.add')}
           </Button>
         </Grid>
       </Grid>
@@ -92,8 +94,8 @@ export default function FlowbitsSection({ flowbitsList, onFlowbitsChange }) {
             <ListItem
               key={flowbit.id}
               secondaryAction={
-                <Tooltip title="Delete Flowbit">
-                  <IconButton edge="end" onClick={() => handleDelete(flowbit.id)} size="small" aria-label="Delete flowbit">
+                <Tooltip title={t('snort.flowbitsSection.deleteTooltip')}>
+                  <IconButton edge="end" onClick={() => handleDelete(flowbit.id)} size="small" aria-label={t('snort.flowbitsSection.deleteAria')}>
                     <DeleteIcon fontSize="small" color="error" />
                   </IconButton>
                 </Tooltip>

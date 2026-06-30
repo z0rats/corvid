@@ -1,10 +1,11 @@
 import React from 'react';
 import { useAtomValue } from 'jotai';
+import { useTranslation } from 'react-i18next';
 import { modulesState } from '../../../core/state/atoms';
 import { useModules } from '../hooks/api/useModules';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
 import { formatModuleName } from '../utils/settingsUtils';
-import { VALID_MODULE_IDS, MODULE_DESCRIPTIONS } from '../constants/settingsConstants';
+import { VALID_MODULE_IDS } from '../constants/settingsConstants';
 import NotificationSnackbar from '../components/ui/NotificationSnackbar';
 
 import Alert from '@mui/material/Alert';
@@ -17,6 +18,7 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 
 export default function Modules() {
+  const { t } = useTranslation('settings');
   const modules = useAtomValue(modulesState);
   const { loading, toggleModule } = useModules();
   const { notification, showNotification, hideNotification } = useNotification();
@@ -39,7 +41,7 @@ export default function Modules() {
   if (!modules || filteredModules.length === 0) {
     return (
       <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
-        <Alert severity="info">Loading modules...</Alert>
+        <Alert severity="info">{t('modules.loading')}</Alert>
       </Box>
     );
   }
@@ -49,10 +51,10 @@ export default function Modules() {
       <Card elevation={0} sx={{ border: 'none' }}>
         <CardContent>
           <Typography variant="h5" sx={{ mb: 2 }}>
-            Modules
+            {t('modules.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Enable or disable modules based on your needs.
+            {t('modules.description')}
           </Typography>
 
           <Grid container spacing={2}>
@@ -73,11 +75,9 @@ export default function Modules() {
                 >
                   <Box>
                     <Typography variant="h6">{formatModuleName(name)}</Typography>
-                    {MODULE_DESCRIPTIONS[name] && (
-                      <Typography variant="body2" color="text.secondary">
-                        {MODULE_DESCRIPTIONS[name]}
-                      </Typography>
-                    )}
+                    <Typography variant="body2" color="text.secondary">
+                      {t(`modules.descriptions.${name}`, { defaultValue: '' })}
+                    </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {loading && (

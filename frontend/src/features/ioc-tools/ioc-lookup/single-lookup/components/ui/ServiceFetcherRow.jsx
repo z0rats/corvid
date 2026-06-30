@@ -1,15 +1,17 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import ServiceResultRow from './ServiceResultRow.jsx';
 import { useServiceFetcher } from '../../hooks/api/useServiceFetcher';
 
 function ServiceFetcherRow({ ioc, iocType, serviceConfigEntry }) {
+  const { t } = useTranslation('iocTools');
   const { loading, apiResult, displayProps } = useServiceFetcher(ioc, iocType, serviceConfigEntry);
 
   const serviceForChild = useMemo(() => ({
-    name: serviceConfigEntry?.name || 'Unknown Service',
+    name: serviceConfigEntry?.name || t('singleLookup.serviceFetcherRow.unknownService'),
     icon: serviceConfigEntry?.icon || 'default_icon',
     detailComponent: serviceConfigEntry?.detailComponent,
-  }), [serviceConfigEntry?.name, serviceConfigEntry?.icon, serviceConfigEntry?.detailComponent]);
+  }), [serviceConfigEntry?.name, serviceConfigEntry?.icon, serviceConfigEntry?.detailComponent, t]);
 
   return (
     <ServiceResultRow

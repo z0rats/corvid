@@ -1,0 +1,76 @@
+{
+  "nav": {
+    "newsfeed": "Newsfeed",
+    "iocTools": "IOC Tools",
+    "emailAnalyzer": "Email Analyzer",
+    "imageTools": "Image Tools",
+    "aiTemplates": "AI Templates",
+    "cvssCalculator": "CVSS Calculator",
+    "detectionRules": "Detection Rules",
+
+    "aiTemplatesTabs": {
+      "templates": "Templates",
+      "createTemplate": "Create Template"
+    },
+
+    "iocToolsTabs": {
+      "singleLookup": "Single Lookup",
+      "bulkLookup": "Bulk Lookup",
+      "domainFinder": "Domain Finder",
+      "extractor": "Extractor",
+      "defangFang": "Defang/Fang"
+    },
+
+    "newsfeedTabs": {
+      "feed": "Feed",
+      "trends": "Trends",
+      "headlineView": "Headline View",
+      "newsReport": "News Report",
+      "settings": "Settings",
+      "settingsGeneral": "General",
+      "manageFeeds": "Manage Feeds",
+      "keywordMatching": "Keyword Matching",
+      "ctiSettings": "CTI Settings"
+    },
+
+    "settingsTabs": {
+      "apiKeys": "API Keys",
+      "aiSettings": "AI Settings",
+      "modules": "Modules",
+      "about": "About"
+    },
+
+    "cvssTabs": {
+      "cvss31": "CVSS 3.1",
+      "cvss40": "CVSS 4.0"
+    },
+
+    "rulesTabs": {
+      "sigma": "Sigma",
+      "yara": "Yara",
+      "snort": "Snort"
+    }
+  },
+
+  "layout": {
+    "openMenu": "Open menu",
+    "toggleSidebar": "Toggle sidebar",
+    "switchToLightMode": "Switch to light mode",
+    "switchToDarkMode": "Switch to dark mode",
+    "toggleDarkMode": "Toggle dark mode",
+    "settings": "Settings"
+  },
+
+  "settings": {
+    "general": {
+      "title": "General",
+      "description": "Application wide settings can be configured here.",
+      "visual": "Visual",
+      "darkMode": "Dark mode",
+      "customFont": "Custom font",
+      "customFontHelper": "Change the application wide font for OSINT Toolkit",
+      "language": "Language",
+      "languageHelper": "Change the language used across the application interface"
+    }
+  }
+}

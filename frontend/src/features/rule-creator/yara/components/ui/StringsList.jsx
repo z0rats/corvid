@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -21,6 +22,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
  * @param {Function} props.onDeleteString - Handler for deleting a string
  */
 export default function StringsList({ strings, onDeleteString }) {
+  const { t } = useTranslation('ruleCreator');
   if (strings.length === 0) {
     return null;
   }
@@ -41,7 +43,7 @@ export default function StringsList({ strings, onDeleteString }) {
         <Box display="flex" alignItems="center">
           <CodeIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">
-            Strings ({strings.length})
+            {t('yara.stringsList.header', { count: strings.length })}
           </Typography>
         </Box>
       </AccordionSummary>
@@ -51,13 +53,13 @@ export default function StringsList({ strings, onDeleteString }) {
             <ListItem
               key={string.id}
               secondaryAction={
-                <Tooltip title="Delete String">
+                <Tooltip title={t('yara.stringsList.deleteTooltip')}>
                   <IconButton
                     edge="end"
                     onClick={() => onDeleteString(string.id)}
                     size="small"
                     color="error"
-                    aria-label="Delete string"
+                    aria-label={t('yara.stringsList.deleteAria')}
                   >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
@@ -73,13 +75,13 @@ export default function StringsList({ strings, onDeleteString }) {
                 secondary={
                   <>
                     <Typography component="span" variant="caption" color="text.primary">
-                      Type: {string.type.toUpperCase()}
+                      {t('yara.stringsList.typeLabel', { type: string.type.toUpperCase() })}
                     </Typography>
                     {string.modifiers.length > 0 && (
                       <>
                         {' | '}
                         <Typography component="span" variant="caption" color="text.primary">
-                          Modifiers: {string.modifiers.join(', ')}
+                          {t('yara.stringsList.modifiersLabel', { modifiers: string.modifiers.join(', ') })}
                         </Typography>
                       </>
                     )}
@@ -94,7 +96,7 @@ export default function StringsList({ strings, onDeleteString }) {
                         maxWidth: '100%'
                       }}
                     >
-                      Value: {string.value}
+                      {t('yara.stringsList.valueLabel', { value: string.value })}
                     </Typography>
                   </>
                 }

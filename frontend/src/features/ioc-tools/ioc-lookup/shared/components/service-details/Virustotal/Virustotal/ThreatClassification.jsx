@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Avatar from "@mui/material/Avatar";
 import Card from "@mui/material/Card";
@@ -12,6 +13,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Typography from '@mui/material/Typography';
 
 export default function ThreatClassification(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       key="threat_classification_card"
@@ -23,18 +25,17 @@ export default function ThreatClassification(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            Popular threat classification
+            {t('providers.virustotal.popularThreatClassification')}
           </Typography>
         </Grid>
       </Grid>
       <Typography variant="body1" component="h2" gutterBottom>
-        Human readable names extracted from the AV verdicts and clustering
-        hashes
+        {t('providers.virustotal.threatClassificationHelper')}
       </Typography>
       <List>
         <ListItem>
           <ListItemText
-            primary="Suggested threat label"
+            primary={t('providers.virustotal.suggestedThreatLabel')}
             secondary={
               props.result["data"]["attributes"][
                 "popular_threat_classification"
@@ -45,7 +46,7 @@ export default function ThreatClassification(props) {
       </List>
       <Divider textAlign="left" sx={{ m: 2 }}>
         {" "}
-        Popular threat category{" "}
+        {t('providers.virustotal.popularThreatCategory')}{" "}
       </Divider>
       {props.result["data"]["attributes"]["popular_threat_classification"][
         "popular_threat_category"
@@ -59,7 +60,7 @@ export default function ThreatClassification(props) {
       ))}
       <Divider textAlign="left" sx={{ m: 2 }}>
         {" "}
-        Popular threat name{" "}
+        {t('providers.virustotal.popularThreatName')}{" "}
       </Divider>
       {props.result["data"]["attributes"]["popular_threat_classification"][
         "popular_threat_name"

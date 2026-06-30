@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -13,6 +14,7 @@ import tagData from '../../data/TagData.json';
 const tagSuggestions = Object.values(tagData).flat();
 
 export default function Tags({ tags, handleTagsChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [tagInput, setTagInput] = useState('');
 
   const handleAddTag = () => {
@@ -30,12 +32,12 @@ export default function Tags({ tags, handleTagsChange }) {
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom>
-        Use tags from MITRE ATT&CK, CAR and tags for CVE numbers.
+        {t('sigma.tags.helpText')}
       </Typography>
       <Typography variant="caption" gutterBottom>
-        Examples tags: attack.credential_access, attack.t1003.002, car.2013-07-001, cve.2020.10189
+        {t('sigma.tags.examplesCaption')}
         <br />
-        Use lower-case tags only. Use . or - as divider in tag names. Replace space with an underscore _.
+        {t('sigma.tags.formatRules')}
       </Typography>
       <Autocomplete
         freeSolo
@@ -53,15 +55,15 @@ export default function Tags({ tags, handleTagsChange }) {
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Add Tag"
+            label={t('sigma.tags.addLabel')}
             size="small"
             variant="outlined"
-            placeholder="Enter tag and press Enter or click Add"
+            placeholder={t('sigma.tags.addPlaceholder')}
             slotProps={{
               input: {
                 ...params.InputProps,
                 endAdornment: (
-                  <IconButton onClick={handleAddTag} disabled={!tagInput.trim()} size="small" aria-label="Add tag">
+                  <IconButton onClick={handleAddTag} disabled={!tagInput.trim()} size="small" aria-label={t('sigma.tags.addAria')}>
                     <AddCircleIcon fontSize="small" />
                   </IconButton>
                 ),

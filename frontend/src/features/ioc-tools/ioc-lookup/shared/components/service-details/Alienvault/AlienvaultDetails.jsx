@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import NoDetails from "../NoDetails";
@@ -8,8 +9,9 @@ import MalwareSamplesCard from "./MalwareSamplesCard";
 import FileAnalysisCard from "./FileAnalysisCard";
 
 export default function AlienvaultDetails({ result }) {
+  const { t } = useTranslation('iocTools');
   if (!result || result.error) {
-    return <NoDetails message="Detailed information for AlienVault OTX is unavailable or still loading." />;
+    return <NoDetails message={t('providers.alienvault.unavailable')} />;
   }
 
   return (

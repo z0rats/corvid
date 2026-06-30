@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -9,6 +10,7 @@ import Typography from '@mui/material/Typography';
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
 
 export default function Whois(props) {
+  const { t } = useTranslation('iocTools');
   const [expanded, setExpanded] = useState(false);
 
   const toggleExpanded = () => {
@@ -37,7 +39,7 @@ export default function Whois(props) {
       </Typography>
       {props.result["data"]["attributes"]["whois"].length > 250 && (
         <Button onClick={toggleExpanded}>
-          {expanded ? "Read Less" : "Read More"}
+          {expanded ? t('providers.virustotal.readLess') : t('providers.virustotal.readMore')}
         </Button>
       )}
     </Card>

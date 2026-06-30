@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Pagination from '@mui/material/Pagination';
@@ -9,6 +10,8 @@ import { processSourcesForDisplay } from './utils/mandiantDataUtils';
 const ROWS_PER_PAGE = 10;
 
 export default function MandiantIndicators({ indicators, page, onPageChange }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const paginatedIndicators = indicators.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
   const chunkedIndicators = [];
   for (let i = 0; i < paginatedIndicators.length; i += 2) {
@@ -25,21 +28,21 @@ export default function MandiantIndicators({ indicators, page, onPageChange }) {
               <Grid size={{ xs: 12, md: 6 }} key={indicator.value}>
                 <Box sx={{ p: 2, backgroundColor: (t) => t.palette.mode === 'dark' ? t.palette.background.default : t.palette.grey[100], height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <Typography variant="subtitle1" fontWeight="bold">{indicator.value}</Typography>
-                  <Typography variant="body2" color="text.secondary">Type: {indicator.type}</Typography>
+                  <Typography variant="body2" color="text.secondary">{t('providers.crowdstrike.type')} {indicator.type}</Typography>
                   <Box display="flex" alignItems="center" mt={1}>
-                    <Typography variant="body2" mr={1}>Risk Score:</Typography>
+                    <Typography variant="body2" mr={1}>{t('providers.mandiant.riskScore')}</Typography>
                     <Box sx={{ backgroundColor: indicator.mscore < 20 ? 'success.main' : indicator.mscore < 40 ? 'warning.main' : 'error.main', px: 1, py: 0.5, borderRadius: 1, display: 'inline-block', color: 'white' }}>
                       {indicator.mscore}
                     </Box>
                   </Box>
                   <Box mt={1}>
-                    <Typography variant="body2">First seen: {indicator.first_seen ? new Date(indicator.first_seen).toLocaleDateString() : 'N/A'}</Typography>
-                    <Typography variant="body2">Last seen: {indicator.last_seen ? new Date(indicator.last_seen).toLocaleDateString() : 'N/A'}</Typography>
+                    <Typography variant="body2">{t('providers.threatfox.firstSeen')} {indicator.first_seen ? new Date(indicator.first_seen).toLocaleDateString() : notAvailable}</Typography>
+                    <Typography variant="body2">{t('providers.threatfox.lastSeen')} {indicator.last_seen ? new Date(indicator.last_seen).toLocaleDateString() : notAvailable}</Typography>
                   </Box>
                   <Box mt={2} sx={{ flexGrow: 1 }}>
                     {processedSources.length > 0 && (
                       <>
-                        <Typography variant="body2" fontWeight="bold">Sources:</Typography>
+                        <Typography variant="body2" fontWeight="bold">{t('providers.mandiant.sources')}</Typography>
                         <Box mt={1}>
                           {processedSources.map((source) => (
                             <Box key={source.source_name} sx={{ mb: 1 }}>

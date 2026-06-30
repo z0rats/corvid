@@ -3,6 +3,7 @@ Domain lookup business logic service
 """
 import logging
 from fastapi import HTTPException
+from app.core.exceptions import AppHTTPException
 
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     DomainLookupRequest,
@@ -61,18 +62,20 @@ async def perform_domain_lookup(domain_request: DomainLookupRequest) -> DomainLo
         
     except ValueError as e:
         logger.error("Domain validation failed for '%s': %s", domain, str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=400,
-            detail=f"Invalid domain format: {str(e)}"
+            detail=f"Invalid domain format: {str(e)}",
+            error_code="DOMAIN_INVALID_FORMAT",
         )
     except HTTPException:
         # Re-raise HTTPExceptions from API service
         raise
     except Exception as e:
         logger.error("Unexpected error during domain lookup for '%s': %s", domain, e, exc_info=True)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=500,
-            detail="An unexpected error occurred during domain lookup"
+            detail="An unexpected error occurred during domain lookup",
+            error_code="DOMAIN_LOOKUP_ERROR",
         )
 
 

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue } from 'jotai';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -43,6 +44,7 @@ function normalizeTemplate(template) {
 }
 
 export default function EditTemplateDialog({ open, onClose, template, onSave, onDelete: onDeleteSuccess, categories = [] }) {
+  const { t } = useTranslation('llmTemplates');
   const theme = useTheme();
   const apiKeys = useAtomValue(apiKeysState);
   const [tpl, setTpl] = useState(() => template ? normalizeTemplate(template) : null);
@@ -76,7 +78,7 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
       onClose();
     } catch (err) {
       logger.error('Failed to save template:', err);
-      alert('Failed to save template');
+      alert(t('editDialog.saveFailedAlert'));
     } finally {
       setSaving(false);
     }
@@ -99,26 +101,26 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
   return (
     <>
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Edit Template</DialogTitle>
+      <DialogTitle>{t('editDialog.title')}</DialogTitle>
       <DialogContent dividers>
-        <Typography variant="subtitle1" gutterBottom>Basic Information</Typography>
-        <ResizableTextField label="Title" fullWidth value={tpl.title} onChange={e => updateField('title', e.target.value)} required sx={{ mb: 2 }} />
+        <Typography variant="subtitle1" gutterBottom>{t('editDialog.basicInfo')}</Typography>
+        <ResizableTextField label={t('editDialog.titleLabel')} fullWidth value={tpl.title} onChange={e => updateField('title', e.target.value)} required sx={{ mb: 2 }} />
         <FormControl sx={{ minWidth: 200, mb: 2 }}>
-          <InputLabel>LLM Model</InputLabel>
-          <Select value={tpl.model} label="LLM Model" onChange={e => updateField('model', e.target.value)}>
+          <InputLabel>{t('editDialog.modelLabel')}</InputLabel>
+          <Select value={tpl.model} label={t('editDialog.modelLabel')} onChange={e => updateField('model', e.target.value)}>
             {Object.entries(Object.groupBy(availableModels, m => m.provider)).flatMap(([provider, models]) => [
               <ListSubheader key={provider}>{provider}</ListSubheader>,
               ...models.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>),
             ])}
           </Select>
         </FormControl>
-        <ResizableTextField label="Description" fullWidth multiline minRows={2} value={tpl.description} onChange={e => updateField('description', e.target.value)} />
+        <ResizableTextField label={t('editDialog.descriptionLabel')} fullWidth multiline minRows={2} value={tpl.description} onChange={e => updateField('description', e.target.value)} />
         {categories.length > 0 && (
           <FormControl sx={{ minWidth: 200, mt: 2 }}>
-            <InputLabel>Group</InputLabel>
+            <InputLabel>{t('editDialog.groupLabel')}</InputLabel>
             <Select
               value={tpl.category_id || ''}
-              label="Group"
+              label={t('editDialog.groupLabel')}
               onChange={e => updateField('category_id', e.target.value)}
             >
               {categories.map(c => (
@@ -129,9 +131,9 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
         )}
 
         <Box my={2}>
-          <Typography variant="subtitle1" gutterBottom>AI Agent Configuration</Typography>
-          <ResizableTextField label="AI Agent Role" fullWidth multiline minRows={1} value={tpl.ai_agent_role} onChange={e => updateField('ai_agent_role', e.target.value)} sx={{ mb: 2 }} />
-          <ResizableTextField label="AI Agent Task" fullWidth multiline minRows={2} value={tpl.ai_agent_task} onChange={e => updateField('ai_agent_task', e.target.value)} />
+          <Typography variant="subtitle1" gutterBottom>{t('editDialog.aiAgentConfig')}</Typography>
+          <ResizableTextField label={t('editDialog.agentRoleLabel')} fullWidth multiline minRows={1} value={tpl.ai_agent_role} onChange={e => updateField('ai_agent_role', e.target.value)} sx={{ mb: 2 }} />
+          <ResizableTextField label={t('editDialog.agentTaskLabel')} fullWidth multiline minRows={2} value={tpl.ai_agent_task} onChange={e => updateField('ai_agent_task', e.target.value)} />
         </Box>
 
         <Box my={2}>
@@ -162,7 +164,7 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
         </Box>
 
         <Box my={2}>
-          <Typography variant="subtitle1" gutterBottom>Example (Markdown)</Typography>
+          <Typography variant="subtitle1" gutterBottom>{t('editDialog.exampleSection')}</Typography>
           <Box className="mdxeditor-wrapper" sx={{ height: 300, minHeight: 100, resize: 'vertical', overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
             <MDXEditor
               className={theme.palette.mode === 'dark' ? 'dark-theme' : ''}
@@ -185,12 +187,12 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
 
       <DialogActions>
         <Button color="error" onClick={() => setDeleteDialogOpen(true)} disabled={deleting}>
-          {deleting ? <CircularProgress size={20} /> : 'Delete'}
+          {deleting ? <CircularProgress size={20} /> : t('editDialog.deleteButton')}
         </Button>
         <Box sx={{ flex: 1 }} />
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('editDialog.cancelButton')}</Button>
         <Button variant="contained" onClick={handleSave} disabled={saving}>
-          {saving ? <CircularProgress size={20} /> : 'Save Changes'}
+          {saving ? <CircularProgress size={20} /> : t('editDialog.saveButton')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -199,8 +201,8 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
       open={deleteDialogOpen}
       onClose={() => setDeleteDialogOpen(false)}
       onConfirm={handleDeleteConfirm}
-      title="Delete Template"
-      message="Are you sure you want to delete this template? This action cannot be undone."
+      title={t('editDialog.deleteTemplateTitle')}
+      message={t('editDialog.deleteTemplateMessage')}
     />
     </>
   );

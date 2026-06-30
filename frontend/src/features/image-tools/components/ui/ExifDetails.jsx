@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -8,13 +9,14 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { imageUtils } from '../../utils/imageUtils';
 
 export default function ExifDetails({ exif }) {
+  const { t } = useTranslation('imageTools');
   const groups = imageUtils.groupExifTags(exif);
   const categories = Object.keys(groups);
 
   if (categories.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">
-        No EXIF data found in this image.
+        {t('exif.empty')}
       </Typography>
     );
   }

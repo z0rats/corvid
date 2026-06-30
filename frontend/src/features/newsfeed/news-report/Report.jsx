@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -31,6 +32,7 @@ function getTimelineDotIcon(step, stepIndex, DefaultIcon) {
 }
 
 export default function Report() {
+  const { t } = useTranslation('newsfeed');
   const {
     step,
     isLoading,
@@ -49,18 +51,18 @@ export default function Report() {
   };
 
   const steps = [
-    { stepIndex: 1, label: "Fetch all news articles of the last 7 days", Icon: SearchIcon, renderContent: () => null },
-    { stepIndex: 2, label: "Rank news articles by relevance", Icon: AnalyticsIcon, renderContent: () => null },
+    { stepIndex: 1, label: t('report.steps.fetch'), Icon: SearchIcon, renderContent: () => null },
+    { stepIndex: 2, label: t('report.steps.rank'), Icon: AnalyticsIcon, renderContent: () => null },
     {
       stepIndex: 3,
-      label: "Show 10 most relevant articles",
+      label: t('report.steps.showTop'),
       Icon: ListAltIcon,
       renderContent: () => {
         if (step < 3) return null;
         return (
           <Box>
             {ranking.length === 0 && (
-              <Typography variant="body2" color="text.secondary">No articles found or none returned.</Typography>
+              <Typography variant="body2" color="text.secondary">{t('report.noArticlesFound')}</Typography>
             )}
             {ranking.map((article, idx) => (
               <RankingCard key={article.id} article={article} index={idx} />
@@ -71,15 +73,15 @@ export default function Report() {
     },
     {
       stepIndex: 4,
-      label: "Analyze most relevant articles and create reports",
+      label: t('report.steps.analyze'),
       Icon: AssessmentOutlinedIcon,
       renderContent: () => {
         if (step < 4) return null;
         return (
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>Detailed Analysis</Typography>
+            <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>{t('report.detailedAnalysis')}</Typography>
             {analysisResults.length === 0 && (
-              <Typography variant="body2" color="text.secondary">Waiting for the first analysis result...</Typography>
+              <Typography variant="body2" color="text.secondary">{t('report.waitingForFirstResult')}</Typography>
             )}
             {analysisResults.map((res, i) => (
               <AnalysisCard key={`${res.article_id}-${i}`} result={res} index={i} />
@@ -90,18 +92,18 @@ export default function Report() {
     },
     {
       stepIndex: 5,
-      label: "Completed analysis and report creation",
+      label: t('report.steps.completed'),
       Icon: CheckCircleOutlineIcon,
       renderContent: () => {
         if (step < 5) return null;
         return (
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>Analysis Complete</Typography>
+            <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>{t('report.analysisComplete')}</Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              All articles have been analyzed. You may restart if you wish to run another analysis.
+              {t('report.restartMessage')}
             </Typography>
             <Button variant="contained" onClick={handleExportMarkdown}>
-              Download Markdown Report
+              {t('report.downloadMarkdown')}
             </Button>
           </Box>
         );
@@ -111,27 +113,26 @@ export default function Report() {
 
   return (
     <Box sx={{ width: "100%", py: 4, px: 2 }}>
-      <Typography variant="h4" gutterBottom>News Report Generator</Typography>
+      <Typography variant="h4" gutterBottom>{t('report.pageTitle')}</Typography>
       <Typography variant="body1" color="text.secondary" paragraph>
-        This tool fetches all cybersecurity news from the last 7 days, ranks the top 10 relevant news by headline,
-        and then provides a detailed analysis of each article.
+        {t('report.pageDescription')}
       </Typography>
 
       {!showStopButton && step !== 5 && (
         <Box sx={{ mb: 2 }}>
-          <Button variant="contained" onClick={startAnalysis}>Start Analysis</Button>
+          <Button variant="contained" onClick={startAnalysis}>{t('report.startAnalysis')}</Button>
         </Box>
       )}
       {showStopButton && (
         <Box sx={{ mb: 2 }}>
-          <Button variant="outlined" color="error" onClick={stopAnalysis}>Stop Analysis</Button>
+          <Button variant="outlined" color="error" onClick={stopAnalysis}>{t('report.stopAnalysis')}</Button>
         </Box>
       )}
 
       {isLoading && (
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <CircularProgress size={24} sx={{ mr: 2 }} />
-          <Typography>Fetching / Analyzing...</Typography>
+          <Typography>{t('report.fetchingAnalyzing')}</Typography>
         </Box>
       )}
 

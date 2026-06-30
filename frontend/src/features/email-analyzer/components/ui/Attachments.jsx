@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import IocLookupDialog from '../../../ioc-tools/ioc-lookup/shared/components/IocLookupDialog';
 import { useIocLookupDialog } from '../../../ioc-tools/ioc-lookup/shared/hooks/useIocLookupDialog';
 import { emailUtils } from '../../utils/emailUtils';
@@ -24,6 +25,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 const HASH_FIELDS = ['md5', 'sha1', 'sha256'];
 
 function CopyButton({ value }) {
+  const { t } = useTranslation('emailAnalyzer');
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef(null);
 
@@ -40,8 +42,8 @@ function CopyButton({ value }) {
   };
 
   return (
-    <Tooltip title={copied ? 'Copied!' : 'Copy'}>
-      <IconButton size="small" onClick={handleCopy} sx={{ ml: 0.5 }} aria-label="Copy hash">
+    <Tooltip title={copied ? t('attachments.copyButton.copied') : t('attachments.copyButton.copy')}>
+      <IconButton size="small" onClick={handleCopy} sx={{ ml: 0.5 }} aria-label={t('attachments.copyButton.ariaLabel')}>
         <ContentCopyIcon sx={{ fontSize: '0.75rem' }} />
       </IconButton>
     </Tooltip>
@@ -49,9 +51,11 @@ function CopyButton({ value }) {
 }
 
 function AttachmentTable({ attachment, theme, onAnalyze }) {
+  const { t } = useTranslation('emailAnalyzer');
+
   return (
     <TableContainer sx={{ maxWidth: '100%', mb: 2, boxShadow: 0, borderRadius: 1 }}>
-      <Table size="small" aria-label="attachments table">
+      <Table size="small" aria-label={t('attachments.tableAriaLabel')}>
         <TableHead>
           <TableRow>
             <TableCell
@@ -59,7 +63,7 @@ function AttachmentTable({ attachment, theme, onAnalyze }) {
               sx={{ backgroundColor: theme.palette.background.tablecell, py: 1 }}
             >
               <Typography variant="subtitle2" component="div" fontWeight="bold">
-                {attachment.filename ?? 'Unknown filename'}
+                {attachment.filename ?? t('attachments.unknownFilename')}
               </Typography>
             </TableCell>
           </TableRow>
@@ -85,7 +89,7 @@ function AttachmentTable({ attachment, theme, onAnalyze }) {
                   size="small"
                   onClick={() => onAnalyze(attachment[hashType])}
                 >
-                  Analyze
+                  {t('attachments.analyzeButton')}
                 </Button>
               </TableCell>
             </TableRow>
@@ -97,6 +101,7 @@ function AttachmentTable({ attachment, theme, onAnalyze }) {
 }
 
 export default function Attachments({ result }) {
+  const { t } = useTranslation('emailAnalyzer');
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
   const { open, ioc, iocType, openDialog, closeDialog } = useIocLookupDialog();
@@ -120,7 +125,7 @@ export default function Attachments({ result }) {
         <Box display="flex" alignItems="center">
           <AttachFileIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
-            Attachments ({result.length})
+            {t('attachments.title', { count: result.length })}
           </Typography>
         </Box>
       </AccordionSummary>
@@ -136,7 +141,7 @@ export default function Attachments({ result }) {
           ))
         ) : (
           <Typography variant="body2" sx={{ px: 1 }}>
-            No attachments found
+            {t('attachments.empty')}
           </Typography>
         )}
         <IocLookupDialog open={open} onClose={closeDialog} ioc={ioc} iocType={iocType} />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -23,6 +24,7 @@ import ActionButtons from '../shared/components/ui/ActionButtons';
 import RulePreview from '../shared/components/ui/RulePreview';
 
 export default function Sigma() {
+  const { t } = useTranslation('ruleCreator');
   const ruleState = useSigmaRuleState();
   const actions = useSigmaRuleActions(ruleState);
 
@@ -41,26 +43,26 @@ export default function Sigma() {
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h5" align="center" gutterBottom>
-        Sigma Rule Builder
+        {t('sigma.title')}
       </Typography>
 
-      <AccordionSection icon={<DescriptionIcon fontSize="small" sx={{ mr: 1 }} />} title="Rule Metadata" defaultExpanded>
+      <AccordionSection icon={<DescriptionIcon fontSize="small" sx={{ mr: 1 }} />} title={t('sigma.sections.metadata')} defaultExpanded>
         <Metadata metadata={metadata} handleMetadataChange={setMetadata} />
       </AccordionSection>
 
-      <AccordionSection icon={<LinkIcon fontSize="small" sx={{ mr: 1 }} />} title="References" sx={{ mt: 1 }}>
+      <AccordionSection icon={<LinkIcon fontSize="small" sx={{ mr: 1 }} />} title={t('sigma.sections.references')} sx={{ mt: 1 }}>
         <References references={references} handleReferencesChange={setReferences} />
       </AccordionSection>
 
-      <AccordionSection icon={<TagIcon fontSize="small" sx={{ mr: 1 }} />} title="Tags" sx={{ mt: 1 }}>
+      <AccordionSection icon={<TagIcon fontSize="small" sx={{ mr: 1 }} />} title={t('sigma.sections.tags')} sx={{ mt: 1 }}>
         <Tags tags={tags} handleTagsChange={setTags} />
       </AccordionSection>
 
-      <AccordionSection icon={<SecurityIcon fontSize="small" sx={{ mr: 1 }} />} title="Log Source" sx={{ mt: 1 }}>
+      <AccordionSection icon={<SecurityIcon fontSize="small" sx={{ mr: 1 }} />} title={t('sigma.sections.logSource')} sx={{ mt: 1 }}>
         <LogSource logSource={logSource} handleLogSourceChange={setLogSource} />
       </AccordionSection>
 
-      <AccordionSection icon={<FingerprintIcon fontSize="small" sx={{ mr: 1 }} />} title="Detection" sx={{ mt: 1 }}>
+      <AccordionSection icon={<FingerprintIcon fontSize="small" sx={{ mr: 1 }} />} title={t('sigma.sections.detection')} sx={{ mt: 1 }}>
         <Detection
           detections={detections}
           handleDetectionsChange={setDetections}
@@ -69,11 +71,11 @@ export default function Sigma() {
         />
       </AccordionSection>
 
-      <AccordionSection icon={<CodeIcon fontSize="small" sx={{ mr: 1 }} />} title="Fields" sx={{ mt: 1 }}>
+      <AccordionSection icon={<CodeIcon fontSize="small" sx={{ mr: 1 }} />} title={t('sigma.sections.fields')} sx={{ mt: 1 }}>
         <Fields fields={fields} handleFieldsChange={setFields} />
       </AccordionSection>
 
-      <AccordionSection icon={<WarningIcon fontSize="small" sx={{ mr: 1 }} />} title="False Positives" sx={{ mt: 1 }}>
+      <AccordionSection icon={<WarningIcon fontSize="small" sx={{ mr: 1 }} />} title={t('sigma.sections.falsePositives')} sx={{ mt: 1 }}>
         <FalsePositives falsePositives={falsePositives} handleFalsePositivesChange={setFalsePositives} />
       </AccordionSection>
 
@@ -83,10 +85,10 @@ export default function Sigma() {
         onReset={handleReset}
         canPreview={isRuleValid()}
         canExport={isRuleValid()}
-        ruleType="Sigma"
+        ruleType={t('common.ruleTypeLabels.sigma')}
       />
 
-      <RulePreview open={previewOpen} onClose={handleClosePreview} rulePreview={rulePreview} />
+      <RulePreview open={previewOpen} onClose={handleClosePreview} rulePreview={rulePreview} title={t('common.preview.sigmaTitle')} />
     </Box>
   );
 }

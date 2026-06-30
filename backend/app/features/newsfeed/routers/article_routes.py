@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Path, status
+from app.core.exceptions import AppHTTPException
 
 from app.core.dependencies import ReadSessionDep, SessionDep
 from app.features.newsfeed.schemas.newsfeed_schemas import (
@@ -32,7 +33,7 @@ ArticleId = Annotated[int, Path(ge=1, description="Article ID")]
 async def get_article(article_id: ArticleId, db: ReadSessionDep) -> NewsArticleSchema:
     article = await get_article_service(db, article_id)
     if not article:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found", error_code="ARTICLE_NOT_FOUND")
     return article
 
 
@@ -64,7 +65,7 @@ async def update_article_endpoint(
         db, article_id, note=update_data.note, tlp=update_data.tlp, read=update_data.read
     )
     if not article:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found", error_code="ARTICLE_NOT_FOUND")
     return article
 
 
@@ -78,5 +79,5 @@ async def update_article_endpoint(
 async def get_article_iocs(article_id: ArticleId, db: ReadSessionDep) -> ArticleIocsResponse:
     result = await get_article_iocs_service(db, article_id)
     if not result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found", error_code="ARTICLE_NOT_FOUND")
     return result

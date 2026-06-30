@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
@@ -15,7 +16,8 @@ import { useTrendsBlacklist } from "../hooks/api/useTrendsBlacklistApi";
 import { useNotification } from "../../../core/hooks/ui/useNotification";
 import NotificationSnackbar from "../components/ui/NotificationSnackbar";
 
-function BlacklistSection({ title, description, entries, newValue, onNewValueChange, onAdd, onDelete, loading }) {
+function BlacklistSection({ title, description, addLabel, entries, newValue, onNewValueChange, onAdd, onDelete, loading }) {
+  const { t } = useTranslation('newsfeed');
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant="h6" gutterBottom>{title}</Typography>
@@ -23,7 +25,7 @@ function BlacklistSection({ title, description, entries, newValue, onNewValueCha
 
       <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
         <TextField
-          label={`Add ${title.toLowerCase().replace("blacklisted ", "")}`}
+          label={addLabel}
           value={newValue}
           size="small"
           onChange={(e) => onNewValueChange(e.target.value)}
@@ -37,7 +39,7 @@ function BlacklistSection({ title, description, entries, newValue, onNewValueCha
             input: {
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={onAdd} edge="end" color="primary" sx={{ mr: "-8px" }} aria-label="Add entry">
+                  <IconButton onClick={onAdd} edge="end" color="primary" sx={{ mr: "-8px" }} aria-label={t('settings.trends.addEntry')}>
                     <AddIcon />
                   </IconButton>
                 </InputAdornment>
@@ -63,7 +65,7 @@ function BlacklistSection({ title, description, entries, newValue, onNewValueCha
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No entries added yet.</Typography>
+          <Typography variant="body2" color="text.secondary">{t('settings.trends.noEntriesYet')}</Typography>
         )}
       </Box>
     </Box>
@@ -71,6 +73,7 @@ function BlacklistSection({ title, description, entries, newValue, onNewValueCha
 }
 
 export default function TrendsSettings() {
+  const { t } = useTranslation('newsfeed');
   const theme = useTheme();
   const [newWord, setNewWord] = useState("");
   const [newIoc, setNewIoc] = useState("");
@@ -90,11 +93,11 @@ export default function TrendsSettings() {
     const result = await addToBlacklist(newWord, "word");
     if (result.success) {
       setNewWord("");
-      showSuccess("Word added to blacklist.");
+      showSuccess(t('settings.trends.words.addSuccess'));
     } else if (result.duplicate) {
-      showWarning("Word is already blacklisted.");
+      showWarning(t('settings.trends.words.addDuplicate'));
     } else {
-      showError("Failed to add word to blacklist.");
+      showError(t('settings.trends.words.addError'));
     }
   };
 
@@ -103,29 +106,29 @@ export default function TrendsSettings() {
     const result = await addToBlacklist(newIoc, "ioc");
     if (result.success) {
       setNewIoc("");
-      showSuccess("IOC added to blacklist.");
+      showSuccess(t('settings.trends.iocs.addSuccess'));
     } else if (result.duplicate) {
-      showWarning("IOC is already blacklisted.");
+      showWarning(t('settings.trends.iocs.addDuplicate'));
     } else {
-      showError("Failed to add IOC to blacklist.");
+      showError(t('settings.trends.iocs.addError'));
     }
   };
 
   const handleDeleteWord = async (entryId) => {
     const result = await removeFromBlacklist(entryId, "word");
     if (result.success) {
-      showSuccess("Word removed from blacklist.");
+      showSuccess(t('settings.trends.words.deleteSuccess'));
     } else {
-      showError("Failed to remove word from blacklist.");
+      showError(t('settings.trends.words.deleteError'));
     }
   };
 
   const handleDeleteIoc = async (entryId) => {
     const result = await removeFromBlacklist(entryId, "ioc");
     if (result.success) {
-      showSuccess("IOC removed from blacklist.");
+      showSuccess(t('settings.trends.iocs.deleteSuccess'));
     } else {
-      showError("Failed to remove IOC from blacklist.");
+      showError(t('settings.trends.iocs.deleteError'));
     }
   };
 
@@ -133,15 +136,16 @@ export default function TrendsSettings() {
     <>
       <Card sx={{ p: 2, boxShadow: theme.shadows[1], borderRadius: 1 }}>
         <Box sx={{ mb: 2 }}>
-          <Typography variant="h6" gutterBottom>Trends Blacklist Settings</Typography>
+          <Typography variant="h6" gutterBottom>{t('settings.trends.title')}</Typography>
           <Typography variant="body1" sx={{ mb: 3 }}>
-            Manage blacklisted words and IOC values that are excluded from the trends analytics charts.
+            {t('settings.trends.description')}
           </Typography>
         </Box>
 
         <BlacklistSection
-          title="Blacklisted Words"
-          description="Words added here will be excluded from the Top Words in Headlines chart."
+          title={t('settings.trends.words.title')}
+          description={t('settings.trends.words.description')}
+          addLabel={t('settings.trends.words.addLabel')}
           entries={wordBlacklist}
           newValue={newWord}
           onNewValueChange={setNewWord}
@@ -153,8 +157,9 @@ export default function TrendsSettings() {
         <Divider sx={{ my: 3 }} />
 
         <BlacklistSection
-          title="Blacklisted IOCs"
-          description="IOC values added here will be excluded from the Top Indicators of Compromise chart."
+          title={t('settings.trends.iocs.title')}
+          description={t('settings.trends.iocs.description')}
+          addLabel={t('settings.trends.iocs.addLabel')}
           entries={iocBlacklist}
           newValue={newIoc}
           onNewValueChange={setNewIoc}

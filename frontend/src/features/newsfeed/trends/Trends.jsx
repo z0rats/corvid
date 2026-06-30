@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
@@ -17,6 +18,7 @@ import ArticleTable from './components/ArticleTable';
 import NotificationSnackbar from '../components/ui/NotificationSnackbar';
 
 export default function Trends() {
+  const { t } = useTranslation('newsfeed');
   const [selectedArticleIds, setSelectedArticleIds] = useState([]);
   const [selectedTitle, setSelectedTitle] = useState(null);
   const [timeRange, setTimeRange] = useState('7d');
@@ -54,26 +56,26 @@ export default function Trends() {
   const handleBlacklistWord = useCallback(async (word) => {
     const result = await addToBlacklist(word, 'word');
     if (result.success) {
-      showSuccess(`"${word}" added to blacklist`);
+      showSuccess(t('trends.wordFrequency.addedToBlacklist', { word }));
       setRefreshKey(prev => prev + 1);
     } else if (result.duplicate) {
-      showError(`"${word}" is already blacklisted`);
+      showError(t('trends.wordFrequency.alreadyBlacklisted', { word }));
     } else {
-      showError('Failed to blacklist word');
+      showError(t('trends.wordFrequency.blacklistError'));
     }
-  }, [addToBlacklist, showSuccess, showError]);
+  }, [addToBlacklist, showSuccess, showError, t]);
 
   const handleBlacklistIoc = useCallback(async (iocValue) => {
     const result = await addToBlacklist(iocValue, 'ioc');
     if (result.success) {
-      showSuccess(`"${iocValue}" added to blacklist`);
+      showSuccess(t('trends.ioc.addedToBlacklist', { value: iocValue }));
       setRefreshKey(prev => prev + 1);
     } else if (result.duplicate) {
-      showError(`"${iocValue}" is already blacklisted`);
+      showError(t('trends.ioc.alreadyBlacklisted', { value: iocValue }));
     } else {
-      showError('Failed to blacklist IOC');
+      showError(t('trends.ioc.blacklistError'));
     }
-  }, [addToBlacklist, showSuccess, showError]);
+  }, [addToBlacklist, showSuccess, showError, t]);
 
   if (loadingWordFrequency) {
     return (

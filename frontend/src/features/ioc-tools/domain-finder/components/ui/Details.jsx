@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import IocLookupDialog from '../../../ioc-lookup/shared/components/IocLookupDialog';
 import { useIocLookupDialog } from '../../../ioc-lookup/shared/hooks/useIocLookupDialog';
@@ -35,6 +36,7 @@ function getStatusColor(status) {
 }
 
 export default function Details(props) {
+  const { t } = useTranslation('iocTools');
   const { open, ioc, iocType, openDialog, closeDialog } = useIocLookupDialog();
 
   return (
@@ -52,7 +54,7 @@ export default function Details(props) {
       >
         <Stack sx={{ float: "right" }}>
           <Typography variant="h6" align="center">
-            Screenshot
+            {t('domainFinder.details.screenshot')}
           </Typography>
           {(props.section["task"]["screenshotURL"] || 
             props.section["screenshot"] || 
@@ -86,7 +88,7 @@ export default function Details(props) {
             </a>
           ) : (
             <Typography variant="body2" color="text.secondary">
-              No screenshot available
+              {t('domainFinder.details.noScreenshot')}
             </Typography>
           )}
         </Stack>
@@ -110,11 +112,11 @@ export default function Details(props) {
                     <LanIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="IP"
+                    primary={t('domainFinder.details.fields.ip')}
                     secondary={
                       props.section["page"]["ip"]
                         ? props.section["page"]["ip"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -123,11 +125,11 @@ export default function Details(props) {
                     <LanguageIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Country"
+                    primary={t('domainFinder.details.fields.country')}
                     secondary={
                       props.section["page"]["country"]
                         ? props.section["page"]["country"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -140,11 +142,11 @@ export default function Details(props) {
                     <HttpIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="URL"
+                    primary={t('domainFinder.details.fields.url')}
                     secondary={
                       props.section["page"]["url"]
                         ? props.section["page"]["url"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -153,9 +155,9 @@ export default function Details(props) {
                     <OpenInNewIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Result"
+                    primary={t('domainFinder.details.fields.result')}
                     secondary={
-                      props.section["result"] ? props.section["result"] : "N/A"
+                      props.section["result"] ? props.section["result"] : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -168,7 +170,7 @@ export default function Details(props) {
             size="small"
             onClick={() => openDialog(props.section["page"]["ip"], 'IPv4')}
           >
-            Analyze IP
+            {t('domainFinder.details.actions.analyzeIp')}
           </Button>
           &nbsp;&nbsp;
           <Button
@@ -177,7 +179,7 @@ export default function Details(props) {
             size="small"
             onClick={() => openDialog(props.section["task"]["domain"], 'Domain')}
           >
-            Analyze Domain
+            {t('domainFinder.details.actions.analyzeDomain')}
           </Button>
         </CardContent>
       </Card>
@@ -194,11 +196,11 @@ export default function Details(props) {
                     <CircleIcon sx={{ color: getStatusColor(props.section["page"]["status"]) }} />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Status code"
+                    primary={t('domainFinder.details.fields.statusCode')}
                     secondary={
                       props.section["page"]["status"]
                         ? props.section["page"]["status"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -207,11 +209,11 @@ export default function Details(props) {
                     <StorageIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Server"
+                    primary={t('domainFinder.details.fields.server')}
                     secondary={
                       props.section["page"]["server"]
                         ? props.section["page"]["server"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -220,11 +222,11 @@ export default function Details(props) {
                     <CategoryIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="MIME type"
+                    primary={t('domainFinder.details.fields.mimeType')}
                     secondary={
                       props.section["page"]["mimeType"]
                         ? props.section["page"]["mimeType"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -233,11 +235,11 @@ export default function Details(props) {
                     <BusinessIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="ASN Name"
+                    primary={t('domainFinder.details.fields.asnName')}
                     secondary={
                       props.section["page"]["asnname"]
                         ? props.section["page"]["asnname"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -250,11 +252,11 @@ export default function Details(props) {
                     <DomainVerificationIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="TLS valid days"
+                    primary={t('domainFinder.details.fields.tlsValidDays')}
                     secondary={
                       props.section["page"]["tlsValidDays"]
                         ? props.section["page"]["tlsValidDays"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -263,11 +265,11 @@ export default function Details(props) {
                     <DateRangeIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="TLS age in days"
+                    primary={t('domainFinder.details.fields.tlsAgeDays')}
                     secondary={
                       props.section["page"]["tlsAgeDays"]
                         ? props.section["page"]["tlsAgeDays"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -276,11 +278,11 @@ export default function Details(props) {
                     <CalendarMonthIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="TLS valid from"
+                    primary={t('domainFinder.details.fields.tlsValidFrom')}
                     secondary={
                       props.section["page"]["tlsValidFrom"]
                         ? props.section["page"]["tlsValidFrom"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>
@@ -289,11 +291,11 @@ export default function Details(props) {
                     <AdminPanelSettingsIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="TLS issuer"
+                    primary={t('domainFinder.details.fields.tlsIssuer')}
                     secondary={
                       props.section["page"]["tlsIssuer"]
                         ? props.section["page"]["tlsIssuer"]
-                        : "N/A"
+                        : t('domainFinder.details.notAvailable')
                     }
                   />
                 </ListItem>

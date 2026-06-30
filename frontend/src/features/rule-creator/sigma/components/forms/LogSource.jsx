@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -12,14 +13,12 @@ const products = logSourceData.product;
 const services = logSourceData.service;
 
 export default function LogSource({ logSource, handleLogSourceChange }) {
+  const { t } = useTranslation('ruleCreator');
 
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom>
-        Application and the type that is required in the detection. It consists of three attributes
-        that are evaluated automatically by the converters and an arbitrary number of optional
-        elements. We recommend using a "definition" value in cases in which further explanation is
-        necessary.
+        {t('sigma.logSource.helpText')}
       </Typography>
       <Grid container spacing={2} sx={{ mt: 1 }}>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -38,11 +37,11 @@ export default function LogSource({ logSource, handleLogSourceChange }) {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Product"
-                    placeholder="Select or type to add"
+                    label={t('sigma.logSource.productLabel')}
+                    placeholder={t('sigma.logSource.selectOrTypePlaceholder')}
                     size="small"
                     variant="outlined"
-                    helperText="e.g. linux, windows, cisco"
+                    helperText={t('sigma.logSource.productHelper')}
                     fullWidth 
                   />
                 )}
@@ -62,11 +61,11 @@ export default function LogSource({ logSource, handleLogSourceChange }) {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Category"
-                    placeholder="Select or type to add"
+                    label={t('sigma.logSource.categoryLabel')}
+                    placeholder={t('sigma.logSource.selectOrTypePlaceholder')}
                     size="small"
                     variant="outlined"
-                    helperText="e.g. process_creation"
+                    helperText={t('sigma.logSource.categoryHelper')}
                     fullWidth
                   />
                 )}
@@ -86,11 +85,11 @@ export default function LogSource({ logSource, handleLogSourceChange }) {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Service"
-                    placeholder="Select or type to add"
+                    label={t('sigma.logSource.serviceLabel')}
+                    placeholder={t('sigma.logSource.selectOrTypePlaceholder')}
                     size="small"
                     variant="outlined"
-                    helperText="e.g. sysmon, ldapd, dhcp"
+                    helperText={t('sigma.logSource.serviceHelper')}
                     fullWidth
                   />
                 )}
@@ -101,17 +100,17 @@ export default function LogSource({ logSource, handleLogSourceChange }) {
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
-            label="Definition"
+            label={t('sigma.logSource.definitionLabel')}
             value={logSource.definition}
             onChange={(e) =>
               handleLogSourceChange((prev) => ({ ...prev, definition: e.target.value }))
             }
             size="small"
             variant="outlined"
-            placeholder="Enter definition"
+            placeholder={t('sigma.logSource.definitionPlaceholder')}
             multiline
-            rows={7} 
-            helperText="Describe the log source, including log verbosity level or configurations."
+            rows={7}
+            helperText={t('sigma.logSource.definitionHelper')}
           />
         </Grid>
       </Grid>

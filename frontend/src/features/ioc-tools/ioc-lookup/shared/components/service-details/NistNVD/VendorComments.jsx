@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import BusinessIcon from "@mui/icons-material/Business";
 import Card from "@mui/material/Card";
@@ -23,6 +24,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from '@mui/material/styles';
 
 export default function VendorComments(props) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -56,25 +58,25 @@ export default function VendorComments(props) {
       sx={{ m: 1, p: 2, borderRadius: 5, boxShadow: 0 }}
     >
       <Typography variant="h5" gutterBottom component="div">
-        Vendor Comments
+        {t('providers.nistnvd.vendorComments')}
       </Typography>
       <List>
         <ListItem>
           <ListItemIcon>
             <InfoIcon />
           </ListItemIcon>
-          <ListItemText secondary="Official Vendor Comment for the CVE. NVD provides a service whereby organizations can submit Official Vendor Comments for CVE associated with their products. Organizations can use the service in a variety of ways. For example, they can provide configuration and remediation guidance, clarify vulnerability applicability, provide deeper vulnerability analysis, dispute third party vulnerability information, and explain vulnerability impact. Official Vendor Comments can be submitted to the NVD by email at nvd@nist.gov." />
+          <ListItemText secondary={t('providers.nistnvd.vendorCommentsDisclaimer')} />
         </ListItem>
       </List>
       <TableContainer component={Paper} sx={tableContainerStyle}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table sx={{ minWidth: 650 }} aria-label={t('providers.nistnvd.simpleTable')}>
           <TableHead>
             <TableRow>
               <TableCell sx={tableCellStyle}>
                 <Grid container direction={"row"}>
                   <BusinessIcon sx={{ mr: 1 }} />
                   <Typography variant="h7" gutterBottom component="div">
-                    Organization
+                    {t('providers.nistnvd.organization')}
                   </Typography>
                 </Grid>
               </TableCell>
@@ -82,7 +84,7 @@ export default function VendorComments(props) {
                 <Grid container direction={"row"}>
                   <CommentIcon sx={{ mr: 1 }} />
                   <Typography variant="h7" gutterBottom component="div">
-                    Comment
+                    {t('providers.nistnvd.comment')}
                   </Typography>
                 </Grid>
               </TableCell>
@@ -90,7 +92,7 @@ export default function VendorComments(props) {
                 <Grid container direction={"row"}>
                   <ScheduleIcon sx={{ mr: 1 }} />
                   <Typography variant="h7" gutterBottom component="div">
-                    Last modified
+                    {t('providers.nistnvd.lastModified')}
                   </Typography>
                 </Grid>
               </TableCell>

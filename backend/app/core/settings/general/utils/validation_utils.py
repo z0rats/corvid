@@ -8,7 +8,8 @@ from app.core.settings.general.config.default_settings import (
     get_supported_fonts,
     is_valid_font_length,
     get_font_allowed_chars,
-    get_default_font
+    get_default_font,
+    get_supported_languages
 )
 
 
@@ -70,3 +71,19 @@ def normalize_font_name(font: str) -> str:
     
     # Otherwise return the trimmed version
     return normalized if normalized else get_default_font()
+
+
+def validate_language_code(language: str) -> bool:
+    """
+    Validate that the language code is one of the supported languages
+
+    Args:
+        language: Language code to validate
+
+    Returns:
+        True if supported, False otherwise
+    """
+    if not language or not isinstance(language, str):
+        return False
+
+    return language.strip().lower() in get_supported_languages()

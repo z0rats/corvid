@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
@@ -20,6 +21,8 @@ export default function BulkLookupForm({
   hasEnabledServices,
   onFormError,
 }) {
+  const { t } = useTranslation('iocTools');
+
   const handleDragOver = useCallback((event) => {
     event.preventDefault();
   }, []);
@@ -36,15 +39,15 @@ export default function BulkLookupForm({
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
     if (!ALLOWED_MIME_TYPES.includes(file.type) && !ALLOWED_EXTENSIONS.includes(fileExtension)) {
-      onFormError('Invalid file type. Please drop a CSV, MD, or TXT file.');
+      onFormError(t('bulkLookup.form.errors.invalidFileType'));
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (e) => onInputChange(e.target.result);
-    reader.onerror = () => onFormError(`Error reading file: ${file.name}`);
+    reader.onerror = () => onFormError(t('bulkLookup.form.errors.fileReadError', { fileName: file.name }));
     reader.readAsText(file);
-  }, [processing, onInputChange, onFormError]);
+  }, [processing, onInputChange, onFormError, t]);
 
   return (
     <Paper elevation={1} sx={{ p: 3, mb: 2 }}>
@@ -54,11 +57,11 @@ export default function BulkLookupForm({
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
               <TextFields sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 500 }}>
-                IOC Input
+                {t('bulkLookup.form.iocInput.heading')}
               </Typography>
             </Box>
             <TextField
-              label="Enter IOCs (one per line)"
+              label={t('bulkLookup.form.iocInput.label')}
               multiline
               fullWidth
               variant="outlined"
@@ -87,7 +90,7 @@ export default function BulkLookupForm({
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
               <UploadFileIcon sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 500 }}>
-                File Upload
+                {t('bulkLookup.form.fileUpload.heading')}
               </Typography>
             </Box>
             <Box
@@ -126,7 +129,7 @@ export default function BulkLookupForm({
                   lineHeight: 1.3
                 }}
               >
-                Drop files here
+                {t('bulkLookup.form.fileUpload.dropHint')}
               </Typography>
               <Typography
                 variant="caption"
@@ -136,7 +139,7 @@ export default function BulkLookupForm({
                   mt: 0.5
                 }}
               >
-                (.txt, .csv, .md)
+                {t('bulkLookup.form.fileUpload.allowedExtensions')}
               </Typography>
             </Box>
           </Box>
@@ -152,12 +155,12 @@ export default function BulkLookupForm({
               size="medium"
               sx={{ minWidth: 140 }}
             >
-              {processing ? 'Looking up...' : 'Analyze IOCs'}
+              {processing ? t('bulkLookup.form.submitButton.loading') : t('bulkLookup.form.submitButton.idle')}
             </Button>
 
             {!hasEnabledServices && (
               <Typography variant="body2" color="error" sx={{ textAlign: 'center' }}>
-                Enable at least one service in settings above
+                {t('bulkLookup.form.noServicesEnabled')}
               </Typography>
             )}
           </Box>

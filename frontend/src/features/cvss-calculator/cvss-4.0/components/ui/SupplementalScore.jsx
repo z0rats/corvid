@@ -10,8 +10,10 @@ import Typography from '@mui/material/Typography';
 import InfoModal from "../../../shared/components/InfoModal";
 import MetricSelect from "../../../shared/components/MetricSelect";
 import { supplementalMetrics } from "../../constants/metricsConfig";
+import { useTranslation } from 'react-i18next';
 
 export default function SupplementalScore({ metrics, onMetricChange }) {
+  const { t } = useTranslation('cvssCalculator');
   const [openModal, setOpenModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", text: "" });
 
@@ -48,7 +50,7 @@ export default function SupplementalScore({ metrics, onMetricChange }) {
       >
         <Box display="flex" alignItems="center">
           <ExtensionIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Supplemental Metrics (optional)</Typography>
+          <Typography variant="subtitle2">{t('cvss40.supplemental.accordionTitle')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
@@ -61,17 +63,14 @@ export default function SupplementalScore({ metrics, onMetricChange }) {
           }}
         >
           <Typography variant="body1">
-            The Supplemental metric group is intended to be used by organizations to 
-            customize the CVSS score based on additional organization-specific or 
-            use-case-specific considerations. These metrics do not affect the base score 
-            but provide additional context for vulnerability assessment.
+            {t('cvss40.supplemental.description')}
           </Typography>
         </Box>
 
         <Grid container spacing={2}>
           <Grid size={6}>
             <Typography variant="h6" align="center">
-              Supplemental Metrics (Part 1)
+              {t('cvss40.supplemental.part1')}
             </Typography>
             {supplementalMetrics.slice(0, 3).map((metric) => (
               <MetricSelect
@@ -86,7 +85,7 @@ export default function SupplementalScore({ metrics, onMetricChange }) {
           </Grid>
           <Grid size={6}>
             <Typography variant="h6" align="center">
-              Supplemental Metrics (Part 2)
+              {t('cvss40.supplemental.part2')}
             </Typography>
             {supplementalMetrics.slice(3).map((metric) => (
               <MetricSelect

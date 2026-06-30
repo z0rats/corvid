@@ -1,4 +1,5 @@
 import React, { useState, useMemo, memo } from "react";
+import { useTranslation } from 'react-i18next';
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Collapse from "@mui/material/Collapse";
@@ -23,6 +24,7 @@ function ServiceResultRow({
   ioc,
   iocType
 }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -35,7 +37,7 @@ function ServiceResultRow({
     return (
       <TableRow key={serviceKey || "service-config-error"}>
         <TableCell colSpan={4}>
-          <Typography color="error">Error: Service details missing for row.</Typography>
+          <Typography color="error">{t('singleLookup.serviceResultRow.errors.serviceDetailsMissing')}</Typography>
         </TableCell>
       </TableRow>
     );
@@ -51,30 +53,30 @@ function ServiceResultRow({
 
   const renderDetailsContent = () => {
     if (result?.error && !DetailComponentToRender) {
-      let detailMessage = "No further details available for this error.";
-      
+      let detailMessage = t('singleLookup.serviceResultRow.errors.noFurtherDetails');
+
       if (result.error === 429 && result.is_rate_limited) {
         detailMessage = (
           <Box>
             <Typography variant="body2" color="error" gutterBottom>
-              <strong>Quota consumed. No API calls left.</strong>
+              <strong>{t('singleLookup.serviceResultRow.errors.quotaConsumed')}</strong>
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {result.message}
             </Typography>
             {result.retry_after && result.retry_after !== 'unknown' && (
               <Typography variant="body2" color="text.secondary">
-                Retry after: {result.retry_after} seconds
+                {t('singleLookup.serviceResultRow.errors.retryAfter', { seconds: result.retry_after })}
               </Typography>
             )}
             {result.rate_limit_reset && result.rate_limit_reset !== 'unknown' && (
               <Typography variant="body2" color="text.secondary">
-                Limit resets at: {result.rate_limit_reset}
+                {t('singleLookup.serviceResultRow.errors.limitResetsAt', { time: result.rate_limit_reset })}
               </Typography>
             )}
             {result.rate_limit_remaining && result.rate_limit_remaining !== 'unknown' && (
               <Typography variant="body2" color="text.secondary">
-                Remaining requests: {result.rate_limit_remaining}
+                {t('singleLookup.serviceResultRow.errors.remainingRequests', { count: result.rate_limit_remaining })}
               </Typography>
             )}
           </Box>
@@ -82,9 +84,9 @@ function ServiceResultRow({
       } else if (result.message && result.error !== 404) {
         detailMessage = result.message;
       } else if (result.error === 404) {
-        detailMessage = "The requested item was not found by the service.";
+        detailMessage = t('singleLookup.serviceResultRow.errors.notFound');
       } else if (result.error) {
-        detailMessage = `An error (${result.error}) occurred.`;
+        detailMessage = t('singleLookup.serviceResultRow.errors.genericError', { code: result.error });
       }
       
       return (
@@ -102,13 +104,13 @@ function ServiceResultRow({
       return <DetailComponentToRender result={result} ioc={ioc} type={iocType} />;
     }
 
-    if (!result || result.error) { 
-        return <Box sx={{ p: 2, textAlign: 'center' }}><Typography variant="body2" color="text.secondary">No specific details component for this result.</Typography></Box>;
+    if (!result || result.error) {
+        return <Box sx={{ p: 2, textAlign: 'center' }}><Typography variant="body2" color="text.secondary">{t('singleLookup.serviceResultRow.errors.noDetailsComponent')}</Typography></Box>;
     }
 
     return (
       <Box sx={{ p: 2, overflowX: 'auto' }}>
-        <Typography variant="caption" display="block" gutterBottom color="text.secondary">Raw JSON Data:</Typography>
+        <Typography variant="caption" display="block" gutterBottom color="text.secondary">{t('singleLookup.serviceResultRow.rawJsonLabel')}</Typography>
         <Box
           component="pre"
           sx={{
@@ -134,7 +136,7 @@ function ServiceResultRow({
     return (
       <TableRow key={`${serviceKey}-loading`} sx={{ backgroundColor: `${rowBgColor} !important` }}>
         <TableCell sx={{ ...baseCellSx, width: '5%' }}>
-          <IconButton aria-label="expand row" size="small" disabled><KeyboardArrowDownIcon /></IconButton>
+          <IconButton aria-label={t('singleLookup.serviceResultRow.expandRowAriaLabel')} size="small" disabled><KeyboardArrowDownIcon /></IconButton>
         </TableCell>
         <TableCell sx={{ ...baseCellSx, width: '25%' }}>
           <ServiceHeaderCell iconSrc={iconSrc} serviceName={service.name} avatarStyle={avatarStyle} />
@@ -156,7 +158,7 @@ function ServiceResultRow({
       <TableRow key={`${serviceKey}-data`} sx={{ backgroundColor: `${rowBgColor} !important`, '& > *': { borderBottom: 'unset' } }}>
         <TableCell sx={{ ...baseCellSx, width: '5%' }}>
           <IconButton
-            aria-label="expand row" size="small" onClick={() => setOpen(!open)}
+            aria-label={t('singleLookup.serviceResultRow.expandRowAriaLabel')} size="small" onClick={() => setOpen(!open)}
             disabled={isExpandDisabled}
           >
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -170,7 +172,7 @@ function ServiceResultRow({
         </TableCell>
         <TableCell
           sx={{ verticalAlign: 'middle', width: '5%', backgroundColor: tlpCellBgColor, p: 0, borderLeft: 1, borderLeftColor: 'divider' }}
-          title={`TLP: ${tlp}`}
+          title={t('singleLookup.serviceResultRow.tlpTooltip', { tlp })}
         >
           &nbsp;
         </TableCell>

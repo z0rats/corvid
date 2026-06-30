@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
 import { modeValue } from '../../../../core/utils/themeUtils';
 import Alert from '@mui/material/Alert';
@@ -29,6 +30,7 @@ const titleTruncateSx = {
 };
 
 const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, articleLoading }) => {
+  const { t } = useTranslation('newsfeed');
   const theme = useTheme();
 
   if (!selectedTitle || selectedArticleIds.length === 0) {
@@ -40,7 +42,7 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
       <CardContent>
         <Box display="flex" alignItems="center" mb={2}>
           <Typography variant="h6" color="text.primary">
-            Articles containing
+            {t('trends.articleTable.articlesContaining')}
           </Typography>
           <Chip
             label={selectedTitle}
@@ -53,7 +55,7 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
             }}
           />
           <Typography variant="body1" color="text.secondary">
-            ({selectedArticleIds.length} occurrences)
+            {t('trends.articleTable.occurrences', { count: selectedArticleIds.length })}
           </Typography>
         </Box>
 
@@ -61,10 +63,10 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
           <Table size="medium">
             <TableHead>
               <TableRow>
-                <TableCell>Source</TableCell>
-                <TableCell>Title</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>{t('trends.articleTable.source')}</TableCell>
+                <TableCell>{t('trends.articleTable.title')}</TableCell>
+                <TableCell>{t('trends.articleTable.date')}</TableCell>
+                <TableCell align="right">{t('trends.articleTable.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -78,7 +80,7 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
                       <TableCell colSpan={4}>
                         <Box display="flex" alignItems="center" gap={1}>
                           <CircularProgress size={20} />
-                          <Typography variant="body2">Loading article details...</Typography>
+                          <Typography variant="body2">{t('trends.articleTable.loadingDetails')}</Typography>
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -90,7 +92,7 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
                     <TableRow key={articleId}>
                       <TableCell colSpan={4}>
                         <Alert severity="error" size="small">
-                          Error loading article {articleId}: {article.error}
+                          {t('trends.articleTable.errorLoadingArticle', { articleId, error: article.error })}
                         </Alert>
                       </TableCell>
                     </TableRow>
@@ -102,7 +104,7 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
                     <TableRow key={articleId}>
                       <TableCell colSpan={4}>
                         <Typography variant="body2" color="text.secondary">
-                          Article details not available.
+                          {t('trends.articleTable.detailsNotAvailable')}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -143,13 +145,13 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
                     </TableCell>
                     <TableCell align="right">
                       {article.link && (
-                        <Tooltip title="Open article">
+                        <Tooltip title={t('trends.articleTable.openArticle')}>
                           <IconButton
                             size="small"
                             href={article.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label="Open article"
+                            aria-label={t('trends.articleTable.openArticle')}
                             sx={{
                               color: modeValue(theme, theme.palette.secondary.light, theme.palette.secondary.dark)
                             }}

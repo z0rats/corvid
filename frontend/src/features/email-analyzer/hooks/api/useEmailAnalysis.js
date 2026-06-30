@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { emailAnalyzerApi } from '../../services/api/emailAnalyzerApi';
 
 export function useEmailAnalysis() {
+  const { t } = useTranslation('emailAnalyzer');
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,7 +22,7 @@ export function useEmailAnalysis() {
 
   const analyzeEmail = useCallback(async (file) => {
     if (!file) {
-      setError('No file provided');
+      setError(t('errors.noFileProvided'));
       return;
     }
 
@@ -60,11 +62,11 @@ export function useEmailAnalysis() {
     } catch (err) {
       if (signal.aborted) return;
       clearInterval(progressIntervalRef.current);
-      setError(err.response?.data?.detail || err.message || 'Failed to analyze email');
+      setError(err.response?.data?.detail || err.message || t('errors.analysisFailed'));
       setUploadProgress(0);
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const reset = useCallback(() => {
     abortControllerRef.current?.abort();

@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import Grid from "@mui/material/Grid";
 import LinkIcon from "@mui/icons-material/Link";
@@ -16,6 +17,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from '@mui/material/styles';
 
 export default function RefTable(props) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -44,7 +46,7 @@ export default function RefTable(props) {
   return (
     <>
       <TableContainer component={Paper} sx={tableContainerStyle}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table sx={{ minWidth: 650 }} aria-label={t('providers.nistnvd.simpleTable')}>
           <TableHead>
             <TableRow>
               <TableCell sx={tableCellStyle}>
@@ -59,7 +61,7 @@ export default function RefTable(props) {
                 <Grid container direction={"row"}>
                   <SourceIcon sx={{ mr: 1 }} />
                   <Typography variant="h7" gutterBottom component="div">
-                    Source
+                    {t('providers.nistnvd.source')}
                   </Typography>
                 </Grid>
               </TableCell>

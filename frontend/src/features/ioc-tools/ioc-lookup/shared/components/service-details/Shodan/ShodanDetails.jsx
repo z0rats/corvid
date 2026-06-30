@@ -1,4 +1,5 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -29,8 +30,8 @@ const CollapsibleSection = ({ title, icon: Icon, children, defaultExpanded = fal
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
-    <Box sx={{ mb: 1 }}> 
-      <ListItemButton onClick={() => setExpanded(!expanded)} sx={{ borderRadius: 1, py: 0.5, px:1 }}> 
+    <Box sx={{ mb: 1 }}>
+      <ListItemButton onClick={() => setExpanded(!expanded)} sx={{ borderRadius: 1, py: 0.5, px:1 }}>
         <ListItemIcon sx={{minWidth: 36}}>
           <Icon color="action" />
         </ListItemIcon>
@@ -38,7 +39,7 @@ const CollapsibleSection = ({ title, icon: Icon, children, defaultExpanded = fal
         {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </ListItemButton>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ pt: 1, pb:1, pl: 2, pr: 1 }}> 
+        <Box sx={{ pt: 1, pb:1, pl: 2, pr: 1 }}>
           {children}
         </Box>
       </Collapse>
@@ -73,11 +74,11 @@ const DataDisplay = ({ data, level = 0 }) => {
       <List dense disablePadding sx={{ width: '100%', overflowX: 'hidden' }}>
         {Object.entries(data).map(([key, value]) => (
           <ListItem key={key} sx={{ flexDirection: 'column', alignItems: 'flex-start', width: '100%', py:0.2, pl: level > 0 ? 1 : 0 }}>
-            <Typography variant="caption" color="text.secondary" sx={{fontWeight:'medium', textTransform: 'capitalize'}}> 
+            <Typography variant="caption" color="text.secondary" sx={{fontWeight:'medium', textTransform: 'capitalize'}}>
               {key.replace(/_/g, ' ')}:
             </Typography>
             <Box sx={{ pl: 1, width: '100%', overflowWrap: 'break-word' }}>
-              {typeof value === 'object' && value !== null && !Array.isArray(value) ? ( 
+              {typeof value === 'object' && value !== null && !Array.isArray(value) ? (
                 <DataDisplay data={value} level={level + 1} />
               ) : Array.isArray(value) ? (
                 <Typography variant="caption" sx={{ wordBreak: 'break-all' }}>{value.join(', ')}</Typography>
@@ -94,29 +95,31 @@ const DataDisplay = ({ data, level = 0 }) => {
 };
 
 
-export default function ShodanDetails({ result, ioc }) { 
+export default function ShodanDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
 
   if (!result) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message="Loading Shodan details..." />
+        <NoDetails message={t('providers.shodan.loading')} />
       </Box>
     );
   }
 
   if (result.shodan_error || result.error) {
-    const errorMessage = result.shodan_error || (result.error ? (result.message || result.error) : "Unknown error");
+    const errorMessage = result.shodan_error || (result.error ? (result.message || result.error) : t('providers.shodan.unknownError'));
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`Error fetching Shodan details: ${errorMessage}`} />
+        <NoDetails message={t('providers.shodan.errorFetching', { error: errorMessage })} />
       </Box>
     );
   }
-  
+
   if (result.error === "No information available" || (Object.keys(result).length === 1 && result.ip_str && !result.ports && !result.data )) {
      return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`No detailed Shodan information found for "${result.ip_str || ioc}".`} />
+        <NoDetails message={t('providers.shodan.noInfoFound', { ip: result.ip_str || ioc })} />
       </Box>
     );
   }
@@ -126,35 +129,35 @@ export default function ShodanDetails({ result, ioc }) {
     <List dense>
       <ListItem>
         <ListItemIcon sx={{minWidth:36}}><LocationIcon color="action" /></ListItemIcon>
-        <ListItemText 
-          primary="Location" 
+        <ListItemText
+          primary={t('providers.shodan.location')}
           secondary={[
             result.city,
             result.region_code,
             result.country_name,
             result.postal_code
-          ].filter(Boolean).join(', ') || 'N/A'} 
+          ].filter(Boolean).join(', ') || notAvailable}
         />
       </ListItem>
       <ListItem>
         <ListItemIcon sx={{minWidth:36}}><BusinessIcon color="action" /></ListItemIcon>
-        <ListItemText 
-          primary="Organization / ASN" 
-          secondary={`${result.org || 'N/A'} (${result.asn || 'N/A'})`} 
+        <ListItemText
+          primary={t('providers.shodan.organizationAsn')}
+          secondary={`${result.org || notAvailable} (${result.asn || notAvailable})`}
         />
       </ListItem>
       <ListItem>
         <ListItemIcon sx={{minWidth:36}}><PublicIcon color="action" /></ListItemIcon>
-        <ListItemText 
-          primary="ISP" 
-          secondary={result.isp || 'N/A'} 
+        <ListItemText
+          primary={t('providers.shodan.isp')}
+          secondary={result.isp || notAvailable}
         />
       </ListItem>
        <ListItem>
         <ListItemIcon sx={{minWidth:36}}><DomainIcon color="action" /></ListItemIcon>
-        <ListItemText 
-          primary="Last Update" 
-          secondary={result.last_update ? new Date(result.last_update).toLocaleString() : 'N/A'} 
+        <ListItemText
+          primary={t('providers.shodan.lastUpdate')}
+          secondary={result.last_update ? new Date(result.last_update).toLocaleString() : notAvailable}
         />
       </ListItem>
     </List>
@@ -167,15 +170,15 @@ export default function ShodanDetails({ result, ioc }) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                 <InfoIcon />
                 <Typography variant="h6" component="div">
-                Shodan IP Report for: <Typography component="span" sx={{wordBreak: 'break-all'}}>{result.ip_str || ioc}</Typography>
+                {t('providers.shodan.ipReportFor')} <Typography component="span" sx={{wordBreak: 'break-all'}}>{result.ip_str || ioc}</Typography>
                 </Typography>
             </Box>
-            
+
             {generalInfo}
             <Divider sx={{ my: 1 }} />
 
             {result.ports?.length > 0 && (
-                <CollapsibleSection title={`Open Ports (${result.ports.length})`} icon={PortIcon} defaultExpanded>
+                <CollapsibleSection title={t('providers.shodan.openPorts', { count: result.ports.length })} icon={PortIcon} defaultExpanded>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {result.ports.map((port) => (
                     <Chip key={port} label={port} size="small" variant="outlined" sx={{borderRadius:1}} />
@@ -185,19 +188,19 @@ export default function ShodanDetails({ result, ioc }) {
             )}
 
             {(result.domains?.length > 0 || result.hostnames?.length > 0) && (
-                <CollapsibleSection title="Domains & Hostnames" icon={DomainIcon} defaultExpanded>
+                <CollapsibleSection title={t('providers.shodan.domainsAndHostnames')} icon={DomainIcon} defaultExpanded>
                 {result.domains?.length > 0 && (
                     <Box sx={{ mb: result.hostnames?.length > 0 ? 1: 0, mt: 0.5 }}>
-                    <Typography variant="caption" color="text.secondary" display="block">Domains ({result.domains.length}):</Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">{t('providers.shodan.domainsCount', { count: result.domains.length })}</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {result.domains.map((domain) => ( <Chip key={`dom-${domain}`} label={domain} size="small" variant="outlined" /> ))}
                     </Box>
                     </Box>
                 )}
-                
+
                 {result.hostnames?.length > 0 && (
                     <Box sx={{mt: 0.5}}>
-                    <Typography variant="caption" color="text.secondary" display="block">Hostnames ({result.hostnames.length}):</Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">{t('providers.shodan.hostnamesCount', { count: result.hostnames.length })}</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {result.hostnames.map((hostname) => ( <Chip key={`host-${hostname}`} label={hostname} size="small" variant="outlined" /> ))}
                     </Box>
@@ -207,7 +210,7 @@ export default function ShodanDetails({ result, ioc }) {
             )}
 
             {result.tags?.length > 0 && (
-                <CollapsibleSection title={`Tags (${result.tags.length})`} icon={TagIcon}>
+                <CollapsibleSection title={t('providers.shodan.tagsCount', { count: result.tags.length })} icon={TagIcon}>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {result.tags.map((tag) => ( <Chip key={`tag-${tag}`} label={tag} size="small" variant="filled" color="secondary" sx={{borderRadius:1}}/> ))}
                 </Box>
@@ -215,10 +218,10 @@ export default function ShodanDetails({ result, ioc }) {
             )}
 
             {result.data?.length > 0 && (
-                <CollapsibleSection title={`Service Banners / Detailed Data (${result.data.length})`} icon={DataIcon}>
+                <CollapsibleSection title={t('providers.shodan.serviceBanners', { count: result.data.length })} icon={DataIcon}>
                 {result.data.map((item, idx) => (
                     <Card key={`${item.port}-${item.transport}-${idx}`} sx={{ mb: 1, mt:0.5, boxShadow: 0 }}>
-                        <CardContent sx={{p:1, '&:last-child': {pb:1}}}> 
+                        <CardContent sx={{p:1, '&:last-child': {pb:1}}}>
                             <DataDisplay data={item} />
                         </CardContent>
                     </Card>
@@ -227,7 +230,7 @@ export default function ShodanDetails({ result, ioc }) {
             )}
 
             {result.vulns?.length > 0 && (
-                 <CollapsibleSection title={`Vulnerabilities (${result.vulns.length})`} icon={SecurityIcon} defaultExpanded>
+                 <CollapsibleSection title={t('providers.shodan.vulnerabilities', { count: result.vulns.length })} icon={SecurityIcon} defaultExpanded>
                     <List dense disablePadding>
                         {result.vulns.map((vuln_id) => (
                             <ListItem key={vuln_id} dense disableGutters>

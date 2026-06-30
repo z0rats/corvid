@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -17,6 +18,7 @@ import ActionButtons from '../shared/components/ui/ActionButtons';
 import RulePreview from '../shared/components/ui/RulePreview';
 
 export default function Snort() {
+  const { t } = useTranslation('ruleCreator');
   const ruleState = useSnortRuleState();
   const actions = useSnortRuleActions(ruleState);
 
@@ -33,22 +35,22 @@ export default function Snort() {
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h5" align="center" gutterBottom>
-        Snort/Suricata Rule Builder
+        {t('snort.title')}
       </Typography>
 
-      <AccordionSection icon={<NetworkCheckIcon fontSize="small" sx={{ mr: 1 }} />} title="Rule Header" defaultExpanded>
+      <AccordionSection icon={<NetworkCheckIcon fontSize="small" sx={{ mr: 1 }} />} title={t('snort.sections.ruleHeader')} defaultExpanded>
         <RuleHeader ruleHeader={ruleHeader} handleRuleHeaderChange={setRuleHeader} />
       </AccordionSection>
 
-      <AccordionSection icon={<SettingsIcon fontSize="small" sx={{ mr: 1 }} />} title="Rule Options" sx={{ mt: 1 }}>
+      <AccordionSection icon={<SettingsIcon fontSize="small" sx={{ mr: 1 }} />} title={t('snort.sections.ruleOptions')} sx={{ mt: 1 }}>
         <RuleOptions ruleOptions={ruleOptions} handleRuleOptionsChange={setRuleOptions} />
       </AccordionSection>
 
-      <AccordionSection icon={<FingerprintIcon fontSize="small" sx={{ mr: 1 }} />} title="Detection Content" sx={{ mt: 1 }}>
+      <AccordionSection icon={<FingerprintIcon fontSize="small" sx={{ mr: 1 }} />} title={t('snort.sections.detectionContent')} sx={{ mt: 1 }}>
         <RuleContent ruleContent={ruleContent} handleRuleContentChange={setRuleContent} />
       </AccordionSection>
 
-      <AccordionSection icon={<DescriptionIcon fontSize="small" sx={{ mr: 1 }} />} title="Enhanced Metadata" sx={{ mt: 1 }}>
+      <AccordionSection icon={<DescriptionIcon fontSize="small" sx={{ mr: 1 }} />} title={t('snort.sections.enhancedMetadata')} sx={{ mt: 1 }}>
         <RuleMetadata ruleMetadata={ruleMetadata} handleRuleMetadataChange={setRuleMetadata} />
       </AccordionSection>
 
@@ -58,14 +60,14 @@ export default function Snort() {
         onReset={handleReset}
         canPreview={isRuleValid()}
         canExport={isRuleValid()}
-        ruleType="Snort"
+        ruleType={t('common.ruleTypeLabels.snort')}
       />
 
       <RulePreview
         open={previewOpen}
         onClose={handleClosePreview}
         rulePreview={rulePreview}
-        title="Snort Rule Preview"
+        title={t('common.preview.snortTitle')}
       />
     </Box>
   );

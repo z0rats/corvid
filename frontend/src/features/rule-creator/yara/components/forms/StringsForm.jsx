@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -33,8 +34,9 @@ export default function StringsForm({
   onAddString,
   canAddString,
   errors = {},
-  onClearError 
+  onClearError
 }) {
+  const { t } = useTranslation('ruleCreator');
   const handleFieldChange = (field) => (event) => {
     onCurrentStringChange(field, event.target.value);
     if (errors[field] && onClearError) {
@@ -68,7 +70,7 @@ export default function StringsForm({
       >
         <Box display="flex" alignItems="center">
           <CodeIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Add String</Typography>
+          <Typography variant="subtitle2">{t('yara.stringsForm.header')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
@@ -76,7 +78,7 @@ export default function StringsForm({
           <Grid size={{ xs: 12, sm: 3 }}>
             <TextField
               fullWidth
-              label="Identifier"
+              label={t('yara.stringsForm.identifierLabel')}
               value={currentString.identifier}
               onChange={handleFieldChange('identifier')}
               onKeyPress={handleKeyPress}
@@ -85,15 +87,15 @@ export default function StringsForm({
               variant="outlined"
               error={!!errors.identifier}
               helperText={errors.identifier}
-              placeholder="e.g., malware_string"
+              placeholder={t('yara.stringsForm.identifierPlaceholder')}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 2 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Type</InputLabel>
+              <InputLabel>{t('yara.stringsForm.typeLabel')}</InputLabel>
               <Select
                 value={currentString.type}
-                label="Type"
+                label={t('yara.stringsForm.typeLabel')}
                 onChange={handleFieldChange('type')}
               >
                 {STRING_TYPES.map((type) => (
@@ -107,7 +109,7 @@ export default function StringsForm({
           <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               fullWidth
-              label="Value"
+              label={t('yara.stringsForm.valueLabel')}
               value={currentString.value}
               onChange={handleFieldChange('value')}
               onKeyPress={handleKeyPress}
@@ -116,7 +118,7 @@ export default function StringsForm({
               variant="outlined"
               error={!!errors.value}
               helperText={errors.value}
-              placeholder={getPlaceholderForType(currentString.type)}
+              placeholder={getPlaceholderForType(currentString.type, t)}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 2 }}>
@@ -126,11 +128,11 @@ export default function StringsForm({
               value={currentString.modifiers}
               onChange={handleModifiersChange}
               renderInput={(params) => (
-                <TextField 
-                  {...params} 
-                  label="Modifiers" 
-                  placeholder="Select" 
-                  size="small" 
+                <TextField
+                  {...params}
+                  label={t('yara.stringsForm.modifiersLabel')}
+                  placeholder={t('yara.stringsForm.modifiersPlaceholder')}
+                  size="small"
                 />
               )}
               size="small"
@@ -145,7 +147,7 @@ export default function StringsForm({
               size="small"
               fullWidth
             >
-              Add
+              {t('common.actions.add')}
             </Button>
           </Grid>
         </Grid>
@@ -159,15 +161,15 @@ export default function StringsForm({
  * @param {string} type - String type
  * @returns {string} Placeholder text
  */
-function getPlaceholderForType(type) {
+function getPlaceholderForType(type, t) {
   switch (type) {
     case 'hex':
-      return 'e.g., 4D 5A 90 00';
+      return t('yara.stringsForm.placeholderHex');
     case 'regex':
-      return 'e.g., /malware[0-9]+/';
+      return t('yara.stringsForm.placeholderRegex');
     case 'wide':
-      return 'e.g., wide string';
+      return t('yara.stringsForm.placeholderWide');
     default:
-      return 'e.g., malicious string';
+      return t('yara.stringsForm.placeholderDefault');
   }
 }

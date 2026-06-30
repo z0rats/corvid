@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -13,6 +14,7 @@ import { createLogger } from "../../../core/utils/logger";
 const logger = createLogger("AnalyzeSection");
 
 export default function AnalyzeSection({ item }) {
+  const { t } = useTranslation('newsfeed');
 
   const getMarkdownContent = () => {
     try {
@@ -35,7 +37,7 @@ export default function AnalyzeSection({ item }) {
       return '';
     } catch (error) {
       logger.error("Error parsing analysis result:", error);
-      return "Error displaying analysis";
+      return t('feed.analysis.errorDisplaying');
     }
   };
 
@@ -58,7 +60,7 @@ export default function AnalyzeSection({ item }) {
         >
           <AutoAwesomeIcon />
           <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-            AI Analysis
+            {t('feed.analysis.title')}
           </Typography>
         </Stack>
       </AccordionSummary>

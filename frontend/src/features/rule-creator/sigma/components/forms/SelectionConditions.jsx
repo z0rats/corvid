@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Autocomplete from '@mui/material/Autocomplete';
 import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
@@ -20,11 +21,12 @@ import { SIGMA_CONSTANTS, INITIAL_CONDITION } from '../../constants/sigmaConstan
 import fieldData from '../../data/FieldData.json';
 
 export default function SelectionConditions({ conditionsList, onAddCondition, onDeleteCondition }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentCondition, setCurrentCondition] = useState(INITIAL_CONDITION);
 
   const handleAdd = () => {
     if (currentCondition.field.trim() === '' || currentCondition.value.trim() === '') {
-      alert('Field and Value are required for a condition.');
+      alert(t('sigma.selectionConditions.requiredAlert'));
       return;
     }
     onAddCondition({
@@ -51,16 +53,16 @@ export default function SelectionConditions({ conditionsList, onAddCondition, on
             }
             freeSolo
             renderInput={(params) => (
-              <TextField {...params} label="Field" size="small" variant="outlined" />
+              <TextField {...params} label={t('sigma.selectionConditions.fieldLabel')} size="small" variant="outlined" />
             )}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>Modifier</InputLabel>
+            <InputLabel>{t('sigma.selectionConditions.modifierLabel')}</InputLabel>
             <Select
               value={currentCondition.modifier}
-              label="Modifier"
+              label={t('sigma.selectionConditions.modifierLabel')}
               onChange={(e) =>
                 setCurrentCondition((prev) => ({ ...prev, modifier: e.target.value }))
               }
@@ -76,7 +78,7 @@ export default function SelectionConditions({ conditionsList, onAddCondition, on
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             fullWidth
-            label="Value"
+            label={t('sigma.selectionConditions.valueLabel')}
             value={currentCondition.value}
             onChange={(e) =>
               setCurrentCondition((prev) => ({ ...prev, value: e.target.value }))
@@ -89,16 +91,16 @@ export default function SelectionConditions({ conditionsList, onAddCondition, on
                 handleAdd();
               }
             }}
-            placeholder="Enter value and press Enter or click Add"
+            placeholder={t('sigma.selectionConditions.valuePlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 1 }}>
-          <Tooltip title="Add Condition">
+          <Tooltip title={t('sigma.selectionConditions.addTooltip')}>
             <IconButton
               onClick={handleAdd}
               disabled={!currentCondition.field.trim() || !currentCondition.value.trim()}
               size="small"
-              aria-label="Add condition"
+              aria-label={t('sigma.selectionConditions.addAria')}
             >
               <AddCircleIcon fontSize="small" />
             </IconButton>
@@ -112,8 +114,8 @@ export default function SelectionConditions({ conditionsList, onAddCondition, on
             <ListItem
               key={cond.id}
               secondaryAction={
-                <Tooltip title="Delete Condition">
-                  <IconButton edge="end" onClick={() => onDeleteCondition(cond.id)} size="small" aria-label="Delete condition">
+                <Tooltip title={t('sigma.selectionConditions.deleteTooltip')}>
+                  <IconButton edge="end" onClick={() => onDeleteCondition(cond.id)} size="small" aria-label={t('sigma.selectionConditions.deleteAria')}>
                     <DeleteIcon fontSize="small" color="error" />
                   </IconButton>
                 </Tooltip>

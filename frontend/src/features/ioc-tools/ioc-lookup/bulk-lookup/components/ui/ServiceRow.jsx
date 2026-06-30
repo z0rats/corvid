@@ -1,4 +1,5 @@
 import React, { useState, useMemo, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Collapse from '@mui/material/Collapse';
@@ -22,6 +23,7 @@ function ServiceRow({
   avatarStyle: propAvatarStyle,
   cellStyle: propCellStyle
 }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -47,7 +49,7 @@ function ServiceRow({
     return (
       <TableRow sx={{ backgroundColor: `${rowBgColor} !important` }}>
         <TableCell sx={{ ...baseCellSx, width: '40px' }}>
-          <IconButton aria-label="expand row" size="small" disabled>
+          <IconButton aria-label={t('bulkLookup.serviceRow.expandRowAriaLabel')} size="small" disabled>
             <KeyboardArrowDownIcon />
           </IconButton>
         </TableCell>
@@ -66,7 +68,7 @@ function ServiceRow({
      return (
       <TableRow sx={{ backgroundColor: `${rowBgColor} !important` }}>
         <TableCell sx={{ ...baseCellSx, width: '40px' }}>
-          <IconButton aria-label="expand row" size="small" disabled>
+          <IconButton aria-label={t('bulkLookup.serviceRow.expandRowAriaLabel')} size="small" disabled>
             <KeyboardArrowDownIcon />
           </IconButton>
         </TableCell>
@@ -88,7 +90,7 @@ function ServiceRow({
       <TableRow sx={{ backgroundColor: `${rowBgColor} !important` }}>
         <TableCell sx={{ ...baseCellSx, width: '40px' }}>
           <IconButton
-            aria-label="expand row"
+            aria-label={t('bulkLookup.serviceRow.expandRowAriaLabel')}
             size="small"
             onClick={() => setOpen(!open)}
             disabled={!serviceData.data || !DetailComponent}
@@ -101,7 +103,7 @@ function ServiceRow({
         </TableCell>
         <TableCell sx={baseCellSx}>
           <Typography variant="body2" noWrap title={serviceData.summary}>
-            {serviceData.summary || 'No summary'}
+            {serviceData.summary || t('bulkLookup.serviceRow.noSummary')}
           </Typography>
         </TableCell>
         <TableCell
@@ -113,7 +115,7 @@ function ServiceRow({
             borderLeft: 1,
             borderLeftColor: 'divider',
           }}
-          title={`TLP: ${serviceData.tlp || 'N/A'}`}
+          title={t('bulkLookup.serviceRow.tlpTitle', { tlp: serviceData.tlp || t('bulkLookup.serviceRow.tlpNotAvailable') })}
         >
           &nbsp;
         </TableCell>

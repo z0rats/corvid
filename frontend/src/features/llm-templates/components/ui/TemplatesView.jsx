@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -29,6 +30,7 @@ const MainContent = styled(Box)({
 });
 
 export default function TemplatesView() {
+  const { t } = useTranslation('llmTemplates');
   const { templates, setTemplates, loading, error, fetchTemplates, reorderTemplates, deleteTemplate } = useTemplates();
   const {
     categories, createCategory, updateCategory, deleteCategory: deleteCategoryApi,
@@ -62,11 +64,11 @@ export default function TemplatesView() {
     if (!selected) return;
     try {
       await executeTemplate(selected, payload);
-      showSnackbar('Template executed successfully!', 'success');
+      showSnackbar(t('templatesView.templateExecutedSuccess'), 'success');
     } catch (err) {
       showSnackbar(extractErrorMessage(err), 'error');
     }
-  }, [selected, payload, executeTemplate, showSnackbar]);
+  }, [selected, payload, executeTemplate, showSnackbar, t]);
 
   // --- Drag-end handler: supports both category and template drags ---
   const handleDragEnd = useCallback(async (dragResult) => {
@@ -111,11 +113,11 @@ export default function TemplatesView() {
         }
       }
     } catch {
-      showSnackbar('Failed to update order', 'error');
+      showSnackbar(t('templatesView.orderUpdateFailedError'), 'error');
       fetchTemplates();
       fetchCategories();
     }
-  }, [templates, setTemplates, categories, reorderTemplates, reorderCategories, moveTemplates, fetchTemplates, fetchCategories, showSnackbar]);
+  }, [templates, setTemplates, categories, reorderTemplates, reorderCategories, moveTemplates, fetchTemplates, fetchCategories, showSnackbar, t]);
 
   // --- Template CRUD handlers ---
   const handleDelete = useCallback((tpl) => {
@@ -128,20 +130,20 @@ export default function TemplatesView() {
     try {
       await deleteTemplate(tplToDelete.id);
       if (selected?.id === tplToDelete.id) setSelected(null);
-      showSnackbar('Template deleted successfully!', 'success');
+      showSnackbar(t('templatesView.templateDeletedSuccess'), 'success');
     } catch (err) {
       showSnackbar(extractErrorMessage(err), 'error');
     }
-  }, [deleteTemplate, deleteDialog, selected, showSnackbar]);
+  }, [deleteTemplate, deleteDialog, selected, showSnackbar, t]);
 
   const handleCopyResult = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(result);
-      showSnackbar('Result copied to clipboard!', 'success');
+      showSnackbar(t('templatesView.resultCopiedSuccess'), 'success');
     } catch {
-      showSnackbar('Failed to copy to clipboard', 'error');
+      showSnackbar(t('templatesView.copyFailedError'), 'error');
     }
-  }, [result, showSnackbar]);
+  }, [result, showSnackbar, t]);
 
   const openExample = useCallback((tpl) => { exampleDialog.openDialog(tpl); }, [exampleDialog]);
   const openEdit = useCallback((tpl) => { editDialog.openDialog(tpl); }, [editDialog]);
@@ -149,14 +151,14 @@ export default function TemplatesView() {
   const handleEditSave = useCallback((updated) => {
     setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t));
     if (selected?.id === updated.id) setSelected(updated);
-    showSnackbar('Template updated successfully!', 'success');
-  }, [setTemplates, selected, showSnackbar]);
+    showSnackbar(t('templatesView.templateUpdatedSuccess'), 'success');
+  }, [setTemplates, selected, showSnackbar, t]);
 
   const handleEditDelete = useCallback((deletedId) => {
-    setTemplates(prev => prev.filter(t => t.id !== deletedId));
+    setTemplates(prev => prev.filter(tpl => tpl.id !== deletedId));
     if (selected?.id === deletedId) setSelected(null);
-    showSnackbar('Template deleted successfully!', 'success');
-  }, [setTemplates, selected, showSnackbar]);
+    showSnackbar(t('templatesView.templateDeletedSuccess'), 'success');
+  }, [setTemplates, selected, showSnackbar, t]);
 
   const handleToggleFavorite = useCallback(async (tpl) => {
     const isFavorite = tpl.category_id === SYSTEM_CATEGORY_IDS.FAVORITES;
@@ -179,21 +181,21 @@ export default function TemplatesView() {
     setAddCategoryOpen(false);
     try {
       await createCategory(name);
-      showSnackbar('Group created!', 'success');
+      showSnackbar(t('templatesView.groupCreatedSuccess'), 'success');
     } catch (err) {
       showSnackbar(extractErrorMessage(err), 'error');
     }
-  }, [createCategory, showSnackbar]);
+  }, [createCategory, showSnackbar, t]);
 
   const handleRenameCategory = useCallback(async (categoryId, newName) => {
     renameCategoryDialog.closeDialog();
     try {
       await updateCategory(categoryId, newName);
-      showSnackbar('Group renamed!', 'success');
+      showSnackbar(t('templatesView.groupRenamedSuccess'), 'success');
     } catch (err) {
       showSnackbar(extractErrorMessage(err), 'error');
     }
-  }, [updateCategory, renameCategoryDialog, showSnackbar]);
+  }, [updateCategory, renameCategoryDialog, showSnackbar, t]);
 
   const deleteCategoryTemplateCount = useMemo(() => {
     if (!deleteCategoryDialog.item) return 0;
@@ -211,18 +213,18 @@ export default function TemplatesView() {
           prev.map(t => t.category_id === categoryId ? { ...t, category_id: SYSTEM_CATEGORY_IDS.DEFAULT } : t)
         );
       }
-      showSnackbar('Group deleted!', 'success');
+      showSnackbar(t('templatesView.groupDeletedSuccess'), 'success');
     } catch (err) {
       showSnackbar(extractErrorMessage(err), 'error');
     }
-  }, [deleteCategoryApi, deleteCategoryDialog, setTemplates, showSnackbar]);
+  }, [deleteCategoryApi, deleteCategoryDialog, setTemplates, showSnackbar, t]);
 
   if (error) {
     return (
       <Box sx={{ p: 2 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
-          <Button size="small" onClick={fetchTemplates} sx={{ ml: 2 }}>Retry</Button>
+          <Button size="small" onClick={fetchTemplates} sx={{ ml: 2 }}>{t('templatesView.retryButton')}</Button>
         </Alert>
       </Box>
     );
@@ -233,7 +235,7 @@ export default function TemplatesView() {
       {loading ? (
         <LoadingSkeleton />
       ) : templates.length === 0 && categories.length === 0 ? (
-        <Alert severity="info" sx={{ mb: 2 }}>No templates available</Alert>
+        <Alert severity="info" sx={{ mb: 2 }}>{t('templatesView.noTemplatesAvailable')}</Alert>
       ) : (
         <Box display="flex" sx={{ height: 'calc(100vh - 120px)' }}>
           <TemplateSidebar

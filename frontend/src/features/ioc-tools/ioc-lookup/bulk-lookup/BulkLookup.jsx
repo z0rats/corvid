@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -11,6 +12,7 @@ import BulkLookupResults from './components/ui/BulkLookupResults';
 import BulkLookupSettings from './components/ui/BulkLookupSettings';
 
 export default function BulkLookup() {
+  const { t } = useTranslation('iocTools');
   const [iocsInput, setIocsInput] = useState('');
   const [activeTab, setActiveTab] = useState(0);
   const [formError, setFormError] = useState('');
@@ -59,7 +61,7 @@ export default function BulkLookup() {
     return (
       <Box sx={{ mb: 2, p: 2 }}>
         <Typography variant="h5" gutterBottom>
-          Bulk IOC Lookup
+          {t('bulkLookup.title')}
         </Typography>
         <Box display="flex" justifyContent="center" sx={{ my: 4 }}>
           <CircularProgress />

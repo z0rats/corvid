@@ -6,6 +6,7 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
+import { useTranslation } from 'react-i18next';
 
 const DEFANG_EXAMPLES = [
   'https://example.com → hxxps[://]example[.]com',
@@ -41,25 +42,27 @@ const ExampleCard = ({ icon, title, subtitle, description, examples }) => (
 );
 
 export default function HowToUseSection() {
+  const { t } = useTranslation('iocTools');
+
   return (
     <>
       <Typography variant="h6" sx={{ mb: 2, mt: 3 }}>
-        How to Use
+        {t('iocDefanger.howToUse.title')}
       </Typography>
 
       <Grid container spacing={3}>
         <ExampleCard
           icon={<HealthAndSafetyIcon sx={{ color: 'text.primary' }} />}
-          title="Defanging IOCs"
-          subtitle="Make IOCs safe for sharing"
-          description="Defanging replaces dangerous characters in IOCs to prevent accidental execution:"
+          title={t('iocDefanger.howToUse.defang.title')}
+          subtitle={t('iocDefanger.howToUse.defang.subtitle')}
+          description={t('iocDefanger.howToUse.defang.description')}
           examples={DEFANG_EXAMPLES}
         />
         <ExampleCard
           icon={<GppMaybeIcon sx={{ color: 'text.primary' }} />}
-          title="Fanging IOCs"
-          subtitle="Restore original IOCs for analysis"
-          description="Fanging restores defanged IOCs to their original form for analysis:"
+          title={t('iocDefanger.howToUse.fang.title')}
+          subtitle={t('iocDefanger.howToUse.fang.subtitle')}
+          description={t('iocDefanger.howToUse.fang.description')}
           examples={FANG_EXAMPLES}
         />
       </Grid>

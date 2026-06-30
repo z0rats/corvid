@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -29,8 +30,10 @@ const GeneralInfo = ({
   loading = false,
   error = null,
 }) => {
-  if (loading) return <Typography>Loading...</Typography>;
-  if (error) return <Typography color="error">Error loading information</Typography>;
+  const { t } = useTranslation('iocTools');
+
+  if (loading) return <Typography>{t('providers.common.loading')}</Typography>;
+  if (error) return <Typography color="error">{t('providers.common.errorLoadingInfo')}</Typography>;
 
   const {
     ip,
@@ -54,29 +57,29 @@ const GeneralInfo = ({
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <InfoIcon />
-          <Typography variant="h6" component="h2">General Information</Typography>
+          <Typography variant="h6" component="h2">{t('providers.common.generalInformation')}</Typography>
         </Box>
         {/* Network Information */}
-        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, pb: 0.5 }}>Network Information</Typography>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, pb: 0.5 }}>{t('providers.common.networkInformation')}</Typography>
         <List disablePadding>
           <ListItem dense>
             <ListItemIcon>
               <RouterIcon color="action" />
             </ListItemIcon>
-            <ListItemText primary="IP" secondary={ip} />
+            <ListItemText primary={t('providers.common.ipAddress')} secondary={ip} />
           </ListItem>
           <ListItem dense>
             <ListItemIcon>
               <RouterIcon color="action" />
             </ListItemIcon>
-            <ListItemText primary="IP Type" secondary={ipType} />
+            <ListItemText primary={t('providers.common.ipType')} secondary={ipType} />
           </ListItem>
           {ipRange && (
             <ListItem dense>
               <ListItemIcon>
                 <RouterIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="IP Range" secondary={ipRange} />
+              <ListItemText primary={t('providers.common.ipRange')} secondary={ipRange} />
             </ListItem>
           )}
           {reverseDns && (
@@ -84,21 +87,21 @@ const GeneralInfo = ({
               <ListItemIcon>
                 <DnsIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Reverse DNS" secondary={reverseDns} />
+              <ListItemText primary={t('providers.common.reverseDns')} secondary={reverseDns} />
             </ListItem>
           )}
         </List>
 
         {/* Domain Information */}
         <Divider sx={{ my: 0.5 }} />
-        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, py: 0.5 }}>Domain Information</Typography>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, py: 0.5 }}>{t('providers.common.domainInformation')}</Typography>
         <List disablePadding>
           {domain && (
             <ListItem dense>
               <ListItemIcon>
                 <DomainIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Domain" secondary={domain} />
+              <ListItemText primary={t('providers.common.domain')} secondary={domain} />
             </ListItem>
           )}
           {hostnames?.length > 0 && (
@@ -106,7 +109,7 @@ const GeneralInfo = ({
               <ListItemIcon>
                 <DnsIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Hostnames" secondary={hostnames.join(", ")} />
+              <ListItemText primary={t('providers.common.hostnames')} secondary={hostnames.join(", ")} />
             </ListItem>
           )}
           {type && (
@@ -114,21 +117,21 @@ const GeneralInfo = ({
               <ListItemIcon>
                 <StorageIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Type" secondary={type} />
+              <ListItemText primary={t('providers.common.type')} secondary={type} />
             </ListItem>
           )}
         </List>
 
         {/* Location Information */}
         <Divider sx={{ my: 0.5 }} />
-        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, py: 0.5 }}>Location Information</Typography>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, py: 0.5 }}>{t('providers.common.locationInformation')}</Typography>
         <List disablePadding>
           {country && (
             <ListItem dense>
               <ListItemIcon>
                 <PublicIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Country" secondary={country} />
+              <ListItemText primary={t('providers.common.country')} secondary={country} />
             </ListItem>
           )}
           {countryCode && (
@@ -136,7 +139,7 @@ const GeneralInfo = ({
               <ListItemIcon>
                 <PublicIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Country Code" secondary={countryCode} />
+              <ListItemText primary={t('providers.common.countryCode')} secondary={countryCode} />
             </ListItem>
           )}
           {region && (
@@ -144,7 +147,7 @@ const GeneralInfo = ({
               <ListItemIcon>
                 <LocationCityIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Region" secondary={region} />
+              <ListItemText primary={t('providers.common.region')} secondary={region} />
             </ListItem>
           )}
           {city && (
@@ -152,21 +155,21 @@ const GeneralInfo = ({
               <ListItemIcon>
                 <LocationCityIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="City" secondary={city} />
+              <ListItemText primary={t('providers.common.city')} secondary={city} />
             </ListItem>
           )}
         </List>
 
         {/* Organization Information */}
         <Divider sx={{ my: 0.5 }} />
-        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, py: 0.5 }}>Organization Information</Typography>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ pl: 2, py: 0.5 }}>{t('providers.common.organizationInformation')}</Typography>
         <List disablePadding>
           {organisation && (
             <ListItem dense>
               <ListItemIcon>
                 <BusinessIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="Organisation" secondary={organisation} />
+              <ListItemText primary={t('providers.common.organisation')} secondary={organisation} />
             </ListItem>
           )}
           {isp && (
@@ -174,7 +177,7 @@ const GeneralInfo = ({
               <ListItemIcon>
                 <LanguageIcon color="action" />
               </ListItemIcon>
-              <ListItemText primary="ISP" secondary={isp} />
+              <ListItemText primary={t('providers.common.isp')} secondary={isp} />
             </ListItem>
           )}
         </List>
@@ -197,7 +200,7 @@ const GeneralInfo = ({
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <NetworkCheckIcon color="action" sx={{ mr: 1 }} />
-                  <Typography variant="subtitle2" color="text.secondary">ASN Information</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">{t('providers.common.asnInformation')}</Typography>
                 </Box>
               </AccordionSummary>
               <AccordionDetails sx={{ p: 0 }}>
@@ -207,7 +210,7 @@ const GeneralInfo = ({
                       <ListItemIcon>
                         <NetworkCheckIcon color="action" />
                       </ListItemIcon>
-                      <ListItemText primary="ASN" secondary={asn.asn} />
+                      <ListItemText primary={t('providers.common.asn')} secondary={asn.asn} />
                     </ListItem>
                   )}
                   {asn.asOwner && (
@@ -215,7 +218,7 @@ const GeneralInfo = ({
                       <ListItemIcon>
                         <BusinessIcon color="action" />
                       </ListItemIcon>
-                      <ListItemText primary="AS Owner" secondary={asn.asOwner} />
+                      <ListItemText primary={t('providers.common.asOwner')} secondary={asn.asOwner} />
                     </ListItem>
                   )}
                   {asn.asnCidr && (
@@ -223,7 +226,7 @@ const GeneralInfo = ({
                       <ListItemIcon>
                         <RouterIcon color="action" />
                       </ListItemIcon>
-                      <ListItemText primary="ASN CIDR" secondary={asn.asnCidr} />
+                      <ListItemText primary={t('providers.common.asnCidr')} secondary={asn.asnCidr} />
                     </ListItem>
                   )}
                   {asn.asnCountryCode && (
@@ -231,7 +234,7 @@ const GeneralInfo = ({
                       <ListItemIcon>
                         <PublicIcon color="action" />
                       </ListItemIcon>
-                      <ListItemText primary="ASN Country" secondary={asn.asnCountryCode} />
+                      <ListItemText primary={t('providers.common.asnCountry')} secondary={asn.asnCountryCode} />
                     </ListItem>
                   )}
                   {asn.asnDate && (
@@ -239,7 +242,7 @@ const GeneralInfo = ({
                       <ListItemIcon>
                         <StorageIcon color="action" />
                       </ListItemIcon>
-                      <ListItemText primary="ASN Date" secondary={asn.asnDate} />
+                      <ListItemText primary={t('providers.common.asnDate')} secondary={asn.asnDate} />
                     </ListItem>
                   )}
                   {asn.asnRegistry && (
@@ -247,7 +250,7 @@ const GeneralInfo = ({
                       <ListItemIcon>
                         <StorageIcon color="action" />
                       </ListItemIcon>
-                      <ListItemText primary="ASN Registry" secondary={asn.asnRegistry} />
+                      <ListItemText primary={t('providers.common.asnRegistry')} secondary={asn.asnRegistry} />
                     </ListItem>
                   )}
                 </List>

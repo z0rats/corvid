@@ -1,0 +1,296 @@
+{
+  "feed": {
+    "noArticles": "No articles found.",
+    "noSummary": "No summary available for this article.",
+    "filters": {
+      "advancedOptions": "Advanced Options",
+      "refreshFeed": "Refresh Feed",
+      "refresh": "Refresh",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "tlp": "TLP",
+      "hasKeywordMatches": "Has Keyword Matches",
+      "hasIocs": "Has IOCs",
+      "hasAnalysis": "Has Analysis",
+      "hasNote": "Has Note",
+      "resetFilters": "Reset Filters",
+      "fetchNews": "Fetch News",
+      "fetching": "Fetching..."
+    },
+    "article": {
+      "changeTlp": "Change TLP",
+      "changeTlpLevel": "Change TLP Level",
+      "viewOriginalOn": "View Original Article on {{feedName}}",
+      "original": "Original",
+      "openOriginalArticle": "Open Original Article",
+      "invalidArticleUrl": "Invalid article URL",
+      "analyzeUsingAi": "Analyze Article Using AI",
+      "analyzing": "Analyzing...",
+      "reanalyze": "Re-analyze",
+      "analyze": "Analyze",
+      "aiAnalysisMenuItem": "AI Analysis",
+      "mitreMappingMenuItem": "MITRE ATT&CK Mapping",
+      "addOrEditNote": "Add or Edit Note",
+      "editNote": "Edit Note",
+      "addNote": "Add Note"
+    },
+    "analysis": {
+      "title": "AI Analysis",
+      "errorDisplaying": "Error displaying analysis"
+    },
+    "mitre": {
+      "title": "MITRE ATT&CK",
+      "actors": "Actors",
+      "software": "Software",
+      "targets": "Targets",
+      "techniques": "Techniques",
+      "observedBehavior": "Observed Behavior",
+      "procedureExample": "Procedure Example",
+      "detectionOpportunities": "Detection Opportunities"
+    },
+    "notes": {
+      "label": "Note:",
+      "editNote": "Edit Note",
+      "deleteNote": "Delete Note",
+      "saveNote": "Save Note",
+      "cancel": "Cancel",
+      "deleteDialogTitle": "Delete Note",
+      "deleteDialogMessage": "Are you sure you want to delete this note? This action cannot be undone."
+    },
+    "groups": {
+      "title": "Group",
+      "titlePlural": "Groups"
+    },
+    "keywords": {
+      "title": "Keyword Match",
+      "titlePlural": "Keyword Matches"
+    },
+    "iocs": {
+      "copyAll": "Copy All",
+      "copy": "Copy"
+    }
+  },
+  "headlines": {
+    "filterSource": "Filter Source",
+    "filterTitle": "Filter Title",
+    "timeRange": "Time Range",
+    "refresh": "Refresh",
+    "source": "Source",
+    "title": "Title",
+    "time": "Time",
+    "actions": "Actions",
+    "openSource": "Open source",
+    "openArticle": "Open article"
+  },
+  "report": {
+    "pageTitle": "News Report Generator",
+    "pageDescription": "This tool fetches all cybersecurity news from the last 7 days, ranks the top 10 relevant news by headline, and then provides a detailed analysis of each article.",
+    "startAnalysis": "Start Analysis",
+    "stopAnalysis": "Stop Analysis",
+    "fetchingAnalyzing": "Fetching / Analyzing...",
+    "noArticlesFound": "No articles found or none returned.",
+    "waitingForFirstResult": "Waiting for the first analysis result...",
+    "detailedAnalysis": "Detailed Analysis",
+    "analysisComplete": "Analysis Complete",
+    "restartMessage": "All articles have been analyzed. You may restart if you wish to run another analysis.",
+    "downloadMarkdown": "Download Markdown Report",
+    "steps": {
+      "fetch": "Fetch all news articles of the last 7 days",
+      "rank": "Rank news articles by relevance",
+      "showTop": "Show 10 most relevant articles",
+      "analyze": "Analyze most relevant articles and create reports",
+      "completed": "Completed analysis and report creation"
+    },
+    "rankingCard": {
+      "reason": "Reason: {{reason}}"
+    },
+    "analysisCard": {
+      "risk": "Risk: {{risk}}",
+      "summary": "Summary:",
+      "reason": "Reason:",
+      "possibleActionItems": "Possible Action Items:",
+      "source": "Source:"
+    }
+  },
+  "settings": {
+    "general": {
+      "title": "General Newsfeed Settings",
+      "description": "Configure how your newsfeed behaves and manages content",
+      "contentRetention": "Content Retention",
+      "contentRetentionDescription": "Define how long articles should be kept in your feed before being automatically removed",
+      "retentionPeriod": "Retention Period",
+      "backgroundFetch": "Background Fetch",
+      "backgroundFetchDescription": "Enable automatic fetching of new content at regular intervals",
+      "fetchInterval": "Fetch Interval",
+      "updateSuccess": "Settings updated successfully",
+      "updateError": "An error occurred"
+    },
+    "feeds": {
+      "title": "Manage Newsfeeds",
+      "addFeed": "Add Feed",
+      "fetchMissingIcons": "Fetch Missing Icons",
+      "fetchMissingIconsTooltip": "Fetch favicons for feeds with missing icons",
+      "allFeedsHaveIcons": "All feeds have icons",
+      "noFeedsConfigured": "No feeds configured. Click \"Add Feed\" to get started.",
+      "refreshFavicon": "Refresh favicon",
+      "deleteFeed": "Delete feed",
+      "removeCustomIcon": "Remove custom icon",
+      "deleteDialogTitle": "Delete Feed",
+      "deleteDialogMessage": "Are you sure you want to delete this feed? This action cannot be undone.",
+      "feedAddedSuccess": "Feed added successfully",
+      "feedEnabledSuccess": "Feed enabled successfully",
+      "feedDisabledSuccess": "Feed disabled successfully",
+      "feedToggleError": "Failed to toggle feed",
+      "feedDeletedSuccess": "Feed deleted successfully",
+      "feedDeleteError": "Error deleting feed",
+      "iconDeletedSuccess": "Icon deleted successfully",
+      "iconDeleteError": "Error deleting icon",
+      "iconRefreshedSuccess": "Icon refreshed",
+      "iconRefreshError": "Failed to refresh icon",
+      "bulkFetchSuccess": "Fetched {{succeeded}} of {{total}} missing icons",
+      "bulkFetchNoneError": "No favicons could be downloaded",
+      "bulkFetchError": "Error fetching missing icons",
+      "dialog": {
+        "title": "Add New Feed",
+        "dropIcon": "Drop icon",
+        "iconOptionalHelper": "Optional — a favicon will be fetched automatically",
+        "feedName": "Feed Name",
+        "feedUrl": "Feed URL",
+        "cancel": "Cancel",
+        "addFeed": "Add Feed",
+        "missingFieldsError": "Please provide both feed name and URL",
+        "genericAddError": "Error adding feed"
+      }
+    },
+    "keywords": {
+      "title": "Keyword Matching Settings",
+      "description": "Enable keyword matching to highlight news articles containing specific keywords of interest.",
+      "enable": "Enable Keyword Matching",
+      "manageKeywords": "Manage Keywords",
+      "addNewKeyword": "Add New Keyword",
+      "noKeywordsYet": "No keywords added yet.",
+      "toggleSuccess": "Keyword matching setting updated.",
+      "toggleError": "Failed to update keyword matching setting.",
+      "addSuccess": "Keyword added successfully.",
+      "addDuplicate": "Keyword already exists.",
+      "addError": "Failed to add keyword.",
+      "deleteSuccess": "Keyword deleted successfully.",
+      "deleteError": "Failed to delete keyword."
+    },
+    "cti": {
+      "title": "CTI Settings",
+      "description": "Define your company profile and threat landscape to tailor the AI-powered analysis of newsfeed articles to your organization.",
+      "companyProfileTab": "Company Profile",
+      "threatActorsTab": "Threat Actors",
+      "loading": "Loading...",
+      "saveSettings": "Save Settings",
+      "saveSuccess": "CTI settings saved successfully.",
+      "saveError": "Failed to save CTI settings.",
+      "companyProfile": {
+        "industrySelection": "Industry Selection",
+        "industrySelectionPlaceholder": "Add or select industries",
+        "companySize": "Company Size",
+        "geographicalScope": "Geographical Scope",
+        "geographicalScopePlaceholder": "Add or select regions",
+        "primaryLanguage": "Primary Language",
+        "primaryLanguagePlaceholder": "Add or select languages",
+        "brandMentions": "Brand Mentions",
+        "brandMentionsPlaceholder": "Add brand names",
+        "competitorMonitoring": "Competitor News Monitoring",
+        "competitorMonitoringPlaceholder": "Add competitor names"
+      },
+      "threatActor": {
+        "relevantThreatActors": "Relevant Threat Actors",
+        "relevantThreatActorsPlaceholder": "Add threat actor names",
+        "knownThreatActorNames": "Known Threat Actor Names",
+        "knownThreatActorNamesPlaceholder": "Add known threat actor names",
+        "attackTypesOfInterest": "Attack Types of Interest",
+        "attackTypesOfInterestPlaceholder": "Add or select attack types",
+        "priority": "Priority",
+        "motivationFilters": "Motivation Filters",
+        "motivationFiltersPlaceholder": "Add or select motivations"
+      }
+    },
+    "trends": {
+      "title": "Trends Blacklist Settings",
+      "description": "Manage blacklisted words and IOC values that are excluded from the trends analytics charts.",
+      "addEntry": "Add entry",
+      "noEntriesYet": "No entries added yet.",
+      "words": {
+        "title": "Blacklisted Words",
+        "description": "Words added here will be excluded from the Top Words in Headlines chart.",
+        "addLabel": "Add word",
+        "addSuccess": "Word added to blacklist.",
+        "addDuplicate": "Word is already blacklisted.",
+        "addError": "Failed to add word to blacklist.",
+        "deleteSuccess": "Word removed from blacklist.",
+        "deleteError": "Failed to remove word from blacklist."
+      },
+      "iocs": {
+        "title": "Blacklisted IOCs",
+        "description": "IOC values added here will be excluded from the Top Indicators of Compromise chart.",
+        "addLabel": "Add IOC",
+        "addSuccess": "IOC added to blacklist.",
+        "addDuplicate": "IOC is already blacklisted.",
+        "addError": "Failed to add IOC to blacklist.",
+        "deleteSuccess": "IOC removed from blacklist.",
+        "deleteError": "Failed to remove IOC from blacklist."
+      }
+    }
+  },
+  "trends": {
+    "header": {
+      "title": "Newsfeed Trends",
+      "timeRange": "Time Range",
+      "refreshData": "Refresh data",
+      "refresh": "Refresh"
+    },
+    "wordFrequency": {
+      "title": "Top Words in Headlines",
+      "noData": "No word frequency data available for the selected time range.",
+      "occurrences": "{{count}} occurrences",
+      "clickToView": "Click to view articles",
+      "hideFromTrends": "Hide \"{{value}}\" from trends",
+      "selectedTitle": "Word: {{word}}",
+      "addedToBlacklist": "\"{{word}}\" added to blacklist",
+      "alreadyBlacklisted": "\"{{word}}\" is already blacklisted",
+      "blacklistError": "Failed to blacklist word"
+    },
+    "cve": {
+      "title": "Top Common Vulnerabilities and Exposures (CVEs)",
+      "noData": "No CVE data available for the selected time range.",
+      "occurrences": "{{count}} occurrences",
+      "clickToView": "Click to view articles",
+      "selectedTitle": "CVE: {{value}}"
+    },
+    "ioc": {
+      "title": "Top Indicators of Compromise (IOCs)",
+      "type": "IOC Type",
+      "noData": "No IOC data available for the selected type and time range.",
+      "occurrences": "{{count}} occurrences",
+      "clickToView": "Click to view articles",
+      "hideFromTrends": "Hide \"{{value}}\" from trends",
+      "selectedTitle": "IOC: {{value}}",
+      "addedToBlacklist": "\"{{value}}\" added to blacklist",
+      "alreadyBlacklisted": "\"{{value}}\" is already blacklisted",
+      "blacklistError": "Failed to blacklist IOC"
+    },
+    "iocDistribution": {
+      "title": "IOC Type Distribution",
+      "noData": "No IOC type distribution data available for the selected time range.",
+      "totalOccurrences": "{{count}} total occurrences"
+    },
+    "articleTable": {
+      "articlesContaining": "Articles containing",
+      "occurrences": "({{count}} occurrences)",
+      "source": "Source",
+      "title": "Title",
+      "date": "Date",
+      "actions": "Actions",
+      "loadingDetails": "Loading article details...",
+      "errorLoadingArticle": "Error loading article {{articleId}}: {{error}}",
+      "detailsNotAvailable": "Article details not available.",
+      "openArticle": "Open article"
+    }
+  }
+}

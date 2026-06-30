@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -18,20 +19,21 @@ import VendorComments from "./VendorComments";
 import Weaknesses from "./Weaknesses";
 import NoDetails from "../NoDetails";
 
-export default function NistNvdDetails({ result, ioc }) { 
+export default function NistNvdDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
 
-  if (!result) { 
+  if (!result) {
      return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message="Loading NIST NVD details..." />
+        <NoDetails message={t('providers.nistnvd.loading')} />
       </Box>
     );
   }
-  
+
   if (result.error) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`Error fetching NIST NVD details: ${result.message || result.error}`} />
+        <NoDetails message={t('providers.nistnvd.errorFetching', { error: result.message || result.error })} />
       </Box>
     );
   }
@@ -41,9 +43,9 @@ export default function NistNvdDetails({ result, ioc }) {
     : null;
 
   if (!cveDetails) {
-    let message = `No detailed vulnerability information found for CVE ID: ${ioc}.`;
+    let message = t('providers.nistnvd.noInfoFound', { ioc });
     if (result.totalResults === 0) {
-        message = `CVE ID: ${ioc} was not found in the NIST NVD.`;
+        message = t('providers.nistnvd.notFound', { ioc });
     }
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
@@ -67,7 +69,7 @@ export default function NistNvdDetails({ result, ioc }) {
 
 
   return (
-    <Box sx={{ margin: 1, mt:0 }}> 
+    <Box sx={{ margin: 1, mt:0 }}>
       {cveDetails && <Details details={cveDetails} />}
 
       {primaryCvssMetric && (
@@ -82,14 +84,14 @@ export default function NistNvdDetails({ result, ioc }) {
         <Card elevation={0} sx={{ mt: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom component="div">
-              References
+              {t('providers.crowdsec.references')}
             </Typography>
             <List dense disablePadding sx={{mb:1}}>
               <ListItem>
                 <ListItemIcon sx={{minWidth:36, alignItems:'flex-start'}}><InfoIcon color="action" /></ListItemIcon>
-                <ListItemText 
+                <ListItemText
                     primaryTypographyProps={{variant:'caption', color:'text.secondary'}}
-                    primary="References to advisories, solutions, and tools. By selecting these links, you may be leaving NIST webspace. NIST does not necessarily endorse the views expressed or products mentioned on these sites." 
+                    primary={t('providers.nistnvd.referencesDisclaimer')}
                 />
               </ListItem>
             </List>
@@ -106,28 +108,28 @@ export default function NistNvdDetails({ result, ioc }) {
         <Card elevation={0} sx={{ mt: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom component="div">
-              Affected Configurations (CPEs)
+              {t('providers.nistnvd.affectedConfigurations')}
             </Typography>
             <List dense disablePadding sx={{mb:1}}>
               <ListItem>
                 <ListItemIcon sx={{minWidth:36, alignItems:'flex-start'}}><InfoIcon color="action" /></ListItemIcon>
-                <ListItemText 
+                <ListItemText
                     primaryTypographyProps={{variant:'caption', color:'text.secondary'}}
-                    primary="CVE applicability statements conveying which product(s) are associated with the vulnerability." 
+                    primary={t('providers.nistnvd.configurationsDisclaimer')}
                 />
               </ListItem>
             </List>
             {cveDetails.configurations.map((configuration, index) => (
-              <Box key={`config-${configuration.nodes?.[0]?.operator || ''}-${index}`} sx={{mb: 2, mt: index > 0 ? 2 : 0}}> 
+              <Box key={`config-${configuration.nodes?.[0]?.operator || ''}-${index}`} sx={{mb: 2, mt: index > 0 ? 2 : 0}}>
                 <Typography
                   variant="subtitle1"
                   gutterBottom
                   component="div"
                   sx={{ fontWeight:'medium' }}
                 >
-                  Configuration #{index + 1}
-                  {configuration.nodes?.[0]?.operator && ` (Operator: ${configuration.nodes[0].operator})`}
-                  {configuration.negate ? " - Negated" : ""}
+                  {t('providers.nistnvd.configurationNumber', { number: index + 1 })}
+                  {configuration.nodes?.[0]?.operator && ` ${t('providers.nistnvd.operator', { operator: configuration.nodes[0].operator })}`}
+                  {configuration.negate ? ` ${t('providers.nistnvd.negated')}` : ""}
                 </Typography>
                 <ConfTable configuration={configuration} index={index} />
               </Box>

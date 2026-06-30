@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
@@ -9,6 +10,7 @@ import WelcomeScreen from './components/ui/WelcomeScreen';
 import ResultTable from './components/ui/ResultTable';
 
 export default function DomainMonitoring() {
+  const { t } = useTranslation('iocTools');
   const [searchDomain, setSearchDomain] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState(null);
@@ -38,7 +40,7 @@ export default function DomainMonitoring() {
               sx={{ borderRadius: 5, mb: 2 }}
             >
               <AlertTitle>
-                <b>Error</b>
+                <b>{t('domainFinder.errors.title')}</b>
               </AlertTitle>
               {error}
             </Alert>

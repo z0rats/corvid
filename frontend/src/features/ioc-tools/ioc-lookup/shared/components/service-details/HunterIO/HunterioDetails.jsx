@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -23,19 +24,23 @@ import { useTheme } from '@mui/material/styles';
 
 import NoDetails from "../NoDetails";
 
-const DetailListItem = ({ primary, secondary }) => (
+const DetailListItem = ({ primary, secondary, yes, no, notAvailable }) => (
   <ListItem dense disableGutters>
     <ListItemText
       primary={primary}
-      secondary={typeof secondary === 'boolean' ? (secondary ? "Yes" : "No") : (secondary || "N/A")}
+      secondary={typeof secondary === 'boolean' ? (secondary ? yes : no) : (secondary || notAvailable)}
       primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
       secondaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
     />
   </ListItem>
 );
 
-export default function HunterioDetails({ result, ioc }) { 
-  const theme = useTheme(); 
+export default function HunterioDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
+  const yes = t('providers.common.yes');
+  const no = t('providers.common.no');
+  const theme = useTheme();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -45,14 +50,14 @@ export default function HunterioDetails({ result, ioc }) {
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10)); 
+    setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
   if (!result || !result.data) {
-    const message = result && result.error 
-        ? `Error fetching Hunter.io details: ${result.message || result.error}` 
-        : "Hunter.io details are unavailable or the data is incomplete.";
+    const message = result && result.error
+        ? t('providers.hunterio.errorFetching', { error: result.message || result.error })
+        : t('providers.hunterio.unavailable');
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
         <NoDetails message={message} />
@@ -60,11 +65,11 @@ export default function HunterioDetails({ result, ioc }) {
     );
   }
 
-  const hunterData = result.data; 
+  const hunterData = result.data;
   const sources = Array.isArray(hunterData.sources) ? hunterData.sources : [];
 
   return (
-    <Box sx={{ margin: 1, mt:0 }}> 
+    <Box sx={{ margin: 1, mt:0 }}>
       <Grid container spacing={2}>
         {/* Verification Details Card */}
         <Grid size={{ xs: 12, md: 5 }}>
@@ -73,23 +78,23 @@ export default function HunterioDetails({ result, ioc }) {
               <Grid direction="row" container spacing={1} alignItems="center" mb={1}>
                 <InfoIcon color="action" />
                 <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-                  Email Verification Details
+                  {t('providers.hunterio.emailVerificationDetails')}
                 </Typography>
               </Grid>
               <List dense>
-                <DetailListItem primary="Queried Email:" secondary={hunterData.email || ioc} />
-                <DetailListItem primary="Verification Result:" secondary={hunterData.result} />
-                <DetailListItem primary="Status:" secondary={hunterData.status} />
-                <DetailListItem primary="Score:" secondary={hunterData.score} />
-                <DetailListItem primary="Regexp Valid:" secondary={hunterData.regexp} />
-                <DetailListItem primary="Gibberish (Auto-generated):" secondary={hunterData.gibberish} />
-                <DetailListItem primary="Disposable Email:" secondary={hunterData.disposable} />
-                <DetailListItem primary="Webmail (e.g., Gmail):" secondary={hunterData.webmail} />
-                <DetailListItem primary="MX Records Found:" secondary={hunterData.mx_records} />
-                <DetailListItem primary="SMTP Server Connect:" secondary={hunterData.smtp_server} />
-                <DetailListItem primary="SMTP Check (No Bounce):" secondary={hunterData.smtp_check} />
-                <DetailListItem primary="Domain Accepts All:" secondary={hunterData.accept_all} />
-                <DetailListItem primary="SMTP Check Blocked:" secondary={hunterData.block} />
+                <DetailListItem primary={t('providers.hunterio.fields.queriedEmail')} secondary={hunterData.email || ioc} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.verificationResult')} secondary={hunterData.result} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.status')} secondary={hunterData.status} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.score')} secondary={hunterData.score} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.regexpValid')} secondary={hunterData.regexp} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.gibberish')} secondary={hunterData.gibberish} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.disposable')} secondary={hunterData.disposable} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.webmail')} secondary={hunterData.webmail} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.mxRecords')} secondary={hunterData.mx_records} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.smtpServer')} secondary={hunterData.smtp_server} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.smtpCheck')} secondary={hunterData.smtp_check} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.acceptAll')} secondary={hunterData.accept_all} yes={yes} no={no} notAvailable={notAvailable} />
+                <DetailListItem primary={t('providers.hunterio.fields.block')} secondary={hunterData.block} yes={yes} no={no} notAvailable={notAvailable} />
               </List>
             </CardContent>
           </Card>
@@ -102,11 +107,11 @@ export default function HunterioDetails({ result, ioc }) {
               <Grid direction="row" container spacing={1} alignItems="center" mb={1}>
                 <SourceIcon color="action" />
                 <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-                  Sources ({sources.length})
+                  {t('providers.hunterio.sourcesCount', { count: sources.length })}
                 </Typography>
               </Grid>
               <Typography variant="caption" color="text.disabled" display="block" mb={2}>
-                Web pages where this email address was found. Limited to the most recent sources by Hunter.io.
+                {t('providers.hunterio.sourcesHelper')}
               </Typography>
               {sources.length > 0 ? (
                 <TableContainer
@@ -116,17 +121,17 @@ export default function HunterioDetails({ result, ioc }) {
                     border: '1px solid',
                     borderColor: theme.palette.divider,
                     borderRadius: 1,
-                    flexGrow: 1 
+                    flexGrow: 1
                   }}
                 >
                   <Table stickyHeader size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>Domain</TableCell>
-                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>URI</TableCell>
-                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>Extracted</TableCell>
-                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>Last Seen</TableCell>
-                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>Still on Page</TableCell>
+                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>{t('providers.hunterio.columns.domain')}</TableCell>
+                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>{t('providers.hunterio.columns.uri')}</TableCell>
+                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>{t('providers.hunterio.columns.extracted')}</TableCell>
+                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>{t('providers.hunterio.columns.lastSeen')}</TableCell>
+                        <TableCell sx={{ bgcolor: theme.palette.background.paper, fontWeight: "bold" }}>{t('providers.hunterio.columns.stillOnPage')}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -136,23 +141,23 @@ export default function HunterioDetails({ result, ioc }) {
                           page * rowsPerPage + rowsPerPage
                         )
                         .map((source, index) => (
-                          <TableRow hover key={source.uri + index}> 
+                          <TableRow hover key={source.uri + index}>
                             <TableCell sx={{wordBreak:'break-all'}}>{source.domain}</TableCell>
                             <TableCell sx={{wordBreak:'break-all'}}>
                                 <Link href={source.uri} target="_blank" rel="noopener noreferrer" sx={{display:'block', maxWidth: 200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={source.uri}>
                                     {source.uri}
                                 </Link>
                             </TableCell>
-                            <TableCell>{source.extracted_on || 'N/A'}</TableCell>
-                            <TableCell>{source.last_seen_on || 'N/A'}</TableCell>
-                            <TableCell>{source.still_on_page ? "Yes" : "No"}</TableCell>
+                            <TableCell>{source.extracted_on || notAvailable}</TableCell>
+                            <TableCell>{source.last_seen_on || notAvailable}</TableCell>
+                            <TableCell>{source.still_on_page ? yes : no}</TableCell>
                           </TableRow>
                         ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
               ) : (
-                <Typography sx={{textAlign:'center', mt:2}}>No public sources found for this email address.</Typography>
+                <Typography sx={{textAlign:'center', mt:2}}>{t('providers.hunterio.noSourcesFound')}</Typography>
               )}
             </CardContent>
              {sources.length > 0 && (
@@ -164,7 +169,7 @@ export default function HunterioDetails({ result, ioc }) {
                     page={page}
                     onPageChange={handleChangePage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
-                    sx={{ borderTop: `1px solid ${theme.palette.divider}`, flexShrink: 0 }} 
+                    sx={{ borderTop: `1px solid ${theme.palette.divider}`, flexShrink: 0 }}
                 />
              )}
           </Card>

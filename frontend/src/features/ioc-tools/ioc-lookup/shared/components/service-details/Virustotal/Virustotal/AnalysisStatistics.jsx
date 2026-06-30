@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, ResponsiveContainer } from "recharts";
 
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -42,6 +43,8 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 export default function AnalysisStatistics(props) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const theme = useTheme();
   const attributes = props.result?.data?.attributes || {};
   const totalVotes = attributes.total_votes || { malicious: 0, harmless: 0 };
@@ -68,7 +71,7 @@ export default function AnalysisStatistics(props) {
         <Grid size={6}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <DataUsageIcon />
-            <Typography variant="h6" component="h2">Analysis Statistics</Typography>
+            <Typography variant="h6" component="h2">{t('providers.virustotal.analysisStatistics')}</Typography>
           </Box>
           <List>
             <ListItem disablePadding>
@@ -78,7 +81,7 @@ export default function AnalysisStatistics(props) {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary="Harmless"
+                primary={t('providers.virustotal.harmless')}
                 secondary={
                   props.stats.harmless || 0
                 }
@@ -91,7 +94,7 @@ export default function AnalysisStatistics(props) {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary="Malicious"
+                primary={t('providers.virustotal.malicious')}
                 secondary={
                   props.stats.malicious || 0
                 }
@@ -104,7 +107,7 @@ export default function AnalysisStatistics(props) {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary="Suspicious"
+                primary={t('providers.virustotal.suspicious')}
                 secondary={
                   props.stats.suspicious || 0
                 }
@@ -117,7 +120,7 @@ export default function AnalysisStatistics(props) {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary="Undetected"
+                primary={t('providers.virustotal.undetected')}
                 secondary={
                   props.stats.undetected || 0
                 }
@@ -130,7 +133,7 @@ export default function AnalysisStatistics(props) {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary="Timeout"
+                primary={t('providers.virustotal.timeout')}
                 secondary={
                   props.stats.timeout || 0
                 }
@@ -225,7 +228,7 @@ export default function AnalysisStatistics(props) {
         >
           <PeopleIcon />
           <Typography variant="body1" sx={{ ml: 1 }}>
-            Community
+            {t('providers.virustotal.community')}
           </Typography>
         </Box>
       </Divider>
@@ -237,8 +240,8 @@ export default function AnalysisStatistics(props) {
                 <PollOutlinedIcon color="action" />
               </ListItemIcon>
               <ListItemText
-                primary="Reputation"
-                secondary={attributes.reputation ?? 'N/A'}
+                primary={t('providers.virustotal.reputation')}
+                secondary={attributes.reputation ?? notAvailable}
               />
             </ListItem>
             <ListItem alignItems="flex-start">
@@ -246,7 +249,7 @@ export default function AnalysisStatistics(props) {
                 <ThumbDownOutlinedIcon htmlColor="red" />
               </ListItemIcon>
               <ListItemText
-                primary="Voted malicious"
+                primary={t('providers.virustotal.votedMalicious')}
                 secondary={totalVotes.malicious}
               />
             </ListItem>
@@ -260,10 +263,10 @@ export default function AnalysisStatistics(props) {
                 <CalendarMonthOutlinedIcon color="action" />
               </ListItemIcon>
               <ListItemText
-                primary="Last modification"
+                primary={t('providers.virustotal.lastModification')}
                 secondary={attributes.last_modification_date
                   ? `${new Date(attributes.last_modification_date * 1000).toLocaleDateString()} ${new Date(attributes.last_modification_date * 1000).toLocaleTimeString()}`
-                  : 'N/A'}
+                  : notAvailable}
               />
             </ListItem>
             <ListItem alignItems="flex-start">
@@ -271,7 +274,7 @@ export default function AnalysisStatistics(props) {
                 <ThumbUpOutlinedIcon htmlColor={theme.palette.success.main} />
               </ListItemIcon>
               <ListItemText
-                primary="Voted harmless"
+                primary={t('providers.virustotal.votedHarmless')}
                 secondary={totalVotes.harmless}
               />
             </ListItem>

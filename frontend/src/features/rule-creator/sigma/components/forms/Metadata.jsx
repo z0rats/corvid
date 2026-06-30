@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Autocomplete from '@mui/material/Autocomplete';
 import Chip from '@mui/material/Chip';
 import FormControl from '@mui/material/FormControl';
@@ -20,6 +21,7 @@ import licensesData from '../../data/licenses.json';
 const licenses = licensesData.licenses.map((license) => license.licenseId);
 
 export default function Metadata({ metadata, handleMetadataChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [authorInput, setAuthorInput] = useState('');
 
   const handleGenerateUUID = () => {
@@ -53,7 +55,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           fullWidth
-          label="Title"
+          label={t('sigma.metadata.titleLabel')}
           value={metadata.title}
           onChange={(e) => handleMetadataChange((prev) => ({ ...prev, title: e.target.value }))}
           required
@@ -65,7 +67,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
           fullWidth
-          label="ID"
+          label={t('sigma.metadata.idLabel')}
           value={metadata.id}
           onChange={(e) => handleMetadataChange((prev) => ({ ...prev, id: e.target.value }))}
           required
@@ -74,8 +76,8 @@ export default function Metadata({ metadata, handleMetadataChange }) {
           slotProps={{
             input: {
               endAdornment: (
-                <Tooltip title="Generate New UUID">
-                  <IconButton onClick={handleGenerateUUID} size="small" aria-label="Generate UUID">
+                <Tooltip title={t('sigma.metadata.generateUuidTooltip')}>
+                  <IconButton onClick={handleGenerateUUID} size="small" aria-label={t('sigma.metadata.generateUuidAria')}>
                     <EditIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -88,7 +90,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
       <Grid size={12}>
         <TextField
           fullWidth
-          label="Description"
+          label={t('sigma.metadata.descriptionLabel')}
           multiline
           rows={2}
           value={metadata.description}
@@ -102,7 +104,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
         <Stack direction="row" spacing={2} alignItems="center"> 
           <TextField
             fullWidth
-            label="Date"
+            label={t('sigma.metadata.dateLabel')}
             type="date"
             value={metadata.date}
             onChange={(e) => handleMetadataChange((prev) => ({ ...prev, date: e.target.value }))}
@@ -114,7 +116,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
           />
           <TextField
             fullWidth
-            label="Modified Date"
+            label={t('sigma.metadata.modifiedDateLabel')}
             type="date"
             value={metadata.modified}
             onChange={(e) => handleMetadataChange((prev) => ({ ...prev, modified: e.target.value }))}
@@ -130,10 +132,10 @@ export default function Metadata({ metadata, handleMetadataChange }) {
       <Grid size={{ xs: 12, sm: 6 }}>
         <Stack direction="row" spacing={2} alignItems="center"> 
           <FormControl fullWidth size="small">
-            <InputLabel>Level</InputLabel>
+            <InputLabel>{t('sigma.metadata.levelLabel')}</InputLabel>
             <Select
               value={metadata.level}
-              label="Level"
+              label={t('sigma.metadata.levelLabel')}
               onChange={(e) => handleMetadataChange((prev) => ({ ...prev, level: e.target.value }))}
             >
               {SIGMA_CONSTANTS.LEVELS.map((level) => (
@@ -144,10 +146,10 @@ export default function Metadata({ metadata, handleMetadataChange }) {
             </Select>
           </FormControl>
           <FormControl fullWidth size="small">
-            <InputLabel>Status</InputLabel>
+            <InputLabel>{t('sigma.metadata.statusLabel')}</InputLabel>
             <Select
               value={metadata.status}
-              label="Status"
+              label={t('sigma.metadata.statusLabel')}
               onChange={(e) => handleMetadataChange((prev) => ({ ...prev, status: e.target.value }))}
             >
               {SIGMA_CONSTANTS.STATUSES.map((status) => (
@@ -164,7 +166,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
         <Stack direction="row" spacing={2} alignItems="center">
           <TextField
             fullWidth
-            label="Add Author"
+            label={t('sigma.metadata.addAuthorLabel')}
             value={authorInput}
             onChange={(e) => setAuthorInput(e.target.value)}
             onKeyDown={(e) => {
@@ -176,7 +178,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
             slotProps={{
               input: {
                 endAdornment: (
-                  <IconButton onClick={handleAddAuthor} disabled={!authorInput.trim()} size="small" aria-label="Add author">
+                  <IconButton onClick={handleAddAuthor} disabled={!authorInput.trim()} size="small" aria-label={t('sigma.metadata.addAuthorAria')}>
                     <AddCircleIcon fontSize="small" />
                   </IconButton>
                 ),
@@ -196,7 +198,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="License"
+                label={t('sigma.metadata.licenseLabel')}
                 size="small"
                 variant="outlined"
               />

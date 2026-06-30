@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Paper from '@mui/material/Paper';
@@ -8,6 +9,8 @@ import ResultTable from '../../../ioc-lookup/single-lookup/components/ui/ResultT
 import { mapIocTypeToLabel } from '../../utils/iocExportUtils';
 
 export default function AnalysisModal({ open, onClose, ioc, iocType }) {
+  const { t } = useTranslation('iocTools');
+
   if (!ioc) return null;
 
   return (
@@ -27,7 +30,7 @@ export default function AnalysisModal({ open, onClose, ioc, iocType }) {
         <Paper sx={{ p: 2, width: '100%', borderRadius: 5 }}>
           <Stack spacing={2} sx={{ width: '100%' }}>
             <Typography>
-              <b>Analysis for: </b>{ioc}
+              <b>{t('iocExtractor.analysisModal.analysisFor')} </b>{ioc}
             </Typography>
             <ResultTable ioc={ioc} iocType={mapIocTypeToLabel(iocType)} />
           </Stack>

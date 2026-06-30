@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
@@ -15,11 +16,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CodeIcon from '@mui/icons-material/Code';
 
 export default function PcreSection({ pcreList, onPcreChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentPcre, setCurrentPcre] = useState({ pattern: '' });
 
   const handleAdd = () => {
     if (!currentPcre.pattern.trim()) {
-      alert('PCRE pattern is required.');
+      alert(t('snort.pcreSection.requiredAlert'));
       return;
     }
     onPcreChange([...pcreList, { id: crypto.randomUUID(), pattern: currentPcre.pattern.trim() }]);
@@ -33,13 +35,13 @@ export default function PcreSection({ pcreList, onPcreChange }) {
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant="subtitle2" gutterBottom>
-        PCRE (Perl Compatible Regular Expressions)
+        {t('snort.pcreSection.header')}
       </Typography>
       <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, sm: 10 }}>
           <TextField
             fullWidth
-            label="PCRE Pattern"
+            label={t('snort.pcreSection.patternLabel')}
             value={currentPcre.pattern}
             onChange={(e) => setCurrentPcre(prev => ({ ...prev, pattern: e.target.value }))}
             size="small"
@@ -56,7 +58,7 @@ export default function PcreSection({ pcreList, onPcreChange }) {
             size="small"
             fullWidth
           >
-            Add
+            {t('common.actions.add')}
           </Button>
         </Grid>
       </Grid>
@@ -67,8 +69,8 @@ export default function PcreSection({ pcreList, onPcreChange }) {
             <ListItem
               key={pcre.id}
               secondaryAction={
-                <Tooltip title="Delete PCRE">
-                  <IconButton edge="end" onClick={() => handleDelete(pcre.id)} size="small" aria-label="Delete PCRE">
+                <Tooltip title={t('snort.pcreSection.deleteTooltip')}>
+                  <IconButton edge="end" onClick={() => handleDelete(pcre.id)} size="small" aria-label={t('snort.pcreSection.deleteAria')}>
                     <DeleteIcon fontSize="small" color="error" />
                   </IconButton>
                 </Tooltip>

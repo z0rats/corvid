@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -101,6 +102,7 @@ function ChipList({ items }) {
 }
 
 function TTPItem({ ttp, isLast }) {
+  const { t } = useTranslation('newsfeed');
   const [open, setOpen] = useState(false);
   const hasDetails = ttp.procedure_example || ttp.detection_opportunities?.length > 0;
 
@@ -168,7 +170,7 @@ function TTPItem({ ttp, isLast }) {
             color="text.disabled"
             sx={{ fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", display: "block", mb: 0.5 }}
           >
-            Observed Behavior
+            {t('feed.mitre.observedBehavior')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, fontSize: "0.85rem" }}>
             {ttp.behavior}
@@ -185,7 +187,7 @@ function TTPItem({ ttp, isLast }) {
                 color="text.disabled"
                 sx={{ fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", display: "block", mb: 0.5 }}
               >
-                Procedure Example
+                {t('feed.mitre.procedureExample')}
               </Typography>
               <Box
                 sx={{
@@ -213,7 +215,7 @@ function TTPItem({ ttp, isLast }) {
                 color="text.disabled"
                 sx={{ fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", display: "block", mb: 0.75 }}
               >
-                Detection Opportunities
+                {t('feed.mitre.detectionOpportunities')}
               </Typography>
               <Stack spacing={0.75}>
                 {ttp.detection_opportunities.map((d, i) => (
@@ -234,6 +236,7 @@ function TTPItem({ ttp, isLast }) {
 }
 
 export default function MitreAttackSection({ item }) {
+  const { t } = useTranslation('newsfeed');
   const data = parseMitreData(item.mitre_attack);
 
   if (!data || !data.has_mitre_data) return null;
@@ -272,29 +275,29 @@ export default function MitreAttackSection({ item }) {
         <Stack direction="row" alignItems="center" spacing={1}>
           <ShieldIcon />
           <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-            MITRE ATT&CK
+            {t('feed.mitre.title')}
           </Typography>
         </Stack>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 3, py: 2.5 }}>
         <Stack spacing={2.5} divider={<Box sx={{ display: "flex", justifyContent: "center" }}><Box sx={{ height: "1px", width: "85%", background: (theme) => `linear-gradient(to right, transparent, ${theme.palette.divider} 15%, ${theme.palette.divider} 85%, transparent)` }} /></Box>}>
           {hasActors && (
-            <Section label="Actors">
+            <Section label={t('feed.mitre.actors')}>
               <ChipList items={actorItems} />
             </Section>
           )}
           {hasSoftware && (
-            <Section label="Software">
+            <Section label={t('feed.mitre.software')}>
               <ChipList items={softwareItems} />
             </Section>
           )}
           {hasTargets && (
-            <Section label="Targets">
+            <Section label={t('feed.mitre.targets')}>
               <ChipList items={targetItems} />
             </Section>
           )}
           {hasTTPs && (
-            <Section label="Techniques">
+            <Section label={t('feed.mitre.techniques')}>
               <Stack spacing={0.5}>
                 {[...data.ttps]
                   .sort((a, b) => a.tactic.id.localeCompare(b.tactic.id) || a.technique.id.localeCompare(b.technique.id))

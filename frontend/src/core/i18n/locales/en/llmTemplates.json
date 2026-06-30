@@ -1,0 +1,167 @@
+{
+  "createForm": {
+    "basicInfo": "Basic Information",
+    "engineerTooltip": "Generate template based on title and description",
+    "optimizePromptAria": "Optimize prompt",
+    "titleLabel": "Title",
+    "titleRequiredHelper": "Enter a concise template title (required)",
+    "titleHelper": "Unique name for your template.",
+    "modelLabel": "LLM Model",
+    "groupLabel": "Group",
+    "descriptionLabel": "Description",
+    "descriptionHelper": "Summarize what this template is for (optional).",
+    "promptConfig": "Prompt Configuration",
+    "agentRoleLabel": "AI Agent Role",
+    "agentRoleRequiredHelper": "Define the AI persona (required)",
+    "agentRoleHelper": "E.g., Customer support expert.",
+    "agentTaskLabel": "AI Agent Task",
+    "agentTaskRequiredHelper": "Describe the task (required)",
+    "agentTaskHelper": "E.g., Generate a friendly response.",
+    "payloadFieldsSection": "Payload Fields",
+    "payloadFieldsHelper": "Set user-input variables and mark them as required if needed.",
+    "staticContextsSection": "Static Contexts",
+    "staticContextsHelper": "Include fixed content like guidelines or reference info.",
+    "webContextsSection": "Web Contexts",
+    "webContextsHelper": "Add websites whose content will be fetched and included when the template is executed.",
+    "previewExampleSection": "Preview Example",
+    "previewExampleTopHelper": "Provide an example to illustrate how input and output could look like when this template is used.",
+    "previewExampleBottomHelper": "Provide example input & output to guide users.",
+    "previewButton": "Preview",
+    "createButton": "Create Template",
+    "creatingButton": "Creating…",
+    "promptEngineeredSuccess": "Prompt engineered!",
+    "templateCreatedSuccess": "Template created!"
+  },
+  "editDialog": {
+    "title": "Edit Template",
+    "basicInfo": "Basic Information",
+    "titleLabel": "Title",
+    "modelLabel": "LLM Model",
+    "descriptionLabel": "Description",
+    "groupLabel": "Group",
+    "aiAgentConfig": "AI Agent Configuration",
+    "agentRoleLabel": "AI Agent Role",
+    "agentTaskLabel": "AI Agent Task",
+    "exampleSection": "Example (Markdown)",
+    "deleteButton": "Delete",
+    "cancelButton": "Cancel",
+    "saveButton": "Save Changes",
+    "deleteTemplateTitle": "Delete Template",
+    "deleteTemplateMessage": "Are you sure you want to delete this template? This action cannot be undone.",
+    "saveFailedAlert": "Failed to save template"
+  },
+  "addCategoryDialog": {
+    "title": "New Group",
+    "nameLabel": "Group name",
+    "cancelButton": "Cancel",
+    "createButton": "Create"
+  },
+  "renameCategoryDialog": {
+    "title": "Rename Group",
+    "nameLabel": "Group name",
+    "cancelButton": "Cancel",
+    "saveButton": "Save"
+  },
+  "deleteCategoryDialog": {
+    "title": "Delete Group",
+    "confirmMessagePrefix": "Are you sure you want to delete the group",
+    "containsTemplates_one": " It contains {{count}} template.",
+    "containsTemplates_other": " It contains {{count}} templates.",
+    "moveToDefault": "Move templates to Default group",
+    "deleteTemplatesInGroup": "Delete all templates in this group",
+    "cancelButton": "Cancel",
+    "deleteButton": "Delete"
+  },
+  "exampleDialog": {
+    "temperatureLabel": "Temperature: {{value}}",
+    "agentRole": "Agent Role",
+    "agentTask": "Agent Task",
+    "example": "Example",
+    "noExample": "No example provided",
+    "closeButton": "Close"
+  },
+  "categorySection": {
+    "groupOptionsTooltip": "Group options",
+    "renameMenuItem": "Rename",
+    "deleteMenuItem": "Delete"
+  },
+  "templateCard": {
+    "viewExampleTooltip": "View Example",
+    "viewExampleAria": "View example",
+    "editTemplateTooltip": "Edit Template",
+    "editTemplateAria": "Edit template",
+    "deleteTemplateTooltip": "Delete Template",
+    "deleteTemplateAria": "Delete template"
+  },
+  "detailPanel": {
+    "selectPrompt": "Select a template to get started",
+    "clearSearch": "Clear search",
+    "removeFavorite": "Remove from Favorites",
+    "addFavorite": "Add to Favorites",
+    "toggleFavoriteAria": "Toggle favorite",
+    "viewExampleTooltip": "View Example",
+    "viewExampleAria": "View example",
+    "editTemplateTooltip": "Edit Template",
+    "editTemplateAria": "Edit template",
+    "inputLabel": "Input",
+    "executeButton": "Execute Template",
+    "executingButton": "Executing…"
+  },
+  "executionResult": {
+    "resultHeading": "Result",
+    "copyResultTooltip": "Copy result",
+    "copyResultAria": "Copy result"
+  },
+  "payloadFields": {
+    "helperText": "Payload fields are fields the user pastes / enters the data to that will be processed by the template.",
+    "addFieldButton": "Add Field",
+    "emptyState": "No payload fields defined.",
+    "nameLabel": "Field Name",
+    "nameRequiredHelper": "Required",
+    "descriptionLabel": "Description",
+    "deleteFieldAria": "Delete field"
+  },
+  "staticContexts": {
+    "helperText": "Static contexts allow you to add static data that will be included in the prompt.",
+    "addContextButton": "Add Context",
+    "emptyState": "No static contexts defined.",
+    "nameLabel": "Context Name",
+    "descriptionLabel": "Description",
+    "contentLabel": "Content",
+    "deleteContextAria": "Delete context"
+  },
+  "webContexts": {
+    "helperText": "Web contexts allow you to fetch content from websites when the template is executed. The content will be automatically extracted and included in the prompt.",
+    "addWebsiteButton": "Add Website",
+    "emptyState": "No web contexts defined.",
+    "nameLabel": "Context Name",
+    "nameRequiredHelper": "Required",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional description of what this website provides",
+    "urlLabel": "Website URL",
+    "urlRequiredHelper": "Required - Enter a valid HTTP/HTTPS URL",
+    "urlHelper": "The website content will be fetched when the template is executed",
+    "urlPlaceholder": "https://example.com/page",
+    "deleteContextAria": "Delete context"
+  },
+  "sidebar": {
+    "searchPlaceholder": "Search templates ({{count}})...",
+    "noSearchResults": "No templates match your search",
+    "addGroup": "Add Group"
+  },
+  "templatesView": {
+    "retryButton": "Retry",
+    "noTemplatesAvailable": "No templates available",
+    "templateExecutedSuccess": "Template executed successfully!",
+    "templateDeletedSuccess": "Template deleted successfully!",
+    "resultCopiedSuccess": "Result copied to clipboard!",
+    "copyFailedError": "Failed to copy to clipboard",
+    "templateUpdatedSuccess": "Template updated successfully!",
+    "groupCreatedSuccess": "Group created!",
+    "groupRenamedSuccess": "Group renamed!",
+    "groupDeletedSuccess": "Group deleted!",
+    "orderUpdateFailedError": "Failed to update order",
+    "deleteTemplateTitle": "Delete Template",
+    "deleteTemplateMessage": "Are you sure you want to delete this template? This action cannot be undone."
+  }
+}

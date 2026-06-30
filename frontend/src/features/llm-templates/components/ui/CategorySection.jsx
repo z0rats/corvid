@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
@@ -32,6 +33,7 @@ export default function CategorySection({
   onDeleteCategory,
   dragHandleProps,
 }) {
+  const { t } = useTranslation('llmTemplates');
   const [menuAnchor, setMenuAnchor] = useState(null);
 
   const handleMenuOpen = (e) => {
@@ -80,7 +82,7 @@ export default function CategorySection({
           {templates.length}
         </Typography>
         {!category.is_system && (
-          <Tooltip title="Group options" arrow>
+          <Tooltip title={t('categorySection.groupOptionsTooltip')} arrow>
             <IconButton size="small" onClick={handleMenuOpen} sx={{ ml: 0.5 }}>
               <MoreVertIcon fontSize="small" />
             </IconButton>
@@ -92,11 +94,11 @@ export default function CategorySection({
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
           <MenuItem onClick={handleRename}>
             <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-            <ListItemText>Rename</ListItemText>
+            <ListItemText>{t('categorySection.renameMenuItem')}</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleDelete}>
             <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
-            <ListItemText sx={{ color: 'error.main' }}>Delete</ListItemText>
+            <ListItemText sx={{ color: 'error.main' }}>{t('categorySection.deleteMenuItem')}</ListItemText>
           </MenuItem>
         </Menu>
       )}

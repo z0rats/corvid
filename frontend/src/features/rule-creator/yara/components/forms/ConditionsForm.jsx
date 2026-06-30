@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -24,8 +25,9 @@ import { FILE_TYPES, CONDITION_TYPES } from '../../constants/yaraConstants';
 export default function ConditionsForm({ 
   conditions, 
   onConditionsChange, 
-  onStringMatchChange 
+  onStringMatchChange
 }) {
+  const { t } = useTranslation('ruleCreator');
   const handleStringMatchChange = (event) => {
     const value = event.target.value;
     onStringMatchChange(value);
@@ -56,47 +58,47 @@ export default function ConditionsForm({
       >
         <Box display="flex" alignItems="center">
           <SecurityIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Conditions</Typography>
+          <Typography variant="subtitle2">{t('yara.conditionsForm.header')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, sm: 4 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>String Match</InputLabel>
+              <InputLabel>{t('yara.conditionsForm.stringMatchLabel')}</InputLabel>
               <Select
                 value={getStringMatchValue()}
-                label="String Match"
+                label={t('yara.conditionsForm.stringMatchLabel')}
                 onChange={handleStringMatchChange}
               >
-                <MenuItem value={CONDITION_TYPES.NONE}>None</MenuItem>
-                <MenuItem value={CONDITION_TYPES.ALL}>All of them</MenuItem>
-                <MenuItem value={CONDITION_TYPES.ANY}>Any of them</MenuItem>
+                <MenuItem value={CONDITION_TYPES.NONE}>{t('yara.conditionsForm.stringMatchNone')}</MenuItem>
+                <MenuItem value={CONDITION_TYPES.ALL}>{t('yara.conditionsForm.stringMatchAll')}</MenuItem>
+                <MenuItem value={CONDITION_TYPES.ANY}>{t('yara.conditionsForm.stringMatchAny')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           <Grid size={{ xs: 6, sm: 4 }}>
             <TextField
               fullWidth
-              label="File Size (KB)"
+              label={t('yara.conditionsForm.fileSizeLabel')}
               type="number"
               value={conditions.filesize}
               onChange={handleFieldChange('filesize')}
               size="small"
               variant="outlined"
               slotProps={{ htmlInput: { min: 0 } }}
-              placeholder="e.g., 1024"
+              placeholder={t('yara.conditionsForm.fileSizePlaceholder')}
             />
           </Grid>
           <Grid size={{ xs: 6, sm: 4 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>File Type</InputLabel>
+              <InputLabel>{t('yara.conditionsForm.fileTypeLabel')}</InputLabel>
               <Select
                 value={conditions.filetype}
-                label="File Type"
+                label={t('yara.conditionsForm.fileTypeLabel')}
                 onChange={handleFieldChange('filetype')}
               >
-                <MenuItem value="">None</MenuItem>
+                <MenuItem value="">{t('yara.conditionsForm.fileTypeNone')}</MenuItem>
                 {FILE_TYPES.map((type) => (
                   <MenuItem key={type} value={type}>
                     {type.toUpperCase()}
@@ -110,7 +112,7 @@ export default function ConditionsForm({
         {/* Help text */}
         <Box sx={{ mt: 1 }}>
           <Typography variant="caption" color="text.secondary">
-            Conditions define when the rule should match. String match conditions require at least one string to be defined.
+            {t('yara.conditionsForm.helpText')}
           </Typography>
         </Box>
       </AccordionDetails>

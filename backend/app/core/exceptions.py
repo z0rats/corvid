@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -17,14 +17,33 @@ class ApplicationError(Exception):
     Raise this in service/route code instead of bare ValueError or HTTPException
     so that errors are logged and return a consistent JSON response.
     The registered handler logs the error and maps it to the given status code.
+
+    `error_code` is an optional stable machine-readable identifier (e.g.
+    "API_KEY_NOT_FOUND") that the frontend can map to a localized message,
+    independently of the (English, human-readable) `detail` text.
     """
 
-    def __init__(self, message: str, status_code: int = 400) -> None:
+    def __init__(self, message: str, status_code: int = 400, error_code: str | None = None) -> None:
         if not (400 <= status_code <= 599):
             raise ValueError(f"ApplicationError status_code must be 4xx or 5xx, got {status_code}")
         self.status_code = status_code
         self.detail = message
+        self.error_code = error_code
         super().__init__(message)
+
+
+class AppHTTPException(HTTPException):
+    """HTTPException variant that carries a stable `error_code`.
+
+    Subclasses FastAPI's HTTPException (not just Starlette's) so that existing
+    `except HTTPException:` call sites continue to catch it as expected.
+    Use this instead of FastAPI's plain HTTPException when the frontend needs
+    to localize the error message rather than display the English `detail` as-is.
+    """
+
+    def __init__(self, status_code: int, detail: str, error_code: str) -> None:
+        super().__init__(status_code=status_code, detail=detail)
+        self.error_code = error_code
 
 
 def _sanitize_validation_errors(errors: list[dict]) -> list[dict]:
@@ -48,9 +67,13 @@ def _sanitize_validation_errors(errors: list[dict]) -> list[dict]:
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     """Handle HTTP exceptions with consistent JSON format"""
+    content = {"detail": exc.detail}
+    error_code = getattr(exc, "error_code", None)
+    if error_code:
+        content["error_code"] = error_code
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail},
+        content=content,
     )
 
 
@@ -69,9 +92,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def application_error_handler(request: Request, exc: ApplicationError) -> JSONResponse:
     """Handle intentional business logic errors"""
     logger.warning("Application error on %s %s: %s", request.method, request.url.path, exc.detail)
+    content = {"detail": exc.detail}
+    if exc.error_code:
+        content["error_code"] = exc.error_code
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail},
+        content=content,
     )
 
 

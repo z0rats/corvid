@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Grow from '@mui/material/Grow';
 import Paper from '@mui/material/Paper';
@@ -13,6 +14,7 @@ import NoApiKeysAlert from './NoApiKeysAlert';
 import ServiceFetcherRow from './ServiceFetcherRow';
 
 function ResultTable({ ioc, iocType, filteredServices: externallyFilteredServices }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const servicesToRender = useServiceFilter(iocType, externallyFilteredServices);
   const headerBgColor = theme.palette.mode === 'dark' ? theme.palette.background.paper : 'inherit';
@@ -31,10 +33,10 @@ function ResultTable({ ioc, iocType, filteredServices: externallyFilteredService
               <TableRow sx={{ backgroundColor: `${headerBgColor} !important` }}>
                 <TableCell sx={{ width: '5%' }} />
                 <TableCell sx={{ fontWeight: "bold", width: '25%' }}>
-                  Service
+                  {t('singleLookup.resultTable.columns.service')}
                 </TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>
-                  Result
+                  {t('singleLookup.resultTable.columns.result')}
                 </TableCell>
                 <TableCell sx={{ width: '5%' }} />
               </TableRow>

@@ -1,50 +1,49 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 
 export default function ExtractorWelcomeScreen() {
+  const { t } = useTranslation('iocTools');
+
   const features = [
     {
-      title: 'Automated Extraction',
-      description: 'Extracts IOCs from unstructured files using regular expressions'
+      title: t('iocExtractor.welcomeScreen.features.automatedExtraction.title'),
+      description: t('iocExtractor.welcomeScreen.features.automatedExtraction.description')
     },
     {
-      title: 'Duplicate Removal',
-      description: 'Automatically removes duplicate IOCs from the results'
+      title: t('iocExtractor.welcomeScreen.features.duplicateRemoval.title'),
+      description: t('iocExtractor.welcomeScreen.features.duplicateRemoval.description')
     },
     {
-      title: 'Simple Interface',
-      description: 'Drop files and get results with no configuration needed'
+      title: t('iocExtractor.welcomeScreen.features.simpleInterface.title'),
+      description: t('iocExtractor.welcomeScreen.features.simpleInterface.description')
     },
     {
-      title: 'One-Click Analysis',
-      description: 'Analyze each detected IOC with a single click'
+      title: t('iocExtractor.welcomeScreen.features.oneClickAnalysis.title'),
+      description: t('iocExtractor.welcomeScreen.features.oneClickAnalysis.description')
     }
   ];
 
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
-        IOC Extractor
+        {t('iocExtractor.welcomeScreen.title')}
       </Typography>
-      
+
       <Box sx={{ mb: 4 }}>
         <Typography paragraph>
-          IOC Extractor is a module that allows you to extract and organize indicators of compromise (IOCs)
-          from unstructured files using regular expressions (Regex). The module automatically removes any duplicates,
-          so you don't have to worry about sorting through the same IOCs multiple times.
+          {t('iocExtractor.welcomeScreen.intro')}
         </Typography>
         <Typography>
-          Just drop your file containing the IOCs into the tool and let it do the work for you. 
-          With a single click, you can analyze every detected IOC,
-          saving you the time and effort of building Excel sheets to extract IOCs from files manually.
+          {t('iocExtractor.welcomeScreen.usage')}
         </Typography>
       </Box>
 
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Key Features
+        {t('iocExtractor.welcomeScreen.keyFeatures')}
       </Typography>
 
       <Grid container spacing={1}>

@@ -23,140 +23,140 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import NetworkCheckIcon from "@mui/icons-material/NetworkCheck";
 
-export const mainMenuItems = [
+const MAIN_MENU_ITEMS_CONFIG = [
   {
-    name: "Newsfeed",
+    i18nKey: "nav.newsfeed",
     icon: <NewspaperIcon />,
     path: "/newsfeed",
     moduleId: "newsfeed",
   },
   {
-    name: "IOC Tools",
+    i18nKey: "nav.iocTools",
     icon: <SearchIcon />,
     path: "/ioc-tools",
     moduleId: "ioc_tools",
   },
   {
-    name: "Email Analyzer",
+    i18nKey: "nav.emailAnalyzer",
     icon: <MailIcon />,
     path: "/email-analyzer",
     moduleId: "email_analyzer",
   },
   {
-    name: "Image Tools",
+    i18nKey: "nav.imageTools",
     icon: <ImageIcon />,
     path: "/image-tools",
     moduleId: "image_tools",
   },
   {
-    name: "AI Templates",
+    i18nKey: "nav.aiTemplates",
     icon: <PsychologyIcon />,
     path: "/ai-templates",
     moduleId: "llm_templates",
   },
   {
-    name: "CVSS Calculator",
+    i18nKey: "nav.cvssCalculator",
     icon: <CalculateIcon />,
     path: "/cvss-calculator",
     moduleId: "cvss_calculator",
   },
   {
-    name: "Detection Rules",
+    i18nKey: "nav.detectionRules",
     icon: <RuleIcon />,
     path: "/rules",
     moduleId: "rule_creator",
   },
 ];
 
-export const aiTemplatesTabs = [
+const AI_TEMPLATES_TABS_CONFIG = [
   {
-    label: "Templates",
+    i18nKey: "nav.aiTemplatesTabs.templates",
     path: "/ai-templates/templates",
     icon: <ViewListIcon />,
   },
   {
-    label: "Create Template",
+    i18nKey: "nav.aiTemplatesTabs.createTemplate",
     path: "/ai-templates/create-template",
     icon: <CreateIcon />,
   },
 ];
 
-export const iocToolsTabs = [
+const IOC_TOOLS_TABS_CONFIG = [
   {
-    label: "Single Lookup",
+    i18nKey: "nav.iocToolsTabs.singleLookup",
     path: "/ioc-tools/lookup",
     icon: <SearchIcon />,
   },
   {
-    label: "Bulk Lookup",
+    i18nKey: "nav.iocToolsTabs.bulkLookup",
     path: "/ioc-tools/bulk",
     icon: <ManageSearchIcon />,
   },
   {
-    label: "Domain Finder",
+    i18nKey: "nav.iocToolsTabs.domainFinder",
     path: "/ioc-tools/domain-finder",
     icon: <TravelExploreIcon />,
   },
   {
-    label: "Extractor",
+    i18nKey: "nav.iocToolsTabs.extractor",
     path: "/ioc-tools/extractor",
     icon: <DocumentScannerIcon />,
   },
   {
-    label: "Defang/Fang",
+    i18nKey: "nav.iocToolsTabs.defangFang",
     path: "/ioc-tools/defanger",
     icon: <HealthAndSafetyIcon />,
   },
 ];
 
-export const newsfeedTabs = [
+const NEWSFEED_TABS_CONFIG = [
   {
-    label: "Feed",
+    i18nKey: "nav.newsfeedTabs.feed",
     path: "/newsfeed/feed",
     icon: <RssFeedIcon />,
   },
   {
-    label: "Trends",
+    i18nKey: "nav.newsfeedTabs.trends",
     path: "/newsfeed/trends",
     icon: <TrendingUpIcon />,
   },
   {
-    label: "Headline View",
+    i18nKey: "nav.newsfeedTabs.headlineView",
     path: "/newsfeed/headlines",
     icon: <ViewHeadlineIcon />,
   },
   {
-    label: "News Report",
+    i18nKey: "nav.newsfeedTabs.newsReport",
     path: "/newsfeed/report",
     icon: <ArticleIcon />,
   },
   {
-    label: "Settings",
+    i18nKey: "nav.newsfeedTabs.settings",
     path: "/newsfeed/settings",
     icon: <SettingsIcon />,
     children: [
       {
-        label: "General",
+        i18nKey: "nav.newsfeedTabs.settingsGeneral",
         path: "/newsfeed/settings",
         icon: <SettingsIcon />,
       },
       {
-        label: "Manage Feeds",
+        i18nKey: "nav.newsfeedTabs.manageFeeds",
         path: "/newsfeed/settings/feeds",
         icon: <SettingsIcon />,
       },
       {
-        label: "Keyword Matching",
+        i18nKey: "nav.newsfeedTabs.keywordMatching",
         path: "/newsfeed/settings/keywords",
         icon: <SettingsIcon />,
       },
       {
-        label: "CTI Settings",
+        i18nKey: "nav.newsfeedTabs.ctiSettings",
         path: "/newsfeed/settings/cti",
         icon: <SettingsIcon />,
       },
       {
-        label: "Trends",
+        i18nKey: "nav.newsfeedTabs.trends",
         path: "/newsfeed/settings/trends",
         icon: <SettingsIcon />,
       },
@@ -164,20 +164,35 @@ export const newsfeedTabs = [
   },
 ];
 
-export const settingsTabs = [
-  { label: "API Keys", path: "/settings/apikeys", icon: <KeyIcon /> },
-  { label: "AI Settings", path: "/settings/ai-settings", icon: <PsychologyAltIcon /> },
-  { label: "Modules", path: "/settings/modules", icon: <ViewModuleIcon /> },
-  { label: "About", path: "/settings/about", icon: <InfoIcon /> },
+const SETTINGS_TABS_CONFIG = [
+  { i18nKey: "nav.settingsTabs.apiKeys", path: "/settings/apikeys", icon: <KeyIcon /> },
+  { i18nKey: "nav.settingsTabs.aiSettings", path: "/settings/ai-settings", icon: <PsychologyAltIcon /> },
+  { i18nKey: "nav.settingsTabs.modules", path: "/settings/modules", icon: <ViewModuleIcon /> },
+  { i18nKey: "nav.settingsTabs.about", path: "/settings/about", icon: <InfoIcon /> },
 ];
 
-export const cvssTabs = [
-  { label: "CVSS 3.1", path: "/cvss-calculator/cvss-3.1", icon: <CalculateIcon /> },
-  { label: "CVSS 4.0", path: "/cvss-calculator/cvss-4.0", icon: <CalculateIcon /> },
+const CVSS_TABS_CONFIG = [
+  { i18nKey: "nav.cvssTabs.cvss31", path: "/cvss-calculator/cvss-3.1", icon: <CalculateIcon /> },
+  { i18nKey: "nav.cvssTabs.cvss40", path: "/cvss-calculator/cvss-4.0", icon: <CalculateIcon /> },
 ];
 
-export const rulesTabs = [
-  { label: "Sigma", path: "/rules/sigma", icon: <ManageSearchIcon /> },
-  { label: "Yara", path: "/rules/yara", icon: <FindInPageIcon /> },
-  { label: "Snort", path: "/rules/snort", icon: <NetworkCheckIcon /> },
+const RULES_TABS_CONFIG = [
+  { i18nKey: "nav.rulesTabs.sigma", path: "/rules/sigma", icon: <ManageSearchIcon /> },
+  { i18nKey: "nav.rulesTabs.yara", path: "/rules/yara", icon: <FindInPageIcon /> },
+  { i18nKey: "nav.rulesTabs.snort", path: "/rules/snort", icon: <NetworkCheckIcon /> },
 ];
+
+const translateItem = (t, { i18nKey, children, ...rest }) => ({
+  ...rest,
+  label: t(i18nKey),
+  name: t(i18nKey),
+  ...(children ? { children: children.map(child => translateItem(t, child)) } : {}),
+});
+
+export const getMainMenuItems = (t) => MAIN_MENU_ITEMS_CONFIG.map(item => translateItem(t, item));
+export const getAiTemplatesTabs = (t) => AI_TEMPLATES_TABS_CONFIG.map(item => translateItem(t, item));
+export const getIocToolsTabs = (t) => IOC_TOOLS_TABS_CONFIG.map(item => translateItem(t, item));
+export const getNewsfeedTabs = (t) => NEWSFEED_TABS_CONFIG.map(item => translateItem(t, item));
+export const getSettingsTabs = (t) => SETTINGS_TABS_CONFIG.map(item => translateItem(t, item));
+export const getCvssTabs = (t) => CVSS_TABS_CONFIG.map(item => translateItem(t, item));
+export const getRulesTabs = (t) => RULES_TABS_CONFIG.map(item => translateItem(t, item));

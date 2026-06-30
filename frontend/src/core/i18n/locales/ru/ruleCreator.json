@@ -1,0 +1,288 @@
+{
+  "common": {
+    "ruleTypeLabels": {
+      "sigma": "Sigma",
+      "yara": "YARA",
+      "snort": "Snort"
+    },
+    "actions": {
+      "previewRule": "Предпросмотр правила",
+      "exportRule": "Экспорт правила {{ruleType}}",
+      "reset": "Сбросить",
+      "close": "Закрыть",
+      "copyToClipboard": "Скопировать в буфер",
+      "copyToClipboardAria": "Скопировать в буфер обмена",
+      "add": "Добавить"
+    },
+    "preview": {
+      "defaultTitle": "Предпросмотр правила",
+      "sigmaTitle": "Предпросмотр правила Sigma",
+      "yaraTitle": "Предпросмотр правила YARA",
+      "snortTitle": "Предпросмотр правила Snort"
+    },
+    "none": "Нет"
+  },
+  "sigma": {
+    "title": "Конструктор правил Sigma",
+    "sections": {
+      "metadata": "Метаданные правила",
+      "references": "Источники",
+      "tags": "Теги",
+      "logSource": "Источник логов",
+      "detection": "Обнаружение",
+      "fields": "Поля",
+      "falsePositives": "Ложные срабатывания"
+    },
+    "metadata": {
+      "titleLabel": "Название",
+      "idLabel": "ID",
+      "generateUuidTooltip": "Сгенерировать новый UUID",
+      "generateUuidAria": "Сгенерировать UUID",
+      "descriptionLabel": "Описание",
+      "dateLabel": "Дата",
+      "modifiedDateLabel": "Дата изменения",
+      "levelLabel": "Уровень",
+      "statusLabel": "Статус",
+      "addAuthorLabel": "Добавить автора",
+      "addAuthorAria": "Добавить автора",
+      "licenseLabel": "Лицензия"
+    },
+    "references": {
+      "helpText": "Добавьте ссылки на веб-страницы или документы, предоставляющие дополнительный контекст об обнаруженной угрозе.",
+      "guidanceLinksOnly": "Используйте только ссылки на веб-страницы или документы.",
+      "guidanceNoRawContent": "Не добавляйте ссылки на EVTX-файлы, PCAP и другой необработанный контент.",
+      "guidanceNoMitreLinks": "Не включайте ссылки на техники MITRE ATT&CK (для этого используйте теги).",
+      "examplesCaption": "Примеры: записи в блогах, твиты, страницы проектов, руководства, предупреждения, обсуждения.",
+      "label": "Источник",
+      "placeholder": "Введите ссылку и нажмите Enter или кнопку добавления",
+      "addTooltip": "Добавить источник",
+      "addAria": "Добавить источник",
+      "deleteAria": "Удалить источник"
+    },
+    "tags": {
+      "helpText": "Используйте теги из MITRE ATT&CK, CAR и теги для номеров CVE.",
+      "examplesCaption": "Примеры тегов: attack.credential_access, attack.t1003.002, car.2013-07-001, cve.2020.10189",
+      "formatRules": "Используйте только строчные буквы. Используйте . или - как разделитель в именах тегов. Пробелы заменяйте символом подчёркивания _.",
+      "addLabel": "Добавить тег",
+      "addPlaceholder": "Введите тег и нажмите Enter или кнопку добавления",
+      "addAria": "Добавить тег"
+    },
+    "logSource": {
+      "helpText": "Приложение и тип, необходимые для обнаружения. Состоит из трёх атрибутов, которые автоматически обрабатываются конверторами, и произвольного количества необязательных элементов. Рекомендуется использовать значение \"definition\" в случаях, когда требуется дополнительное объяснение.",
+      "productLabel": "Продукт",
+      "categoryLabel": "Категория",
+      "serviceLabel": "Сервис",
+      "definitionLabel": "Определение",
+      "selectOrTypePlaceholder": "Выберите или введите значение",
+      "productHelper": "например: linux, windows, cisco",
+      "categoryHelper": "например: process_creation",
+      "serviceHelper": "например: sysmon, ldapd, dhcp",
+      "definitionPlaceholder": "Введите определение",
+      "definitionHelper": "Опишите источник логов, включая уровень детализации или конфигурацию."
+    },
+    "detection": {
+      "helpNoSingleList": "Если список состоит из одного элемента, не используйте список.",
+      "helpLowercase": "Используйте только идентификаторы в нижнем регистре.",
+      "helpComments": "При желании добавляйте комментарии к строкам (используйте 2 пробела для отделения выражения от комментария, например - 'cmd.exe' # command line).",
+      "helpNoRegex": "Не используйте регулярные выражения без крайней необходимости (например, вместо CommandLine|re: '\\\\payload.*\\skeyset' используйте CommandLine|contains|all со значениями \\payload и keyset).",
+      "helpFieldNames": "В новых источниках используйте имена полей в том виде, в каком они появляются в источнике логов, удаляя пробелы и сохраняя дефисы (например, SAM User Account → SAMUserAccount).",
+      "helpNoSiemLogic": "Не используйте логику, специфичную для SIEM, в условиях.",
+      "keywordsHeader": "Ключевые слова",
+      "selectionConditionsHeader": "Условия выборки",
+      "filterLabel": "Фильтр",
+      "filterPlaceholder": "например: selection and some_other_condition",
+      "timeframeLabel": "Временной интервал",
+      "timeframePlaceholder": "например: 1h, 30m",
+      "conditionLabel": "Условие"
+    },
+    "fields": {
+      "helpText": "Это поля, которые очень полезны при оценке определённого события. Например, полезно знать родительский процесс процесса, содержащего подозрительные строки в параметрах командной строки. Эти поля могут быть извлечены автоматически и представлены аналитику для ускорения анализа.",
+      "addLabel": "Добавить поле",
+      "addPlaceholder": "Введите поле",
+      "addAria": "Добавить поле"
+    },
+    "falsePositives": {
+      "helpText": "Подумайте о возможных условиях ложных срабатываний, которые также могут активировать правило. Список должен содержать полезные подсказки для аналитика. Например, комментарий «Легитимные процессы, удаляющие теневые копии» может быть подсказкой аналитику проверить процессы резервного копирования или выяснить, были ли необычные административные действия, связанные с удалением теневых копий.",
+      "addLabel": "Добавить ложное срабатывание",
+      "addPlaceholder": "Введите ложное срабатывание",
+      "addAria": "Добавить ложное срабатывание"
+    },
+    "keywordsInput": {
+      "label": "Ключевое слово",
+      "placeholder": "Введите ключевое слово и нажмите Enter или кнопку добавления",
+      "addTooltip": "Добавить ключевое слово",
+      "addAria": "Добавить ключевое слово",
+      "requiredAlert": "Ключевое слово обязательно."
+    },
+    "selectionConditions": {
+      "fieldLabel": "Поле",
+      "modifierLabel": "Модификатор",
+      "valueLabel": "Значение",
+      "valuePlaceholder": "Введите значение и нажмите Enter или кнопку добавления",
+      "addTooltip": "Добавить условие",
+      "addAria": "Добавить условие",
+      "deleteTooltip": "Удалить условие",
+      "deleteAria": "Удалить условие",
+      "requiredAlert": "Поле и значение обязательны для условия."
+    }
+  },
+  "yara": {
+    "title": "Конструктор правил YARA",
+    "metadataForm": {
+      "header": "Метаданные правила",
+      "ruleNameLabel": "Имя правила",
+      "authorLabel": "Автор",
+      "descriptionLabel": "Описание",
+      "referenceLabel": "Источник",
+      "hashLabel": "Хеш",
+      "versionLabel": "Версия"
+    },
+    "tagsForm": {
+      "header": "Теги",
+      "addLabel": "Добавить тег",
+      "addTooltip": "Добавить тег",
+      "addAria": "Добавить тег",
+      "addPlaceholder": "Введите тег и нажмите Enter или кнопку добавления",
+      "helpText": "Теги помогают категоризировать и идентифицировать правила. Распространённые теги: имена семейств вредоносного ПО, техники атак или типы файлов."
+    },
+    "stringsForm": {
+      "header": "Добавить строку",
+      "identifierLabel": "Идентификатор",
+      "identifierPlaceholder": "например: malware_string",
+      "typeLabel": "Тип",
+      "valueLabel": "Значение",
+      "modifiersLabel": "Модификаторы",
+      "modifiersPlaceholder": "Выбрать",
+      "placeholderHex": "например: 4D 5A 90 00",
+      "placeholderRegex": "например: /malware[0-9]+/",
+      "placeholderWide": "например: wide string",
+      "placeholderDefault": "например: malicious string"
+    },
+    "stringsList": {
+      "header": "Строки ({{count}})",
+      "deleteTooltip": "Удалить строку",
+      "deleteAria": "Удалить строку",
+      "typeLabel": "Тип: {{type}}",
+      "modifiersLabel": "Модификаторы: {{modifiers}}",
+      "valueLabel": "Значение: {{value}}"
+    },
+    "conditionsForm": {
+      "header": "Условия",
+      "stringMatchLabel": "Совпадение строк",
+      "stringMatchNone": "Нет",
+      "stringMatchAll": "Все из них",
+      "stringMatchAny": "Любая из них",
+      "fileSizeLabel": "Размер файла (КБ)",
+      "fileSizePlaceholder": "например: 1024",
+      "fileTypeLabel": "Тип файла",
+      "fileTypeNone": "Нет",
+      "helpText": "Условия определяют, когда правило должно срабатывать. Условия совпадения строк требуют наличия хотя бы одной определённой строки."
+    }
+  },
+  "snort": {
+    "title": "Конструктор правил Snort/Suricata",
+    "sections": {
+      "ruleHeader": "Заголовок правила",
+      "ruleOptions": "Параметры правила",
+      "detectionContent": "Содержимое обнаружения",
+      "enhancedMetadata": "Расширенные метаданные"
+    },
+    "ruleHeader": {
+      "actionLabel": "Действие",
+      "protocolLabel": "Протокол",
+      "sourceIpLabel": "IP источника",
+      "sourcePortLabel": "Порт источника",
+      "directionLabel": "Направление",
+      "destIpLabel": "IP назначения",
+      "destPortLabel": "Порт назначения"
+    },
+    "ruleOptions": {
+      "messageLabel": "Сообщение",
+      "messagePlaceholder": "Краткое описание того, что обнаруживает правило",
+      "sidLabel": "SID",
+      "sidPlaceholder": "Уникальный идентификатор правила",
+      "revisionLabel": "Ревизия",
+      "revisionPlaceholder": "Номер ревизии правила",
+      "priorityLabel": "Приоритет",
+      "priorityPlaceholder": "1-4 (1 — наивысший)",
+      "classTypeLabel": "Тип класса"
+    },
+    "ruleContent": {
+      "rateLimitingHeader": "Ограничение частоты",
+      "thresholdLabel": "Порог",
+      "detectionFilterLabel": "Фильтр обнаружения"
+    },
+    "ruleMetadata": {
+      "createdAtLabel": "Дата создания",
+      "updatedAtLabel": "Дата обновления",
+      "policyLabel": "Политика",
+      "formerCategoryLabel": "Предыдущая категория",
+      "signatureSeverityLabel": "Серьёзность сигнатуры",
+      "attackTargetLabel": "Цель атаки",
+      "attackTargetPlaceholder": "Выберите цели",
+      "deploymentLabel": "Развёртывание",
+      "deploymentPlaceholder": "Выберите варианты развёртывания"
+    },
+    "basicMetadataSection": {
+      "header": "Основные метаданные",
+      "keyLabel": "Ключ",
+      "keyPlaceholder": "policy, created_at и т.д.",
+      "valueLabel": "Значение",
+      "valuePlaceholder": "Значение метаданных",
+      "deleteTooltip": "Удалить метаданные",
+      "deleteAria": "Удалить метаданные",
+      "requiredAlert": "Требуются и ключ, и значение метаданных."
+    },
+    "contentMatching": {
+      "header": "Сопоставление содержимого",
+      "contentLabel": "Содержимое",
+      "contentPlaceholder": "Строка для поиска (например: GET /admin)",
+      "modifiersLabel": "Модификаторы",
+      "modifiersPlaceholder": "Выбрать модификаторы",
+      "deleteTooltip": "Удалить содержимое",
+      "deleteAria": "Удалить содержимое",
+      "modifiersDisplay": "Модификаторы: {{modifiers}}",
+      "noModifiers": "Без модификаторов",
+      "requiredAlert": "Содержимое обязательно."
+    },
+    "customTagsSection": {
+      "header": "Пользовательские теги",
+      "addLabel": "Добавить тег",
+      "addPlaceholder": "Введите пользовательский тег",
+      "requiredAlert": "Тег обязателен.",
+      "duplicateAlert": "Тег уже существует."
+    },
+    "flowbitsSection": {
+      "header": "Flowbits",
+      "actionLabel": "Действие",
+      "nameLabel": "Имя flowbit",
+      "namePlaceholder": "имя_flowbit",
+      "deleteTooltip": "Удалить flowbit",
+      "deleteAria": "Удалить flowbit",
+      "requiredAlert": "Имя flowbit обязательно."
+    },
+    "malwareFamilySection": {
+      "header": "Семейство вредоносного ПО",
+      "addLabel": "Добавить семейство",
+      "addPlaceholder": "Введите название семейства вредоносного ПО",
+      "requiredAlert": "Семейство вредоносного ПО обязательно.",
+      "duplicateAlert": "Такое семейство уже существует."
+    },
+    "pcreSection": {
+      "header": "PCRE (Perl-совместимые регулярные выражения)",
+      "patternLabel": "Шаблон PCRE",
+      "deleteTooltip": "Удалить PCRE",
+      "deleteAria": "Удалить PCRE",
+      "requiredAlert": "Шаблон PCRE обязателен."
+    },
+    "referencesSection": {
+      "header": "Источники",
+      "typeLabel": "Тип",
+      "valueLabel": "Значение источника",
+      "valuePlaceholder": "URL, CVE ID и т.д.",
+      "deleteTooltip": "Удалить источник",
+      "deleteAria": "Удалить источник",
+      "requiredAlert": "Значение источника обязательно."
+    }
+  }
+}

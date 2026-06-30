@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -10,6 +11,7 @@ import Grid from '@mui/material/Grid';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 export default function Fields({ fields, handleFieldsChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentField, setCurrentField] = useState('');
 
   const handleAddField = () => {
@@ -28,18 +30,14 @@ export default function Fields({ fields, handleFieldsChange }) {
     <>
       {/* Info text */}
       <Typography variant="caption" display="block" gutterBottom>
-        These are the fields that are very helpful in the evaluation of a certain
-        event. For example, it is helpful to know the parent process of a process
-        that contains suspicious strings in its command line parameters. These
-        fields could be extracted automatically and presented to the analyst in
-        order to speed up the analysis.
+        {t('sigma.fields.helpText')}
       </Typography>
 
       <Grid container spacing={1} alignItems="center">
         <Grid size={12}>
           <TextField
             fullWidth
-            label="Add Field"
+            label={t('sigma.fields.addLabel')}
             value={currentField}
             onChange={(e) => setCurrentField(e.target.value)}
             size="small"
@@ -50,17 +48,17 @@ export default function Fields({ fields, handleFieldsChange }) {
                 handleAddField();
               }
             }}
-            placeholder="Enter field"
+            placeholder={t('sigma.fields.addPlaceholder')}
             slotProps={{
               input: {
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Tooltip title="Add Field">
+                    <Tooltip title={t('sigma.fields.addLabel')}>
                       <IconButton
                         onClick={handleAddField}
                         disabled={!currentField.trim()}
                         size="small"
-                        aria-label="Add field"
+                        aria-label={t('sigma.fields.addAria')}
                       >
                         <AddCircleIcon fontSize="small" />
                       </IconButton>

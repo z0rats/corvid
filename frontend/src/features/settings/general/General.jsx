@@ -1,9 +1,10 @@
 import React, { useId, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
+import { useTranslation } from 'react-i18next';
 import { generalSettingsState } from '../../../core/state/atoms';
 import { useGeneralSettings } from '../hooks/api/useGeneralSettings';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
-import { FONT_OPTIONS } from '../constants/settingsConstants';
+import { FONT_OPTIONS, LANGUAGE_OPTIONS } from '../constants/settingsConstants';
 import NotificationSnackbar from '../components/ui/NotificationSnackbar';
 
 import Box from '@mui/material/Box';
@@ -22,11 +23,13 @@ import { useTheme } from '@mui/material/styles';
  * General settings component
  */
 export default function General() {
+  const { t } = useTranslation();
   const generalSettings = useAtomValue(generalSettingsState);
   const theme = useTheme();
-  
+
   const fontSelectId = useId();
-  const { loading, updateFont, updateDarkmode } = useGeneralSettings();
+  const languageSelectId = useId();
+  const { loading, updateFont, updateDarkmode, updateLanguage } = useGeneralSettings();
   const { notification, showNotification, hideNotification } = useNotification();
 
   const cardStyle = useMemo(() => ({
@@ -56,22 +59,31 @@ export default function General() {
     }
   };
 
+  const handleLanguageChange = async (event) => {
+    const result = await updateLanguage(event.target.value);
+    if (result.success) {
+      showNotification(result.message);
+    } else {
+      showNotification(result.message, 'error');
+    }
+  };
+
   return (
     <Box>
       <Card sx={cardStyle}>
         <Typography variant="h4" component="h2" gutterBottom>
-          General
+          {t('settings.general.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Application wide settings can be configured here.
+          {t('settings.general.description')}
         </Typography>
       </Card>
 
       <Card sx={cardStyle}>
         <Typography variant="h5" component="h3" gutterBottom>
-          Visual
+          {t('settings.general.visual')}
         </Typography>
-        
+
         <Stack spacing={3}>
           <FormControlLabel
             control={
@@ -81,12 +93,12 @@ export default function General() {
                 disabled={loading}
               />
             }
-            label="Dark mode"
+            label={t('settings.general.darkMode')}
           />
 
           <Box>
             <Typography variant="body1" gutterBottom>
-              Custom font
+              {t('settings.general.customFont')}
             </Typography>
             <FormControl sx={{ minWidth: 200 }}>
               <Select
@@ -96,7 +108,7 @@ export default function General() {
                 disabled={loading}
                 size="small"
                 displayEmpty
-                slotProps={{ htmlInput: { 'aria-label': 'Font selection' } }}
+                slotProps={{ htmlInput: { 'aria-label': t('settings.general.customFont') } }}
               >
                 {FONT_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
@@ -105,16 +117,42 @@ export default function General() {
                 ))}
               </Select>
               <FormHelperText>
-                Change the application wide font for OSINT Toolkit
+                {t('settings.general.customFontHelper')}
+              </FormHelperText>
+            </FormControl>
+          </Box>
+
+          <Box>
+            <Typography variant="body1" gutterBottom>
+              {t('settings.general.language')}
+            </Typography>
+            <FormControl sx={{ minWidth: 200 }}>
+              <Select
+                id={languageSelectId}
+                value={generalSettings.language}
+                onChange={handleLanguageChange}
+                disabled={loading}
+                size="small"
+                displayEmpty
+                slotProps={{ htmlInput: { 'aria-label': t('settings.general.language') } }}
+              >
+                {LANGUAGE_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>
+                {t('settings.general.languageHelper')}
               </FormHelperText>
             </FormControl>
           </Box>
         </Stack>
       </Card>
 
-      <NotificationSnackbar 
-        notification={notification} 
-        onClose={hideNotification} 
+      <NotificationSnackbar
+        notification={notification}
+        onClose={hideNotification}
       />
     </Box>
   );

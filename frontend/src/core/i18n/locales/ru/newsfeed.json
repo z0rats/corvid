@@ -1,0 +1,296 @@
+{
+  "feed": {
+    "noArticles": "Статьи не найдены.",
+    "noSummary": "Для этой статьи нет краткого содержания.",
+    "filters": {
+      "advancedOptions": "Дополнительные параметры",
+      "refreshFeed": "Обновить ленту",
+      "refresh": "Обновить",
+      "startDate": "Дата начала",
+      "endDate": "Дата окончания",
+      "tlp": "TLP",
+      "hasKeywordMatches": "Есть совпадения по ключевым словам",
+      "hasIocs": "Есть IOC",
+      "hasAnalysis": "Есть анализ",
+      "hasNote": "Есть заметка",
+      "resetFilters": "Сбросить фильтры",
+      "fetchNews": "Загрузить новости",
+      "fetching": "Загрузка..."
+    },
+    "article": {
+      "changeTlp": "Изменить TLP",
+      "changeTlpLevel": "Изменить уровень TLP",
+      "viewOriginalOn": "Открыть оригинал статьи на {{feedName}}",
+      "original": "Оригинал",
+      "openOriginalArticle": "Открыть оригинал статьи",
+      "invalidArticleUrl": "Недействительный URL статьи",
+      "analyzeUsingAi": "Проанализировать статью с помощью AI",
+      "analyzing": "Анализ...",
+      "reanalyze": "Повторный анализ",
+      "analyze": "Анализировать",
+      "aiAnalysisMenuItem": "AI-анализ",
+      "mitreMappingMenuItem": "Сопоставление с MITRE ATT&CK",
+      "addOrEditNote": "Добавить или изменить заметку",
+      "editNote": "Изменить заметку",
+      "addNote": "Добавить заметку"
+    },
+    "analysis": {
+      "title": "AI-анализ",
+      "errorDisplaying": "Ошибка отображения анализа"
+    },
+    "mitre": {
+      "title": "MITRE ATT&CK",
+      "actors": "Группы",
+      "software": "Программное обеспечение",
+      "targets": "Цели",
+      "techniques": "Техники",
+      "observedBehavior": "Наблюдаемое поведение",
+      "procedureExample": "Пример процедуры",
+      "detectionOpportunities": "Возможности обнаружения"
+    },
+    "notes": {
+      "label": "Заметка:",
+      "editNote": "Изменить заметку",
+      "deleteNote": "Удалить заметку",
+      "saveNote": "Сохранить заметку",
+      "cancel": "Отмена",
+      "deleteDialogTitle": "Удалить заметку",
+      "deleteDialogMessage": "Вы уверены, что хотите удалить эту заметку? Это действие нельзя отменить."
+    },
+    "groups": {
+      "title": "Группа",
+      "titlePlural": "Группы"
+    },
+    "keywords": {
+      "title": "Совпадение по ключевому слову",
+      "titlePlural": "Совпадения по ключевым словам"
+    },
+    "iocs": {
+      "copyAll": "Скопировать все",
+      "copy": "Скопировать"
+    }
+  },
+  "headlines": {
+    "filterSource": "Фильтр по источнику",
+    "filterTitle": "Фильтр по заголовку",
+    "timeRange": "Временной диапазон",
+    "refresh": "Обновить",
+    "source": "Источник",
+    "title": "Заголовок",
+    "time": "Время",
+    "actions": "Действия",
+    "openSource": "Открыть источник",
+    "openArticle": "Открыть статью"
+  },
+  "report": {
+    "pageTitle": "Генератор новостного отчёта",
+    "pageDescription": "Этот инструмент собирает все новости по кибербезопасности за последние 7 дней, ранжирует 10 самых релевантных новостей по заголовкам, а затем предоставляет подробный анализ каждой статьи.",
+    "startAnalysis": "Начать анализ",
+    "stopAnalysis": "Остановить анализ",
+    "fetchingAnalyzing": "Загрузка / Анализ...",
+    "noArticlesFound": "Статьи не найдены или не были возвращены.",
+    "waitingForFirstResult": "Ожидание первого результата анализа...",
+    "detailedAnalysis": "Подробный анализ",
+    "analysisComplete": "Анализ завершён",
+    "restartMessage": "Все статьи были проанализированы. Вы можете перезапустить анализ, если хотите выполнить его снова.",
+    "downloadMarkdown": "Скачать отчёт в Markdown",
+    "steps": {
+      "fetch": "Загрузка всех новостных статей за последние 7 дней",
+      "rank": "Ранжирование новостных статей по релевантности",
+      "showTop": "Показ 10 самых релевантных статей",
+      "analyze": "Анализ самых релевантных статей и создание отчётов",
+      "completed": "Анализ и создание отчёта завершены"
+    },
+    "rankingCard": {
+      "reason": "Причина: {{reason}}"
+    },
+    "analysisCard": {
+      "risk": "Риск: {{risk}}",
+      "summary": "Краткое содержание:",
+      "reason": "Причина:",
+      "possibleActionItems": "Возможные действия:",
+      "source": "Источник:"
+    }
+  },
+  "settings": {
+    "general": {
+      "title": "Общие настройки новостной ленты",
+      "description": "Настройте поведение вашей новостной ленты и управление контентом",
+      "contentRetention": "Хранение контента",
+      "contentRetentionDescription": "Определите, как долго статьи должны храниться в вашей ленте перед автоматическим удалением",
+      "retentionPeriod": "Период хранения",
+      "backgroundFetch": "Фоновая загрузка",
+      "backgroundFetchDescription": "Включить автоматическую загрузку нового контента через определённые интервалы",
+      "fetchInterval": "Интервал загрузки",
+      "updateSuccess": "Настройки успешно обновлены",
+      "updateError": "Произошла ошибка"
+    },
+    "feeds": {
+      "title": "Управление новостными лентами",
+      "addFeed": "Добавить ленту",
+      "fetchMissingIcons": "Загрузить отсутствующие иконки",
+      "fetchMissingIconsTooltip": "Загрузить favicon для лент с отсутствующими иконками",
+      "allFeedsHaveIcons": "У всех лент есть иконки",
+      "noFeedsConfigured": "Лент не настроено. Нажмите «Добавить ленту», чтобы начать.",
+      "refreshFavicon": "Обновить favicon",
+      "deleteFeed": "Удалить ленту",
+      "removeCustomIcon": "Удалить пользовательскую иконку",
+      "deleteDialogTitle": "Удалить ленту",
+      "deleteDialogMessage": "Вы уверены, что хотите удалить эту ленту? Это действие нельзя отменить.",
+      "feedAddedSuccess": "Лента успешно добавлена",
+      "feedEnabledSuccess": "Лента успешно включена",
+      "feedDisabledSuccess": "Лента успешно отключена",
+      "feedToggleError": "Не удалось переключить состояние ленты",
+      "feedDeletedSuccess": "Лента успешно удалена",
+      "feedDeleteError": "Ошибка удаления ленты",
+      "iconDeletedSuccess": "Иконка успешно удалена",
+      "iconDeleteError": "Ошибка удаления иконки",
+      "iconRefreshedSuccess": "Иконка обновлена",
+      "iconRefreshError": "Не удалось обновить иконку",
+      "bulkFetchSuccess": "Загружено {{succeeded}} из {{total}} отсутствующих иконок",
+      "bulkFetchNoneError": "Не удалось загрузить ни одного favicon",
+      "bulkFetchError": "Ошибка загрузки отсутствующих иконок",
+      "dialog": {
+        "title": "Добавить новую ленту",
+        "dropIcon": "Перетащите иконку",
+        "iconOptionalHelper": "Необязательно — favicon будет загружен автоматически",
+        "feedName": "Название ленты",
+        "feedUrl": "URL ленты",
+        "cancel": "Отмена",
+        "addFeed": "Добавить ленту",
+        "missingFieldsError": "Укажите название и URL ленты",
+        "genericAddError": "Ошибка добавления ленты"
+      }
+    },
+    "keywords": {
+      "title": "Настройки сопоставления ключевых слов",
+      "description": "Включите сопоставление ключевых слов, чтобы выделять новостные статьи, содержащие интересующие вас ключевые слова.",
+      "enable": "Включить сопоставление ключевых слов",
+      "manageKeywords": "Управление ключевыми словами",
+      "addNewKeyword": "Добавить новое ключевое слово",
+      "noKeywordsYet": "Ключевые слова ещё не добавлены.",
+      "toggleSuccess": "Настройка сопоставления ключевых слов обновлена.",
+      "toggleError": "Не удалось обновить настройку сопоставления ключевых слов.",
+      "addSuccess": "Ключевое слово успешно добавлено.",
+      "addDuplicate": "Такое ключевое слово уже существует.",
+      "addError": "Не удалось добавить ключевое слово.",
+      "deleteSuccess": "Ключевое слово успешно удалено.",
+      "deleteError": "Не удалось удалить ключевое слово."
+    },
+    "cti": {
+      "title": "Настройки CTI",
+      "description": "Определите профиль вашей компании и ландшафт угроз, чтобы адаптировать AI-анализ статей новостной ленты для вашей организации.",
+      "companyProfileTab": "Профиль компании",
+      "threatActorsTab": "Группы угроз",
+      "loading": "Загрузка...",
+      "saveSettings": "Сохранить настройки",
+      "saveSuccess": "Настройки CTI успешно сохранены.",
+      "saveError": "Не удалось сохранить настройки CTI.",
+      "companyProfile": {
+        "industrySelection": "Выбор отрасли",
+        "industrySelectionPlaceholder": "Добавьте или выберите отрасли",
+        "companySize": "Размер компании",
+        "geographicalScope": "Географический охват",
+        "geographicalScopePlaceholder": "Добавьте или выберите регионы",
+        "primaryLanguage": "Основной язык",
+        "primaryLanguagePlaceholder": "Добавьте или выберите языки",
+        "brandMentions": "Упоминания бренда",
+        "brandMentionsPlaceholder": "Добавьте названия брендов",
+        "competitorMonitoring": "Мониторинг новостей конкурентов",
+        "competitorMonitoringPlaceholder": "Добавьте названия конкурентов"
+      },
+      "threatActor": {
+        "relevantThreatActors": "Релевантные группы угроз",
+        "relevantThreatActorsPlaceholder": "Добавьте названия групп угроз",
+        "knownThreatActorNames": "Известные названия групп угроз",
+        "knownThreatActorNamesPlaceholder": "Добавьте известные названия групп угроз",
+        "attackTypesOfInterest": "Интересующие типы атак",
+        "attackTypesOfInterestPlaceholder": "Добавьте или выберите типы атак",
+        "priority": "Приоритет",
+        "motivationFilters": "Фильтры мотивации",
+        "motivationFiltersPlaceholder": "Добавьте или выберите мотивацию"
+      }
+    },
+    "trends": {
+      "title": "Настройки чёрного списка трендов",
+      "description": "Управляйте чёрным списком слов и значений IOC, которые исключаются из аналитических графиков трендов.",
+      "addEntry": "Добавить запись",
+      "noEntriesYet": "Записи ещё не добавлены.",
+      "words": {
+        "title": "Запрещённые слова",
+        "description": "Добавленные здесь слова будут исключены из графика «Популярные слова в заголовках».",
+        "addLabel": "Добавить слово",
+        "addSuccess": "Слово добавлено в чёрный список.",
+        "addDuplicate": "Слово уже в чёрном списке.",
+        "addError": "Не удалось добавить слово в чёрный список.",
+        "deleteSuccess": "Слово удалено из чёрного списка.",
+        "deleteError": "Не удалось удалить слово из чёрного списка."
+      },
+      "iocs": {
+        "title": "Запрещённые IOC",
+        "description": "Добавленные здесь значения IOC будут исключены из графика «Популярные индикаторы компрометации».",
+        "addLabel": "Добавить IOC",
+        "addSuccess": "IOC добавлен в чёрный список.",
+        "addDuplicate": "IOC уже в чёрном списке.",
+        "addError": "Не удалось добавить IOC в чёрный список.",
+        "deleteSuccess": "IOC удалён из чёрного списка.",
+        "deleteError": "Не удалось удалить IOC из чёрного списка."
+      }
+    }
+  },
+  "trends": {
+    "header": {
+      "title": "Тренды новостной ленты",
+      "timeRange": "Временной диапазон",
+      "refreshData": "Обновить данные",
+      "refresh": "Обновить"
+    },
+    "wordFrequency": {
+      "title": "Популярные слова в заголовках",
+      "noData": "Нет данных о частоте слов за выбранный период.",
+      "occurrences": "{{count}} совпадений",
+      "clickToView": "Нажмите, чтобы посмотреть статьи",
+      "hideFromTrends": "Скрыть «{{value}}» из трендов",
+      "selectedTitle": "Слово: {{word}}",
+      "addedToBlacklist": "«{{word}}» добавлено в чёрный список",
+      "alreadyBlacklisted": "«{{word}}» уже в чёрном списке",
+      "blacklistError": "Не удалось добавить слово в чёрный список"
+    },
+    "cve": {
+      "title": "Популярные уязвимости и угрозы (CVE)",
+      "noData": "Нет данных о CVE за выбранный период.",
+      "occurrences": "{{count}} совпадений",
+      "clickToView": "Нажмите, чтобы посмотреть статьи",
+      "selectedTitle": "CVE: {{value}}"
+    },
+    "ioc": {
+      "title": "Популярные индикаторы компрометации (IOC)",
+      "type": "Тип IOC",
+      "noData": "Нет данных IOC для выбранного типа и периода.",
+      "occurrences": "{{count}} совпадений",
+      "clickToView": "Нажмите, чтобы посмотреть статьи",
+      "hideFromTrends": "Скрыть «{{value}}» из трендов",
+      "selectedTitle": "IOC: {{value}}",
+      "addedToBlacklist": "«{{value}}» добавлено в чёрный список",
+      "alreadyBlacklisted": "«{{value}}» уже в чёрном списке",
+      "blacklistError": "Не удалось добавить IOC в чёрный список"
+    },
+    "iocDistribution": {
+      "title": "Распределение типов IOC",
+      "noData": "Нет данных о распределении типов IOC за выбранный период.",
+      "totalOccurrences": "{{count}} совпадений всего"
+    },
+    "articleTable": {
+      "articlesContaining": "Статьи, содержащие",
+      "occurrences": "({{count}} совпадений)",
+      "source": "Источник",
+      "title": "Заголовок",
+      "date": "Дата",
+      "actions": "Действия",
+      "loadingDetails": "Загрузка данных статьи...",
+      "errorLoadingArticle": "Ошибка загрузки статьи {{articleId}}: {{error}}",
+      "detailsNotAvailable": "Данные статьи недоступны.",
+      "openArticle": "Открыть статью"
+    }
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "errors": {
+    "noFileProvided": "No file provided",
+    "analysisFailed": "Failed to analyze email"
+  },
+  "emailUploadForm": {
+    "title": "File Upload",
+    "dropzoneText": "Drag 'n' drop an .eml file here, or click to select a file",
+    "dropzoneHint": "(Only .eml files will be accepted)",
+    "analyzeButton": "Analyze"
+  },
+  "attachments": {
+    "title": "Attachments ({{count}})",
+    "unknownFilename": "Unknown filename",
+    "analyzeButton": "Analyze",
+    "empty": "No attachments found",
+    "tableAriaLabel": "attachments table",
+    "copyButton": {
+      "copy": "Copy",
+      "copied": "Copied!",
+      "ariaLabel": "Copy hash"
+    }
+  },
+  "emailMetadata": {
+    "notAvailable": "N/A",
+    "fields": {
+      "from": "From",
+      "replyTo": "Reply To",
+      "to": "To",
+      "cc": "CC",
+      "date": "Date",
+      "subject": "Subject",
+      "deliveredTo": "Delivered to"
+    }
+  },
+  "emlHashValues": {
+    "analyzeButton": "Analyze .eml hash",
+    "copyButton": {
+      "copy": "Copy",
+      "copied": "Copied!",
+      "ariaLabel": "Copy hash"
+    }
+  },
+  "generalInfo": {
+    "title": "General information",
+    "analyzeSenderButton": "Analyze sender address",
+    "emlFileHashes": ".eml file hashes"
+  },
+  "header": {
+    "title": "Complete Header ({{count}} fields)",
+    "filterPlaceholder": "Filter headers...",
+    "columns": {
+      "key": "Key",
+      "value": "Value"
+    },
+    "showingCount": "Showing {{shown}} of {{total}} fields",
+    "empty": "No header fields available",
+    "tableAriaLabel": "header fields table"
+  },
+  "hops": {
+    "title": "Hops ({{count}})",
+    "columns": {
+      "hop": "Hop",
+      "from": "From",
+      "by": "By",
+      "with": "With",
+      "date": "Date / Time"
+    },
+    "empty": "Could not parse hops",
+    "tableAriaLabel": "hops table"
+  },
+  "messageBody": {
+    "title": "Message body"
+  },
+  "securityCheck": {
+    "title": "Basic security checks"
+  },
+  "showAiAnswer": {
+    "analyzeButton": "Analyze message body with AI",
+    "resultTitle": "AI message-body analysis"
+  },
+  "urls": {
+    "title": "URLs in body ({{count}})",
+    "analyzeButton": "Analyze",
+    "empty": "No URLs found",
+    "tableAriaLabel": "urls table"
+  },
+  "welcomeScreen": {
+    "title": "Email Analyzer",
+    "description1": "Email Analyzer is a module that allows you to analyze .eml files for potential threats. To use the module, simply drag an .eml file into it. The module will then parse the file and perform basic security checks to identify any potential risks.",
+    "description2": "It also extracts all indicators of compromise (IOCs) from the file and makes it possible to analyze them using various open source intelligence (OSINT) services. In addition, Email Analyzer generates hash values for every attachment in the file, allowing you to perform a privacy-friendly analysis of these files.",
+    "keyFeaturesTitle": "Key Features",
+    "features": {
+      "securityAnalysis": {
+        "title": "Security Analysis",
+        "description": "Performs basic security checks on .eml files"
+      },
+      "iocExtraction": {
+        "title": "IOC Extraction",
+        "description": "Extracts and analyzes IOCs using OSINT services"
+      },
+      "attachmentAnalysis": {
+        "title": "Attachment Analysis",
+        "description": "Generates hash values for all email attachments"
+      },
+      "privacyFriendly": {
+        "title": "Privacy-Friendly",
+        "description": "Analyze attachments without exposing original files"
+      }
+    }
+  }
+}

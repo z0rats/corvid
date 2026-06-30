@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -6,6 +7,7 @@ import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 
 export default function RankingCard({ article, index }) {
+  const { t } = useTranslation('newsfeed');
   return (
     <Card variant="outlined" sx={{ mb: 2 }}>
       <CardHeader
@@ -17,7 +19,7 @@ export default function RankingCard({ article, index }) {
                 {article.title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Reason: {article.reason}
+                {t('report.rankingCard.reason', { reason: article.reason })}
               </Typography>
             </Box>
           </Box>

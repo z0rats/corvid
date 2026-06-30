@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card'
 import { styled } from '@mui/material/styles';
 import NotInterestedIcon from '@mui/icons-material/NotInterested';
@@ -14,7 +15,8 @@ const StyledGrid = styled(MuiGrid)(({ theme }) => ({
     },
   }));
 
-export default function NoDetails() {
+export default function NoDetails({ message }) {
+  const { t } = useTranslation('iocTools');
   return (
     <>
         <Card elevation={0} sx={{ maxWidth: 600, m: 2, p: 2, borderRadius: 2 }}>
@@ -24,8 +26,8 @@ export default function NoDetails() {
                 </StyledGrid>
                 <Divider orientation="vertical" flexItem></Divider>
                 <StyledGrid size="grow" sx={{p: 2}}>
-                    <Typography variant="h5">No details available</Typography>
-                    <Typography>There are no further details availables for this item.</Typography>
+                    <Typography variant="h5">{t('providers.common.noDetailsTitle')}</Typography>
+                    <Typography>{message || t('providers.common.noDetailsMessage')}</Typography>
                 </StyledGrid>
             </StyledGrid>
         </Card>

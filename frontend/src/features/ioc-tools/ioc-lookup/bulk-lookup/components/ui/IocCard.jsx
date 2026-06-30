@@ -1,4 +1,5 @@
 import React, { useState, useMemo, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
@@ -35,6 +36,7 @@ const StyledExpandMoreIcon = styled(ExpandMoreIcon, {
 }));
 
 function IocCard({ ioc, onToggleExpand }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const [expanded, setExpanded] = useState(ioc.isCardExpanded || false);
 
@@ -65,7 +67,7 @@ function IocCard({ ioc, onToggleExpand }) {
       }}>
       <CardHeader
         action={
-          <IconButton onClick={handleExpandClick} aria-expanded={expanded} aria-label="show more">
+          <IconButton onClick={handleExpandClick} aria-expanded={expanded} aria-label={t('bulkLookup.iocCard.showMoreAriaLabel')}>
             <StyledExpandMoreIcon isExpanded={expanded}/>
           </IconButton>
         }
@@ -80,12 +82,12 @@ function IocCard({ ioc, onToggleExpand }) {
         <CardContent sx={{ pt: 0 }}>
           {Object.keys(ioc.services).length > 0 ? (
             <TableContainer component={Paper} sx={{ boxShadow: 0 }}>
-              <Table aria-label="service results">
+              <Table aria-label={t('bulkLookup.iocCard.serviceResultsAriaLabel')}>
                 <TableHead>
                   <TableRow>
                     <StyledHeaderCell sx={{ width: '40px' }} />
-                    <StyledHeaderCell>Service</StyledHeaderCell>
-                    <StyledHeaderCell>Result</StyledHeaderCell>
+                    <StyledHeaderCell>{t('bulkLookup.iocCard.tableHeaders.service')}</StyledHeaderCell>
+                    <StyledHeaderCell>{t('bulkLookup.iocCard.tableHeaders.result')}</StyledHeaderCell>
                     <StyledHeaderCell sx={{ width: '40px' }} />
                   </TableRow>
                 </TableHead>
@@ -108,7 +110,7 @@ function IocCard({ ioc, onToggleExpand }) {
             </TableContainer>
           ) : (
             <Typography variant="body2" color="text.secondary">
-              No services configured or results available for this IOC type.
+              {t('bulkLookup.iocCard.noServicesConfigured')}
             </Typography>
           )}
         </CardContent>

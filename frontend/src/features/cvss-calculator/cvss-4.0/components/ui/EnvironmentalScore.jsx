@@ -10,8 +10,10 @@ import Typography from '@mui/material/Typography';
 import InfoModal from "../../../shared/components/InfoModal";
 import MetricSelect from "../../../shared/components/MetricSelect";
 import { modifiedExploitabilityMetrics, modifiedVulnerableSystemImpactMetrics, modifiedSubsequentSystemImpactMetrics } from "../../constants/metricsConfig";
+import { useTranslation } from 'react-i18next';
 
 export default function EnvironmentalScore({ metrics, onMetricChange }) {
+  const { t } = useTranslation('cvssCalculator');
   const [openModal, setOpenModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", text: "" });
 
@@ -48,7 +50,7 @@ export default function EnvironmentalScore({ metrics, onMetricChange }) {
       >
         <Box display="flex" alignItems="center">
           <PublicIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Environmental (Modified Base Metrics) (optional)</Typography>
+          <Typography variant="subtitle2">{t('cvss40.environmental.accordionTitle')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
@@ -61,18 +63,14 @@ export default function EnvironmentalScore({ metrics, onMetricChange }) {
           }}
         >
           <Typography variant="body1">
-            The Environmental metric group enables the analyst to customize the CVSS 
-            score depending on the importance of the affected IT asset to a user's 
-            organization, measured in terms of Confidentiality, Integrity, and 
-            Availability. These metrics modify the base metrics to reflect the 
-            characteristics of the user's environment.
+            {t('cvss40.environmental.description')}
           </Typography>
         </Box>
 
         <Grid container spacing={2}>
           <Grid size={6}>
             <Typography variant="h6" align="center">
-              Modified Exploitability Metrics
+              {t('cvss40.environmental.modifiedExploitabilityMetrics')}
             </Typography>
             {modifiedExploitabilityMetrics.map((metric) => (
               <MetricSelect
@@ -87,7 +85,7 @@ export default function EnvironmentalScore({ metrics, onMetricChange }) {
           </Grid>
           <Grid size={6}>
             <Typography variant="h6" align="center">
-              Modified Impact Metrics
+              {t('cvss40.environmental.modifiedImpactMetrics')}
             </Typography>
             {modifiedVulnerableSystemImpactMetrics.map((metric) => (
               <MetricSelect

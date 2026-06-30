@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -41,6 +42,7 @@ export default function TemplateDetailPanel({
   search,
   onClearSearch,
 }) {
+  const { t } = useTranslation('llmTemplates');
   const isPayloadValid = useMemo(() => {
     if (!template) return false;
     const fields = Array.isArray(template.payload_fields) ? template.payload_fields : [];
@@ -53,11 +55,11 @@ export default function TemplateDetailPanel({
     return (
       <StyledPaper elevation={0} sx={{ textAlign: 'center', py: 6 }}>
         <Typography variant="h6" color="text.secondary">
-          Select a template to get started
+          {t('detailPanel.selectPrompt')}
         </Typography>
         {search && (
           <Button variant="text" size="small" onClick={onClearSearch} sx={{ mt: 1 }}>
-            Clear search
+            {t('detailPanel.clearSearch')}
           </Button>
         )}
       </StyledPaper>
@@ -71,21 +73,21 @@ export default function TemplateDetailPanel({
           <Typography variant="h6" fontWeight={600}>{template.title}</Typography>
           <Stack direction="row" spacing={1}>
             {onToggleFavorite && (
-              <Tooltip title={template.category_id === SYSTEM_CATEGORY_IDS.FAVORITES ? 'Remove from Favorites' : 'Add to Favorites'}>
-                <IconButton size="small" onClick={() => onToggleFavorite(template)} aria-label="Toggle favorite">
+              <Tooltip title={template.category_id === SYSTEM_CATEGORY_IDS.FAVORITES ? t('detailPanel.removeFavorite') : t('detailPanel.addFavorite')}>
+                <IconButton size="small" onClick={() => onToggleFavorite(template)} aria-label={t('detailPanel.toggleFavoriteAria')}>
                   {template.category_id === SYSTEM_CATEGORY_IDS.FAVORITES
                     ? <StarIcon fontSize="small" sx={{ color: 'warning.main' }} />
                     : <StarBorderIcon fontSize="small" />}
                 </IconButton>
               </Tooltip>
             )}
-            <Tooltip title="View Example">
-              <IconButton size="small" onClick={() => onShowExample(template)} aria-label="View example">
+            <Tooltip title={t('detailPanel.viewExampleTooltip')}>
+              <IconButton size="small" onClick={() => onShowExample(template)} aria-label={t('detailPanel.viewExampleAria')}>
                 <InfoIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Edit Template">
-              <IconButton size="small" onClick={() => onEdit(template)} aria-label="Edit template">
+            <Tooltip title={t('detailPanel.editTemplateTooltip')}>
+              <IconButton size="small" onClick={() => onEdit(template)} aria-label={t('detailPanel.editTemplateAria')}>
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -129,7 +131,7 @@ export default function TemplateDetailPanel({
             ))
           ) : (
             <TextField
-              label="Input"
+              label={t('detailPanel.inputLabel')}
               value={payload.input || ''}
               onChange={e => onPayloadChange('input', e.target.value)}
               multiline
@@ -154,7 +156,7 @@ export default function TemplateDetailPanel({
             disabled={!isPayloadValid || executing}
             sx={{ borderRadius: 1.5, px: 3 }}
           >
-            {executing ? 'Executing\u2026' : 'Execute Template'}
+            {executing ? t('detailPanel.executingButton') : t('detailPanel.executeButton')}
           </Button>
         </Box>
       </StyledPaper>

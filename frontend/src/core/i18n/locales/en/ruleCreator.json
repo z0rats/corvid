@@ -1,0 +1,288 @@
+{
+  "common": {
+    "ruleTypeLabels": {
+      "sigma": "Sigma",
+      "yara": "YARA",
+      "snort": "Snort"
+    },
+    "actions": {
+      "previewRule": "Preview Rule",
+      "exportRule": "Export {{ruleType}} Rule",
+      "reset": "Reset",
+      "close": "Close",
+      "copyToClipboard": "Copy to Clipboard",
+      "copyToClipboardAria": "Copy to clipboard",
+      "add": "Add"
+    },
+    "preview": {
+      "defaultTitle": "Rule Preview",
+      "sigmaTitle": "Sigma Rule Preview",
+      "yaraTitle": "YARA Rule Preview",
+      "snortTitle": "Snort Rule Preview"
+    },
+    "none": "None"
+  },
+  "sigma": {
+    "title": "Sigma Rule Builder",
+    "sections": {
+      "metadata": "Rule Metadata",
+      "references": "References",
+      "tags": "Tags",
+      "logSource": "Log Source",
+      "detection": "Detection",
+      "fields": "Fields",
+      "falsePositives": "False Positives"
+    },
+    "metadata": {
+      "titleLabel": "Title",
+      "idLabel": "ID",
+      "generateUuidTooltip": "Generate New UUID",
+      "generateUuidAria": "Generate UUID",
+      "descriptionLabel": "Description",
+      "dateLabel": "Date",
+      "modifiedDateLabel": "Modified Date",
+      "levelLabel": "Level",
+      "statusLabel": "Status",
+      "addAuthorLabel": "Add Author",
+      "addAuthorAria": "Add author",
+      "licenseLabel": "License"
+    },
+    "references": {
+      "helpText": "Add references to web pages or documents that provide more context about the detected threat.",
+      "guidanceLinksOnly": "Use links to web pages or documents only.",
+      "guidanceNoRawContent": "Do not link to EVTX files, PCAPs, or other raw content.",
+      "guidanceNoMitreLinks": "Do not include links to MITRE ATT&CK techniques (we use tags for that).",
+      "examplesCaption": "Examples: blog posts, tweets, project pages, manual pages, advisories, discussions.",
+      "label": "Reference",
+      "placeholder": "Enter reference and press Enter or click Add",
+      "addTooltip": "Add Reference",
+      "addAria": "Add reference",
+      "deleteAria": "Delete reference"
+    },
+    "tags": {
+      "helpText": "Use tags from MITRE ATT&CK, CAR and tags for CVE numbers.",
+      "examplesCaption": "Examples tags: attack.credential_access, attack.t1003.002, car.2013-07-001, cve.2020.10189",
+      "formatRules": "Use lower-case tags only. Use . or - as divider in tag names. Replace space with an underscore _.",
+      "addLabel": "Add Tag",
+      "addPlaceholder": "Enter tag and press Enter or click Add",
+      "addAria": "Add tag"
+    },
+    "logSource": {
+      "helpText": "Application and the type that is required in the detection. It consists of three attributes that are evaluated automatically by the converters and an arbitrary number of optional elements. We recommend using a \"definition\" value in cases in which further explanation is necessary.",
+      "productLabel": "Product",
+      "categoryLabel": "Category",
+      "serviceLabel": "Service",
+      "definitionLabel": "Definition",
+      "selectOrTypePlaceholder": "Select or type to add",
+      "productHelper": "e.g. linux, windows, cisco",
+      "categoryHelper": "e.g. process_creation",
+      "serviceHelper": "e.g. sysmon, ldapd, dhcp",
+      "definitionPlaceholder": "Enter definition",
+      "definitionHelper": "Describe the log source, including log verbosity level or configurations."
+    },
+    "detection": {
+      "helpNoSingleList": "If your list consists of a single element, don't use a list.",
+      "helpLowercase": "Use only lowercase identifiers.",
+      "helpComments": "Put comments on lines if you like to (use 2 spaces to separate the expression from your comment, e.g. - 'cmd.exe' # command line).",
+      "helpNoRegex": "Don't use regular expressions unless you really have to (e.g. instead of CommandLine|re: '\\\\payload.*\\skeyset' use CommandLine|contains|all with the values \\payload and keyset).",
+      "helpFieldNames": "In new sources use the field names as they appear in the log source, remove spaces and keep hyphens (e.g. SAM User Account becomes SAMUserAccount).",
+      "helpNoSiemLogic": "Don't use SIEM specific logic in your condition.",
+      "keywordsHeader": "Keywords",
+      "selectionConditionsHeader": "Selection Conditions",
+      "filterLabel": "Filter",
+      "filterPlaceholder": "e.g., selection and some_other_condition",
+      "timeframeLabel": "Timeframe",
+      "timeframePlaceholder": "e.g., 1h, 30m",
+      "conditionLabel": "Condition"
+    },
+    "fields": {
+      "helpText": "These are the fields that are very helpful in the evaluation of a certain event. For example, it is helpful to know the parent process of a process that contains suspicious strings in its command line parameters. These fields could be extracted automatically and presented to the analyst in order to speed up the analysis.",
+      "addLabel": "Add Field",
+      "addPlaceholder": "Enter field",
+      "addAria": "Add field"
+    },
+    "falsePositives": {
+      "helpText": "Think about possible false positive conditions that could also trigger the rule. This list should contain useful hints for an analyst. E.g. the comment \"Legitimate processes that delete the shadow copies\" can be a hint for an analyst to check for backup processes on that system or ask for any unusual administrative activity that involved the deletion of the local volume shadow copies.",
+      "addLabel": "Add False Positive",
+      "addPlaceholder": "Enter false positive",
+      "addAria": "Add false positive"
+    },
+    "keywordsInput": {
+      "label": "Keyword",
+      "placeholder": "Enter keyword and press Enter or click Add",
+      "addTooltip": "Add Keyword",
+      "addAria": "Add keyword",
+      "requiredAlert": "Keyword is required."
+    },
+    "selectionConditions": {
+      "fieldLabel": "Field",
+      "modifierLabel": "Modifier",
+      "valueLabel": "Value",
+      "valuePlaceholder": "Enter value and press Enter or click Add",
+      "addTooltip": "Add Condition",
+      "addAria": "Add condition",
+      "deleteTooltip": "Delete Condition",
+      "deleteAria": "Delete condition",
+      "requiredAlert": "Field and Value are required for a condition."
+    }
+  },
+  "yara": {
+    "title": "YARA Rule Builder",
+    "metadataForm": {
+      "header": "Rule Metadata",
+      "ruleNameLabel": "Rule Name",
+      "authorLabel": "Author",
+      "descriptionLabel": "Description",
+      "referenceLabel": "Reference",
+      "hashLabel": "Hash",
+      "versionLabel": "Version"
+    },
+    "tagsForm": {
+      "header": "Tags",
+      "addLabel": "Add Tag",
+      "addTooltip": "Add Tag",
+      "addAria": "Add tag",
+      "addPlaceholder": "Enter tag and press Enter or click Add",
+      "helpText": "Tags help categorize and identify rules. Common tags include malware family names, attack techniques, or file types."
+    },
+    "stringsForm": {
+      "header": "Add String",
+      "identifierLabel": "Identifier",
+      "identifierPlaceholder": "e.g., malware_string",
+      "typeLabel": "Type",
+      "valueLabel": "Value",
+      "modifiersLabel": "Modifiers",
+      "modifiersPlaceholder": "Select",
+      "placeholderHex": "e.g., 4D 5A 90 00",
+      "placeholderRegex": "e.g., /malware[0-9]+/",
+      "placeholderWide": "e.g., wide string",
+      "placeholderDefault": "e.g., malicious string"
+    },
+    "stringsList": {
+      "header": "Strings ({{count}})",
+      "deleteTooltip": "Delete String",
+      "deleteAria": "Delete string",
+      "typeLabel": "Type: {{type}}",
+      "modifiersLabel": "Modifiers: {{modifiers}}",
+      "valueLabel": "Value: {{value}}"
+    },
+    "conditionsForm": {
+      "header": "Conditions",
+      "stringMatchLabel": "String Match",
+      "stringMatchNone": "None",
+      "stringMatchAll": "All of them",
+      "stringMatchAny": "Any of them",
+      "fileSizeLabel": "File Size (KB)",
+      "fileSizePlaceholder": "e.g., 1024",
+      "fileTypeLabel": "File Type",
+      "fileTypeNone": "None",
+      "helpText": "Conditions define when the rule should match. String match conditions require at least one string to be defined."
+    }
+  },
+  "snort": {
+    "title": "Snort/Suricata Rule Builder",
+    "sections": {
+      "ruleHeader": "Rule Header",
+      "ruleOptions": "Rule Options",
+      "detectionContent": "Detection Content",
+      "enhancedMetadata": "Enhanced Metadata"
+    },
+    "ruleHeader": {
+      "actionLabel": "Action",
+      "protocolLabel": "Protocol",
+      "sourceIpLabel": "Source IP",
+      "sourcePortLabel": "Source Port",
+      "directionLabel": "Direction",
+      "destIpLabel": "Dest IP",
+      "destPortLabel": "Dest Port"
+    },
+    "ruleOptions": {
+      "messageLabel": "Message",
+      "messagePlaceholder": "Brief description of what this rule detects",
+      "sidLabel": "SID",
+      "sidPlaceholder": "Unique rule identifier",
+      "revisionLabel": "Revision",
+      "revisionPlaceholder": "Rule revision number",
+      "priorityLabel": "Priority",
+      "priorityPlaceholder": "1-4 (1=highest)",
+      "classTypeLabel": "Class Type"
+    },
+    "ruleContent": {
+      "rateLimitingHeader": "Rate Limiting",
+      "thresholdLabel": "Threshold",
+      "detectionFilterLabel": "Detection Filter"
+    },
+    "ruleMetadata": {
+      "createdAtLabel": "Created At",
+      "updatedAtLabel": "Updated At",
+      "policyLabel": "Policy",
+      "formerCategoryLabel": "Former Category",
+      "signatureSeverityLabel": "Signature Severity",
+      "attackTargetLabel": "Attack Target",
+      "attackTargetPlaceholder": "Select targets",
+      "deploymentLabel": "Deployment",
+      "deploymentPlaceholder": "Select deployments"
+    },
+    "basicMetadataSection": {
+      "header": "Basic Metadata",
+      "keyLabel": "Key",
+      "keyPlaceholder": "policy, created_at, etc.",
+      "valueLabel": "Value",
+      "valuePlaceholder": "Metadata value",
+      "deleteTooltip": "Delete Metadata",
+      "deleteAria": "Delete metadata",
+      "requiredAlert": "Both metadata key and value are required."
+    },
+    "contentMatching": {
+      "header": "Content Matching",
+      "contentLabel": "Content",
+      "contentPlaceholder": "String to match (e.g., GET /admin)",
+      "modifiersLabel": "Modifiers",
+      "modifiersPlaceholder": "Select modifiers",
+      "deleteTooltip": "Delete Content",
+      "deleteAria": "Delete content",
+      "modifiersDisplay": "Modifiers: {{modifiers}}",
+      "noModifiers": "No modifiers",
+      "requiredAlert": "Content value is required."
+    },
+    "customTagsSection": {
+      "header": "Custom Tags",
+      "addLabel": "Add Tag",
+      "addPlaceholder": "Enter custom tag",
+      "requiredAlert": "Tag is required.",
+      "duplicateAlert": "Tag already exists."
+    },
+    "flowbitsSection": {
+      "header": "Flowbits",
+      "actionLabel": "Action",
+      "nameLabel": "Flowbit Name",
+      "namePlaceholder": "flowbit_name",
+      "deleteTooltip": "Delete Flowbit",
+      "deleteAria": "Delete flowbit",
+      "requiredAlert": "Flowbit name is required."
+    },
+    "malwareFamilySection": {
+      "header": "Malware Family",
+      "addLabel": "Add Malware Family",
+      "addPlaceholder": "Enter malware family name",
+      "requiredAlert": "Malware family is required.",
+      "duplicateAlert": "Malware family already exists."
+    },
+    "pcreSection": {
+      "header": "PCRE (Perl Compatible Regular Expressions)",
+      "patternLabel": "PCRE Pattern",
+      "deleteTooltip": "Delete PCRE",
+      "deleteAria": "Delete PCRE",
+      "requiredAlert": "PCRE pattern is required."
+    },
+    "referencesSection": {
+      "header": "References",
+      "typeLabel": "Type",
+      "valueLabel": "Reference Value",
+      "valuePlaceholder": "URL, CVE ID, etc.",
+      "deleteTooltip": "Delete Reference",
+      "deleteAria": "Delete reference",
+      "requiredAlert": "Reference value is required."
+    }
+  }
+}

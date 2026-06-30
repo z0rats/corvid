@@ -1,0 +1,51 @@
+{
+  "reverseSearch": {
+    "title": "Reverse image search",
+    "urlLabel": "Image URL (optional, enables reverse-search links)",
+    "urlPlaceholder": "https://example.com/photo.jpg",
+    "withUrlHint": "Open this image in a reverse-search engine:",
+    "noUrlHint": "No image URL provided — these will open each engine so you can upload the file manually."
+  },
+  "upload": {
+    "title": "Image Upload",
+    "dropzonePrompt": "Drag 'n' drop an image here, or click to select a file",
+    "acceptedFormats": "(JPEG, PNG, TIFF, WEBP, HEIC, BMP, GIF)",
+    "analyzeButton": "Analyze"
+  },
+  "exif": {
+    "empty": "No EXIF data found in this image."
+  },
+  "gps": {
+    "empty": "No GPS data found in this image.",
+    "viewOnMap": "View on map",
+    "altitude": "(alt. {{value}} m)"
+  },
+  "analysisResult": {
+    "generalInfo": "General information",
+    "gpsLocation": "GPS location",
+    "exifMetadata": "EXIF metadata"
+  },
+  "fileMetadata": {
+    "fileProperties": "File properties",
+    "fileHashes": "File hashes",
+    "format": "Format",
+    "mimeType": "MIME type",
+    "dimensions": "Dimensions",
+    "colorMode": "Color mode",
+    "dpi": "DPI",
+    "fileSize": "File size",
+    "copied": "Copied!",
+    "copy": "Copy",
+    "copyHashAriaLabel": "Copy hash"
+  },
+  "welcome": {
+    "title": "Image Tools",
+    "intro1": "Image Tools lets you inspect an image file for OSINT purposes. Upload a picture to see every piece of metadata it carries — camera/device info, capture timestamp, GPS location, and the software used to create or edit it.",
+    "intro2": "You can also kick off a reverse image search without any API keys: provide the image's URL (if it has one) to get deep links straight into Google Lens, Yandex, Bing, and TinEye, or use the same buttons to open each engine for a manual upload.",
+    "keyFeatures": "Key Features",
+    "exifGps": { "title": "EXIF & GPS", "description": "Full EXIF tag breakdown plus a map link when GPS data is present" },
+    "fileProps": { "title": "File Properties & Hashes", "description": "Format, dimensions, color mode, DPI, and MD5/SHA1/SHA256 hashes" },
+    "reverseSearch": { "title": "Reverse Image Search", "description": "Deep links into Google Lens, Yandex, Bing, and TinEye — no API keys required" },
+    "privacy": { "title": "Privacy-Friendly", "description": "Your image is only sent to this app's own backend, never to a third party" }
+  }
+}

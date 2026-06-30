@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -27,14 +28,14 @@ import DonutLargeIcon from '@mui/icons-material/DonutLarge';
 import NoDetails from '../NoDetails';
 import { ResponsivePie } from '@nivo/pie';
 
-const KILL_CHAIN_PHASES = [
-  { id: 'reconnaissance', label: 'Reconnaissance' },
-  { id: 'weaponization', label: 'Weaponization' },
-  { id: 'delivery', label: 'Delivery' },
-  { id: 'exploitation', label: 'Exploitation' },
-  { id: 'installation', label: 'Installation' },
-  { id: 'command_and_control', label: 'Command & Control' },
-  { id: 'actions_on_objectives', label: 'Actions on Objectives' },
+const KILL_CHAIN_PHASE_IDS = [
+  'reconnaissance',
+  'weaponization',
+  'delivery',
+  'exploitation',
+  'installation',
+  'command_and_control',
+  'actions_on_objectives',
 ];
 
 const confidenceToScore = (level) => {
@@ -76,6 +77,8 @@ const mapKillChainToPhase = (chainNotation) => {
 };
 
 export default function CrowdStrikeDetails({ result }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const [page, setPage] = useState(1);
   const theme = useTheme();
 
@@ -177,7 +180,7 @@ export default function CrowdStrikeDetails({ result }) {
   }, []);
 
   if (!result || !result.resources || result.resources.length === 0) {
-    return <NoDetails message="No intelligence information found for this indicator in CrowdStrike" />;
+    return <NoDetails message={t('providers.crowdstrike.noInfoFound')} />;
   }
 
   return (
@@ -192,7 +195,7 @@ export default function CrowdStrikeDetails({ result }) {
                 confidenceScore < 50 ? 'warning.main' : 'error.main'
               }} />
               <Box>
-                <Typography variant="h6">Confidence Level</Typography>
+                <Typography variant="h6">{t('providers.crowdstrike.confidenceLevel')}</Typography>
                 <Typography variant="h4" sx={{
                   color: confidenceScore < 20 ? 'success.main' :
                   confidenceScore < 50 ? 'warning.main' : 'error.main'
@@ -208,7 +211,7 @@ export default function CrowdStrikeDetails({ result }) {
             <Box display="flex" alignItems="center">
               <PersonIcon fontSize="large" sx={{ mr: 1, color: 'error.main' }} />
               <Box>
-                <Typography variant="h6">Threat Actors</Typography>
+                <Typography variant="h6">{t('providers.crowdstrike.threatActors')}</Typography>
                 <Typography variant="h4">
                   {actorCount}
                 </Typography>
@@ -221,7 +224,7 @@ export default function CrowdStrikeDetails({ result }) {
             <Box display="flex" alignItems="center">
               <CodeIcon fontSize="large" sx={{ mr: 1, color: 'warning.main' }} />
               <Box>
-                <Typography variant="h6">Malware Families</Typography>
+                <Typography variant="h6">{t('providers.crowdstrike.malwareFamilies')}</Typography>
                 <Typography variant="h4">
                   {malwareCount}
                 </Typography>
@@ -240,7 +243,7 @@ export default function CrowdStrikeDetails({ result }) {
                 <Box display="flex" alignItems="center" mb={1}>
                   <DonutLargeIcon sx={{ mr: 1 }} />
                   <Typography variant="h6" component="h3">
-                    Threat Types
+                    {t('providers.crowdstrike.threatTypes')}
                   </Typography>
                 </Box>
                 <Box sx={{ height: 300 }}>
@@ -269,31 +272,31 @@ export default function CrowdStrikeDetails({ result }) {
                 <Box display="flex" alignItems="center" mb={1}>
                   <TimelineIcon sx={{ mr: 1 }} />
                   <Typography variant="h6" component="h3">
-                    Kill Chain Phases
+                    {t('providers.crowdstrike.killChainPhases')}
                   </Typography>
                 </Box>
                 <Box sx={{ p: 2 }}>
                   <Stepper orientation="vertical">
-                    {KILL_CHAIN_PHASES.map((phase) => {
-                      const isActive = activePhases.has(phase.id);
+                    {KILL_CHAIN_PHASE_IDS.map((phaseId) => {
+                      const isActive = activePhases.has(phaseId);
                       return (
-                        <Step key={phase.id} active={isActive} completed={isActive}>
+                        <Step key={phaseId} active={isActive} completed={isActive}>
                           <StepLabel
                             StepIconProps={{
                               sx: { color: isActive ? 'error.main' : '' }
                             }}
                           >
                             <Typography fontWeight={isActive ? 'bold' : 'normal'}>
-                              {phase.label}
+                              {t(`providers.crowdstrike.killChainPhaseLabels.${phaseId}`)}
                             </Typography>
                           </StepLabel>
                           {isActive && (
                             <StepContent>
                               <Typography color="text.secondary">
                                 {Object.entries(killChains)
-                                  .filter(([chain]) => mapKillChainToPhase(chain) === phase.id)
-                                  .map(([chain, count]) => `${chain} (Observed ${count} time(s))`)
-                                  .join(', ') || "Details not available for this phase."}
+                                  .filter(([chain]) => mapKillChainToPhase(chain) === phaseId)
+                                  .map(([chain, count]) => t('providers.crowdstrike.observedTimes', { chain, count }))
+                                  .join(', ') || t('providers.crowdstrike.detailsNotAvailable')}
                               </Typography>
                             </StepContent>
                           )}
@@ -317,7 +320,7 @@ export default function CrowdStrikeDetails({ result }) {
         >
           <Box display="flex" alignItems="center">
             <BugReportIcon sx={{ mr: 1 }} />
-            <Typography variant="h6">Indicators ({indicators.length})</Typography>
+            <Typography variant="h6">{t('providers.crowdstrike.indicatorsCount', { count: indicators.length })}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails>
@@ -334,15 +337,15 @@ export default function CrowdStrikeDetails({ result }) {
                 {indicator.indicator}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Type: {indicator.type}
+                {t('providers.crowdstrike.type')} {indicator.type}
               </Typography>
 
               <Box display="flex" alignItems="center" mt={1}>
                 <Typography variant="body2" mr={1}>
-                  Confidence:
+                  {t('providers.crowdstrike.confidence')}
                 </Typography>
                 <Chip
-                  label={indicator.malicious_confidence || "Unknown"}
+                  label={indicator.malicious_confidence || t('providers.crowdstrike.unknown')}
                   size="small"
                   color={getConfidenceLevelColor(indicator.malicious_confidence)}
                 />
@@ -350,17 +353,17 @@ export default function CrowdStrikeDetails({ result }) {
 
               <Box mt={1}>
                 <Typography variant="body2">
-                  Published: {indicator.published_date ? new Date(indicator.published_date * 1000).toLocaleDateString() : "N/A"}
+                  {t('providers.crowdstrike.published')} {indicator.published_date ? new Date(indicator.published_date * 1000).toLocaleDateString() : notAvailable}
                 </Typography>
                 <Typography variant="body2">
-                  Last Updated: {indicator.last_updated ? new Date(indicator.last_updated * 1000).toLocaleDateString() : "N/A"}
+                  {t('providers.crowdstrike.lastUpdated')} {indicator.last_updated ? new Date(indicator.last_updated * 1000).toLocaleDateString() : notAvailable}
                 </Typography>
               </Box>
 
               {indicator.actors && indicator.actors.length > 0 && (
                 <Box mt={2}>
                   <Typography variant="body2" fontWeight="bold">
-                    Threat Actors:
+                    {t('providers.crowdstrike.threatActorsLabel')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {indicator.actors.map((actor) => (
@@ -380,7 +383,7 @@ export default function CrowdStrikeDetails({ result }) {
               {indicator.malware_families && indicator.malware_families.length > 0 && (
                 <Box mt={2}>
                   <Typography variant="body2" fontWeight="bold">
-                    Malware Families:
+                    {t('providers.crowdstrike.malwareFamiliesLabel')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {indicator.malware_families.map((malware) => (
@@ -400,7 +403,7 @@ export default function CrowdStrikeDetails({ result }) {
               {indicator.kill_chains && indicator.kill_chains.length > 0 && (
                 <Box mt={2}>
                   <Typography variant="body2" fontWeight="bold">
-                    Kill Chain Phases (Raw):
+                    {t('providers.crowdstrike.killChainPhasesRaw')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {indicator.kill_chains.map((phase) => (
@@ -419,7 +422,7 @@ export default function CrowdStrikeDetails({ result }) {
               {indicator.threat_types && indicator.threat_types.length > 0 && (
                 <Box mt={2}>
                   <Typography variant="body2" fontWeight="bold">
-                    Threat Types:
+                    {t('providers.crowdstrike.threatTypesLabel')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {indicator.threat_types.map((type) => (

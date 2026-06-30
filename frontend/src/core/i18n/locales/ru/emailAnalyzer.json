@@ -1,0 +1,112 @@
+{
+  "errors": {
+    "noFileProvided": "Файл не предоставлен",
+    "analysisFailed": "Не удалось проанализировать письмо"
+  },
+  "emailUploadForm": {
+    "title": "Загрузка файла",
+    "dropzoneText": "Перетащите файл .eml сюда или нажмите для выбора файла",
+    "dropzoneHint": "(Принимаются только файлы .eml)",
+    "analyzeButton": "Анализировать"
+  },
+  "attachments": {
+    "title": "Вложения ({{count}})",
+    "unknownFilename": "Неизвестное имя файла",
+    "analyzeButton": "Анализировать",
+    "empty": "Вложения не найдены",
+    "tableAriaLabel": "таблица вложений",
+    "copyButton": {
+      "copy": "Копировать",
+      "copied": "Скопировано!",
+      "ariaLabel": "Скопировать хеш"
+    }
+  },
+  "emailMetadata": {
+    "notAvailable": "Н/Д",
+    "fields": {
+      "from": "От",
+      "replyTo": "Reply To",
+      "to": "Кому",
+      "cc": "Копия",
+      "date": "Дата",
+      "subject": "Тема",
+      "deliveredTo": "Доставлено для"
+    }
+  },
+  "emlHashValues": {
+    "analyzeButton": "Анализировать хеш .eml",
+    "copyButton": {
+      "copy": "Копировать",
+      "copied": "Скопировано!",
+      "ariaLabel": "Скопировать хеш"
+    }
+  },
+  "generalInfo": {
+    "title": "Общая информация",
+    "analyzeSenderButton": "Анализировать адрес отправителя",
+    "emlFileHashes": "Хеши файла .eml"
+  },
+  "header": {
+    "title": "Полный заголовок ({{count}} полей)",
+    "filterPlaceholder": "Фильтр заголовков...",
+    "columns": {
+      "key": "Ключ",
+      "value": "Значение"
+    },
+    "showingCount": "Показано {{shown}} из {{total}} полей",
+    "empty": "Поля заголовка отсутствуют",
+    "tableAriaLabel": "таблица полей заголовка"
+  },
+  "hops": {
+    "title": "Узлы маршрута ({{count}})",
+    "columns": {
+      "hop": "Узел",
+      "from": "От",
+      "by": "Через",
+      "with": "С использованием",
+      "date": "Дата / Время"
+    },
+    "empty": "Не удалось разобрать узлы маршрута",
+    "tableAriaLabel": "таблица узлов маршрута"
+  },
+  "messageBody": {
+    "title": "Текст письма"
+  },
+  "securityCheck": {
+    "title": "Базовые проверки безопасности"
+  },
+  "showAiAnswer": {
+    "analyzeButton": "Анализировать текст письма с помощью AI",
+    "resultTitle": "AI-анализ текста письма"
+  },
+  "urls": {
+    "title": "URL в тексте письма ({{count}})",
+    "analyzeButton": "Анализировать",
+    "empty": "URL не найдены",
+    "tableAriaLabel": "таблица URL"
+  },
+  "welcomeScreen": {
+    "title": "Анализ Email",
+    "description1": "Email Analyzer — это модуль, позволяющий анализировать файлы .eml на наличие потенциальных угроз. Чтобы использовать модуль, просто перетащите в него файл .eml. Модуль разберёт файл и выполнит базовые проверки безопасности для выявления возможных рисков.",
+    "description2": "Он также извлекает все индикаторы компрометации (IOC) из файла и позволяет анализировать их с помощью различных сервисов OSINT. Кроме того, Email Analyzer создаёт хеш-суммы для каждого вложения в файле, позволяя проводить анализ этих файлов без раскрытия исходных данных.",
+    "keyFeaturesTitle": "Ключевые возможности",
+    "features": {
+      "securityAnalysis": {
+        "title": "Анализ безопасности",
+        "description": "Выполняет базовые проверки безопасности файлов .eml"
+      },
+      "iocExtraction": {
+        "title": "Извлечение IOC",
+        "description": "Извлекает и анализирует IOC с помощью сервисов OSINT"
+      },
+      "attachmentAnalysis": {
+        "title": "Анализ вложений",
+        "description": "Создаёт хеш-суммы для всех вложений письма"
+      },
+      "privacyFriendly": {
+        "title": "Безопасно для приватности",
+        "description": "Анализ вложений без раскрытия исходных файлов"
+      }
+    }
+  }
+}

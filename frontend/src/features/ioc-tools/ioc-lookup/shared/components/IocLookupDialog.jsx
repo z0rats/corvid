@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -9,6 +10,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import ResultTable from '../../single-lookup/components/ui/ResultTable';
 
 export default function IocLookupDialog({ open, onClose, ioc, iocType }) {
+  const { t } = useTranslation('iocTools');
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -25,9 +28,9 @@ export default function IocLookupDialog({ open, onClose, ioc, iocType }) {
           }}
         >
           <SearchIcon sx={{ mr: 1, flexShrink: 0 }} />
-          IOC Lookup: {ioc}
+          {t('iocLookupShared.dialog.title', { ioc })}
         </Typography>
-        <IconButton onClick={onClose} aria-label="Close">
+        <IconButton onClick={onClose} aria-label={t('iocLookupShared.dialog.close')}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>

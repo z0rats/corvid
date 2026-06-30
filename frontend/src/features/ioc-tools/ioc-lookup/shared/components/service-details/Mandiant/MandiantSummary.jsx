@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveLine } from '@nivo/line';
 import Box from '@mui/material/Box';
@@ -23,6 +24,8 @@ export default function MandiantSummary({
   chartTheme,
   currentTheme,
 }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const theme = useTheme();
 
   const summaryPaperSx = {
@@ -48,7 +51,7 @@ export default function MandiantSummary({
         <Grid size={{ xs: 12, md: 6 }}>
           <Box display="flex" alignItems="center" mb={1}>
             <DonutLargeIcon sx={{ mr: 1 }} />
-            <Typography variant="h6" component="h4">Threat Categories</Typography>
+            <Typography variant="h6" component="h4">{t('providers.mandiant.threatCategories')}</Typography>
           </Box>
           <Box sx={{ height: 300 }}>
             {Object.keys(categoryStats).length > 0 ? (
@@ -71,7 +74,7 @@ export default function MandiantSummary({
             ) : (
               <Box sx={emptyStateSx}>
                 <DonutLargeIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
-                <Typography variant="body1" color="text.secondary" align="center">No threat categories available</Typography>
+                <Typography variant="body1" color="text.secondary" align="center">{t('providers.mandiant.noThreatCategories')}</Typography>
               </Box>
             )}
           </Box>
@@ -80,7 +83,7 @@ export default function MandiantSummary({
         <Grid size={{ xs: 12, md: 6 }}>
           <Box display="flex" alignItems="center" mb={1}>
             <TimelineIcon sx={{ mr: 1 }} />
-            <Typography variant="h6" component="h4">Observations Timeline</Typography>
+            <Typography variant="h6" component="h4">{t('providers.mandiant.observationsTimeline')}</Typography>
           </Box>
           <Box sx={{ height: 300 }}>
             {lineChartData.length > 0 && lineChartData[0].data.length > 0 ? (
@@ -90,8 +93,8 @@ export default function MandiantSummary({
                 xScale={{ type: 'point' }}
                 yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
                 curve="cardinal"
-                axisBottom={{ tickSize: 5, tickPadding: 5, tickRotation: 45, legend: 'Month', legendPosition: 'middle', legendOffset: 40 }}
-                axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0, legend: 'Indicators', legendPosition: 'middle', legendOffset: -50 }}
+                axisBottom={{ tickSize: 5, tickPadding: 5, tickRotation: 45, legend: t('providers.mandiant.month'), legendPosition: 'middle', legendOffset: 40 }}
+                axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0, legend: t('providers.mandiant.indicatorsAxisLabel'), legendPosition: 'middle', legendOffset: -50 }}
                 colors={{ scheme: 'category10' }}
                 pointSize={10}
                 pointColor={{ theme: 'background' }}
@@ -104,7 +107,7 @@ export default function MandiantSummary({
             ) : (
               <Box sx={emptyStateSx}>
                 <TimelineIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
-                <Typography variant="body1" color="text.secondary" align="center">No timeline data available</Typography>
+                <Typography variant="body1" color="text.secondary" align="center">{t('providers.mandiant.noTimelineData')}</Typography>
               </Box>
             )}
           </Box>
@@ -117,9 +120,9 @@ export default function MandiantSummary({
                 <Box display="flex" alignItems="center">
                   <SecurityIcon fontSize="large" sx={{ mr: 1, color: riskScore < 20 ? 'success.main' : riskScore < 40 ? 'warning.main' : 'error.main' }} />
                   <Box>
-                    <Typography variant="h6">Average Risk Score</Typography>
+                    <Typography variant="h6">{t('providers.mandiant.averageRiskScore')}</Typography>
                     <Typography variant="h4" color={riskScore < 20 ? 'success.main' : riskScore < 40 ? 'warning.main' : 'error.main'}>
-                      {riskScore !== null ? riskScore : 'N/A'}
+                      {riskScore !== null ? riskScore : notAvailable}
                     </Typography>
                   </Box>
                 </Box>
@@ -130,7 +133,7 @@ export default function MandiantSummary({
                 <Box display="flex" alignItems="center">
                   <WarningIcon fontSize="large" sx={{ mr: 1, color: 'warning.main' }} />
                   <Box>
-                    <Typography variant="h6">Indicators Found</Typography>
+                    <Typography variant="h6">{t('providers.mandiant.indicatorsFound')}</Typography>
                     <Typography variant="h4">{indicatorCount}</Typography>
                   </Box>
                 </Box>
@@ -141,7 +144,7 @@ export default function MandiantSummary({
                 <Box display="flex" alignItems="center">
                   <DescriptionIcon fontSize="large" sx={{ mr: 1, color: 'info.main' }} />
                   <Box>
-                    <Typography variant="h6">Related Reports</Typography>
+                    <Typography variant="h6">{t('providers.mandiant.relatedReports')}</Typography>
                     <Typography variant="h4">{reportCount}</Typography>
                   </Box>
                 </Box>

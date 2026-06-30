@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -14,6 +15,7 @@ import { useDropzone } from "react-dropzone";
 const INITIAL_FEED = { name: "", url: "" };
 
 export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile }) {
+  const { t } = useTranslation('newsfeed');
   const [newFeed, setNewFeed] = useState(INITIAL_FEED);
   const [iconFile, setIconFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -61,7 +63,7 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
 
   const handleSubmit = async () => {
     if (!newFeed.name || !newFeed.url) {
-      setErrorMessage("Please provide both feed name and URL");
+      setErrorMessage(t('settings.feeds.dialog.missingFieldsError'));
       return;
     }
 
@@ -71,7 +73,7 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
     if (result.success) {
       handleClose();
     } else {
-      const detail = result.error?.response?.data?.detail || "Error adding feed";
+      const detail = result.error?.response?.data?.detail || t('settings.feeds.dialog.genericAddError');
       setErrorMessage(detail);
       setLoading(false);
     }
@@ -79,7 +81,7 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Feed</DialogTitle>
+      <DialogTitle>{t('settings.feeds.dialog.title')}</DialogTitle>
       <DialogContent dividers>
         <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
           <Box
@@ -110,17 +112,17 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
               />
             ) : (
               <Typography variant="caption" color="text.secondary" textAlign="center">
-                Drop icon
+                {t('settings.feeds.dialog.dropIcon')}
               </Typography>
             )}
           </Box>
         </Box>
         <Typography variant="caption" color="text.secondary" display="block" textAlign="center" sx={{ mb: 2 }}>
-          Optional — a favicon will be fetched automatically
+          {t('settings.feeds.dialog.iconOptionalHelper')}
         </Typography>
 
         <TextField
-          label="Feed Name"
+          label={t('settings.feeds.dialog.feedName')}
           value={newFeed.name}
           onChange={(e) => { setNewFeed({ ...newFeed, name: e.target.value }); setErrorMessage(""); }}
           variant="outlined"
@@ -130,7 +132,7 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
           sx={{ mb: 2 }}
         />
         <TextField
-          label="Feed URL"
+          label={t('settings.feeds.dialog.feedUrl')}
           value={newFeed.url}
           onChange={(e) => { setNewFeed({ ...newFeed, url: e.target.value }); setErrorMessage(""); }}
           variant="outlined"
@@ -145,7 +147,7 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} variant="outlined" disabled={loading}>
-          Cancel
+          {t('settings.feeds.dialog.cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
@@ -153,7 +155,7 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
           disabled={!newFeed.name || !newFeed.url || loading}
           startIcon={loading ? <CircularProgress size={16} /> : null}
         >
-          Add Feed
+          {t('settings.feeds.dialog.addFeed')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import ReactCountryFlag from "react-country-flag";
 import { useDomainSearch } from "../../hooks/api/useDomainSearch";
 import { domainUtils } from "../../utils/domainUtils";
@@ -29,6 +30,7 @@ function StatusIcon({ status }) {
 }
 
 function Row({ row }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -39,7 +41,7 @@ function Row({ row }) {
       >
         <TableCell>
           <IconButton
-            aria-label="expand row"
+            aria-label={t('domainFinder.resultTable.expandRow')}
             size="small"
             onClick={() => setOpen(!open)}
           >
@@ -80,6 +82,7 @@ function Row({ row }) {
 }
 
 export default function ResultTable(props) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const { data: response, loading } = useDomainSearch(props.domain);
   const [page, setPage] = useState(0);
@@ -120,7 +123,7 @@ export default function ResultTable(props) {
             borderRadius: 1,
           }}
         >
-          <Table aria-label="result_table">
+          <Table aria-label={t('domainFinder.resultTable.ariaLabel')}>
             <TableHead>
               <TableRow>
                 <TableCell
@@ -132,7 +135,7 @@ export default function ResultTable(props) {
                     fontWeight: "bold",
                   }}
                 >
-                  Domain
+                  {t('domainFinder.resultTable.columns.domain')}
                 </TableCell>
                 <TableCell
                   sx={{
@@ -140,7 +143,7 @@ export default function ResultTable(props) {
                     fontWeight: "bold",
                   }}
                 >
-                  Status code
+                  {t('domainFinder.resultTable.columns.statusCode')}
                 </TableCell>
                 <TableCell
                   sx={{
@@ -149,7 +152,7 @@ export default function ResultTable(props) {
                     textAlign: "left",
                   }}
                 >
-                  Found
+                  {t('domainFinder.resultTable.columns.found')}
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -162,7 +165,7 @@ export default function ResultTable(props) {
                   })
               ) : (
                 <TableRow>
-                  <TableCell>No Data</TableCell>
+                  <TableCell>{t('domainFinder.resultTable.noData')}</TableCell>
                 </TableRow>
               )}
             </TableBody>

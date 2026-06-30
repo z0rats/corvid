@@ -1,0 +1,880 @@
+{
+  "bulkLookup": {
+    "title": "Bulk IOC Lookup",
+    "form": {
+      "errors": {
+        "invalidFileType": "Invalid file type. Please drop a CSV, MD, or TXT file.",
+        "fileReadError": "Error reading file: {{fileName}}"
+      },
+      "iocInput": {
+        "heading": "IOC Input",
+        "label": "Enter IOCs (one per line)"
+      },
+      "fileUpload": {
+        "heading": "File Upload",
+        "dropHint": "Drop files here",
+        "allowedExtensions": "(.txt, .csv, .md)"
+      },
+      "submitButton": {
+        "idle": "Analyze IOCs",
+        "loading": "Looking up..."
+      },
+      "noServicesEnabled": "Enable at least one service in settings above"
+    },
+    "results": {
+      "progress": "{{percent}}% Complete",
+      "tabsAriaLabel": "ioc type tabs",
+      "emptyTab": "No IOCs of type {{type}} to display in this tab."
+    },
+    "settings": {
+      "errors": {
+        "updateFailed": "Failed to update setting for {{serviceName}}."
+      },
+      "title": "Bulk IOC Lookup Settings",
+      "serviceToggleLabel": "Toggle {{serviceName}}",
+      "noServicesConfigured": "No services with API keys are configured. Please add keys in the main settings tab to enable them here."
+    },
+    "iocCard": {
+      "showMoreAriaLabel": "show more",
+      "serviceResultsAriaLabel": "service results",
+      "tableHeaders": {
+        "service": "Service",
+        "result": "Result"
+      },
+      "noServicesConfigured": "No services configured or results available for this IOC type."
+    },
+    "serviceRow": {
+      "expandRowAriaLabel": "expand row",
+      "noSummary": "No summary",
+      "tlpTitle": "TLP: {{tlp}}",
+      "tlpNotAvailable": "N/A"
+    },
+    "welcomeScreen": {
+      "title": "Bulk IOC Lookup",
+      "intro": "This tool processes IOCs in batches, automatically categorizes them by type, and provides threat intelligence data from various security services.",
+      "instructions": "Paste your IOCs (one per line) or upload a file to get started. The system will automatically detect IOC types and query relevant threat intelligence sources in parallel for fast analysis.",
+      "supportedTypesHeading": "Supported IOC Types",
+      "supportedTypes": {
+        "ipAddresses": { "title": "IP Addresses", "description": "IPv4 and IPv6 addresses for threat analysis" },
+        "domains": { "title": "Domains", "description": "Domain names and subdomains" },
+        "urls": { "title": "URLs", "description": "Web addresses and endpoints" },
+        "emailAddresses": { "title": "Email Addresses", "description": "Known malicious or suspicious email addresses" },
+        "hashes": { "title": "Hashes", "description": "MD5, SHA1, and SHA256 file hashes" },
+        "cves": { "title": "CVEs", "description": "Common Vulnerabilities and Exposures identifiers" }
+      }
+    }
+  },
+  "singleLookup": {
+    "searchBar": {
+      "placeholder": "Enter an IOC to analyze (IP, Domain, URL, Email, Hash, CVE, Crypto Address)...",
+      "buttonLabel": "Analyze"
+    },
+    "invalidInputAlert": {
+      "title": "Invalid Input",
+      "message": "Please enter a supported IOC type. The entered value does not match known formats for IP, Domain, URL, Email, Hash, CVE, or Crypto Address."
+    },
+    "noApiKeysAlert": {
+      "title": "No API keys available for this action",
+      "message": "You need to add API keys in the settings tab, to use this function."
+    },
+    "resultTable": {
+      "columns": {
+        "service": "Service",
+        "result": "Result"
+      }
+    },
+    "serviceFetcherRow": {
+      "unknownService": "Unknown Service"
+    },
+    "serviceResultRow": {
+      "errors": {
+        "serviceDetailsMissing": "Error: Service details missing for row.",
+        "noFurtherDetails": "No further details available for this error.",
+        "quotaConsumed": "Quota consumed. No API calls left.",
+        "retryAfter": "Retry after: {{seconds}} seconds",
+        "limitResetsAt": "Limit resets at: {{time}}",
+        "remainingRequests": "Remaining requests: {{count}}",
+        "notFound": "The requested item was not found by the service.",
+        "genericError": "An error ({{code}}) occurred.",
+        "noDetailsComponent": "No specific details component for this result."
+      },
+      "rawJsonLabel": "Raw JSON Data:",
+      "expandRowAriaLabel": "expand row",
+      "tlpTooltip": "TLP: {{tlp}}"
+    },
+    "welcomeScreen": {
+      "title": "Single IOC Lookup",
+      "intro": "Investigate various Indicators of Compromise (IOCs) using multiple threat intelligence sources like VirusTotal, AlienVault, AbuseIPDB, and more, to gain detailed insights into potential security threats.",
+      "description": "The tool automatically identifies the IOC type and correlates data from relevant sources, enabling rapid threat assessment and informed security decision-making.",
+      "supportedIocTypesTitle": "Supported IOC Types",
+      "iocTypes": {
+        "ipAddresses": { "title": "IP Addresses", "description": "IPv4 and IPv6 addresses for threat analysis" },
+        "domains": { "title": "Domains", "description": "Domain names and subdomains" },
+        "urls": { "title": "URLs", "description": "Web addresses and endpoints" },
+        "emailAddresses": { "title": "Email Addresses", "description": "Known malicious or suspicious email addresses" },
+        "hashes": { "title": "Hashes", "description": "MD5, SHA1, and SHA256 file hashes" },
+        "cves": { "title": "CVEs", "description": "Common Vulnerabilities and Exposures identifiers" },
+        "cryptoAddresses": { "title": "Crypto Addresses", "description": "EVM addresses (0x...) and Bitcoin addresses (legacy, P2SH, bech32)" }
+      },
+      "addressReputationChecksTitle": "Address Reputation Checks",
+      "addressReputationChecksIntro": "Crypto addresses are screened against a self-hosted blacklist built from open, no-key data sources — no third-party API calls are made for this check.",
+      "addressReputationChecks": {
+        "ofacSdn": { "title": "OFAC SDN (Sanctions)", "description": "Checked against the U.S. Treasury's Specially Designated Nationals list, including digital currency addresses tied to sanctioned entities. Refreshed daily." },
+        "scamSniffer": { "title": "ScamSniffer (Phishing)", "description": "Checked against ScamSniffer's open-source blacklist of EVM addresses linked to known phishing scams. Refreshed daily." }
+      }
+    }
+  },
+  "domainFinder": {
+    "errors": {
+      "title": "Error",
+      "invalidPattern": "Please enter a domain pattern to search for"
+    },
+    "searchForm": {
+      "placeholder": "Please enter a domain pattern to search for...",
+      "buttonLabel": "Search"
+    },
+    "details": {
+      "screenshot": "Screenshot",
+      "noScreenshot": "No screenshot available",
+      "notAvailable": "N/A",
+      "fields": {
+        "ip": "IP",
+        "country": "Country",
+        "url": "URL",
+        "result": "Result",
+        "statusCode": "Status code",
+        "server": "Server",
+        "mimeType": "MIME type",
+        "asnName": "ASN Name",
+        "tlsValidDays": "TLS valid days",
+        "tlsAgeDays": "TLS age in days",
+        "tlsValidFrom": "TLS valid from",
+        "tlsIssuer": "TLS issuer"
+      },
+      "actions": {
+        "analyzeIp": "Analyze IP",
+        "analyzeDomain": "Analyze Domain"
+      }
+    },
+    "noResults": {
+      "title": "No results",
+      "message": "There are no results for your search: \"{{searchTerm}}\""
+    },
+    "resultTable": {
+      "expandRow": "expand row",
+      "ariaLabel": "result_table",
+      "columns": {
+        "domain": "Domain",
+        "statusCode": "Status code",
+        "found": "Found"
+      },
+      "noData": "No Data"
+    },
+    "welcomeScreen": {
+      "title": "Domain Finder",
+      "intro": "Domain Finder is a module that helps you protect your organization from phishing attacks by allowing you to search for recently registered domains that match a specific pattern. This can help you identify potential threats before they occur.",
+      "description": "Using the URLScan.io API, the module allows you to view screenshots of websites to see what is behind a domain without the need to visit the site and potentially expose yourself to danger. Additionally, with just a single click, you can check each domain and the IP it resolves to against multiple threat intelligence services to further protect your organization.",
+      "example": "For example, you can use the module to search for domains that start with \"google-\" by using the search pattern \"google-*\".",
+      "featuresTitle": "Features",
+      "features": {
+        "patternMatching": { "title": "Pattern Matching", "description": "Search for recently registered domains using specific patterns" },
+        "safePreview": { "title": "Safe Preview", "description": "View website screenshots via URLScan.io integration" },
+        "threatIntelligence": { "title": "Threat Intelligence", "description": "Check domains and IPs against multiple security services" },
+        "proactiveDefense": { "title": "Proactive Defense", "description": "Identify potential phishing threats before they become active" }
+      }
+    }
+  },
+  "iocDefanger": {
+    "howToUse": {
+      "title": "How to Use",
+      "defang": {
+        "title": "Defanging IOCs",
+        "subtitle": "Make IOCs safe for sharing",
+        "description": "Defanging replaces dangerous characters in IOCs to prevent accidental execution:"
+      },
+      "fang": {
+        "title": "Fanging IOCs",
+        "subtitle": "Restore original IOCs for analysis",
+        "description": "Fanging restores defanged IOCs to their original form for analysis:"
+      }
+    },
+    "inputForm": {
+      "labelDefang": "Enter IOCs to defang (one per line)",
+      "labelFang": "Enter IOCs to fang (one per line)",
+      "helperText": "Supports domains, IPs, URLs, emails, filenames. {{count}} lines entered.",
+      "copyAllResults": "Copy All Results",
+      "downloadCsv": "Download CSV",
+      "clear": "Clear",
+      "defangButton": "Defang",
+      "fangButton": "Fang"
+    },
+    "operationControls": {
+      "defangOption": "Defang (Make Safe)",
+      "fangOption": "Fang (Restore Original)"
+    },
+    "resultsTable": {
+      "title": "Results ({{filteredCount}} of {{totalCount}} IOCs)",
+      "showOnlyChanged": "Show only changed ({{count}})",
+      "noChanges": {
+        "defang": "No IOCs were modified. They may already be defanged or not recognized as IOCs.",
+        "fang": "No IOCs were modified. They may already be fanged or not contain defanged patterns."
+      },
+      "columns": {
+        "original": "Original",
+        "defanged": "Defanged",
+        "fanged": "Fanged",
+        "types": "Type(s)",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "modified": "Modified",
+        "unchanged": "Unchanged"
+      },
+      "copyResultTooltip": "Copy result"
+    },
+    "welcomeScreen": {
+      "title": "IOC Defang/Fang Tool",
+      "subtitle": "Supported Defanging Techniques",
+      "description": "Safely defang IOCs for sharing or restore fanged IOCs for analysis. This tool automatically detects IOC types and applies fanging or defanging techniques."
+    }
+  },
+  "iocExtractor": {
+    "messages": {
+      "extractionSuccess": "IOC extraction completed successfully",
+      "extractionFailed": "Failed to extract IOCs from file",
+      "copyFailed": "Failed to copy IOCs",
+      "exportFailed": "Failed to export IOCs"
+    },
+    "analysisModal": {
+      "analysisFor": "Analysis for:"
+    },
+    "fileUploadZone": {
+      "title": "File Upload",
+      "dragDropText": "Drag 'n' drop a file here, or click to select a file",
+      "acceptedFormats": "(Only .txt and .csv files will be accepted)",
+      "extractButton": "Extract"
+    },
+    "noData": {
+      "title": "No IOCs found",
+      "message": "There are no items for this IOC type."
+    },
+    "resultRows": {
+      "copyFailed": "Failed to copy to clipboard",
+      "exportFailed": "Failed to export to file",
+      "copyAllTooltip": "Copy all {{type}}",
+      "copyAllAriaLabel": "Copy all",
+      "exportAllTooltip": "Export all {{type}}",
+      "exportAllAriaLabel": "Export all",
+      "columns": {
+        "ioc": "IOC",
+        "actions": "Actions"
+      },
+      "analyzeButton": "Analyze"
+    },
+    "statisticsOverview": {
+      "duplicateLabels": {
+        "domains": "Domains",
+        "ipAddresses": "IP Addresses",
+        "urls": "URLs",
+        "emailAddresses": "Email Addresses",
+        "md5Hashes": "MD5 Hashes",
+        "sha1Hashes": "SHA1 Hashes",
+        "sha256Hashes": "SHA256 Hashes"
+      },
+      "extractionComplete": "Extraction Complete",
+      "uniqueIocsFound": "{{count}} unique IOCs found and organized",
+      "copyAllTooltip": "Copy all IOCs",
+      "copyAllAriaLabel": "Copy all",
+      "exportAllTooltip": "Export all IOCs",
+      "exportAllAriaLabel": "Export all",
+      "duplicatesRemoved": "Duplicates Removed"
+    },
+    "welcomeScreen": {
+      "title": "IOC Extractor",
+      "intro": "IOC Extractor is a module that allows you to extract and organize indicators of compromise (IOCs) from unstructured files using regular expressions (Regex). The module automatically removes any duplicates, so you don't have to worry about sorting through the same IOCs multiple times.",
+      "usage": "Just drop your file containing the IOCs into the tool and let it do the work for you. With a single click, you can analyze every detected IOC, saving you the time and effort of building Excel sheets to extract IOCs from files manually.",
+      "keyFeatures": "Key Features",
+      "features": {
+        "automatedExtraction": { "title": "Automated Extraction", "description": "Extracts IOCs from unstructured files using regular expressions" },
+        "duplicateRemoval": { "title": "Duplicate Removal", "description": "Automatically removes duplicate IOCs from the results" },
+        "simpleInterface": { "title": "Simple Interface", "description": "Drop files and get results with no configuration needed" },
+        "oneClickAnalysis": { "title": "One-Click Analysis", "description": "Analyze each detected IOC with a single click" }
+      }
+    }
+  },
+  "iocLookupShared": {
+    "dialog": {
+      "title": "IOC Lookup: {{ioc}}",
+      "close": "Close"
+    },
+    "serviceHeaderCell": {
+      "iconAlt": "{{serviceName}} icon"
+    }
+  },
+  "providers": {
+    "common": {
+      "loading": "Loading...",
+      "errorLoadingInfo": "Error loading information",
+      "notAvailable": "N/A",
+      "yes": "Yes",
+      "no": "No",
+      "noDetailsTitle": "No details available",
+      "noDetailsMessage": "There are no further details available for this item.",
+      "generalInformation": "General Information",
+      "networkInformation": "Network Information",
+      "ipAddress": "IP",
+      "ipType": "IP Type",
+      "ipRange": "IP Range",
+      "reverseDns": "Reverse DNS",
+      "domainInformation": "Domain Information",
+      "domain": "Domain",
+      "hostnames": "Hostnames",
+      "type": "Type",
+      "locationInformation": "Location Information",
+      "country": "Country",
+      "countryCode": "Country Code",
+      "region": "Region",
+      "city": "City",
+      "organizationInformation": "Organization Information",
+      "organisation": "Organisation",
+      "isp": "ISP",
+      "asnInformation": "ASN Information",
+      "asn": "ASN",
+      "asOwner": "AS Owner",
+      "asnCidr": "ASN CIDR",
+      "asnCountry": "ASN Country",
+      "asnDate": "ASN Date",
+      "asnRegistry": "ASN Registry"
+    },
+    "abuseipdb": {
+      "errorFetching": "Error fetching AbuseIPDB details: {{error}}",
+      "unavailable": "AbuseIPDB details are unavailable or still loading.",
+      "confidenceScoreAndStats": "Confidence Score & Stats",
+      "totalReports": "Total Reports",
+      "distinctUsers": "Distinct Users",
+      "lastReported": "Last Reported",
+      "whitelisted": "Whitelisted",
+      "percentMalicious": "% malicious"
+    },
+    "blacklist": {
+      "unavailable": "Address blacklist details are unavailable or still loading.",
+      "noMatch": "No match — not listed in OFAC SDN or ScamSniffer",
+      "ofacSanctioned": "OFAC Sanctioned",
+      "phishingAssociated": "Phishing-Associated Address",
+      "entity": "Entity",
+      "program": "Program",
+      "chain": "Chain",
+      "remarks": "Remarks",
+      "phishingDomain": "Phishing domain"
+    },
+    "checkphish": {
+      "unavailable": "Checkphish details are unavailable or the scan is not complete.",
+      "errorFetching": "Error fetching Checkphish details: {{error}}",
+      "scanStatus": "Checkphish scan status: {{status}}. Please wait for completion.",
+      "scanDetails": "Scan Details",
+      "jobId": "Job ID",
+      "scannedUrl": "Scanned URL",
+      "urlSha256": "URL SHA256",
+      "jobStatus": "Job Status",
+      "scanStart": "Scan Start",
+      "scanEnd": "Scan End",
+      "disposition": "Disposition",
+      "detectedBrand": "Detected Brand",
+      "insights": "Insights",
+      "screenshot": "Screenshot",
+      "screenshotAlt": "Website screenshot"
+    },
+    "googleSafeBrowsing": {
+      "loading": "Loading Google Safe Browse details...",
+      "errorFetching": "Error fetching Google Safe Browse details: {{error}}",
+      "match": "Match {{number}}: {{threatType}}",
+      "platformType": "Platform Type:",
+      "threatEntryType": "Threat Entry Type:",
+      "matchedUrlPattern": "Matched URL Pattern:",
+      "cacheDuration": "Cache Duration:",
+      "analysisFor": "Google Safe Browse Analysis for:",
+      "threatsReported": "The following threats were reported for the queried IOC:",
+      "noThreatsFound": "No threats found by Google Safe Browse. The IOC appears to be safe according to this check."
+    },
+    "github": {
+      "errorFetching": "Error fetching GitHub details: {{error}}",
+      "unavailable": "GitHub details are unavailable or the data is incomplete.",
+      "noMentionsFound": "No GitHub mentions found for \"{{ioc}}\". (Total reported: {{totalCount}})",
+      "mentionsTotal": "GitHub Mentions ({{count}} total)",
+      "tableAriaLabel": "github results table",
+      "columns": {
+        "filename": "Filename",
+        "url": "URL",
+        "repository": "Repository"
+      }
+    },
+    "emailrepio": {
+      "errorFetching": "Error fetching Emailrep.io details: {{error}}",
+      "unavailable": "Emailrep.io details are unavailable or the data is incomplete.",
+      "reputationAndDetails": "Reputation & Details",
+      "onlineProfiles": "Online Profiles",
+      "onlineProfilesHelper": "Social and online profiles associated with this email address.",
+      "noProfilesFound": "No profiles found.",
+      "fields": {
+        "email": "Email",
+        "reputation": "Reputation",
+        "suspicious": "Suspicious",
+        "references": "References",
+        "blacklisted": "Blacklisted",
+        "maliciousActivity": "Malicious Activity",
+        "recentMaliciousActivity": "Recent Malicious Activity",
+        "credentialsLeaked": "Credentials Leaked",
+        "dataBreaches": "Data Breaches",
+        "firstSeen": "First Seen",
+        "lastSeen": "Last Seen",
+        "domainExists": "Domain Exists",
+        "domainReputation": "Domain Reputation",
+        "newDomain": "New Domain",
+        "daysSinceDomainCreation": "Days Since Domain Creation",
+        "suspiciousTld": "Suspicious TLD",
+        "spam": "Spam",
+        "freeProvider": "Free Provider",
+        "disposable": "Disposable",
+        "deliverable": "Deliverable",
+        "acceptAll": "Accept All (Domain)",
+        "validMx": "Valid MX (Domain)",
+        "spoofable": "Spoofable",
+        "spfStrict": "SPF Strict",
+        "dmarcEnforced": "DMARC Enforced"
+      },
+      "helpers": {
+        "references": "- Total sources of reputation (may include domain reputation).",
+        "blacklisted": "- Believed to be malicious or spammy.",
+        "maliciousActivity": "- Exhibited phishing or fraud.",
+        "recentMaliciousActivity": "- Malicious behavior in the last 90 days.",
+        "credentialsLeaked": "- Credentials leaked in the last 90 days.",
+        "dataBreaches": "- Appeared in a data breach.",
+        "firstSeen": "- First observed in breach/leak or malicious activity.",
+        "lastSeen": "- Last observed in breach/leak or malicious activity.",
+        "domainReputation": "- (high/medium/low/n/a)",
+        "newDomain": "- Domain created within the last year.",
+        "suspiciousTld": "- e.g., .tk, .xyz",
+        "spam": "- Exhibited spammy behavior.",
+        "disposable": "- Uses a temporary email service.",
+        "acceptAll": "- Mail server has a catch-all policy.",
+        "spoofable": "- Weak SPF or DMARC not enforced."
+      }
+    },
+    "hunterio": {
+      "errorFetching": "Error fetching Hunter.io details: {{error}}",
+      "unavailable": "Hunter.io details are unavailable or the data is incomplete.",
+      "emailVerificationDetails": "Email Verification Details",
+      "sourcesCount": "Sources ({{count}})",
+      "sourcesHelper": "Web pages where this email address was found. Limited to the most recent sources by Hunter.io.",
+      "noSourcesFound": "No public sources found for this email address.",
+      "fields": {
+        "queriedEmail": "Queried Email:",
+        "verificationResult": "Verification Result:",
+        "status": "Status:",
+        "score": "Score:",
+        "regexpValid": "Regexp Valid:",
+        "gibberish": "Gibberish (Auto-generated):",
+        "disposable": "Disposable Email:",
+        "webmail": "Webmail (e.g., Gmail):",
+        "mxRecords": "MX Records Found:",
+        "smtpServer": "SMTP Server Connect:",
+        "smtpCheck": "SMTP Check (No Bounce):",
+        "acceptAll": "Domain Accepts All:",
+        "block": "SMTP Check Blocked:"
+      },
+      "columns": {
+        "domain": "Domain",
+        "uri": "URI",
+        "extracted": "Extracted",
+        "lastSeen": "Last Seen",
+        "stillOnPage": "Still on Page"
+      }
+    },
+    "ipqualityscore": {
+      "errorFetching": "Error fetching IPQualityScore details: {{error}}",
+      "unavailable": "IPQualityScore details are unavailable or data is incomplete.",
+      "fraudScoreAndIndicators": "Fraud Score & Indicators",
+      "proxy": "Proxy",
+      "vpn": "VPN",
+      "tor": "Tor",
+      "active": "(Active)",
+      "recentAbuse": "Recent Abuse",
+      "botStatus": "Bot Status",
+      "mobileConnection": "Mobile Connection",
+      "fraudRisk": "fraud risk"
+    },
+    "maltiverse": {
+      "errorFetching": "Error fetching Maltiverse details: {{error}}",
+      "unavailable": "Maltiverse details are unavailable or data is incomplete.",
+      "insufficientData": "Insufficient data from Maltiverse.",
+      "threatProfileAndIpCharacteristics": "Threat Profile & IP Characteristics",
+      "classification": "Classification",
+      "vpnNode": "VPN Node",
+      "openProxy": "Open Proxy",
+      "torNode": "Tor Node",
+      "cnc": "Command & Control (C&C)",
+      "distributingMalware": "Distributing Malware",
+      "cdnNode": "CDN Node",
+      "hostingService": "Hosting Service",
+      "webServer": "Web Server",
+      "webHosting": "Web Hosting",
+      "knownScanner": "Known Scanner",
+      "webSpider": "Web Spider",
+      "blacklistMentions": "Blacklist Mentions ({{count}})",
+      "noBlacklistEntries": "No blacklist entries found.",
+      "columns": {
+        "description": "Description",
+        "firstSeen": "First Seen",
+        "lastSeen": "Last Seen",
+        "source": "Source"
+      }
+    },
+    "malwarebazaar": {
+      "loading": "Loading MalwareBazaar details...",
+      "errorFetching": "Error fetching MalwareBazaar details: {{error}}",
+      "malwareSampleIdentified": "Malware Sample Identified",
+      "hashAssociated": "This hash is associated with a known malware sample in the MalwareBazaar database.",
+      "keyDetails": "Key details from the first match (full detailed view pending implementation):",
+      "sha256": "SHA256:",
+      "signature": "Signature:",
+      "fileNames": "File Name(s):",
+      "mimeType": "MIME Type:",
+      "tags": "Tags:",
+      "furtherDetails": "Further details (like download links, full analysis) will be implemented later.",
+      "hashNotFound": "Hash Not Found",
+      "hashNotFoundMessage": "The hash ({{ioc}}) was not found in the MalwareBazaar database.",
+      "queryError": "Query Error",
+      "statusCheckFormat": "Status: {{status}}. Please check the hash format.",
+      "unknown": "Unknown",
+      "status": "Status: {{status}}",
+      "couldNotRetrieve": "Could not retrieve specific details for this hash from MalwareBazaar at the moment."
+    },
+    "pulsedive": {
+      "loading": "Loading Pulsedive details...",
+      "errorFetching": "Error fetching Pulsedive details: {{error}}",
+      "notFound": "Indicator \"{{ioc}}\" not found or no details in Pulsedive.",
+      "analysisFor": "Pulsedive Analysis for:",
+      "riskLevel": "Risk Level",
+      "timestamps": "Timestamps",
+      "added": "Added:",
+      "updated": "Updated:",
+      "lastSeen": "Last Seen:",
+      "properties": "Properties:",
+      "dnsPtr": "DNS PTR",
+      "geolocation": "Geolocation",
+      "country": "Country:",
+      "city": "City:",
+      "organization": "Organization:",
+      "httpProperties": "HTTP Properties",
+      "contentType": "Content Type:",
+      "statusCode": "Status Code:",
+      "noProperties": "No specific properties found."
+    },
+    "reddit": {
+      "noTitle": "No Title",
+      "openOnReddit": "Open on Reddit",
+      "readLess": "Read less",
+      "readMore": "Read more",
+      "loading": "Loading Reddit mentions...",
+      "errorFetching": "Error fetching Reddit mentions: {{error}}",
+      "noMentionsFound": "No Reddit mentions found for \"{{ioc}}\".",
+      "mentionsCount": "Reddit Mentions ({{count}})"
+    },
+    "threatfox": {
+      "loading": "Loading ThreatFox details...",
+      "errorFetching": "Error fetching ThreatFox details: {{error}}",
+      "queryStatus": "ThreatFox query status: {{status}}.",
+      "unknownError": "Unknown error",
+      "notFound": "IOC \"{{ioc}}\" not found in ThreatFox database.",
+      "foundNoEntries": "IOC Found by ThreatFox, but no specific data entries returned.",
+      "foundNoEntriesHint": "(This might indicate outdated or minimal information for this indicator.)",
+      "intelligenceFor": "ThreatFox Intelligence for:",
+      "displayingRecords": "Displaying {{count}} record(s) from ThreatFox.",
+      "entryIdConfidence": "Entry ID: {{id}} (Confidence: {{confidence}}%)",
+      "iocValue": "IOC Value",
+      "iocType": "IOC Type",
+      "threatType": "Threat Type",
+      "malware": "Malware",
+      "genericUnknown": "Generic/Unknown",
+      "alias": "Alias:",
+      "malpediaEntry": "Malpedia Entry",
+      "timeline": "Timeline",
+      "firstSeen": "First seen:",
+      "lastSeen": "Last seen:",
+      "reporter": "Reporter",
+      "reference": "Reference",
+      "tags": "Tags"
+    },
+    "twitter": {
+      "loading": "Loading Twitter mentions...",
+      "errorFetching": "Error fetching Twitter mentions: {{error}}",
+      "noTweetsFound": "No recent tweets found mentioning \"{{ioc}}\".",
+      "recentTweetsMentioning": "Recent Tweets Mentioning:",
+      "totalReported": "({{count}} total reported)",
+      "unknownAuthor": "Unknown Author",
+      "viewOnTwitter": "View on Twitter"
+    },
+    "shodan": {
+      "loading": "Loading Shodan details...",
+      "unknownError": "Unknown error",
+      "errorFetching": "Error fetching Shodan details: {{error}}",
+      "noInfoFound": "No detailed Shodan information found for \"{{ip}}\".",
+      "location": "Location",
+      "organizationAsn": "Organization / ASN",
+      "isp": "ISP",
+      "lastUpdate": "Last Update",
+      "ipReportFor": "Shodan IP Report for:",
+      "openPorts": "Open Ports ({{count}})",
+      "domainsAndHostnames": "Domains & Hostnames",
+      "domainsCount": "Domains ({{count}}):",
+      "hostnamesCount": "Hostnames ({{count}}):",
+      "tagsCount": "Tags ({{count}})",
+      "serviceBanners": "Service Banners / Detailed Data ({{count}})",
+      "vulnerabilities": "Vulnerabilities ({{count}})"
+    },
+    "hibp": {
+      "loading": "Loading Have I Been Pwned details...",
+      "errorFetching": "Error fetching HIBP details: {{error}}",
+      "noResultsFound": "No breaches or pastes found for \"{{ioc}}\" according to Have I Been Pwned.",
+      "breaches": "Breaches",
+      "noBreachesFound": "No breaches found for this email address.",
+      "breachesCount": "Breaches ({{count}})",
+      "searchBreaches": "Search Breaches",
+      "breachesHelper": "Incidents where data was inadvertently exposed in vulnerable systems.",
+      "verified": "(Verified)",
+      "domain": "Domain:",
+      "noMatchingBreaches": "No matching breaches found for search term.",
+      "exportList": "Export List",
+      "pastes": "Pastes",
+      "noPastesFound": "No pastes found for this email address.",
+      "pastesCount": "Pastes ({{count}})",
+      "searchPastes": "Search Pastes",
+      "pastesHelper": "Information \"pasted\" to public sharing sites, often an early indicator of a breach.",
+      "noTitleAvailable": "No Title Available",
+      "noTitle": "No Title",
+      "source": "Source:",
+      "date": "Date:",
+      "emailCount": "Email count:",
+      "noMatchingPastes": "No matching pastes found for search term."
+    },
+    "urlscan": {
+      "noInfoFound": "No urlscan.io information was found for this indicator.",
+      "totalScans": "Total Scans",
+      "uniqueApexDomains": "Unique Apex Domains",
+      "uniqueIps": "Unique IPs",
+      "scanResults": "Scan Results ({{count}})",
+      "screenshotAlt": "Screenshot of {{url}}",
+      "viewFullReport": "View Full Report",
+      "scanTime": "Scan Time",
+      "scannedUrl": "Scanned URL",
+      "visibility": "Visibility",
+      "pageDetails": "Page Details",
+      "finalUrl": "Final URL",
+      "title": "Title",
+      "ipAddress": "IP Address",
+      "country": "Country",
+      "asn": "ASN",
+      "server": "Server",
+      "status": "Status",
+      "mimeType": "MIME Type"
+    },
+    "crowdstrike": {
+      "noInfoFound": "No intelligence information found for this indicator in CrowdStrike",
+      "confidenceLevel": "Confidence Level",
+      "threatActors": "Threat Actors",
+      "malwareFamilies": "Malware Families",
+      "threatTypes": "Threat Types",
+      "killChainPhases": "Kill Chain Phases",
+      "killChainPhaseLabels": {
+        "reconnaissance": "Reconnaissance",
+        "weaponization": "Weaponization",
+        "delivery": "Delivery",
+        "exploitation": "Exploitation",
+        "installation": "Installation",
+        "command_and_control": "Command & Control",
+        "actions_on_objectives": "Actions on Objectives"
+      },
+      "observedTimes": "{{chain}} (Observed {{count}} time(s))",
+      "detailsNotAvailable": "Details not available for this phase.",
+      "indicatorsCount": "Indicators ({{count}})",
+      "type": "Type:",
+      "confidence": "Confidence:",
+      "unknown": "Unknown",
+      "published": "Published:",
+      "lastUpdated": "Last Updated:",
+      "threatActorsLabel": "Threat Actors:",
+      "malwareFamiliesLabel": "Malware Families:",
+      "killChainPhasesRaw": "Kill Chain Phases (Raw):",
+      "threatTypesLabel": "Threat Types:"
+    },
+    "alienvault": {
+      "unavailable": "Detailed information for AlienVault OTX is unavailable or still loading.",
+      "indicator": "Indicator",
+      "location": "Location",
+      "reputationScore": "Reputation Score",
+      "validation": "Validation",
+      "pulseInformation": "Pulse Information",
+      "pulse": "Pulse",
+      "pulses": "Pulses",
+      "uniqueCount": "({{count}} unique)",
+      "referencedPulses": "Referenced Pulses:",
+      "noDetections": "No detections",
+      "malwareSamples": "Malware Samples ({{count}})",
+      "hash": "Hash",
+      "detections": "Detections",
+      "date": "Date",
+      "fileAnalysis": "File Analysis",
+      "fileType": "File Type",
+      "status": "Status",
+      "malwareFamily": "Malware Family"
+    },
+    "crowdsec": {
+      "errorFetching": "Error fetching CrowdSec details: {{error}}",
+      "notFound": "IP not found in CrowdSec CTI.",
+      "unavailable": "CrowdSec details are unavailable.",
+      "insufficientData": "Insufficient data received from CrowdSec CTI.",
+      "behaviours": "Behaviours",
+      "attackDetails": "Attack Details",
+      "references": "References",
+      "referenceNumber": "Reference {{number}}",
+      "noDescription": "No description",
+      "targetCountriesByReportCount": "Target Countries by Report Count",
+      "ipReputationDetails": "IP Reputation Details ({{ip}})",
+      "ipRangeScore": "IP Range Score",
+      "asName": "AS Name",
+      "remediation": "Remediation",
+      "scoreInfoTitle": "CTI Score Information",
+      "scoreInfoText": "The scores indicate malevolence for an IP over time (Overall, Last Day, Week, Month).\n\n- Aggressiveness: Intensity of attacks (number reported).\n- Threat Level: Seriousness of reported attack types (e.g., crawl vs. exploit).\n- Trust: Confidence in reporting actors (reputation, diversity).\n- Anomaly: Red flags from IP's static description.\n- Total: Aggregation of these components (0=low to 5=high malevolence).",
+      "ctiScoresBreakdown": "CTI Scores Breakdown",
+      "showScoreInfo": "Show score info",
+      "period": "Period",
+      "score": "Score"
+    },
+    "mandiant": {
+      "noInfoFound": "No detailed intelligence information found for this indicator in Mandiant.",
+      "reportsCount": "Reports ({{count}})",
+      "threatCategories": "Threat Categories",
+      "noThreatCategories": "No threat categories available",
+      "observationsTimeline": "Observations Timeline",
+      "month": "Month",
+      "indicatorsAxisLabel": "Indicators",
+      "noTimelineData": "No timeline data available",
+      "averageRiskScore": "Average Risk Score",
+      "indicatorsFound": "Indicators Found",
+      "relatedReports": "Related Reports",
+      "riskScore": "Risk Score:",
+      "sources": "Sources:",
+      "open": "Open",
+      "reportId": "Report ID:"
+    },
+    "nistnvd": {
+      "simpleTable": "simple table",
+      "vulnerable": "Vulnerable",
+      "criteria": "Criteria",
+      "versionFrom": "Version from",
+      "versionTo": "Version to",
+      "criteriaId": "Criteria ID",
+      "cvssMetrics": "CVSS 3.1 metrics",
+      "vectorString": "Vector string",
+      "source": "Source",
+      "baseScore": "Base Score",
+      "exploitabilityScore": "Exploitability (Score: {{score}})",
+      "attackVector": "Attack vector (AV)",
+      "attackComplexity": "Attack complexity (AC)",
+      "privilegesRequired": "Privileges required (PR)",
+      "userInteraction": "User interaction (UI)",
+      "scope": "Scope (S)",
+      "impactScore": "Impact (Score: {{score}})",
+      "confidentialityImpact": "Confidentiality impact (CI)",
+      "integrityImpact": "Integrity impact (II)",
+      "availabilityImpact": "Availability impact (AI)",
+      "details": "Details",
+      "sourceIdentifier": "Source identifier",
+      "lastModified": "Last modified",
+      "vulnerabilityStatus": "Vulnerability status",
+      "description": "Description",
+      "loading": "Loading NIST NVD details...",
+      "errorFetching": "Error fetching NIST NVD details: {{error}}",
+      "noInfoFound": "No detailed vulnerability information found for CVE ID: {{ioc}}.",
+      "notFound": "CVE ID: {{ioc}} was not found in the NIST NVD.",
+      "referencesDisclaimer": "References to advisories, solutions, and tools. By selecting these links, you may be leaving NIST webspace. NIST does not necessarily endorse the views expressed or products mentioned on these sites.",
+      "affectedConfigurations": "Affected Configurations (CPEs)",
+      "configurationsDisclaimer": "CVE applicability statements conveying which product(s) are associated with the vulnerability.",
+      "configurationNumber": "Configuration #{{number}}",
+      "operator": "(Operator: {{operator}})",
+      "negated": "- Negated",
+      "organization": "Organization",
+      "comment": "Comment",
+      "vendorComments": "Vendor Comments",
+      "vendorCommentsDisclaimer": "Official Vendor Comment for the CVE. NVD provides a service whereby organizations can submit Official Vendor Comments for CVE associated with their products. Organizations can use the service in a variety of ways. For example, they can provide configuration and remediation guidance, clarify vulnerability applicability, provide deeper vulnerability analysis, dispute third party vulnerability information, and explain vulnerability impact. Official Vendor Comments can be submitted to the NVD by email at nvd@nist.gov.",
+      "weaknesses": "Weaknesses",
+      "weaknessesDisclaimer": "This object contains information on specific weaknesses, considered the cause of the vulnerability. Source identifies the organization that provided the weakness information and type identifies whether the organization is a primary or secondary source. Primary sources include the NVD and CNA who have reached the provider level in CVMAP. 10% of provider level submissions are audited by the NVD. If a submission has been audited the NVD will appear as the primary source and the provider level CNA will appear as the secondary source."
+    },
+    "virustotal": {
+      "filenames": "Filenames",
+      "typeTags": "Type tags",
+      "none": "None",
+      "tags": "Tags",
+      "readLess": "Read Less",
+      "readMore": "Read More",
+      "crowdsourcedContext": "Crowdsourced context",
+      "title": "Title:",
+      "timestamp": "Timestamp:",
+      "detail": "Detail:",
+      "severity": "Severity:",
+      "popularityRanks": "Popularity ranks",
+      "popularityRanksHelper": "Domain's position in popularity ranks such as Alexa, Quantcast, Statvoo, etc.",
+      "popularThreatClassification": "Popular threat classification",
+      "threatClassificationHelper": "Human readable names extracted from the AV verdicts and clustering hashes",
+      "suggestedThreatLabel": "Suggested threat label",
+      "popularThreatCategory": "Popular threat category",
+      "popularThreatName": "Popular threat name",
+      "crowdsourcedIdsRules": "Crowdsourced IDS rules",
+      "ruleCategory": "Rule category",
+      "alertSeverity": "Alert severity",
+      "ruleMessage": "Rule message",
+      "ruleRaw": "Rule raw",
+      "ruleUrl": "Rule url",
+      "ruleSource": "Rule source",
+      "ruleId": "Rule ID",
+      "lastAnalysisResults": "Last analysis results",
+      "engine": "Engine",
+      "category": "Category",
+      "result": "Result",
+      "method": "Method",
+      "detectedAsMalicious": "Detected as malicious by {{count}} engine(s)",
+      "internetRegistry": "Internet registry",
+      "network": "Network",
+      "asOwner": "AS owner",
+      "typeExtension": "Type extension",
+      "magic": "Magic",
+      "uniqueSources": "Unique sources",
+      "elfInformation": "ELF information (Executable and Linkable Format)",
+      "header": "Header",
+      "sectionList": "Section List",
+      "name": "Name",
+      "sectionType": "Section type",
+      "virtualAddress": "Virtual address",
+      "physicalOffset": "Physical offset",
+      "flags": "Flags",
+      "size": "Size",
+      "segmentList": "Segment List",
+      "analysisStatistics": "Analysis Statistics",
+      "harmless": "Harmless",
+      "malicious": "Malicious",
+      "suspicious": "Suspicious",
+      "undetected": "Undetected",
+      "timeout": "Timeout",
+      "community": "Community",
+      "reputation": "Reputation",
+      "votedMalicious": "Voted malicious",
+      "lastModification": "Last modification",
+      "votedHarmless": "Voted harmless",
+      "loading": "Loading VirusTotal details...",
+      "notFound": "IOC \"{{ioc}}\" was not found on VirusTotal",
+      "errorFetching": "Error fetching VirusTotal details: {{error}}",
+      "noAttributesFound": "No detailed VirusTotal attributes found for \"{{ioc}}\". The API response might be incomplete or the IOC was not found."
+    }
+  }
+}

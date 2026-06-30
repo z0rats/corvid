@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -72,14 +73,15 @@ const ResultBox = styled(Box)(({ theme }) => ({
 }));
 
 export default function ExecutionResult({ result, onCopy }) {
+  const { t } = useTranslation('llmTemplates');
   if (!result) return null;
 
   return (
     <StyledPaper elevation={0} sx={{ mt: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6" fontWeight={600}>Result</Typography>
-        <Tooltip title="Copy result">
-          <IconButton onClick={onCopy} aria-label="Copy result"><CopyIcon fontSize="small" /></IconButton>
+        <Typography variant="h6" fontWeight={600}>{t('executionResult.resultHeading')}</Typography>
+        <Tooltip title={t('executionResult.copyResultTooltip')}>
+          <IconButton onClick={onCopy} aria-label={t('executionResult.copyResultAria')}><CopyIcon fontSize="small" /></IconButton>
         </Tooltip>
       </Box>
       <ResultBox sx={{ border: 0, backgroundColor: 'background.paper' }}>

@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
@@ -19,6 +20,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 
 export default function ELFInformation(props) {
+  const { t } = useTranslation('iocTools');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const theme = useTheme();
@@ -43,12 +45,12 @@ export default function ELFInformation(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            ELF information (Executable and Linkable Format)
+            {t('providers.virustotal.elfInformation')}
           </Typography>
         </Grid>
       </Grid>
       <Typography variant="h5" component="h2" gutterBottom mt={2}>
-        Header
+        {t('providers.virustotal.header')}
       </Typography>
       <List>
         <Grid container spacing={2}>
@@ -64,7 +66,7 @@ export default function ELFInformation(props) {
         </Grid>
       </List>
       <Typography variant="h5" component="h2" gutterBottom mt={2}>
-        Section List
+        {t('providers.virustotal.sectionList')}
       </Typography>
       <TableContainer
         component={Paper}
@@ -84,7 +86,7 @@ export default function ELFInformation(props) {
                   fontWeight: "bold",
                 }}
               >
-                Name
+                {t('providers.virustotal.name')}
               </TableCell>
               <TableCell
                 sx={{
@@ -92,7 +94,7 @@ export default function ELFInformation(props) {
                   fontWeight: "bold",
                 }}
               >
-                Section type
+                {t('providers.virustotal.sectionType')}
               </TableCell>
               <TableCell
                 sx={{
@@ -100,7 +102,7 @@ export default function ELFInformation(props) {
                   fontWeight: "bold",
                 }}
               >
-                Virtual address
+                {t('providers.virustotal.virtualAddress')}
               </TableCell>
               <TableCell
                 sx={{
@@ -108,7 +110,7 @@ export default function ELFInformation(props) {
                   fontWeight: "bold",
                 }}
               >
-                Physical offset
+                {t('providers.virustotal.physicalOffset')}
               </TableCell>
               <TableCell
                 sx={{
@@ -116,7 +118,7 @@ export default function ELFInformation(props) {
                   fontWeight: "bold",
                 }}
               >
-                Flags
+                {t('providers.virustotal.flags')}
               </TableCell>
               <TableCell
                 sx={{
@@ -124,7 +126,7 @@ export default function ELFInformation(props) {
                   fontWeight: "bold",
                 }}
               >
-                Size
+                {t('providers.virustotal.size')}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -158,7 +160,7 @@ export default function ELFInformation(props) {
         />
       </TableContainer>
       <Typography variant="h5" component="h2" gutterBottom mt={2}>
-        Segment List
+        {t('providers.virustotal.segmentList')}
       </Typography>
       <List>
         {props.result["data"]["attributes"]["elf_info"]["segment_list"].map(

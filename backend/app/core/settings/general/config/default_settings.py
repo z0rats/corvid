@@ -10,8 +10,16 @@ from typing import Any
 # Default values for general settings
 DEFAULT_GENERAL_SETTINGS: dict[str, Any] = {
     "darkmode": False,
-    "font": "Poppins"
+    "font": "Poppins",
+    "language": "en"
 }
+
+# Supported UI languages
+SUPPORTED_LANGUAGES = ["en", "ru"]
+
+# Language code validation constraints
+LANGUAGE_MIN_LENGTH = 2
+LANGUAGE_MAX_LENGTH = 5
 
 # Supported font families
 SUPPORTED_FONTS = [
@@ -48,6 +56,16 @@ def get_default_font() -> str:
 def get_supported_fonts() -> list[str]:
     """Get list of supported fonts"""
     return SUPPORTED_FONTS.copy()
+
+
+def get_default_language() -> str:
+    """Get default language setting"""
+    return DEFAULT_GENERAL_SETTINGS["language"]
+
+
+def get_supported_languages() -> list[str]:
+    """Get list of supported language codes"""
+    return SUPPORTED_LANGUAGES.copy()
 
 
 def is_valid_font_length(font: str) -> bool:

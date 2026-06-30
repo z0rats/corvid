@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import List from '@mui/material/List';
@@ -14,19 +15,20 @@ import CrowdSecCountriesSection from './CrowdSecCountriesSection';
 import { buildScoreData } from './utils/crowdSecDataUtils';
 
 export default function CrowdSecDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
   const scoreData = useMemo(() => result ? buildScoreData(result) : [], [result]);
 
   if (!result || result.error) {
     const message = result?.error
-      ? `Error fetching CrowdSec details: ${result.message || result.error}`
+      ? t('providers.crowdsec.errorFetching', { error: result.message || result.error })
       : (result?.message?.includes("not found"))
-        ? "IP not found in CrowdSec CTI."
-        : "CrowdSec details are unavailable.";
+        ? t('providers.crowdsec.notFound')
+        : t('providers.crowdsec.unavailable');
     return <NoDetails message={message} />;
   }
 
   if (Object.keys(result).length === 0 || typeof result.ip_range_score === 'undefined') {
-    return <NoDetails message="Insufficient data received from CrowdSec CTI." />;
+    return <NoDetails message={t('providers.crowdsec.insufficientData')} />;
   }
 
   return (
@@ -45,7 +47,7 @@ export default function CrowdSecDetails({ result, ioc }) {
         {result.behaviors?.length > 0 && (
           <Grid size={{ xs: 12, md: 6 }}>
             <Card sx={{ mt: 2, p: 2, borderRadius: 2, height: '100%', border: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="h6" component="h3" gutterBottom>Behaviours</Typography>
+              <Typography variant="h6" component="h3" gutterBottom>{t('providers.crowdsec.behaviours')}</Typography>
               <List dense>
                 {result.behaviors.map((behaviour) => (
                   <ListItem key={behaviour.name || behaviour.label} disablePadding>
@@ -60,7 +62,7 @@ export default function CrowdSecDetails({ result, ioc }) {
         {result.attack_details?.length > 0 && (
           <Grid size={{ xs: 12, md: 6 }}>
             <Card sx={{ mt: 2, p: 2, borderRadius: 2, height: '100%', border: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="h6" component="h3" gutterBottom>Attack Details</Typography>
+              <Typography variant="h6" component="h3" gutterBottom>{t('providers.crowdsec.attackDetails')}</Typography>
               <List dense>
                 {result.attack_details.map((attack) => (
                   <ListItem key={attack.name || attack.label} disablePadding>
@@ -75,11 +77,11 @@ export default function CrowdSecDetails({ result, ioc }) {
         {result.references?.length > 0 && (
           <Grid size={12}>
             <Card sx={{ mt: 2, p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="h6" component="h3" gutterBottom>References</Typography>
+              <Typography variant="h6" component="h3" gutterBottom>{t('providers.crowdsec.references')}</Typography>
               <List dense>
                 {result.references.map((ref, index) => (
                   <ListItem key={ref.name || ref.url || `ref-${index}`} disablePadding>
-                    <ListItemText primary={ref.name || ref.label || `Reference ${index + 1}`} secondary={ref.description || ref.url || "No description"} />
+                    <ListItemText primary={ref.name || ref.label || t('providers.crowdsec.referenceNumber', { number: index + 1 })} secondary={ref.description || ref.url || t('providers.crowdsec.noDescription')} />
                   </ListItem>
                 ))}
               </List>

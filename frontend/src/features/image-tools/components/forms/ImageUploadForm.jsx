@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDropzone } from 'react-dropzone';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -16,6 +17,7 @@ export default function ImageUploadForm({
   uploadProgress,
   error
 }) {
+  const { t } = useTranslation('imageTools');
   const {
     getRootProps,
     getInputProps,
@@ -52,7 +54,7 @@ export default function ImageUploadForm({
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
         <UploadFileIcon sx={{ mr: 1, color: 'primary.main' }} />
         <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 500 }}>
-          Image Upload
+          {t('upload.title')}
         </Typography>
       </Box>
 
@@ -93,7 +95,7 @@ export default function ImageUploadForm({
             lineHeight: 1.3
           }}
         >
-          Drag 'n' drop an image here, or click to select a file
+          {t('upload.dropzonePrompt')}
         </Typography>
         <Typography
           variant="caption"
@@ -103,7 +105,7 @@ export default function ImageUploadForm({
             mt: 0.5
           }}
         >
-          (JPEG, PNG, TIFF, WEBP, HEIC, BMP, GIF)
+          {t('upload.acceptedFormats')}
         </Typography>
       </Box>
 
@@ -140,7 +142,7 @@ export default function ImageUploadForm({
           size="medium"
           sx={{ minWidth: 140 }}
         >
-          {isLoading ? <CircularProgress size={24} /> : "Analyze"}
+          {isLoading ? <CircularProgress size={24} /> : t('upload.analyzeButton')}
         </Button>
       </Box>
     </Paper>

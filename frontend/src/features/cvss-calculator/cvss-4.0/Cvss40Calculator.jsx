@@ -18,10 +18,12 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import DataUsageIcon from '@mui/icons-material/DataUsage';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useTranslation } from 'react-i18next';
 
 export default function Cvss40Calculator() {
   const theme = useTheme();
   const { state, updateSingleMetric } = useCvss40();
+  const { t } = useTranslation('cvssCalculator');
 
   const flattenedMetrics = {
     ...state.metrics.base,
@@ -84,14 +86,14 @@ export default function Cvss40Calculator() {
         >
           <Box display="flex" alignItems="center">
             <DataUsageIcon fontSize="small" sx={{ mr: 1 }} />
-            <Typography variant="subtitle2">Overall CVSS 4.0 Score</Typography>
+            <Typography variant="subtitle2">{t('cvss40.overallScoreTitle')}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ px: 1, py: 1 }}>
           <Box>
             <Grid container spacing={2} alignItems="center">
               <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Typography variant="h5" gutterBottom>Overall Score</Typography>
+                <Typography variant="h5" gutterBottom>{t('common.overallScore')}</Typography>
                 <Box sx={{
                   width: 160,
                   height: 160,
@@ -116,7 +118,7 @@ export default function Cvss40Calculator() {
                       : "success.main"
                   }}
                 >
-                  {state.scores.base_severity || "None"}
+                  {state.scores.base_severity || t('common.severityNone')}
                 </Typography>
               </Grid>
               
@@ -125,14 +127,14 @@ export default function Cvss40Calculator() {
                   version="4.0"
                   metrics={state.metrics}
                   scores={state.scores}
-                  title="CVSS 4.0 Metrics"
+                  title={t('cvss40.chartTitle')}
                   height={300}
                 />
               </Grid>
-              
+
               <Grid size={12}>
                 <Typography variant="h6" align="center" gutterBottom>
-                  Vector String: {state.vectorString}
+                  {t('common.vectorString', { vector: state.vectorString })}
                 </Typography>
               </Grid>
             </Grid>

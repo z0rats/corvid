@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -30,6 +31,8 @@ function Section({ icon, title, defaultExpanded, children }) {
 }
 
 export default function ImageAnalysisResult({ result, previewUrl }) {
+  const { t } = useTranslation('imageTools');
+
   if (!result) {
     return null;
   }
@@ -38,15 +41,15 @@ export default function ImageAnalysisResult({ result, previewUrl }) {
     <>
       <ImagePreview previewUrl={previewUrl} fileInfo={result.file_info} />
 
-      <Section icon={<InfoIcon />} title="General information" defaultExpanded>
+      <Section icon={<InfoIcon />} title={t('analysisResult.generalInfo')} defaultExpanded>
         <FileMetadata fileInfo={result.file_info} hashes={result.hashes} />
       </Section>
 
-      <Section icon={<PlaceIcon />} title="GPS location" defaultExpanded={Boolean(result.gps)}>
+      <Section icon={<PlaceIcon />} title={t('analysisResult.gpsLocation')} defaultExpanded={Boolean(result.gps)}>
         <GpsMap gps={result.gps} />
       </Section>
 
-      <Section icon={<InfoIcon />} title="EXIF metadata" defaultExpanded>
+      <Section icon={<InfoIcon />} title={t('analysisResult.exifMetadata')} defaultExpanded>
         <ExifDetails exif={result.exif} />
       </Section>
     </>

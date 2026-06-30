@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { domainUtils } from '../../utils/domainUtils';
 import SearchBar from '../../../../../core/components/ui/SearchBar';
 
 export default function DomainSearchForm({ onSearch, onError }) {
+  const { t } = useTranslation('iocTools');
   const [domainValue, setDomainValue] = useState('');
 
   const handleSearch = () => {
     const inputValue = domainValue.trim();
-    
+
     if (!domainUtils.validateDomainPattern(inputValue)) {
-      onError('Please enter a domain pattern to search for');
+      onError(t('domainFinder.errors.invalidPattern'));
       return;
     }
-    
+
     onError(null);
     onSearch(inputValue);
   };
@@ -31,8 +33,8 @@ export default function DomainSearchForm({ onSearch, onError }) {
     <SearchBar
       value={domainValue}
       onChange={handleChange}
-      placeholder="Please enter a domain pattern to search for..."
-      buttonLabel="Search"
+      placeholder={t('domainFinder.searchForm.placeholder')}
+      buttonLabel={t('domainFinder.searchForm.buttonLabel')}
       onKeyDown={handleKeypress}
       onSearchClick={handleSearch}
     />

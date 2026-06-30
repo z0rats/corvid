@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import CategoryIcon from "@mui/icons-material/Category";
@@ -21,6 +22,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from '@mui/material/styles';
 
 export default function Weaknesses(props) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const tableContainerStyle = {
     boxShadow: 0,
@@ -42,20 +44,20 @@ export default function Weaknesses(props) {
       sx={{ m: 1, p: 2, borderRadius: 5, boxShadow: 0 }}
     >
       <Typography variant="h5" gutterBottom component="div">
-        Weaknesses
+        {t('providers.nistnvd.weaknesses')}
       </Typography>
       <List>
         <ListItem>
           <ListItemIcon>
             <InfoIcon />
           </ListItemIcon>
-          <ListItemText secondary="This object contains information on specific weaknesses, considered the cause of the vulnerability. Source identifies the organization that provided the weakness information and type identifies whether the organization is a primary or secondary source. Primary sources include the NVD and CNA who have reached the provider level in CVMAP. 10% of provider level submissions are audited by the NVD. If a submission has been audited the NVD will appear as the primary source and the provider level CNA will appear as the secondary source." />
+          <ListItemText secondary={t('providers.nistnvd.weaknessesDisclaimer')} />
         </ListItem>
       </List>
       {props.details ? (
         <>
           <TableContainer component={Paper} sx={tableContainerStyle}>
-            <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <Table sx={{ minWidth: 650 }} aria-label={t('providers.nistnvd.simpleTable')}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={tableCellStyle}>
@@ -70,7 +72,7 @@ export default function Weaknesses(props) {
                     <Grid container direction={"row"}>
                       <CategoryIcon sx={{ mr: 1 }} />
                       <Typography variant="h7" gutterBottom component="div">
-                        Type
+                        {t('providers.common.type')}
                       </Typography>
                     </Grid>
                   </TableCell>
@@ -78,7 +80,7 @@ export default function Weaknesses(props) {
                     <Grid container direction={"row"}>
                       <SourceIcon sx={{ mr: 1 }} />
                       <Typography variant="h7" gutterBottom component="div">
-                        Source
+                        {t('providers.nistnvd.source')}
                       </Typography>
                     </Grid>
                   </TableCell>

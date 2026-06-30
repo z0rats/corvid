@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -12,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import { RISK_CHIP_COLORS } from "../../../constants/newsfeedConstants";
 
 export default function AnalysisCard({ result, index }) {
+  const { t } = useTranslation('newsfeed');
   const { title, analysis } = result;
 
   return (
@@ -27,7 +29,7 @@ export default function AnalysisCard({ result, index }) {
         }
         action={
           <Chip
-            label={"Risk: " + analysis.Risk}
+            label={t('report.analysisCard.risk', { risk: analysis.Risk })}
             color={RISK_CHIP_COLORS[analysis.Risk] || "default"}
             size="small"
             sx={{ position: "absolute", top: 8, right: 8, borderRadius: 1 }}
@@ -36,14 +38,14 @@ export default function AnalysisCard({ result, index }) {
       />
       <CardContent sx={{ pt: 1 }}>
         <Typography variant="body2" gutterBottom>
-          <strong>Summary:</strong> {analysis.Summary}
+          <strong>{t('report.analysisCard.summary')}</strong> {analysis.Summary}
         </Typography>
         <Typography variant="body2" gutterBottom>
-          <strong>Reason:</strong> {analysis["Analysis comment"]}
+          <strong>{t('report.analysisCard.reason')}</strong> {analysis["Analysis comment"]}
         </Typography>
         <Box sx={{ mt: 2 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            Possible Action Items:
+            {t('report.analysisCard.possibleActionItems')}
           </Typography>
           <List dense>
             {(analysis["Action items"] || []).map((item) => (
@@ -54,7 +56,7 @@ export default function AnalysisCard({ result, index }) {
           </List>
         </Box>
         <Typography variant="body2" gutterBottom>
-          <strong>Source:</strong> {analysis["Source"]}
+          <strong>{t('report.analysisCard.source')}</strong> {analysis["Source"]}
         </Typography>
       </CardContent>
     </Card>

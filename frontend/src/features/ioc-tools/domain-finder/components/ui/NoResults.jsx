@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -18,6 +19,7 @@ const StyledGrid = styled(MuiGrid)(({ theme }) => ({
 }));
 
 export default function NoApikeys(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Box sx={{ display: "flex", justifyContent: "center" }}>
       <Grow in={true}>
@@ -37,9 +39,9 @@ export default function NoApikeys(props) {
             </StyledGrid>
             <Divider orientation="vertical" flexItem></Divider>
             <StyledGrid size="grow" sx={{ p: 2 }}>
-              <Typography variant="h5">No results</Typography>
+              <Typography variant="h5">{t('domainFinder.noResults.title')}</Typography>
               <Typography variant="body1">
-                There are no results for your search: "{props.searchterm}"
+                {t('domainFinder.noResults.message', { searchTerm: props.searchterm })}
               </Typography>
             </StyledGrid>
           </StyledGrid>

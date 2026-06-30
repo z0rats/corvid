@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card'
@@ -18,6 +19,7 @@ const StyledGrid = styled(MuiGrid)(({ theme }) => ({
 }));
 
 export default function NoApikeys() {
+  const { t } = useTranslation('iocTools');
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Grow in={true}>
@@ -28,8 +30,8 @@ export default function NoApikeys() {
                     </StyledGrid>
                     <Divider orientation="vertical" flexItem></Divider>
                     <StyledGrid size="grow" sx={{p: 2}}>
-                        <Typography variant="h5">No API keys available for this action</Typography>
-                        <Typography>You need to add API keys in the settings tab, to use this function.</Typography>
+                        <Typography variant="h5">{t('singleLookup.noApiKeysAlert.title')}</Typography>
+                        <Typography>{t('singleLookup.noApiKeysAlert.message')}</Typography>
                     </StyledGrid>
                 </StyledGrid>
             </Card>

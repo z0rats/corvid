@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
@@ -15,11 +16,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 
 export default function BasicMetadataSection({ metadata, onMetadataChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentMetadata, setCurrentMetadata] = useState({ key: '', value: '' });
 
   const handleAdd = () => {
     if (!currentMetadata.key.trim() || !currentMetadata.value.trim()) {
-      alert('Both metadata key and value are required.');
+      alert(t('snort.basicMetadataSection.requiredAlert'));
       return;
     }
     onMetadataChange([...metadata, {
@@ -37,29 +39,29 @@ export default function BasicMetadataSection({ metadata, onMetadataChange }) {
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="subtitle2" gutterBottom>
-        Basic Metadata
+        {t('snort.basicMetadataSection.header')}
       </Typography>
       <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             fullWidth
-            label="Key"
+            label={t('snort.basicMetadataSection.keyLabel')}
             value={currentMetadata.key}
             onChange={(e) => setCurrentMetadata(prev => ({ ...prev, key: e.target.value }))}
             size="small"
             variant="outlined"
-            placeholder="policy, created_at, etc."
+            placeholder={t('snort.basicMetadataSection.keyPlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
-            label="Value"
+            label={t('snort.basicMetadataSection.valueLabel')}
             value={currentMetadata.value}
             onChange={(e) => setCurrentMetadata(prev => ({ ...prev, value: e.target.value }))}
             size="small"
             variant="outlined"
-            placeholder="Metadata value"
+            placeholder={t('snort.basicMetadataSection.valuePlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
@@ -71,7 +73,7 @@ export default function BasicMetadataSection({ metadata, onMetadataChange }) {
             size="small"
             fullWidth
           >
-            Add
+            {t('common.actions.add')}
           </Button>
         </Grid>
       </Grid>
@@ -82,8 +84,8 @@ export default function BasicMetadataSection({ metadata, onMetadataChange }) {
             <ListItem
               key={meta.id}
               secondaryAction={
-                <Tooltip title="Delete Metadata">
-                  <IconButton edge="end" onClick={() => handleDelete(meta.id)} size="small" aria-label="Delete metadata">
+                <Tooltip title={t('snort.basicMetadataSection.deleteTooltip')}>
+                  <IconButton edge="end" onClick={() => handleDelete(meta.id)} size="small" aria-label={t('snort.basicMetadataSection.deleteAria')}>
                     <DeleteIcon fontSize="small" color="error" />
                   </IconButton>
                 </Tooltip>

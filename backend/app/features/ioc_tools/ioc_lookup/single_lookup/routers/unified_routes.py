@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Path, Query, HTTPException, Request, status
+from app.core.exceptions import AppHTTPException
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep
@@ -41,12 +42,12 @@ async def unified_lookup(
 ) -> LookupResult:
     detected_ioc_type = ioc_type or determine_ioc_type(ioc)
     if detected_ioc_type == IOC_TYPES['UNKNOWN']:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or unsupported IOC format")
+        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or unsupported IOC format", error_code="IOC_INVALID_FORMAT")
 
     result = await lookup_ioc(service, ioc, detected_ioc_type, db)
 
     if result is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Service '{service}' not found.")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Service '{service}' not found.", error_code="IOC_SERVICE_NOT_FOUND")
 
     return result
 

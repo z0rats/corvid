@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -31,6 +32,7 @@ const SettingHeader = ({ title, description }) => (
 );
 
 export default function Settings() {
+  const { t } = useTranslation('newsfeed');
   const {
     config,
     loading,
@@ -42,35 +44,35 @@ export default function Settings() {
 
   const handleError = useCallback((error) => {
     logger.error("Settings error:", error);
-    showError(error.response?.data?.message || error.message || "An error occurred");
-  }, [showError]);
+    showError(error.response?.data?.message || error.message || t('settings.general.updateError'));
+  }, [showError, t]);
 
   const handleBackgroundFetchToggle = useCallback(async (enabled) => {
     const result = await updateConfig({ background_fetch_enabled: enabled });
     if (result.success) {
-      showSuccess("Settings updated successfully");
+      showSuccess(t('settings.general.updateSuccess'));
     } else {
       handleError(result.error);
     }
-  }, [updateConfig, showSuccess, handleError]);
+  }, [updateConfig, showSuccess, handleError, t]);
 
   const handleRetentionChange = useCallback(async (event) => {
     const result = await updateConfig({ retention_days: event.target.value });
     if (result.success) {
-      showSuccess("Settings updated successfully");
+      showSuccess(t('settings.general.updateSuccess'));
     } else {
       handleError(result.error);
     }
-  }, [updateConfig, showSuccess, handleError]);
+  }, [updateConfig, showSuccess, handleError, t]);
 
   const handleFetchIntervalChange = useCallback(async (event) => {
     const result = await updateConfig({ fetch_interval_minutes: event.target.value });
     if (result.success) {
-      showSuccess("Settings updated successfully");
+      showSuccess(t('settings.general.updateSuccess'));
     } else {
       handleError(result.error);
     }
-  }, [updateConfig, showSuccess, handleError]);
+  }, [updateConfig, showSuccess, handleError, t]);
 
   if (loading) {
     return (
@@ -84,27 +86,26 @@ export default function Settings() {
     <>
       <Card sx={{ p: 3 }}>
         <SettingHeader
-          title="General Newsfeed Settings"
-          description="Configure how your newsfeed behaves and manages content"
+          title={t('settings.general.title')}
+          description={t('settings.general.description')}
         />
 
         <Divider sx={{ my: 3 }} />
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="subtitle1" gutterBottom>
-            Content Retention
+            {t('settings.general.contentRetention')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Define how long articles should be kept in your feed before being
-            automatically removed
+            {t('settings.general.contentRetentionDescription')}
           </Typography>
 
           <Box sx={{ maxWidth: SETTINGS.MAX_WIDTH }}>
             <FormControl fullWidth size="small" disabled={saving}>
-              <InputLabel>Retention Period</InputLabel>
+              <InputLabel>{t('settings.general.retentionPeriod')}</InputLabel>
               <Select
                 value={config.retention_days}
-                label="Retention Period"
+                label={t('settings.general.retentionPeriod')}
                 onChange={handleRetentionChange}
               >
                 {RETENTION_OPTIONS.map((option) => (
@@ -119,7 +120,7 @@ export default function Settings() {
 
         <Box>
           <Typography variant="subtitle1" gutterBottom>
-            Background Fetch
+            {t('settings.general.backgroundFetch')}
           </Typography>
 
           <Box sx={{ maxWidth: SETTINGS.MAX_WIDTH }}>
@@ -131,7 +132,7 @@ export default function Settings() {
               }}
             >
               <Typography variant="body2" color="text.secondary" sx={{ flex: 1, mr: 2 }}>
-                Enable automatic fetching of new content at regular intervals
+                {t('settings.general.backgroundFetchDescription')}
               </Typography>
               <Switch
                 checked={config.background_fetch_enabled}
@@ -143,10 +144,10 @@ export default function Settings() {
 
             {config.background_fetch_enabled && (
               <FormControl fullWidth size="small" disabled={saving}>
-                <InputLabel>Fetch Interval</InputLabel>
+                <InputLabel>{t('settings.general.fetchInterval')}</InputLabel>
                 <Select
                   value={config.fetch_interval_minutes}
-                  label="Fetch Interval"
+                  label={t('settings.general.fetchInterval')}
                   onChange={handleFetchIntervalChange}
                 >
                   {FETCH_INTERVAL_OPTIONS.map((option) => (

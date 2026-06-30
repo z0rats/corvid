@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
@@ -20,6 +21,8 @@ import Typography from "@mui/material/Typography";
 const iconSx = { minWidth: 36 };
 
 export default function GeneralInfoCard({ result }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const location = [result.city, result.region, result.country_name].filter(Boolean).join(', ');
 
   return (
@@ -27,42 +30,42 @@ export default function GeneralInfoCard({ result }) {
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <InfoIcon />
-          <Typography variant="h6" component="h2">General Information</Typography>
+          <Typography variant="h6" component="h2">{t('providers.common.generalInformation')}</Typography>
         </Box>
         <List dense sx={{ mb: 1, mt: 1 }}>
           <ListItem disablePadding>
             <ListItemIcon sx={iconSx}><FingerprintIcon color="action" /></ListItemIcon>
-            <ListItemText primary="Indicator" secondary={result.indicator || "N/A"} />
+            <ListItemText primary={t('providers.alienvault.indicator')} secondary={result.indicator || notAvailable} />
           </ListItem>
           {result.type && (
             <ListItem disablePadding>
               <ListItemIcon sx={iconSx}><CategoryIcon color="action" /></ListItemIcon>
-              <ListItemText primary="Type" secondary={result.type} />
+              <ListItemText primary={t('providers.common.type')} secondary={result.type} />
             </ListItem>
           )}
           {location && (
             <ListItem disablePadding>
               <ListItemIcon sx={iconSx}><LocationOnIcon color="action" /></ListItemIcon>
-              <ListItemText primary="Location" secondary={location} />
+              <ListItemText primary={t('providers.alienvault.location')} secondary={location} />
             </ListItem>
           )}
           {result.asn && (
             <ListItem disablePadding>
               <ListItemIcon sx={iconSx}><LanguageIcon color="action" /></ListItemIcon>
-              <ListItemText primary="ASN" secondary={result.asn} />
+              <ListItemText primary={t('providers.common.asn')} secondary={result.asn} />
             </ListItem>
           )}
           {typeof result.reputation === 'number' && result.reputation !== 0 && (
             <ListItem disablePadding>
               <ListItemIcon sx={iconSx}><ShieldIcon color="action" /></ListItemIcon>
-              <ListItemText primary="Reputation Score" secondary={String(result.reputation)} />
+              <ListItemText primary={t('providers.alienvault.reputationScore')} secondary={String(result.reputation)} />
             </ListItem>
           )}
           {result.validation?.length > 0 && (
             <ListItem disablePadding>
               <ListItemIcon sx={iconSx}><VerifiedIcon color="action" /></ListItemIcon>
               <ListItemText
-                primary="Validation"
+                primary={t('providers.alienvault.validation')}
                 secondary={
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                     {result.validation.map((v, i) => (

@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, status
+from app.core.exceptions import AppHTTPException
 
 from app.features.ioc_tools.ioc_defanger.service.defang_service import batch_process_iocs
 from app.features.ioc_tools.ioc_defanger.schemas.defang_schemas import (
@@ -33,7 +34,8 @@ async def process_iocs(request: DefangRequest) -> DefangResponse:
 
     except ValueError as e:
         logger.warning("Validation error in defang processing: %s", str(e))
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request: {str(e)}"
+            detail=f"Invalid request: {str(e)}",
+            error_code="DEFANG_INVALID_REQUEST",
         )

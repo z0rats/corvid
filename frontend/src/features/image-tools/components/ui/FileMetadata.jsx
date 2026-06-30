@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
@@ -10,6 +11,7 @@ import { imageUtils } from '../../utils/imageUtils';
 const HASH_FIELDS = ['md5', 'sha1', 'sha256'];
 
 function CopyButton({ value }) {
+  const { t } = useTranslation('imageTools');
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef(null);
 
@@ -25,8 +27,8 @@ function CopyButton({ value }) {
   };
 
   return (
-    <Tooltip title={copied ? 'Copied!' : 'Copy'}>
-      <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }} aria-label="Copy hash">
+    <Tooltip title={copied ? t('fileMetadata.copied') : t('fileMetadata.copy')}>
+      <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }} aria-label={t('fileMetadata.copyHashAriaLabel')}>
         <ContentCopyIcon sx={{ fontSize: '0.875rem' }} />
       </IconButton>
     </Tooltip>
@@ -65,25 +67,27 @@ function HashRow({ label, value }) {
 }
 
 export default function FileMetadata({ fileInfo, hashes }) {
+  const { t } = useTranslation('imageTools');
+
   return (
     <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
       <Box sx={{ flex: 1, minWidth: 240 }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-          File properties
+          {t('fileMetadata.fileProperties')}
         </Typography>
-        <InfoRow label="Format" value={fileInfo?.format} />
-        <InfoRow label="MIME type" value={fileInfo?.mime_type} />
-        <InfoRow label="Dimensions" value={fileInfo?.width && fileInfo?.height ? `${fileInfo.width} × ${fileInfo.height} px` : null} />
-        <InfoRow label="Color mode" value={fileInfo?.mode} />
-        <InfoRow label="DPI" value={fileInfo?.dpi_x ? `${fileInfo.dpi_x} × ${fileInfo.dpi_y}` : null} />
-        <InfoRow label="File size" value={imageUtils.formatFileSize(fileInfo?.file_size)} />
+        <InfoRow label={t('fileMetadata.format')} value={fileInfo?.format} />
+        <InfoRow label={t('fileMetadata.mimeType')} value={fileInfo?.mime_type} />
+        <InfoRow label={t('fileMetadata.dimensions')} value={fileInfo?.width && fileInfo?.height ? `${fileInfo.width} × ${fileInfo.height} px` : null} />
+        <InfoRow label={t('fileMetadata.colorMode')} value={fileInfo?.mode} />
+        <InfoRow label={t('fileMetadata.dpi')} value={fileInfo?.dpi_x ? `${fileInfo.dpi_x} × ${fileInfo.dpi_y}` : null} />
+        <InfoRow label={t('fileMetadata.fileSize')} value={imageUtils.formatFileSize(fileInfo?.file_size)} />
       </Box>
 
       <Divider orientation="vertical" flexItem />
 
       <Box sx={{ flex: 1, minWidth: 240 }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-          File hashes
+          {t('fileMetadata.fileHashes')}
         </Typography>
         {HASH_FIELDS.map((hashType) => (
           <HashRow key={hashType} label={hashType.toUpperCase()} value={hashes?.[hashType]} />

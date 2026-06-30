@@ -5,6 +5,7 @@ import logging
 from typing import Any
 import httpx
 from fastapi import HTTPException
+from app.core.exceptions import AppHTTPException
 
 from app.features.ioc_tools.domain_finder.config.api_config import (
     URLSCAN_BASE_URL,
@@ -56,27 +57,31 @@ async def fetch_domain_scan_results(domain: str) -> list[dict[str, Any]]:
             
     except httpx.TimeoutException as e:
         logger.error("Timeout while fetching URLScan.io data for domain %s: %s", domain, e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=504,
-            detail=f"Request timeout while connecting to URLScan.io service"
+            detail="Request timeout while connecting to URLScan.io service",
+            error_code="URLSCAN_TIMEOUT",
         )
     except httpx.RequestError as e:
         logger.error("Request error while fetching URLScan.io data for domain %s: %s", domain, e)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=503,
-            detail=f"Failed to connect to URLScan.io service: {str(e)}"
+            detail=f"Failed to connect to URLScan.io service: {str(e)}",
+            error_code="URLSCAN_CONNECTION_ERROR",
         )
     except httpx.HTTPStatusError as e:
         logger.error("HTTP status error from URLScan.io for domain %s: Status %s", domain, e.response.status_code)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=e.response.status_code,
-            detail=f"URLScan.io API returned error: {e.response.status_code}"
+            detail=f"URLScan.io API returned error: {e.response.status_code}",
+            error_code="URLSCAN_API_ERROR",
         )
     except Exception as e:
         logger.error("Unexpected error while fetching URLScan.io data for domain %s: %s", domain, e, exc_info=True)
-        raise HTTPException(
+        raise AppHTTPException(
             status_code=500,
-            detail="An unexpected error occurred while fetching scan data"
+            detail="An unexpected error occurred while fetching scan data",
+            error_code="URLSCAN_UNEXPECTED_ERROR",
         )
 
 

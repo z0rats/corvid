@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -26,6 +27,7 @@ const actionsCellSx = { py: 1 };
 const analyzeButtonSx = { minWidth: 'auto', px: 1.5, py: 0.25, fontSize: '0.75rem' };
 
 export default function ResultRows({ title, type, list = [], count, icon }) {
+  const { t } = useTranslation('iocTools');
   const [selectedIoc, setSelectedIoc] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -40,7 +42,7 @@ export default function ResultRows({ title, type, list = [], count, icon }) {
       const result = await copyIOCsToClipboard(list);
       setSnackbar({ open: true, message: result.message, severity: 'success' });
     } catch {
-      setSnackbar({ open: true, message: 'Failed to copy to clipboard', severity: 'error' });
+      setSnackbar({ open: true, message: t('iocExtractor.resultRows.copyFailed'), severity: 'error' });
     }
   };
 
@@ -50,7 +52,7 @@ export default function ResultRows({ title, type, list = [], count, icon }) {
       const result = exportIOCsToFile(list, filename);
       setSnackbar({ open: true, message: result.message, severity: 'success' });
     } catch {
-      setSnackbar({ open: true, message: 'Failed to export to file', severity: 'error' });
+      setSnackbar({ open: true, message: t('iocExtractor.resultRows.exportFailed'), severity: 'error' });
     }
   };
 
@@ -72,13 +74,13 @@ export default function ResultRows({ title, type, list = [], count, icon }) {
             </Box>
             {list.length > 0 && (
               <Box sx={{ display: 'flex', gap: 1 }} onClick={(e) => e.stopPropagation()}>
-                <Tooltip title={`Copy all ${sanitizedTitle}`}>
-                  <IconButton size="small" onClick={handleCopyAll} aria-label="Copy all">
+                <Tooltip title={t('iocExtractor.resultRows.copyAllTooltip', { type: sanitizedTitle })}>
+                  <IconButton size="small" onClick={handleCopyAll} aria-label={t('iocExtractor.resultRows.copyAllAriaLabel')}>
                     <ContentCopyIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={`Export all ${sanitizedTitle}`}>
-                  <IconButton size="small" onClick={handleExportAll} aria-label="Export all">
+                <Tooltip title={t('iocExtractor.resultRows.exportAllTooltip', { type: sanitizedTitle })}>
+                  <IconButton size="small" onClick={handleExportAll} aria-label={t('iocExtractor.resultRows.exportAllAriaLabel')}>
                     <FileDownloadIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -92,8 +94,8 @@ export default function ResultRows({ title, type, list = [], count, icon }) {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600, py: 1 }}>IOC</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, py: 1, width: 100 }}>Actions</TableCell>
+                    <TableCell sx={{ fontWeight: 600, py: 1 }}>{t('iocExtractor.resultRows.columns.ioc')}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 600, py: 1, width: 100 }}>{t('iocExtractor.resultRows.columns.actions')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -109,7 +111,7 @@ export default function ResultRows({ title, type, list = [], count, icon }) {
                           onClick={() => setSelectedIoc(ioc)}
                           sx={analyzeButtonSx}
                         >
-                          Analyze
+                          {t('iocExtractor.resultRows.analyzeButton')}
                         </Button>
                       </TableCell>
                     </TableRow>

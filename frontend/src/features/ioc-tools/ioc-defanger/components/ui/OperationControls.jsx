@@ -3,8 +3,11 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import FangIcon from '@mui/icons-material/GppMaybe';
 import DefangIcon from '@mui/icons-material/HealthAndSafety';
+import { useTranslation } from 'react-i18next';
 
 const OperationControls = ({ operation, onSetOperation }) => {
+  const { t } = useTranslation('iocTools');
+
   const handleChange = (_event, newOperation) => {
     if (newOperation) onSetOperation(newOperation);
   };
@@ -19,11 +22,11 @@ const OperationControls = ({ operation, onSetOperation }) => {
       >
         <ToggleButton value="defang" sx={{ gap: 0.75, px: 2, textTransform: 'none' }}>
           <DefangIcon fontSize="small" />
-          Defang (Make Safe)
+          {t('iocDefanger.operationControls.defangOption')}
         </ToggleButton>
         <ToggleButton value="fang" sx={{ gap: 0.75, px: 2, textTransform: 'none' }}>
           <FangIcon fontSize="small" />
-          Fang (Restore Original)
+          {t('iocDefanger.operationControls.fangOption')}
         </ToggleButton>
       </ToggleButtonGroup>
     </Box>

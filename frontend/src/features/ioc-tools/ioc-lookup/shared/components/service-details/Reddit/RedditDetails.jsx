@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import AccessTime from '@mui/icons-material/AccessTime';
 import ChatBubbleOutline from '@mui/icons-material/ChatBubbleOutlined';
@@ -23,17 +24,17 @@ import NoDetails from "../NoDetails";
 
 const POSTS_PER_PAGE = 5;
 
-const formatDate = (timestamp) => {
-  if (!timestamp) return "N/A";
-  return new Date(timestamp * 1000).toLocaleDateString();
-};
-
 const getTruncatedMessage = (message, maxLength = 200) => {
   if (!message) return "";
   return message.length > maxLength ? message.slice(0, maxLength) + "..." : message;
 };
 
-function PostCard({ post, index, isExpanded, onToggleExpand }) {
+function PostCard({ post, index, isExpanded, onToggleExpand, t, notAvailable }) {
+  const formatDate = (timestamp) => {
+    if (!timestamp) return notAvailable;
+    return new Date(timestamp * 1000).toLocaleDateString();
+  };
+
   return (
     <Card
       sx={{ mb: 1.5, p: 2, borderRadius: 1, boxShadow: 0 }}
@@ -41,14 +42,14 @@ function PostCard({ post, index, isExpanded, onToggleExpand }) {
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
           <Typography variant="subtitle2" component="h2" sx={{ wordBreak: 'break-word', lineHeight: 1.4 }}>
-            {post.title || "No Title"}
+            {post.title || t('providers.reddit.noTitle')}
           </Typography>
           <IconButton
             size="small"
             href={post.url}
             target="_blank"
             rel="noopener noreferrer"
-            title="Open on Reddit"
+            title={t('providers.reddit.openOnReddit')}
             sx={{ flexShrink: 0 }}
           >
             <OpenInNew fontSize="small" />
@@ -75,7 +76,7 @@ function PostCard({ post, index, isExpanded, onToggleExpand }) {
             />
           )}
           <Typography variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center" }}>
-            <Person sx={{ fontSize: 14, mr: 0.5 }} /> {post.author || "N/A"}
+            <Person sx={{ fontSize: 14, mr: 0.5 }} /> {post.author || notAvailable}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: "flex", alignItems: "center" }}>
             <ThumbUp sx={{ fontSize: 14, mr: 0.5 }} /> {post.score ?? 0}
@@ -99,7 +100,7 @@ function PostCard({ post, index, isExpanded, onToggleExpand }) {
                 size="small"
                 sx={{ mt: 0.5, p: 0, textTransform: 'none', minWidth: 'auto' }}
               >
-                {isExpanded ? "Read less" : "Read more"}
+                {isExpanded ? t('providers.reddit.readLess') : t('providers.reddit.readMore')}
               </Button>
             )}
           </Box>
@@ -110,6 +111,8 @@ function PostCard({ post, index, isExpanded, onToggleExpand }) {
 }
 
 export default function RedditDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const [expandedIndices, setExpandedIndices] = useState(new Set());
   const [page, setPage] = useState(1);
 
@@ -124,7 +127,7 @@ export default function RedditDetails({ result, ioc }) {
   if (!result) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message="Loading Reddit mentions..." />
+        <NoDetails message={t('providers.reddit.loading')} />
       </Box>
     );
   }
@@ -132,7 +135,7 @@ export default function RedditDetails({ result, ioc }) {
   if (result.error) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`Error fetching Reddit mentions: ${result.message || result.error}`} />
+        <NoDetails message={t('providers.reddit.errorFetching', { error: result.message || result.error })} />
       </Box>
     );
   }
@@ -142,7 +145,7 @@ export default function RedditDetails({ result, ioc }) {
   if (!Array.isArray(posts) || posts.length === 0) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`No Reddit mentions found for "${ioc}".`} />
+        <NoDetails message={t('providers.reddit.noMentionsFound', { ioc })} />
       </Box>
     );
   }
@@ -155,7 +158,7 @@ export default function RedditDetails({ result, ioc }) {
       <Grid container spacing={1} alignItems="center" mb={1.5}>
         <RedditIcon color="action" />
         <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-          Reddit Mentions ({posts.length})
+          {t('providers.reddit.mentionsCount', { count: posts.length })}
         </Typography>
       </Grid>
 
@@ -168,6 +171,8 @@ export default function RedditDetails({ result, ioc }) {
             index={globalIndex}
             isExpanded={expandedIndices.has(globalIndex)}
             onToggleExpand={toggleExpanded}
+            t={t}
+            notAvailable={notAvailable}
           />
         );
       })}

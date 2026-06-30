@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAtomValue } from 'jotai';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -34,6 +35,7 @@ import WebContextsEditor from '../ui/WebContextsEditor';
 import TemplateExampleDialog from '../modals/TemplateExampleDialog';
 
 export default function CreateTemplateForm() {
+  const { t } = useTranslation('llmTemplates');
   const {
     template, updateField, resetForm,
     payloadFields, staticContexts, webContexts,
@@ -71,7 +73,7 @@ export default function CreateTemplateForm() {
       updateField('ai_agent_task', data.ai_agent_task);
       updateField('payload_fields', data.payload_fields);
       updateField('example_input_output', data.example_input_output);
-      showSnackbar('Prompt engineered!', 'success');
+      showSnackbar(t('createForm.promptEngineeredSuccess'), 'success');
     } catch (err) {
       showSnackbar(extractErrorMessage(err), 'error');
     } finally {
@@ -84,7 +86,7 @@ export default function CreateTemplateForm() {
     setIsSubmitting(true);
     try {
       await templatesApi.createTemplate(template);
-      showSnackbar('Template created!', 'success');
+      showSnackbar(t('createForm.templateCreatedSuccess'), 'success');
       resetForm();
     } catch (err) {
       showSnackbar(extractErrorMessage(err), 'error');
@@ -96,10 +98,10 @@ export default function CreateTemplateForm() {
   return (
     <Box sx={{ pt: 0 }}>
       <FormSection
-        title="Basic Information"
+        title={t('createForm.basicInfo')}
         actions={
-          <Tooltip title="Generate template based on title and description" arrow>
-            <IconButton onClick={handleEngineer} disabled={!canEngineer} aria-label="Optimize prompt">
+          <Tooltip title={t('createForm.engineerTooltip')} arrow>
+            <IconButton onClick={handleEngineer} disabled={!canEngineer} aria-label={t('createForm.optimizePromptAria')}>
               {isEngineering ? <CircularProgress size={24} /> : <AutoFixHighIcon />}
             </IconButton>
           </Tooltip>
@@ -107,17 +109,17 @@ export default function CreateTemplateForm() {
       >
         <Box display="flex" gap={2} alignItems="flex-start">
           <ResizableTextField
-            label="Title"
+            label={t('createForm.titleLabel')}
             value={template.title}
             onChange={e => updateField('title', e.target.value)}
             fullWidth required
             error={!template.title.trim()}
-            helperText={!template.title.trim() ? 'Enter a concise template title (required)' : 'Unique name for your template.'}
+            helperText={!template.title.trim() ? t('createForm.titleRequiredHelper') : t('createForm.titleHelper')}
             sx={{ flex: 1 }}
           />
           <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>LLM Model</InputLabel>
-            <Select value={template.model} label="LLM Model" onChange={e => updateField('model', e.target.value)}>
+            <InputLabel>{t('createForm.modelLabel')}</InputLabel>
+            <Select value={template.model} label={t('createForm.modelLabel')} onChange={e => updateField('model', e.target.value)}>
               {Object.entries(Object.groupBy(availableModels, m => m.provider)).flatMap(([provider, models]) => [
                 <ListSubheader key={provider}>{provider}</ListSubheader>,
                 ...models.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>),
@@ -126,10 +128,10 @@ export default function CreateTemplateForm() {
           </FormControl>
           {categories.length > 0 && (
             <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>Group</InputLabel>
+              <InputLabel>{t('createForm.groupLabel')}</InputLabel>
               <Select
                 value={template.category_id || ''}
-                label="Group"
+                label={t('createForm.groupLabel')}
                 onChange={e => updateField('category_id', e.target.value)}
               >
                 {categories.map(c => (
@@ -141,68 +143,68 @@ export default function CreateTemplateForm() {
         </Box>
         <Box mt={2}>
           <ResizableTextField
-            label="Description"
+            label={t('createForm.descriptionLabel')}
             value={template.description}
             onChange={e => updateField('description', e.target.value)}
             fullWidth multiline minRows={2}
-            helperText="Summarize what this template is for (optional)."
+            helperText={t('createForm.descriptionHelper')}
           />
         </Box>
       </FormSection>
 
-      <FormSection title="Prompt Configuration">
+      <FormSection title={t('createForm.promptConfig')}>
         <ResizableTextField
-          label="AI Agent Role"
+          label={t('createForm.agentRoleLabel')}
           value={template.ai_agent_role}
           onChange={e => updateField('ai_agent_role', e.target.value)}
           fullWidth multiline minRows={1} required
           error={!template.ai_agent_role.trim()}
-          helperText={!template.ai_agent_role.trim() ? 'Define the AI persona (required)' : 'E.g., Customer support expert.'}
+          helperText={!template.ai_agent_role.trim() ? t('createForm.agentRoleRequiredHelper') : t('createForm.agentRoleHelper')}
         />
         <Box mt={2}>
           <ResizableTextField
-            label="AI Agent Task"
+            label={t('createForm.agentTaskLabel')}
             value={template.ai_agent_task}
             onChange={e => updateField('ai_agent_task', e.target.value)}
             fullWidth multiline minRows={2} required
             error={!template.ai_agent_task.trim()}
-            helperText={!template.ai_agent_task.trim() ? 'Describe the task (required)' : 'E.g., Generate a friendly response.'}
+            helperText={!template.ai_agent_task.trim() ? t('createForm.agentTaskRequiredHelper') : t('createForm.agentTaskHelper')}
           />
         </Box>
       </FormSection>
 
-      <FormSection title="Payload Fields">
+      <FormSection title={t('createForm.payloadFieldsSection')}>
         <PayloadFieldsEditor
           fields={template.payload_fields}
           onAdd={payloadFields.add}
           onUpdate={payloadFields.update}
           onDelete={payloadFields.delete}
         />
-        <FormHelperText sx={{ mt: 1 }}>Set user-input variables and mark them as required if needed.</FormHelperText>
+        <FormHelperText sx={{ mt: 1 }}>{t('createForm.payloadFieldsHelper')}</FormHelperText>
       </FormSection>
 
-      <FormSection title="Static Contexts">
+      <FormSection title={t('createForm.staticContextsSection')}>
         <StaticContextsEditor
           contexts={template.static_contexts}
           onAdd={staticContexts.add}
           onUpdate={staticContexts.update}
           onDelete={staticContexts.delete}
         />
-        <FormHelperText sx={{ mt: 1 }}>Include fixed content like guidelines or reference info.</FormHelperText>
+        <FormHelperText sx={{ mt: 1 }}>{t('createForm.staticContextsHelper')}</FormHelperText>
       </FormSection>
 
-      <FormSection title="Web Contexts">
+      <FormSection title={t('createForm.webContextsSection')}>
         <WebContextsEditor
           contexts={template.web_contexts}
           onAdd={webContexts.add}
           onUpdate={webContexts.update}
           onDelete={webContexts.delete}
         />
-        <FormHelperText sx={{ mt: 1 }}>Add websites whose content will be fetched and included when the template is executed.</FormHelperText>
+        <FormHelperText sx={{ mt: 1 }}>{t('createForm.webContextsHelper')}</FormHelperText>
       </FormSection>
 
-      <FormSection title="Preview Example">
-        <FormHelperText sx={{ mt: -1, mb: 1 }}>Provide an example to illustrate how input and output could look like when this template is used.</FormHelperText>
+      <FormSection title={t('createForm.previewExampleSection')}>
+        <FormHelperText sx={{ mt: -1, mb: 1 }}>{t('createForm.previewExampleTopHelper')}</FormHelperText>
         <Box className="mdxeditor-wrapper" sx={{ height: 300, minHeight: 100, resize: 'vertical', overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
           <MDXEditor
             className={theme.palette.mode === 'dark' ? 'dark-theme' : ''}
@@ -220,11 +222,11 @@ export default function CreateTemplateForm() {
             ]}
           />
         </Box>
-        <FormHelperText sx={{ mt: 1 }}>Provide example input & output to guide users.</FormHelperText>
+        <FormHelperText sx={{ mt: 1 }}>{t('createForm.previewExampleBottomHelper')}</FormHelperText>
       </FormSection>
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-        <Button startIcon={<PreviewIcon />} onClick={() => setPreviewOpen(true)}>Preview</Button>
+        <Button startIcon={<PreviewIcon />} onClick={() => setPreviewOpen(true)}>{t('createForm.previewButton')}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
@@ -232,7 +234,7 @@ export default function CreateTemplateForm() {
           startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           sx={{ ml: 2 }}
         >
-          {isSubmitting ? 'Creating\u2026' : 'Create Template'}
+          {isSubmitting ? t('createForm.creatingButton') : t('createForm.createButton')}
         </Button>
       </Box>
 

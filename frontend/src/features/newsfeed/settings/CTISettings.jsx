@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,6 +18,7 @@ import CompanyProfileTab from "./components/ui/CompanyProfileTab";
 import ThreatActorTab from "./components/ui/ThreatActorTab";
 
 export default function CTISettings() {
+  const { t } = useTranslation('newsfeed');
   const theme = useTheme();
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -33,9 +35,9 @@ export default function CTISettings() {
   const handleSave = async () => {
     const result = await saveSettings();
     if (result.success) {
-      showSuccess("CTI settings saved successfully.");
+      showSuccess(t('settings.cti.saveSuccess'));
     } else {
-      showError("Failed to save CTI settings.");
+      showError(t('settings.cti.saveError'));
     }
   };
 
@@ -63,9 +65,9 @@ export default function CTISettings() {
     <>
       <Card sx={{ p: 2, boxShadow: theme.shadows[1], borderRadius: 1 }}>
         <Box sx={{ mb: 2 }}>
-          <Typography variant="h6">CTI Settings</Typography>
+          <Typography variant="h6">{t('settings.cti.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Define your company profile and threat landscape to tailor the AI-powered analysis of newsfeed articles to your organization.
+            {t('settings.cti.description')}
           </Typography>
         </Box>
         <Tabs
@@ -75,12 +77,12 @@ export default function CTISettings() {
           scrollButtons="auto"
           sx={{ borderBottom: 1, borderColor: "divider" }}
         >
-          <Tab label="Company Profile" />
-          <Tab label="Threat Actors" />
+          <Tab label={t('settings.cti.companyProfileTab')} />
+          <Tab label={t('settings.cti.threatActorsTab')} />
         </Tabs>
         <Box sx={{ mt: 2 }}>
           {loading ? (
-            <Typography>Loading...</Typography>
+            <Typography>{t('settings.cti.loading')}</Typography>
           ) : (
             <>
               {tabIndex === 0 && (
@@ -100,7 +102,7 @@ export default function CTISettings() {
               )}
               <Box sx={{ textAlign: "left", mt: 2 }}>
                 <Button variant="contained" color="primary" disableElevation onClick={handleSave}>
-                  Save Settings
+                  {t('settings.cti.saveSettings')}
                 </Button>
               </Box>
             </>

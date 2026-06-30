@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
+import { useTranslation } from 'react-i18next';
 import { SUPPORTED_DEFANGING_TECHNIQUES } from '../../constants/defangerConstants';
 
 const FeatureCard = ({ title, description }) => (
@@ -18,17 +19,19 @@ const FeatureCard = ({ title, description }) => (
 );
 
 export default function WelcomeScreen() {
+  const { t } = useTranslation('iocTools');
+
   return (
     <Paper>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" component="h1" gutterBottom mb={2}>
-          IOC Defang/Fang Tool
+          {t('iocDefanger.welcomeScreen.title')}
         </Typography>
         <Typography variant="h6" component="h1" gutterBottom>
-          Supported Defanging Techniques
+          {t('iocDefanger.welcomeScreen.subtitle')}
         </Typography>
         <Typography paragraph>
-          Safely defang IOCs for sharing or restore fanged IOCs for analysis. This tool automatically detects IOC types and applies fanging or defanging techniques.
+          {t('iocDefanger.welcomeScreen.description')}
         </Typography>
       </Box>
       <Grid container spacing={1}>

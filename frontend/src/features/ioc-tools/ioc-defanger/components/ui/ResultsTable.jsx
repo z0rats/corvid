@@ -14,15 +14,11 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import CopyIcon from '@mui/icons-material/ContentCopy';
 import InfoIcon from '@mui/icons-material/Info';
+import { useTranslation } from 'react-i18next';
 import { getTypeColor } from '../../utils/defangerUtils';
 
 const monospaceCellSx = { fontFamily: 'monospace', wordBreak: 'break-all' };
 const typeChipsContainerSx = { display: 'flex', flexWrap: 'wrap', gap: 0.5 };
-
-const NO_CHANGES_MESSAGES = {
-  defang: 'No IOCs were modified. They may already be defanged or not recognized as IOCs.',
-  fang: 'No IOCs were modified. They may already be fanged or not contain defanged patterns.',
-};
 
 const ResultsTable = ({
   results,
@@ -31,14 +27,20 @@ const ResultsTable = ({
   onToggleShowOnlyChanged,
   onCopy,
 }) => {
+  const { t } = useTranslation('iocTools');
   const filteredResults = showOnlyChanged ? results.filter((r) => r.changed) : results;
   const changedCount = results.filter((r) => r.changed).length;
+
+  const noChangesMessages = {
+    defang: t('iocDefanger.resultsTable.noChanges.defang'),
+    fang: t('iocDefanger.resultsTable.noChanges.fang'),
+  };
 
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">
-          Results ({filteredResults.length} of {results.length} IOCs)
+          {t('iocDefanger.resultsTable.title', { filteredCount: filteredResults.length, totalCount: results.length })}
         </Typography>
         <FormControlLabel
           control={
@@ -48,7 +50,7 @@ const ResultsTable = ({
               sx={{ mr: 1 }}
             />
           }
-          label={`Show only changed (${changedCount})`}
+          label={t('iocDefanger.resultsTable.showOnlyChanged', { count: changedCount })}
         />
       </Box>
 
@@ -56,7 +58,7 @@ const ResultsTable = ({
         <Alert severity="info" sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <InfoIcon />
-            {NO_CHANGES_MESSAGES[operation]}
+            {noChangesMessages[operation]}
           </Box>
         </Alert>
       )}
@@ -65,11 +67,11 @@ const ResultsTable = ({
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Original</TableCell>
-              <TableCell>{operation === 'defang' ? 'Defanged' : 'Fanged'}</TableCell>
-              <TableCell>Type(s)</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="center">Actions</TableCell>
+              <TableCell>{t('iocDefanger.resultsTable.columns.original')}</TableCell>
+              <TableCell>{operation === 'defang' ? t('iocDefanger.resultsTable.columns.defanged') : t('iocDefanger.resultsTable.columns.fanged')}</TableCell>
+              <TableCell>{t('iocDefanger.resultsTable.columns.types')}</TableCell>
+              <TableCell>{t('iocDefanger.resultsTable.columns.status')}</TableCell>
+              <TableCell align="center">{t('iocDefanger.resultsTable.columns.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -114,15 +116,15 @@ const ResultsTable = ({
                 </TableCell>
                 <TableCell>
                   <Chip
-                    label={result.changed ? 'Modified' : 'Unchanged'}
+                    label={result.changed ? t('iocDefanger.resultsTable.status.modified') : t('iocDefanger.resultsTable.status.unchanged')}
                     size="small"
                     color={result.changed ? 'success' : 'default'}
                     variant={result.changed ? 'filled' : 'outlined'}
                   />
                 </TableCell>
                 <TableCell align="center">
-                  <Tooltip title="Copy result">
-                    <IconButton size="small" onClick={() => onCopy(result.processed, 'Result')} aria-label="Copy result">
+                  <Tooltip title={t('iocDefanger.resultsTable.copyResultTooltip')}>
+                    <IconButton size="small" onClick={() => onCopy(result.processed, 'Result')} aria-label={t('iocDefanger.resultsTable.copyResultTooltip')}>
                       <CopyIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>

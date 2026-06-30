@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -10,6 +11,9 @@ import TableRow from '@mui/material/TableRow';
 import { useTheme } from '@mui/material/styles';
 
 export default function ConfTable(props) {
+  const { t } = useTranslation('iocTools');
+  const yes = t('providers.common.yes');
+  const no = t('providers.common.no');
   const theme = useTheme();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -41,14 +45,14 @@ export default function ConfTable(props) {
 
   return (
     <TableContainer component={Paper} sx={tableContainerStyle}>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+      <Table sx={{ minWidth: 650 }} aria-label={t('providers.nistnvd.simpleTable')}>
         <TableHead>
           <TableRow>
-            <TableCell sx={tableCellStyle}>Vulnerable</TableCell>
-            <TableCell sx={tableCellStyle}>Criteria</TableCell>
-            <TableCell sx={tableCellStyle}>Verson from</TableCell>
-            <TableCell sx={tableCellStyle}>Version to</TableCell>
-            <TableCell sx={tableCellStyle}>Criteria ID</TableCell>
+            <TableCell sx={tableCellStyle}>{t('providers.nistnvd.vulnerable')}</TableCell>
+            <TableCell sx={tableCellStyle}>{t('providers.nistnvd.criteria')}</TableCell>
+            <TableCell sx={tableCellStyle}>{t('providers.nistnvd.versionFrom')}</TableCell>
+            <TableCell sx={tableCellStyle}>{t('providers.nistnvd.versionTo')}</TableCell>
+            <TableCell sx={tableCellStyle}>{t('providers.nistnvd.criteriaId')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -57,7 +61,7 @@ export default function ConfTable(props) {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((cpeMatch, index) => (
                 <TableRow>
-                  <TableCell>{cpeMatch.vulnerable ? "Yes" : "No"}</TableCell>
+                  <TableCell>{cpeMatch.vulnerable ? yes : no}</TableCell>
                   <TableCell sx={{ whiteSpace: "pre-line" }}>
                     {cpeMatch.criteria}
                   </TableCell>

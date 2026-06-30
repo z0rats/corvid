@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -16,13 +17,13 @@ import { useTopIocs } from "../../hooks/api/useTrendsApi";
 import { createChartTheme } from "../../utils/chartTheme";
 import { IOC_TYPE_SELECT_OPTIONS } from "../../constants/newsfeedConstants";
 
-function BlacklistLayer({ bars, onBlacklist }) {
+function BlacklistLayer({ bars, onBlacklist, t }) {
   return bars.map((bar) => {
     const x = bar.x + bar.width / 2;
     const y = bar.y + bar.height + 12;
 
     return (
-      <Tooltip key={`blacklist-${bar.key}`} title={`Hide "${bar.data.indexValue}" from trends`} arrow placement="bottom">
+      <Tooltip key={`blacklist-${bar.key}`} title={t('trends.ioc.hideFromTrends', { value: bar.data.indexValue })} arrow placement="bottom">
         <g
           transform={`translate(${x}, ${y})`}
           onClick={(e) => {
@@ -48,6 +49,7 @@ function BlacklistLayer({ bars, onBlacklist }) {
 }
 
 export default function IocStatistics({ timeRange, refreshKey, onSelectArticleIds, onBlacklistIoc }) {
+  const { t } = useTranslation('newsfeed');
   const theme = useTheme();
   const [selectedIocType, setSelectedIocType] = useState("ips");
   const { data, loading } = useTopIocs(selectedIocType, timeRange, refreshKey);
@@ -63,8 +65,8 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
     : [];
 
   const blacklistLayer = useCallback(
-    (props) => <BlacklistLayer {...props} onBlacklist={onBlacklistIoc} />,
-    [onBlacklistIoc]
+    (props) => <BlacklistLayer {...props} onBlacklist={onBlacklistIoc} t={t} />,
+    [onBlacklistIoc, t]
   );
 
   if (loading) {
@@ -80,11 +82,11 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6" color="text.primary">
-            Top Indicators of Compromise (IOCs)
+            {t('trends.ioc.title')}
           </Typography>
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>IOC Type</InputLabel>
-            <Select value={selectedIocType} label="IOC Type" onChange={(e) => setSelectedIocType(e.target.value)}>
+            <InputLabel>{t('trends.ioc.type')}</InputLabel>
+            <Select value={selectedIocType} label={t('trends.ioc.type')} onChange={(e) => setSelectedIocType(e.target.value)}>
               {IOC_TYPE_SELECT_OPTIONS.map((type) => (
                 <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
               ))}
@@ -110,14 +112,14 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
               axisLeft={{ tickSize: 5, tickPadding: 8, tickRotation: 0, legendPosition: "middle", legendOffset: -60 }}
               labelSkipWidth={12}
               labelSkipHeight={12}
-              onClick={(node) => onSelectArticleIds(node.data.article_ids || [], `IOC: ${node.data.value}`)}
+              onClick={(node) => onSelectArticleIds(node.data.article_ids || [], t('trends.ioc.selectedTitle', { value: node.data.value }))}
               borderRadius={4}
               layers={["grid", "axes", "bars", "markers", "legends", "annotations", ...(onBlacklistIoc ? [blacklistLayer] : [])]}
               tooltip={({ value, indexValue }) => (
                 <Box bgcolor="background.paper" p={1.5} border={1} borderColor="divider" borderRadius={1}>
                   <Typography variant="body2" color="text.primary" fontWeight="medium">{indexValue}</Typography>
-                  <Typography variant="body2" color="text.secondary">{value} occurrences</Typography>
-                  <Typography variant="caption" color="text.secondary">Click to view articles</Typography>
+                  <Typography variant="body2" color="text.secondary">{t('trends.ioc.occurrences', { count: value })}</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('trends.ioc.clickToView')}</Typography>
                 </Box>
               )}
               role="application"
@@ -126,7 +128,7 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
           ) : (
             <Box display="flex" justifyContent="center" alignItems="center" height="100%">
               <Typography variant="body1" color="text.secondary">
-                No IOC data available for the selected type and time range.
+                {t('trends.ioc.noData')}
               </Typography>
             </Box>
           )}

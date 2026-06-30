@@ -12,6 +12,11 @@ export const settingsApi = {
     return response.data;
   },
 
+  async updateLanguage(language) {
+    const response = await api.put('/api/settings/general/language', { language });
+    return response.data;
+  },
+
   // API Keys API calls
   async getServicesConfig() {
     const response = await api.get('/api/services/config');

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -6,14 +7,15 @@ import AddIcon from '@mui/icons-material/Add';
 import WebContextEditor from './WebContextEditor';
 
 export default function WebContextsEditor({ contexts, onAdd, onUpdate, onDelete }) {
+  const { t } = useTranslation('llmTemplates');
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Web contexts allow you to fetch content from websites when the template is executed.
-          The content will be automatically extracted and included in the prompt.
+          {t('webContexts.helperText')}
         </Typography>
-        <Button startIcon={<AddIcon />} size="small" onClick={onAdd}>Add Website</Button>
+        <Button startIcon={<AddIcon />} size="small" onClick={onAdd}>{t('webContexts.addWebsiteButton')}</Button>
       </Box>
       {contexts.length > 0 ? (
         contexts.map((c, i) => (
@@ -25,7 +27,7 @@ export default function WebContextsEditor({ contexts, onAdd, onUpdate, onDelete 
           />
         ))
       ) : (
-        <Typography color="text.secondary">No web contexts defined.</Typography>
+        <Typography color="text.secondary">{t('webContexts.emptyState')}</Typography>
       )}
     </Box>
   );

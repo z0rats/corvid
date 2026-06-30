@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -10,6 +11,7 @@ import Grid from '@mui/material/Grid';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 export default function FalsePositives({ falsePositives, handleFalsePositivesChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentFalsePositive, setCurrentFalsePositive] = useState('');
 
   const handleAddFalsePositive = () => {
@@ -28,19 +30,14 @@ export default function FalsePositives({ falsePositives, handleFalsePositivesCha
     <>
       {/* Info text */}
       <Typography variant="caption" display="block" gutterBottom>
-        Think about possible false positive conditions that could also trigger the
-        rule. This list should contain useful hints for an analyst. E.g. the
-        comment "Legitimate processes that delete the shadow copies" can be a hint
-        for an analyst to check for backup processes on that system or ask for any
-        unusual administrative activity that involved the deletion of the local
-        volume shadow copies.
+        {t('sigma.falsePositives.helpText')}
       </Typography>
 
       <Grid container spacing={1} alignItems="center">
         <Grid size={12}>
           <TextField
             fullWidth
-            label="Add False Positive"
+            label={t('sigma.falsePositives.addLabel')}
             value={currentFalsePositive}
             onChange={(e) => setCurrentFalsePositive(e.target.value)}
             size="small"
@@ -51,17 +48,17 @@ export default function FalsePositives({ falsePositives, handleFalsePositivesCha
                 handleAddFalsePositive();
               }
             }}
-            placeholder="Enter false positive"
+            placeholder={t('sigma.falsePositives.addPlaceholder')}
             slotProps={{
               input: {
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Tooltip title="Add False Positive">
+                    <Tooltip title={t('sigma.falsePositives.addLabel')}>
                       <IconButton
                         onClick={handleAddFalsePositive}
                         disabled={!currentFalsePositive.trim()}
                         size="small"
-                        aria-label="Add false positive"
+                        aria-label={t('sigma.falsePositives.addAria')}
                       >
                         <AddCircleIcon fontSize="small" />
                       </IconButton>

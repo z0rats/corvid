@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -9,6 +10,7 @@ import StarIcon from "@mui/icons-material/Star";
 import Typography from '@mui/material/Typography';
 
 export default function PopularityRanks(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       key="popularity_card"
@@ -20,13 +22,12 @@ export default function PopularityRanks(props) {
         </Grid>
         <Grid>
           <Typography variant="h5" component="h2" gutterBottom>
-            Popularity ranks
+            {t('providers.virustotal.popularityRanks')}
           </Typography>
         </Grid>
       </Grid>
       <Typography variant="subtitle1" color="text.secondary">
-        Domain's position in popularity ranks such as Alexa, Quantcast, Statvoo,
-        etc.
+        {t('providers.virustotal.popularityRanksHelper')}
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.625 }}>
         {Object.entries(

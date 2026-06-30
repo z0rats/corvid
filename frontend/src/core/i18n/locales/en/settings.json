@@ -1,0 +1,100 @@
+{
+  "apiKeys": {
+    "title": "API Keys",
+    "loadingServices": "Loading service configuration...",
+    "errorTitle": "Configuration Error",
+    "noServicesFound": "No services found",
+    "noServicesFoundHelper": "Try adjusting your search or filter criteria.",
+    "searchPlaceholder": "Search services...",
+    "showOnlyConfigured": "Show only configured",
+    "supportedIocTypes": "Supported IoC Types",
+    "noKeyRequired": "No API key required - Ready to use",
+    "tierLabels": {
+      "free": "Free",
+      "paid": "Paid",
+      "freemium": "Freemium"
+    },
+    "header": {
+      "title": "API Key Management",
+      "configuredOf": "{{configured}}/{{total}} services configured ({{percent}}% complete)",
+      "intro": "Configure your threat intelligence and security API keys to unlock the full potential of this platform.",
+      "progress": "Configuration Progress ({{configured}}/{{total}} services)",
+      "percentComplete": "{{percent}}% Complete",
+      "gettingStartedTitle": "Getting Started",
+      "gettingStartedBody": "While initial setup requires generating multiple API keys, the enhanced security and intelligence capabilities make it worthwhile. Most services offer free tiers to get you started."
+    }
+  },
+  "apiKeyInput": {
+    "placeholderConfigured": "API key configured",
+    "placeholderEnter": "Enter your API key...",
+    "tooltipRemove": "Remove API Key",
+    "tooltipGet": "Get API Key",
+    "tooltipSave": "Save API Key",
+    "ariaDelete": "Delete API key",
+    "ariaGet": "Get API key",
+    "ariaSave": "Save API key",
+    "noKeyQuestion": "No API key?",
+    "createItHere": "Create it here"
+  },
+  "aiSettings": {
+    "title": "AI Settings",
+    "description": "Configure which LLM models are used as defaults across the application. Per-module overrides take priority over the global default.",
+    "globalDefaultTitle": "Global Default",
+    "defaultModelLabel": "Default Model",
+    "defaultModelDescription": "Fallback model used when no per-module override is set.",
+    "perModuleTitle": "Per-Module Overrides",
+    "useGlobalDefault": "Use global default",
+    "modules": {
+      "newsfeed_analysis_model": {
+        "label": "Newsfeed Article Analysis",
+        "description": "Model used when analyzing individual news articles"
+      },
+      "newsfeed_report_model": {
+        "label": "Newsfeed Report Generation",
+        "description": "Model used for ranking and analyzing top articles in reports"
+      },
+      "email_analyzer_model": {
+        "label": "Email Analyzer",
+        "description": "Model used for AI-based email body analysis"
+      },
+      "llm_templates_model": {
+        "label": "LLM Templates (new template default)",
+        "description": "Default model for newly created templates"
+      }
+    }
+  },
+  "modules": {
+    "title": "Modules",
+    "description": "Enable or disable modules based on your needs.",
+    "loading": "Loading modules...",
+    "descriptions": {
+      "newsfeed": "Aggregate and browse cybersecurity news from RSS feeds.",
+      "ioc_tools": "Look up, extract, and analyze indicators of compromise.",
+      "email_analyzer": "Parse and inspect email headers and content.",
+      "image_tools": "View EXIF/GPS metadata and run reverse image searches.",
+      "llm_templates": "Create and run AI-powered analysis templates.",
+      "cvss_calculator": "Calculate CVSS 3.1 and 4.0 vulnerability scores.",
+      "rule_creator": "Build Sigma, YARA, and Snort detection rules."
+    }
+  },
+  "about": {
+    "title": "About - OSINT Toolkit",
+    "body": "OSINT Toolkit is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday investigative tasks. Optimized for single-user operation, OSINT Toolkit runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, OSINT Toolkit integrates generative AI capabilities, providing additional support for analysis and decision-making. Beyond its practical applications, the project also serves as a personal playground for experimenting with new technologies and automation possibilities, potentially laying the foundation for a future commercial cloud platform.",
+    "nameNote": "The name OSINT Toolkit is a temporary name. The name may be changed in the future.",
+    "madeBy": "Made by Lars Ursprung",
+    "donateTitle": "Donate to support the development",
+    "donateBody": "If you want to support the development of OSINT Toolkit, you can donate using a service of your choice."
+  },
+  "notifications": {
+    "apiKeySaved": "API key configured successfully.",
+    "apiKeyRemoved": "API key removed successfully.",
+    "serviceActivated": "{{service}} activated successfully.",
+    "serviceDeactivated": "{{service}} deactivated successfully.",
+    "moduleEnabled": "Module enabled successfully.",
+    "moduleDisabled": "Module disabled successfully.",
+    "loadError": "Failed to load configuration.",
+    "saveError": "Failed to save changes.",
+    "invalidApiKey": "Please enter a valid API key.",
+    "aiSettingsUpdated": "AI settings updated successfully."
+  }
+}

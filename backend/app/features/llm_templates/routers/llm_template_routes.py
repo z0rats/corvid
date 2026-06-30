@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
+from app.core.exceptions import AppHTTPException
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep, SessionDep
@@ -75,7 +76,7 @@ async def get_template(template_id: str, db: ReadSessionDep) -> AITemplate:
     logger.debug("Retrieving template: %s", template_id)
     template = await get_template_by_id(db, template_id)
     if not template:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
     return template
 
 
@@ -92,7 +93,7 @@ async def update_template(template_id: str, template_update: AITemplateUpdate, d
     logger.info("Updating template: %s", template_id)
     template = await update_existing_template(db, template_id, template_update)
     if not template:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
     logger.info("Template updated successfully: %s", template_id)
     return template
 
@@ -109,7 +110,7 @@ async def delete_template(template_id: str, db: SessionDep) -> StatusMessageResp
     logger.info("Deleting template: %s", template_id)
     success = await delete_template_by_id(db, template_id)
     if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
     logger.info("Template deleted successfully: %s", template_id)
     return StatusMessageResponse(status="success", message="Template deleted successfully")
 
@@ -128,7 +129,7 @@ async def engineer_prompt(request: Request, prompt_request: PromptEngineerReques
     try:
         result = await run_engineer_prompt(prompt_request.title, prompt_request.description, prompt_request.model_id, db)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise AppHTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e), error_code="TEMPLATE_ENGINEER_FAILED")
     logger.info("Prompt engineering completed successfully")
     return result
 
@@ -167,10 +168,10 @@ async def execute_template(request: Request, template_id: str, execution_data: A
     logger.info("Executing template: %s", template_id)
     template = await get_template_by_id(db, template_id)
     if not template:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
     try:
         result = await run_execute_template(template, execution_data, db)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise AppHTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e), error_code="TEMPLATE_EXECUTE_FAILED")
     logger.info("Template executed successfully: %s", template_id)
     return TemplateExecutionResponse(result=result)

@@ -1,8 +1,8 @@
 import React, { useId, useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApiKeys } from '../../hooks/api/useApiKeys';
 import { useNotification } from '../../../../core/hooks/ui/useNotification';
 
-import { NOTIFICATION_MESSAGES } from '../../constants/settingsConstants';
 import NotificationSnackbar from '../ui/NotificationSnackbar';
 
 import Box from '@mui/material/Box';
@@ -18,6 +18,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import SaveIcon from '@mui/icons-material/Save';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 export default function ApiKeyInput({ name, description, link, relatedKeys = [] }) {
+  const { t } = useTranslation('settings');
   const inputId = useId();
 
   const [serviceKeyInput, setServiceKeyInput] = useState('');
@@ -55,7 +56,7 @@ export default function ApiKeyInput({ name, description, link, relatedKeys = [] 
 
   const handleSaveApiKey = async () => {
     if (!serviceKeyInput.trim()) {
-      showNotification(NOTIFICATION_MESSAGES.INVALID_API_KEY, 'warning');
+      showNotification(t('notifications.invalidApiKey'), 'warning');
       return;
     }
 
@@ -105,45 +106,45 @@ export default function ApiKeyInput({ name, description, link, relatedKeys = [] 
         disabled={keyStatus.existsInBackend || loading}
         variant="outlined"
         size="small"
-        placeholder={keyStatus.existsInBackend ? 'API key configured' : 'Enter your API key...'}
+        placeholder={keyStatus.existsInBackend ? t('apiKeyInput.placeholderConfigured') : t('apiKeyInput.placeholderEnter')}
         slotProps={{
           input: {
             endAdornment: (
               <InputAdornment position="end">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   {keyStatus.existsInBackend ? (
-                    <Tooltip title="Remove API Key">
+                    <Tooltip title={t('apiKeyInput.tooltipRemove')}>
                       <IconButton
                         size="small"
                         color="error"
                         onClick={handleDeleteApiKey}
                         disabled={loading}
-                        aria-label="Delete API key"
+                        aria-label={t('apiKeyInput.ariaDelete')}
                       >
                         <DeleteForeverIcon />
                       </IconButton>
                     </Tooltip>
                   ) : (
                     <>
-                      <Tooltip title="Get API Key">
+                      <Tooltip title={t('apiKeyInput.tooltipGet')}>
                         <IconButton
                           size="small"
                           component={Link}
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label="Get API key"
+                          aria-label={t('apiKeyInput.ariaGet')}
                         >
                           <OpenInNewIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Save API Key">
+                      <Tooltip title={t('apiKeyInput.tooltipSave')}>
                         <IconButton
                           size="small"
                           color="primary"
                           onClick={handleSaveApiKey}
                           disabled={!serviceKeyInput.trim() || loading}
-                          aria-label="Save API key"
+                          aria-label={t('apiKeyInput.ariaSave')}
                         >
                           {loading ? <CircularProgress size={20} /> : <SaveIcon />}
                         </IconButton>
@@ -170,7 +171,7 @@ export default function ApiKeyInput({ name, description, link, relatedKeys = [] 
       {!keyStatus.existsInBackend && (
         <Box sx={{ position: 'absolute', mt: '70px', display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="caption" color="text.secondary">
-            No API key?
+            {t('apiKeyInput.noKeyQuestion')}
           </Typography>
           <Link
             href={link}
@@ -179,7 +180,7 @@ export default function ApiKeyInput({ name, description, link, relatedKeys = [] 
             variant="caption"
             sx={{ display: 'flex', alignItems: 'center', gap: 0.5, textDecoration: 'none' }}
           >
-            Create it here
+            {t('apiKeyInput.createItHere')}
             <OpenInNewIcon sx={{ fontSize: 12 }} />
           </Link>
         </Box>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import IocLookupDialog from '../../../ioc-tools/ioc-lookup/shared/components/IocLookupDialog';
 import { useIocLookupDialog } from '../../../ioc-tools/ioc-lookup/shared/hooks/useIocLookupDialog';
 import { EMAIL_CONSTANTS } from '../../constants/emailConstants';
@@ -18,6 +19,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function Urls({ result }) {
+  const { t } = useTranslation('emailAnalyzer');
   const [expanded, setExpanded] = useState(false);
   const { open, ioc, iocType, openDialog, closeDialog } = useIocLookupDialog();
 
@@ -36,7 +38,7 @@ export default function Urls({ result }) {
         <Box display="flex" alignItems="center">
           <LinkIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
-            URLs in body ({result.length})
+            {t('urls.title', { count: result.length })}
           </Typography>
         </Box>
       </AccordionSummary>
@@ -44,7 +46,7 @@ export default function Urls({ result }) {
         {result.length > 0 ? (
           <>
             <TableContainer component={Paper} sx={{ maxWidth: '100%', boxShadow: 0, borderRadius: 1 }}>
-              <Table size="small" aria-label="urls table">
+              <Table size="small" aria-label={t('urls.tableAriaLabel')}>
                 <TableBody>
                   {result.map((url, index) => (
                     <TableRow key={url}>
@@ -61,7 +63,7 @@ export default function Urls({ result }) {
                           size="small"
                           onClick={() => openDialog(url, EMAIL_CONSTANTS.IOC_TYPES.URL)}
                         >
-                          Analyze
+                          {t('urls.analyzeButton')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -73,7 +75,7 @@ export default function Urls({ result }) {
           </>
         ) : (
           <Typography variant="body2" sx={{ px: 1 }}>
-            No URLs found
+            {t('urls.empty')}
           </Typography>
         )}
       </AccordionDetails>

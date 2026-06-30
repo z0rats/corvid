@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -8,6 +9,7 @@ import PcreSection from './PcreSection';
 import FlowbitsSection from './FlowbitsSection';
 
 export default function RuleContent({ ruleContent, handleRuleContentChange }) {
+  const { t } = useTranslation('ruleCreator');
   const handleContentChange = (newContent) => {
     handleRuleContentChange(prev => ({ ...prev, content: newContent }));
   };
@@ -32,13 +34,13 @@ export default function RuleContent({ ruleContent, handleRuleContentChange }) {
 
       <Box>
         <Typography variant="subtitle2" gutterBottom>
-          Rate Limiting
+          {t('snort.ruleContent.rateLimitingHeader')}
         </Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label="Threshold"
+              label={t('snort.ruleContent.thresholdLabel')}
               value={ruleContent.threshold}
               onChange={(e) => handleFieldChange('threshold', e.target.value)}
               size="small"
@@ -49,7 +51,7 @@ export default function RuleContent({ ruleContent, handleRuleContentChange }) {
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label="Detection Filter"
+              label={t('snort.ruleContent.detectionFilterLabel')}
               value={ruleContent.detection_filter}
               onChange={(e) => handleFieldChange('detection_filter', e.target.value)}
               size="small"

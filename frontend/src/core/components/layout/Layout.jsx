@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
-import { hasLlmKeyAtom, enabledModulesMapAtom, themeModeAtom } from '../../state/atoms';
+import { useTranslation } from 'react-i18next';
+import { hasLlmKeyAtom, enabledModulesMapAtom, themeModeAtom, generalSettingsState } from '../../state/atoms';
 import { useThemeManager } from '../../hooks/ui/useThemeManager';
+import { useGeneralSettings } from '../../../features/settings/hooks/api/useGeneralSettings';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -23,13 +25,13 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import SidebarTabs from '../ui/SidebarTabs';
 import {
-  mainMenuItems,
-  aiTemplatesTabs,
-  newsfeedTabs,
-  settingsTabs,
-  rulesTabs,
-  iocToolsTabs,
-  cvssTabs,
+  getMainMenuItems,
+  getAiTemplatesTabs,
+  getNewsfeedTabs,
+  getSettingsTabs,
+  getRulesTabs,
+  getIocToolsTabs,
+  getCvssTabs,
 } from '../../config/sidebarConfig';
 import ot_logo_dark from '../../static/images/ot_logo_dark.png';
 import { useTheme, alpha } from '@mui/material/styles';
@@ -39,16 +41,20 @@ const minDrawerWidth = 180;
 const maxDrawerWidth = 480;
 const miniDrawerWidth = 60;
 
-const menuItems = mainMenuItems;
-
 /**
  * Main layout component that provides the application structure
  */
 function Layout() {
+  const { t } = useTranslation();
   const hasLlmKey = useAtomValue(hasLlmKeyAtom);
   const enabledModules = useAtomValue(enabledModulesMapAtom);
   const themeMode = useAtomValue(themeModeAtom);
   const { toggleColorMode } = useThemeManager();
+  const generalSettings = useAtomValue(generalSettingsState);
+  const { updateLanguage } = useGeneralSettings();
+  const currentLanguage = generalSettings?.language || 'en';
+  const handleLanguageToggle = () => updateLanguage(currentLanguage === 'en' ? 'ru' : 'en');
+  const menuItems = useMemo(() => getMainMenuItems(t), [t]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(defaultDrawerWidth);
@@ -89,23 +95,23 @@ function Layout() {
   }, []);
 
   const currentTabs = useMemo(() => {
-    if (location.pathname.startsWith('/ai-templates') && hasLlmKey) return aiTemplatesTabs;
+    if (location.pathname.startsWith('/ai-templates') && hasLlmKey) return getAiTemplatesTabs(t);
     if (location.pathname.startsWith('/newsfeed')) {
-      return newsfeedTabs.filter(tab => tab.path !== '/newsfeed/report' || hasLlmKey);
+      return getNewsfeedTabs(t).filter(tab => tab.path !== '/newsfeed/report' || hasLlmKey);
     }
-    if (location.pathname.startsWith('/settings')) return settingsTabs;
-    if (location.pathname.startsWith('/rules')) return rulesTabs;
-    if (location.pathname.startsWith('/ioc-tools')) return iocToolsTabs;
-    if (location.pathname.startsWith('/cvss-calculator')) return cvssTabs;
+    if (location.pathname.startsWith('/settings')) return getSettingsTabs(t);
+    if (location.pathname.startsWith('/rules')) return getRulesTabs(t);
+    if (location.pathname.startsWith('/ioc-tools')) return getIocToolsTabs(t);
+    if (location.pathname.startsWith('/cvss-calculator')) return getCvssTabs(t);
     return null;
-  }, [location.pathname, hasLlmKey]);
+  }, [location.pathname, hasLlmKey, t]);
 
   const filteredMenuItems = useMemo(() => menuItems.filter(item => {
     if (item.moduleId === 'llm_templates') {
       return hasLlmKey && (enabledModules[item.moduleId] ?? true);
     }
     return enabledModules[item.moduleId] ?? true;
-  }), [hasLlmKey, enabledModules]);
+  }), [hasLlmKey, enabledModules, menuItems]);
 
   const showSidebar = Boolean(currentTabs);
 
@@ -120,7 +126,7 @@ function Layout() {
         minHeight: 56,
       }}
     >
-      <IconButton onClick={handleSidebarToggle} aria-label="Toggle sidebar">
+      <IconButton onClick={handleSidebarToggle} aria-label={t('layout.toggleSidebar')}>
         {sidebarOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
       </IconButton>
     </Box>
@@ -190,7 +196,7 @@ function Layout() {
             color="inherit"
             edge="start"
             onClick={handleDrawerToggle}
-            aria-label="Open menu"
+            aria-label={t('layout.openMenu')}
             sx={{ mr: 2, display: { md: 'none' } }}
           >
             <MenuIcon />
@@ -226,17 +232,27 @@ function Layout() {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
-            <Tooltip title={themeMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
-              <IconButton color="inherit" onClick={toggleColorMode} aria-label="Toggle dark mode">
+            <Tooltip title={currentLanguage === 'en' ? 'Русский' : 'English'}>
+              <IconButton
+                color="inherit"
+                onClick={handleLanguageToggle}
+                aria-label="toggle language"
+                sx={{ fontSize: '0.8rem', fontWeight: 600 }}
+              >
+                {currentLanguage === 'en' ? 'RU' : 'EN'}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={themeMode === 'dark' ? t('layout.switchToLightMode') : t('layout.switchToDarkMode')}>
+              <IconButton color="inherit" onClick={toggleColorMode} aria-label={t('layout.toggleDarkMode')}>
                 {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
               </IconButton>
             </Tooltip>
-            <Tooltip title="Settings">
+            <Tooltip title={t('layout.settings')}>
               <IconButton
                 color="inherit"
                 component={Link}
                 to="/settings"
-                aria-label="Settings"
+                aria-label={t('layout.settings')}
               >
                 <SettingsIcon />
               </IconButton>

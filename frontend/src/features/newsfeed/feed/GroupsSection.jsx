@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -9,6 +10,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FindInPageIcon from '@mui/icons-material/FindInPage';
 
 export default function GroupsSection({ item }) {
+  const { t } = useTranslation('newsfeed');
+
   if (!item.matches || item.matches.length === 0) {
     return null;
   }
@@ -22,8 +25,8 @@ export default function GroupsSection({ item }) {
         <Stack direction="row" alignItems="center" spacing={1}>
           <FindInPageIcon />
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-            Groups
-            {item.matches.length > 1 ? "es " : " "}
+            {item.matches.length > 1 ? t('feed.groups.titlePlural') : t('feed.groups.title')}
+            {" "}
             ({item.matches.length})
           </Typography>
         </Stack>

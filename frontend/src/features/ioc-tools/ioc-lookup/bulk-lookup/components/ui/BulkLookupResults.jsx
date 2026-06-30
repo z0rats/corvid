@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -40,6 +41,7 @@ export default function BulkLookupResults({
   progress,
   error,
 }) {
+  const { t } = useTranslation('iocTools');
 
   if (error) {
     return <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>;
@@ -50,7 +52,7 @@ export default function BulkLookupResults({
       <Box sx={{ width: '100%', mb: 2 }}>
         <LinearProgress variant="determinate" value={progress} />
         <Typography variant="caption" display="block" textAlign="center">
-          {Math.round(progress)}% Complete
+          {t('bulkLookup.results.progress', { percent: Math.round(progress) })}
         </Typography>
       </Box>
     );
@@ -65,11 +67,11 @@ export default function BulkLookupResults({
   return (
     <Paper sx={{ mt: 2 }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={onTabChange} 
-          aria-label="ioc type tabs" 
-          variant="scrollable" 
+        <Tabs
+          value={activeTab}
+          onChange={onTabChange}
+          aria-label={t('bulkLookup.results.tabsAriaLabel')}
+          variant="scrollable"
           scrollButtons="auto"
         >
           {orderedIocTypes.map((typeKey, index) => (
@@ -88,7 +90,7 @@ export default function BulkLookupResults({
               <IocCard key={ioc.id} ioc={ioc} />
             ))
           ) : (
-            <Typography>No IOCs of type {typeKey.toUpperCase()} to display in this tab.</Typography>
+            <Typography>{t('bulkLookup.results.emptyTab', { type: typeKey.toUpperCase() })}</Typography>
           )}
         </TabPanel>
       ))}

@@ -3,8 +3,11 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import { useTranslation } from 'react-i18next';
 
 export default function MetricSelect({ label, value, options, onChange, onInfoClick }) {
+  const { t } = useTranslation('cvssCalculator');
+
   return (
     <Box display="flex" alignItems="center" sx={{ my: 2, mx: 4 }}>
       <TextField
@@ -25,7 +28,7 @@ export default function MetricSelect({ label, value, options, onChange, onInfoCl
         ))}
       </TextField>
       {onInfoClick && (
-        <IconButton onClick={onInfoClick} aria-label="Show metric info">
+        <IconButton onClick={onInfoClick} aria-label={t('common.showMetricInfo')}>
           <InfoIcon />
         </IconButton>
       )}

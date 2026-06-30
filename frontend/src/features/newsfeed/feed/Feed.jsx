@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Box from '@mui/material/Box';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
@@ -14,6 +15,7 @@ import NewsfeedSkeleton from "./NewsfeedSkeleton";
 import Filters from "./Filters";
 
 export default function Feed() {
+  const { t } = useTranslation('newsfeed');
   const {
     result,
     loading,
@@ -89,7 +91,7 @@ export default function Feed() {
         </>
       ) : (
         <Typography variant="h6" align="center" sx={{ mt: 4 }}>
-          No articles found.
+          {t('feed.noArticles')}
         </Typography>
       )}
     </Stack>

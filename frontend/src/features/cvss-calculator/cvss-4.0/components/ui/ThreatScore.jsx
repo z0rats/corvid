@@ -10,8 +10,10 @@ import Typography from '@mui/material/Typography';
 import InfoModal from "../../../shared/components/InfoModal";
 import MetricSelect from "../../../shared/components/MetricSelect";
 import { threatMetrics } from "../../constants/metricsConfig";
+import { useTranslation } from 'react-i18next';
 
 export default function ThreatScore({ metrics, onMetricChange }) {
+  const { t } = useTranslation('cvssCalculator');
   const [openModal, setOpenModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", text: "" });
 
@@ -49,7 +51,7 @@ export default function ThreatScore({ metrics, onMetricChange }) {
       >
         <Box display="flex" alignItems="center">
           <ScheduleIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Threat Metrics (optional)</Typography>
+          <Typography variant="subtitle2">{t('cvss40.threat.accordionTitle')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
@@ -62,9 +64,7 @@ export default function ThreatScore({ metrics, onMetricChange }) {
           }}
         >
           <Typography variant="body1">
-            The Threat metrics measure the current state of exploit techniques or
-            code availability. These metrics are optional and can be used to
-            customize the CVSS score based on the current threat landscape.
+            {t('cvss40.threat.description')}
           </Typography>
         </Box>
 

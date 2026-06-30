@@ -1,11 +1,14 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Avatar from '@mui/material/Avatar';
 import CardHeader from '@mui/material/CardHeader';
 
 function ServiceHeaderCell({ iconSrc, serviceName, avatarStyle, headerProps }) {
+  const { t } = useTranslation('iocTools');
+
   const avatar = iconSrc ? (
     <Avatar
-      alt={`${serviceName} icon`}
+      alt={t('iocLookupShared.serviceHeaderCell.iconAlt', { serviceName })}
       src={iconSrc}
       sx={avatarStyle}
       variant="rounded"

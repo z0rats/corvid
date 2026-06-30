@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import Card from "@mui/material/Card";
@@ -15,6 +16,7 @@ import SourceIcon from "@mui/icons-material/Source";
 import Typography from "@mui/material/Typography";
 
 export default function Details(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       variant="outlined"
@@ -22,7 +24,7 @@ export default function Details(props) {
       sx={{ m: 1, p: 2, borderRadius: 5, boxShadow: 0 }}
     >
       <Typography variant="h5" gutterBottom component="div">
-        Details
+        {t('providers.nistnvd.details')}
       </Typography>
       {props.details ? (
         <>
@@ -34,7 +36,7 @@ export default function Details(props) {
                     <SourceIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Source identifier"
+                    primary={t('providers.nistnvd.sourceIdentifier')}
                     secondary={props.details.sourceIdentifier}
                   />
                 </ListItem>
@@ -43,7 +45,7 @@ export default function Details(props) {
                     <CalendarMonthIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Published"
+                    primary={t('providers.crowdstrike.published')}
                     secondary={props.details.published}
                   />
                 </ListItem>
@@ -54,7 +56,7 @@ export default function Details(props) {
                     <EventIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Last modified"
+                    primary={t('providers.nistnvd.lastModified')}
                     secondary={props.details.lastModified}
                   />
                 </ListItem>
@@ -63,7 +65,7 @@ export default function Details(props) {
                     <ModelTrainingIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Vulnerability status"
+                    primary={t('providers.nistnvd.vulnerabilityStatus')}
                     secondary={props.details.vulnStatus}
                   />
                 </ListItem>
@@ -74,7 +76,7 @@ export default function Details(props) {
                 <DescriptionIcon />
               </ListItemIcon>
               <ListItemText
-                primary="Description"
+                primary={t('providers.nistnvd.description')}
                 secondary={
                     <ReactMarkdown>{props.details.descriptions[0].value}</ReactMarkdown>
                 }

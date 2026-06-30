@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -31,7 +32,7 @@ function NoDetails({ message }) {
   );
 }
 
-function DetailItem({ label, value, defaultVal = "N/A" }) {
+function DetailItem({ label, value, defaultVal }) {
   if (value === null || value === undefined || value === '') {
     return null;
   }
@@ -55,6 +56,8 @@ function DetailItem({ label, value, defaultVal = "N/A" }) {
 
 
 export default function UrlScanDetails({ result }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
 
@@ -78,15 +81,15 @@ export default function UrlScanDetails({ result }) {
   }, [scans]);
 
   if (!result || !scans.length) {
-    return <NoDetails message="No urlscan.io information was found for this indicator." />;
+    return <NoDetails message={t('providers.urlscan.noInfoFound')} />;
   }
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
-  
+
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return notAvailable;
     return new Date(dateString).toLocaleString();
   }
 
@@ -99,7 +102,7 @@ export default function UrlScanDetails({ result }) {
             <Box display="flex" alignItems="center">
               <NumbersIcon fontSize="large" sx={{ mr: 1, color: 'text.primary' }} />
               <Box>
-                <Typography variant="h6">Total Scans</Typography>
+                <Typography variant="h6">{t('providers.urlscan.totalScans')}</Typography>
                 <Typography variant="h4">{result.total}</Typography>
               </Box>
             </Box>
@@ -110,7 +113,7 @@ export default function UrlScanDetails({ result }) {
             <Box display="flex" alignItems="center">
               <PublicIcon fontSize="large" sx={{ mr: 1, color: 'text.primary' }} />
               <Box>
-                <Typography variant="h6">Unique Apex Domains</Typography>
+                <Typography variant="h6">{t('providers.urlscan.uniqueApexDomains')}</Typography>
                 <Typography variant="h4">{uniqueDomains}</Typography>
               </Box>
             </Box>
@@ -121,7 +124,7 @@ export default function UrlScanDetails({ result }) {
             <Box display="flex" alignItems="center">
               <HttpIcon fontSize="large" sx={{ mr: 1, color: 'text.primary' }} />
               <Box>
-                <Typography variant="h6">Unique IPs</Typography>
+                <Typography variant="h6">{t('providers.urlscan.uniqueIps')}</Typography>
                 <Typography variant="h4">{uniqueIPs}</Typography>
               </Box>
             </Box>
@@ -134,7 +137,7 @@ export default function UrlScanDetails({ result }) {
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box display="flex" alignItems="center">
             <TravelExploreIcon sx={{ mr: 1 }} />
-            <Typography variant="h6">Scan Results ({scans.length})</Typography>
+            <Typography variant="h6">{t('providers.urlscan.scanResults', { count: scans.length })}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails>
@@ -144,16 +147,16 @@ export default function UrlScanDetails({ result }) {
                     component="img"
                     sx={{ width: { xs: '100%', md: 300 }, height: 225, objectFit: 'cover', borderRight: (t) => ({ md: `1px solid ${t.palette.divider}` }) }}
                     image={scan.screenshot}
-                    alt={`Screenshot of ${scan.task.url}`}
+                    alt={t('providers.urlscan.screenshotAlt', { url: scan.task.url })}
                     onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/300x225/EEE/31343C?text=No+Screenshot'; }}
                 />
               <Grid container spacing={2} sx={{ p: 2 }}>
                 <Grid size={{ xs: 12, md: 6 }}>
                    <Typography variant="h6" component="div" sx={{ wordBreak: 'break-all' }}>
-                      {scan.task.domain || 'N/A'}
+                      {scan.task.domain || notAvailable}
                     </Typography>
                   <Link href={scan.result} target="_blank" rel="noopener noreferrer" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                     <LinkIcon fontSize="small" sx={{ mr: 0.5 }} /> View Full Report
+                     <LinkIcon fontSize="small" sx={{ mr: 0.5 }} /> {t('providers.urlscan.viewFullReport')}
                   </Link>
 
                   <Box display="flex" flexWrap="wrap" gap={1} mb={1}>
@@ -163,22 +166,22 @@ export default function UrlScanDetails({ result }) {
                   </Box>
 
                   <List dense>
-                     <DetailItem label="Scan Time" value={formatDate(scan.task.time)} />
-                     <DetailItem label="Scanned URL" value={scan.task.url} />
-                     <DetailItem label="Visibility" value={scan.task.visibility} />
+                     <DetailItem label={t('providers.urlscan.scanTime')} value={formatDate(scan.task.time)} defaultVal={notAvailable} />
+                     <DetailItem label={t('providers.urlscan.scannedUrl')} value={scan.task.url} defaultVal={notAvailable} />
+                     <DetailItem label={t('providers.urlscan.visibility')} value={scan.task.visibility} defaultVal={notAvailable} />
                   </List>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">Page Details</Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">{t('providers.urlscan.pageDetails')}</Typography>
                   <List dense>
-                    <DetailItem label="Final URL" value={scan.page.url} />
-                    <DetailItem label="Title" value={scan.page.title} />
-                    <DetailItem label="IP Address" value={scan.page.ip} />
-                    <DetailItem label="Country" value={scan.page.country} />
-                    <DetailItem label="ASN" value={`${scan.page.asn} (${scan.page.asnname})`} />
-                    <DetailItem label="Server" value={scan.page.server} />
-                    <DetailItem label="Status" value={scan.page.status} />
-                    <DetailItem label="MIME Type" value={scan.page.mimeType} />
+                    <DetailItem label={t('providers.urlscan.finalUrl')} value={scan.page.url} defaultVal={notAvailable} />
+                    <DetailItem label={t('providers.urlscan.title')} value={scan.page.title} defaultVal={notAvailable} />
+                    <DetailItem label={t('providers.urlscan.ipAddress')} value={scan.page.ip} defaultVal={notAvailable} />
+                    <DetailItem label={t('providers.urlscan.country')} value={scan.page.country} defaultVal={notAvailable} />
+                    <DetailItem label={t('providers.urlscan.asn')} value={`${scan.page.asn} (${scan.page.asnname})`} defaultVal={notAvailable} />
+                    <DetailItem label={t('providers.urlscan.server')} value={scan.page.server} defaultVal={notAvailable} />
+                    <DetailItem label={t('providers.urlscan.status')} value={scan.page.status} defaultVal={notAvailable} />
+                    <DetailItem label={t('providers.urlscan.mimeType')} value={scan.page.mimeType} defaultVal={notAvailable} />
                   </List>
                 </Grid>
               </Grid>

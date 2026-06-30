@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -11,8 +12,10 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-export default function RulePreview({ open, onClose, rulePreview, title = "Rule Preview" }) {
+export default function RulePreview({ open, onClose, rulePreview, title }) {
+  const { t } = useTranslation('ruleCreator');
   const preRef = useRef(null);
+  const dialogTitle = title ?? t('common.preview.defaultTitle');
 
   const handleCopyToClipboard = () => {
     if (preRef.current) {
@@ -35,7 +38,7 @@ export default function RulePreview({ open, onClose, rulePreview, title = "Rule 
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogContent>
         <Box
           ref={preRef}
@@ -54,13 +57,13 @@ export default function RulePreview({ open, onClose, rulePreview, title = "Rule 
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 1 }}>
-        <Tooltip title="Copy to Clipboard">
-          <IconButton onClick={handleCopyToClipboard} size="small" aria-label="Copy to clipboard">
+        <Tooltip title={t('common.actions.copyToClipboard')}>
+          <IconButton onClick={handleCopyToClipboard} size="small" aria-label={t('common.actions.copyToClipboardAria')}>
             <ContentCopyIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Button onClick={onClose} size="small">
-          Close
+          {t('common.actions.close')}
         </Button>
       </DialogActions>
     </Dialog>

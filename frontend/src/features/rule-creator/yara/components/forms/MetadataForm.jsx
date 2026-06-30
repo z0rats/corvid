@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -21,8 +22,9 @@ export default function MetadataForm({
   metadata, 
   onMetadataChange, 
   errors = {}, 
-  onClearError 
+  onClearError
 }) {
+  const { t } = useTranslation('ruleCreator');
   const handleFieldChange = (field) => (event) => {
     onMetadataChange(field, event.target.value);
     if (errors[field] && onClearError) {
@@ -45,7 +47,7 @@ export default function MetadataForm({
       >
         <Box display="flex" alignItems="center">
           <DescriptionIcon fontSize="small" sx={{ mr: 1 }} />
-          <Typography variant="subtitle2">Rule Metadata</Typography>
+          <Typography variant="subtitle2">{t('yara.metadataForm.header')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
@@ -53,7 +55,7 @@ export default function MetadataForm({
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label="Rule Name"
+              label={t('yara.metadataForm.ruleNameLabel')}
               value={metadata.ruleName}
               onChange={handleFieldChange('ruleName')}
               required
@@ -66,7 +68,7 @@ export default function MetadataForm({
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label="Author"
+              label={t('yara.metadataForm.authorLabel')}
               value={metadata.author}
               onChange={handleFieldChange('author')}
               size="small"
@@ -76,7 +78,7 @@ export default function MetadataForm({
           <Grid size={12}>
             <TextField
               fullWidth
-              label="Description"
+              label={t('yara.metadataForm.descriptionLabel')}
               multiline
               rows={2}
               value={metadata.description}
@@ -88,7 +90,7 @@ export default function MetadataForm({
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
-              label="Reference"
+              label={t('yara.metadataForm.referenceLabel')}
               value={metadata.reference}
               onChange={handleFieldChange('reference')}
               size="small"
@@ -98,7 +100,7 @@ export default function MetadataForm({
           <Grid size={{ xs: 6, sm: 3 }}>
             <TextField
               fullWidth
-              label="Hash"
+              label={t('yara.metadataForm.hashLabel')}
               value={metadata.hash}
               onChange={handleFieldChange('hash')}
               size="small"
@@ -108,7 +110,7 @@ export default function MetadataForm({
           <Grid size={{ xs: 6, sm: 3 }}>
             <TextField
               fullWidth
-              label="Version"
+              label={t('yara.metadataForm.versionLabel')}
               value={metadata.version}
               onChange={handleFieldChange('version')}
               size="small"

@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, status
+from app.core.exceptions import AppHTTPException
 
 from app.core.dependencies import ReadSessionDep, SessionDep
 from app.features.llm_templates.crud.template_category_crud import (
@@ -66,9 +67,9 @@ async def rename_category(category_id: str, data: TemplateCategoryUpdate, db: Se
     try:
         result = await update_category_name(db, category_id, data.name)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e), error_code="CATEGORY_RENAME_INVALID")
     if not result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found", error_code="CATEGORY_NOT_FOUND")
     return result
 
 
@@ -85,9 +86,9 @@ async def remove_category(category_id: str, data: CategoryDeleteRequest, db: Ses
     try:
         success = await delete_category(db, category_id, data.action)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e), error_code="CATEGORY_DELETE_INVALID")
     if not success:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found", error_code="CATEGORY_NOT_FOUND")
     return StatusMessageResponse(status="success", message="Group deleted successfully")
 
 

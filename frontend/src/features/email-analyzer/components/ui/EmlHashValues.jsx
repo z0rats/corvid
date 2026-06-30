@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import IocLookupDialog from '../../../ioc-tools/ioc-lookup/shared/components/IocLookupDialog';
 import { useIocLookupDialog } from '../../../ioc-tools/ioc-lookup/shared/hooks/useIocLookupDialog';
 import { emailUtils } from '../../utils/emailUtils';
@@ -12,6 +13,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 const HASH_FIELDS = ['md5', 'sha1', 'sha256'];
 
 function CopyButton({ value }) {
+  const { t } = useTranslation('emailAnalyzer');
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef(null);
 
@@ -27,8 +29,8 @@ function CopyButton({ value }) {
   };
 
   return (
-    <Tooltip title={copied ? 'Copied!' : 'Copy'}>
-      <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }} aria-label="Copy hash">
+    <Tooltip title={copied ? t('emlHashValues.copyButton.copied') : t('emlHashValues.copyButton.copy')}>
+      <IconButton size="small" onClick={handleCopy} sx={{ p: 0.25 }} aria-label={t('emlHashValues.copyButton.ariaLabel')}>
         <ContentCopyIcon sx={{ fontSize: '0.875rem' }} />
       </IconButton>
     </Tooltip>
@@ -53,6 +55,7 @@ function HashRow({ label, value }) {
 }
 
 export default function EmlHashValues({ hashes }) {
+  const { t } = useTranslation('emailAnalyzer');
   const { open, ioc, iocType, openDialog, closeDialog } = useIocLookupDialog();
 
   return (
@@ -72,7 +75,7 @@ export default function EmlHashValues({ hashes }) {
           sx={{ py: 0.25, px: 1.5, fontSize: '0.8125rem' }}
           onClick={() => openDialog(hashes.md5, emailUtils.getHashType(hashes.md5))}
         >
-          Analyze .eml hash
+          {t('emlHashValues.analyzeButton')}
         </Button>
       </Box>
       <IocLookupDialog open={open} onClose={closeDialog} ioc={ioc} iocType={iocType} />

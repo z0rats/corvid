@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -16,6 +17,7 @@ import MandiantReports from './MandiantReports';
 import { buildCategoryStats, buildTimelineData, transformCategoryDataForPie } from './utils/mandiantDataUtils';
 
 export default function MandiantDetails({ result: dataFromParent }) {
+  const { t } = useTranslation('iocTools');
   const [indicatorsPage, setIndicatorsPage] = useState(1);
   const [reportsPage, setReportsPage] = useState(1);
   const theme = useTheme();
@@ -54,7 +56,7 @@ export default function MandiantDetails({ result: dataFromParent }) {
   }), [theme]);
 
   if (!dataFromParent || (indicators.length === 0 && reports.length === 0)) {
-    return <NoDetails message="No detailed intelligence information found for this indicator in Mandiant." />;
+    return <NoDetails message={t('providers.mandiant.noInfoFound')} />;
   }
 
   return (
@@ -75,7 +77,7 @@ export default function MandiantDetails({ result: dataFromParent }) {
           <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="indicators-content" id="indicators-header">
             <Box display="flex" alignItems="center">
               <BugReportIcon sx={{ mr: 1 }} />
-              <Typography variant="h6">Indicators ({indicators.length})</Typography>
+              <Typography variant="h6">{t('providers.crowdstrike.indicatorsCount', { count: indicators.length })}</Typography>
             </Box>
           </AccordionSummary>
           <AccordionDetails sx={{ p: { xs: 1, sm: 2 } }}>
@@ -93,7 +95,7 @@ export default function MandiantDetails({ result: dataFromParent }) {
           <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="reports-content" id="reports-header">
             <Box display="flex" alignItems="center">
               <AssessmentIcon sx={{ mr: 1 }} />
-              <Typography variant="h6">Reports ({reports.length})</Typography>
+              <Typography variant="h6">{t('providers.mandiant.reportsCount', { count: reports.length })}</Typography>
             </Box>
           </AccordionSummary>
           <AccordionDetails sx={{ p: { xs: 1, sm: 2 } }}>

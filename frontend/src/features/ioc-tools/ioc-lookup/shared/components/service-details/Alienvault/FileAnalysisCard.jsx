@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Box from "@mui/material/Box";
@@ -9,6 +10,7 @@ import ScienceIcon from "@mui/icons-material/Science";
 import Typography from "@mui/material/Typography";
 
 export default function FileAnalysisCard({ analysis }) {
+  const { t } = useTranslation('iocTools');
   const info = analysis.analysis || {};
 
   return (
@@ -16,20 +18,20 @@ export default function FileAnalysisCard({ analysis }) {
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ScienceIcon />
-          <Typography variant="h6" component="h2">File Analysis</Typography>
+          <Typography variant="h6" component="h2">{t('providers.alienvault.fileAnalysis')}</Typography>
         </Box>
         <List dense sx={{ mt: 1 }}>
           {info.info?.results?.file_type && (
             <ListItem disablePadding>
-              <ListItemText primary="File Type" secondary={info.info.results.file_type} />
+              <ListItemText primary={t('providers.alienvault.fileType')} secondary={info.info.results.file_type} />
             </ListItem>
           )}
           <ListItem disablePadding>
-            <ListItemText primary="Status" secondary={analysis.analysis_status || info.status || "Unknown"} />
+            <ListItemText primary={t('providers.alienvault.status')} secondary={analysis.analysis_status || info.status || t('providers.crowdstrike.unknown')} />
           </ListItem>
           {info.malware?.family?.length > 0 && (
             <ListItem disablePadding>
-              <ListItemText primary="Malware Family" secondary={info.malware.family.join(', ')} />
+              <ListItemText primary={t('providers.alienvault.malwareFamily')} secondary={info.malware.family.join(', ')} />
             </ListItem>
           )}
         </List>

@@ -5,6 +5,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import CopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import ProcessIcon from '@mui/icons-material/PlayArrow';
+import { useTranslation } from 'react-i18next';
 
 const InputForm = ({
   inputText,
@@ -16,6 +17,7 @@ const InputForm = ({
   onDownloadCsv,
   hasResults
 }) => {
+  const { t } = useTranslation('iocTools');
   const lineCount = inputText.split('\n').filter(line => line.trim()).length;
 
   return (
@@ -26,14 +28,17 @@ const InputForm = ({
         minRows={8}
         variant="outlined"
         sx={{ '& .MuiInputBase-inputMultiline': { resize: 'vertical' } }}
-        label={`Enter IOCs to ${operation} (one per line)`}
+        label={operation === 'defang'
+          ? t('iocDefanger.inputForm.labelDefang')
+          : t('iocDefanger.inputForm.labelFang')
+        }
         placeholder={operation === 'defang'
           ? "https://example.com\n192.168.1.1\nuser@domain.com\nmalware.exe"
           : "hxxps[://]example[.]com\n192[.]168[.]1[.]1\nuser[@]domain[.]com"
         }
         value={inputText}
         onChange={(e) => onInputChange(e.target.value)}
-        helperText={`Supports domains, IPs, URLs, emails, filenames. ${lineCount} lines entered.`}
+        helperText={t('iocDefanger.inputForm.helperText', { count: lineCount })}
       />
 
       <Stack direction="row" spacing={1} sx={{ mt: 1.5, justifyContent: 'flex-start' }}>
@@ -44,7 +49,7 @@ const InputForm = ({
             onClick={onCopyAllResults}
             startIcon={<CopyIcon />}
           >
-            Copy All Results
+            {t('iocDefanger.inputForm.copyAllResults')}
           </Button>
         )}
         {hasResults && (
@@ -54,7 +59,7 @@ const InputForm = ({
             onClick={onDownloadCsv}
             startIcon={<DownloadIcon />}
           >
-            Download CSV
+            {t('iocDefanger.inputForm.downloadCsv')}
           </Button>
         )}
         <Button
@@ -64,7 +69,7 @@ const InputForm = ({
           disabled={!inputText.trim() && !hasResults}
           startIcon={<ClearIcon />}
         >
-          Clear
+          {t('iocDefanger.inputForm.clear')}
         </Button>
         <Button
           size="small"
@@ -73,7 +78,7 @@ const InputForm = ({
           disabled={!inputText.trim()}
           startIcon={<ProcessIcon />}
         >
-          {operation === 'defang' ? 'Defang' : 'Fang'}
+          {operation === 'defang' ? t('iocDefanger.inputForm.defangButton') : t('iocDefanger.inputForm.fangButton')}
         </Button>
       </Stack>
     </>

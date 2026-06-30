@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDropzone } from 'react-dropzone';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -11,8 +12,9 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 export default function FileUploadZone({ 
   onFileUpload, 
   isLoading, 
-  uploadProgress 
+  uploadProgress
 }) {
+  const { t } = useTranslation('iocTools');
   const {
     getRootProps,
     getInputProps,
@@ -43,7 +45,7 @@ export default function FileUploadZone({
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
         <UploadFileIcon sx={{ mr: 1, color: 'primary.main' }} />
         <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 500 }}>
-          File Upload
+          {t('iocExtractor.fileUploadZone.title')}
         </Typography>
       </Box>
       
@@ -84,17 +86,17 @@ export default function FileUploadZone({
             lineHeight: 1.3
           }}
         >
-          Drag 'n' drop a file here, or click to select a file
+          {t('iocExtractor.fileUploadZone.dragDropText')}
         </Typography>
-        <Typography 
-          variant="caption" 
-          textAlign="center" 
-          sx={{ 
+        <Typography
+          variant="caption"
+          textAlign="center"
+          sx={{
             color: isLoading ? 'grey.400' : 'text.secondary',
             mt: 0.5
           }}
         >
-          (Only .txt and .csv files will be accepted)
+          {t('iocExtractor.fileUploadZone.acceptedFormats')}
         </Typography>
       </Box>
       
@@ -123,7 +125,7 @@ export default function FileUploadZone({
           size="medium"
           sx={{ minWidth: 140 }}
         >
-          {isLoading ? <CircularProgress size={24} /> : "Extract"}
+          {isLoading ? <CircularProgress size={24} /> : t('iocExtractor.fileUploadZone.extractButton')}
         </Button>
       </Box>
     </Paper>

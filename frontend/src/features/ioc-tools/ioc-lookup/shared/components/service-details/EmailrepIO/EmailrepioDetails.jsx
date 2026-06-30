@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
@@ -23,8 +24,8 @@ import YouTubeIcon from "@mui/icons-material/YouTube";
 
 import NoDetails from "../NoDetails";
 
-const DetailListItem = ({ primaryText, secondaryText, secondaryHelperText = "" }) => (
-  <ListItem sx={{ alignItems: 'flex-start' }}> 
+const DetailListItem = ({ primaryText, secondaryText, secondaryHelperText = "", notAvailable }) => (
+  <ListItem sx={{ alignItems: 'flex-start' }}>
     <ListItemText
       primary={
         <Typography variant="subtitle1" fontWeight="medium" color="text.primary">
@@ -39,7 +40,7 @@ const DetailListItem = ({ primaryText, secondaryText, secondaryHelperText = "" }
             variant="body2"
             color="text.secondary"
           >
-            {secondaryText !== null && typeof secondaryText !== 'undefined' ? String(secondaryText) : "N/A"}
+            {secondaryText !== null && typeof secondaryText !== 'undefined' ? String(secondaryText) : notAvailable}
           </Typography>
           {secondaryHelperText && (
              <Typography component="span" variant="caption" color="text.disabled" sx={{ ml: 0.5 }}>
@@ -48,18 +49,23 @@ const DetailListItem = ({ primaryText, secondaryText, secondaryHelperText = "" }
           )}
         </>
       }
-      sx={{ my: 0 }} 
+      sx={{ my: 0 }}
     />
   </ListItem>
 );
 
 
 export default function EmailrepioDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
+  const yes = t('providers.common.yes');
+  const no = t('providers.common.no');
+  const yn = (value) => (value ? yes : no);
 
   if (!result || result.error || !result.details) {
-    const message = result && result.error 
-        ? `Error fetching Emailrep.io details: ${result.message || result.error}` 
-        : "Emailrep.io details are unavailable or the data is incomplete.";
+    const message = result && result.error
+        ? t('providers.emailrepio.errorFetching', { error: result.message || result.error })
+        : t('providers.emailrepio.unavailable');
     return (
         <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
           <NoDetails message={message} />
@@ -69,148 +75,79 @@ export default function EmailrepioDetails({ result, ioc }) {
 
   const { details, reputation, references, suspicious } = result;
 
+  const fields = [
+    { primary: t('providers.emailrepio.fields.email'), secondaryText: result.email || ioc },
+    { primary: t('providers.emailrepio.fields.reputation'), secondaryText: reputation },
+    { primary: t('providers.emailrepio.fields.suspicious'), secondaryText: yn(suspicious) },
+    { primary: t('providers.emailrepio.fields.references'), secondaryText: references, helper: t('providers.emailrepio.helpers.references') },
+    { primary: t('providers.emailrepio.fields.blacklisted'), secondaryText: yn(details.blacklisted), helper: t('providers.emailrepio.helpers.blacklisted') },
+    { primary: t('providers.emailrepio.fields.maliciousActivity'), secondaryText: yn(details.malicious_activity), helper: t('providers.emailrepio.helpers.maliciousActivity') },
+    { primary: t('providers.emailrepio.fields.recentMaliciousActivity'), secondaryText: yn(details.malicious_activity_recent), helper: t('providers.emailrepio.helpers.recentMaliciousActivity') },
+    { primary: t('providers.emailrepio.fields.credentialsLeaked'), secondaryText: yn(details.credentials_leaked), helper: t('providers.emailrepio.helpers.credentialsLeaked') },
+    { primary: t('providers.emailrepio.fields.dataBreaches'), secondaryText: yn(details.data_breach), helper: t('providers.emailrepio.helpers.dataBreaches') },
+    { primary: t('providers.emailrepio.fields.firstSeen'), secondaryText: details.first_seen, helper: t('providers.emailrepio.helpers.firstSeen') },
+    { primary: t('providers.emailrepio.fields.lastSeen'), secondaryText: details.last_seen, helper: t('providers.emailrepio.helpers.lastSeen') },
+    { primary: t('providers.emailrepio.fields.domainExists'), secondaryText: yn(details.domain_exists) },
+    { primary: t('providers.emailrepio.fields.domainReputation'), secondaryText: details.domain_reputation, helper: t('providers.emailrepio.helpers.domainReputation') },
+    { primary: t('providers.emailrepio.fields.newDomain'), secondaryText: yn(details.new_domain), helper: t('providers.emailrepio.helpers.newDomain') },
+    { primary: t('providers.emailrepio.fields.daysSinceDomainCreation'), secondaryText: details.days_since_domain_creation },
+    { primary: t('providers.emailrepio.fields.suspiciousTld'), secondaryText: yn(details.suspicious_tld), helper: t('providers.emailrepio.helpers.suspiciousTld') },
+    { primary: t('providers.emailrepio.fields.spam'), secondaryText: yn(details.spam), helper: t('providers.emailrepio.helpers.spam') },
+    { primary: t('providers.emailrepio.fields.freeProvider'), secondaryText: yn(details.free_provider) },
+    { primary: t('providers.emailrepio.fields.disposable'), secondaryText: yn(details.disposable), helper: t('providers.emailrepio.helpers.disposable') },
+    { primary: t('providers.emailrepio.fields.deliverable'), secondaryText: yn(details.deliverable) },
+    { primary: t('providers.emailrepio.fields.acceptAll'), secondaryText: yn(details.accept_all), helper: t('providers.emailrepio.helpers.acceptAll') },
+    { primary: t('providers.emailrepio.fields.validMx'), secondaryText: yn(details.valid_mx) },
+    { primary: t('providers.emailrepio.fields.spoofable'), secondaryText: yn(details.spoofable), helper: t('providers.emailrepio.helpers.spoofable') },
+    { primary: t('providers.emailrepio.fields.spfStrict'), secondaryText: yn(details.spf_strict) },
+    { primary: t('providers.emailrepio.fields.dmarcEnforced'), secondaryText: yn(details.dmarc_enforced) },
+  ];
+
   return (
-    <Box sx={{ margin: 1, mt:0 }}> 
+    <Box sx={{ margin: 1, mt:0 }}>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 7 }}> 
+        <Grid size={{ xs: 12, md: 7 }}>
           <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <CardContent>
               <Grid direction="row" container spacing={1} alignItems="center" mb={1}>
                 <InfoIcon color="action" />
                 <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-                  Reputation & Details
+                  {t('providers.emailrepio.reputationAndDetails')}
                 </Typography>
               </Grid>
               <List dense>
-                <DetailListItem primaryText="Email" secondaryText={result.email || ioc} />
-                <DetailListItem primaryText="Reputation" secondaryText={reputation} />
-                <DetailListItem primaryText="Suspicious" secondaryText={suspicious ? "Yes" : "No"} />
-                <DetailListItem 
-                    primaryText="References" 
-                    secondaryText={references}
-                    secondaryHelperText="- Total sources of reputation (may include domain reputation)."
-                />
-                <DetailListItem 
-                    primaryText="Blacklisted" 
-                    secondaryText={details.blacklisted ? "Yes" : "No"}
-                    secondaryHelperText="- Believed to be malicious or spammy."
-                />
-                <DetailListItem 
-                    primaryText="Malicious Activity" 
-                    secondaryText={details.malicious_activity ? "Yes" : "No"}
-                    secondaryHelperText="- Exhibited phishing or fraud."
-                />
-                <DetailListItem 
-                    primaryText="Recent Malicious Activity" 
-                    secondaryText={details.malicious_activity_recent ? "Yes" : "No"}
-                    secondaryHelperText="- Malicious behavior in the last 90 days."
-                />
-                <DetailListItem 
-                    primaryText="Credentials Leaked" 
-                    secondaryText={details.credentials_leaked ? "Yes" : "No"}
-                    secondaryHelperText="- Credentials leaked in the last 90 days."
-                />
-                <DetailListItem 
-                    primaryText="Data Breaches" 
-                    secondaryText={details.data_breach ? "Yes" : "No"}
-                    secondaryHelperText="- Appeared in a data breach."
-                />
-                <DetailListItem 
-                    primaryText="First Seen" 
-                    secondaryText={details.first_seen}
-                    secondaryHelperText="- First observed in breach/leak or malicious activity."
-                />
-                <DetailListItem 
-                    primaryText="Last Seen" 
-                    secondaryText={details.last_seen}
-                    secondaryHelperText="- Last observed in breach/leak or malicious activity."
-                />
-                <DetailListItem 
-                    primaryText="Domain Exists" 
-                    secondaryText={details.domain_exists ? "Yes" : "No"}
-                />
-                <DetailListItem 
-                    primaryText="Domain Reputation" 
-                    secondaryText={details.domain_reputation}
-                    secondaryHelperText="- (high/medium/low/n/a)"
-                />
-                <DetailListItem 
-                    primaryText="New Domain" 
-                    secondaryText={details.new_domain ? "Yes" : "No"}
-                    secondaryHelperText="- Domain created within the last year."
-                />
-                <DetailListItem 
-                    primaryText="Days Since Domain Creation" 
-                    secondaryText={details.days_since_domain_creation}
-                />
-                <DetailListItem 
-                    primaryText="Suspicious TLD" 
-                    secondaryText={details.suspicious_tld ? "Yes" : "No"}
-                    secondaryHelperText="- e.g., .tk, .xyz"
-                />
-                <DetailListItem 
-                    primaryText="Spam" 
-                    secondaryText={details.spam ? "Yes" : "No"}
-                    secondaryHelperText="- Exhibited spammy behavior."
-                />
-                <DetailListItem 
-                    primaryText="Free Provider" 
-                    secondaryText={details.free_provider ? "Yes" : "No"}
-                />
-                <DetailListItem 
-                    primaryText="Disposable" 
-                    secondaryText={details.disposable ? "Yes" : "No"}
-                    secondaryHelperText="- Uses a temporary email service."
-                />
-                <DetailListItem 
-                    primaryText="Deliverable" 
-                    secondaryText={details.deliverable ? "Yes" : "No"}
-                />
-                <DetailListItem 
-                    primaryText="Accept All (Domain)" 
-                    secondaryText={details.accept_all ? "Yes" : "No"}
-                    secondaryHelperText="- Mail server has a catch-all policy."
-                />
-                <DetailListItem 
-                    primaryText="Valid MX (Domain)" 
-                    secondaryText={details.valid_mx ? "Yes" : "No"}
-                />
-                <DetailListItem 
-                    primaryText="Spoofable" 
-                    secondaryText={details.spoofable ? "Yes" : "No"}
-                    secondaryHelperText="- Weak SPF or DMARC not enforced."
-                />
-                <DetailListItem 
-                    primaryText="SPF Strict" 
-                    secondaryText={details.spf_strict ? "Yes" : "No"}
-                />
-                <DetailListItem 
-                    primaryText="DMARC Enforced" 
-                    secondaryText={details.dmarc_enforced ? "Yes" : "No"}
-                />
+                {fields.map((field, index) => (
+                  <DetailListItem
+                    key={index}
+                    primaryText={field.primary}
+                    secondaryText={field.secondaryText}
+                    secondaryHelperText={field.helper}
+                    notAvailable={notAvailable}
+                  />
+                ))}
               </List>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 5 }}> 
+        <Grid size={{ xs: 12, md: 5 }}>
           <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', height: '100%'  }}>
             <CardContent>
                 <Grid direction="row" container spacing={1} alignItems="center" mb={1}>
                     <ContactsIcon color="action"/>
                     <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-                        Online Profiles
+                        {t('providers.emailrepio.onlineProfiles')}
                     </Typography>
                 </Grid>
                 <Typography variant="caption" color="text.disabled" display="block" mb={1}>
-                    Social and online profiles associated with this email address.
+                    {t('providers.emailrepio.onlineProfilesHelper')}
                 </Typography>
                 {details.profiles && details.profiles.length > 0 ? (
                     <List dense>
                     {details.profiles.map((profile, index) => (
                         <ListItem key={index}>
                         <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: 'primary.main' }}> 
+                            <Avatar sx={{ bgcolor: 'primary.main' }}>
                             {profile === "facebook" ? <FacebookIcon /> :
                             profile === "instagram" ? <InstagramIcon /> :
                             profile === "linkedin" ? <LinkedInIcon /> :
@@ -226,7 +163,7 @@ export default function EmailrepioDetails({ result, ioc }) {
                     ))}
                     </List>
                 ) : (
-                    <Typography variant="body2" color="text.secondary" sx={{mt:2}}>No profiles found.</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{mt:2}}>{t('providers.emailrepio.noProfilesFound')}</Typography>
                 )}
             </CardContent>
           </Card>

@@ -1,4 +1,5 @@
-import React from 'react'; 
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
@@ -27,13 +28,17 @@ const getCircleFillColor = (score, chart) => {
 };
 
 export default function IpQualityscoreDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
+  const yes = t('providers.common.yes');
+  const no = t('providers.common.no');
   const theme = useTheme();
   const chart = theme.palette.chart;
 
   if (!result || result.error) {
-    const message = result && result.error 
-        ? `Error fetching IPQualityScore details: ${result.message || result.error}` 
-        : "IPQualityScore details are unavailable or data is incomplete.";
+    const message = result && result.error
+        ? t('providers.ipqualityscore.errorFetching', { error: result.message || result.error })
+        : t('providers.ipqualityscore.unavailable');
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
         <NoDetails message={message} />
@@ -44,10 +49,10 @@ export default function IpQualityscoreDetails({ result, ioc }) {
   const score = result.fraud_score ?? null;
 
   const transformedData = {
-    ip: ioc, 
-    country: result.country_code, 
+    ip: ioc,
+    country: result.country_code,
     city: result.city,
-    isp: result.ISP, 
+    isp: result.ISP,
     organization: result.organization,
   };
 
@@ -57,11 +62,11 @@ export default function IpQualityscoreDetails({ result, ioc }) {
   ];
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
+    <Box sx={{
+      display: 'flex',
       flexDirection: { xs: 'column', md: 'row' },
-      gap: 2, 
-      p:1 
+      gap: 2,
+      p:1
     }}>
       <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 40%' } }}>
         <GeneralInfo data={transformedData} />
@@ -70,7 +75,7 @@ export default function IpQualityscoreDetails({ result, ioc }) {
       <Card sx={{ flex: { xs: '1 1 100%', md: '1 1 60%' }, p: 2, borderRadius: 1, boxShadow: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <DataUsageIcon />
-            <Typography variant="h6" component="h2">Fraud Score & Indicators</Typography>
+            <Typography variant="h6" component="h2">{t('providers.ipqualityscore.fraudScoreAndIndicators')}</Typography>
           </Box>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={6}>
@@ -78,43 +83,43 @@ export default function IpQualityscoreDetails({ result, ioc }) {
                 <ListItem>
                   <ListItemIcon sx={{minWidth: 36}}><ProxyIcon color="action" /></ListItemIcon>
                   <ListItemText
-                    primary="Proxy"
-                    secondary={result.proxy ? "Yes" : "No"}
+                    primary={t('providers.ipqualityscore.proxy')}
+                    secondary={result.proxy ? yes : no}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon sx={{minWidth: 36}}><VpnIcon color="action" /></ListItemIcon>
                   <ListItemText
-                    primary="VPN"
-                    secondary={`${result.VPN ? "Yes" : "No"} ${result.active_VPN ? "(Active)" : ""}`}
+                    primary={t('providers.ipqualityscore.vpn')}
+                    secondary={`${result.VPN ? yes : no} ${result.active_VPN ? t('providers.ipqualityscore.active') : ""}`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon sx={{minWidth: 36}}><TorIcon color="action" /></ListItemIcon>
                   <ListItemText
-                    primary="Tor"
-                    secondary={`${result.tor ? "Yes" : "No"} ${result.active_tor ? "(Active)" : ""}`}
+                    primary={t('providers.ipqualityscore.tor')}
+                    secondary={`${result.tor ? yes : no} ${result.active_tor ? t('providers.ipqualityscore.active') : ""}`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon sx={{minWidth: 36}}><AbuseIcon color="action" /></ListItemIcon>
                   <ListItemText
-                    primary="Recent Abuse"
-                    secondary={result.recent_abuse ? "Yes" : "No"}
+                    primary={t('providers.ipqualityscore.recentAbuse')}
+                    secondary={result.recent_abuse ? yes : no}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon sx={{minWidth: 36}}><BotIcon color="action" /></ListItemIcon>
                   <ListItemText
-                    primary="Bot Status"
-                    secondary={result.bot_status ? "Yes" : "No"}
+                    primary={t('providers.ipqualityscore.botStatus')}
+                    secondary={result.bot_status ? yes : no}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon sx={{minWidth: 36}}><LocationCityIcon color="action" /></ListItemIcon>
                   <ListItemText
-                    primary="Mobile Connection"
-                    secondary={result.mobile ? "Yes" : "No"}
+                    primary={t('providers.ipqualityscore.mobileConnection')}
+                    secondary={result.mobile ? yes : no}
                   />
                 </ListItem>
               </List>
@@ -149,10 +154,10 @@ export default function IpQualityscoreDetails({ result, ioc }) {
                       }}
                     >
                       <Typography variant="h3" sx={{ color: getCircleFillColor(score, chart) }}>
-                        {score ?? 'N/A'}
+                        {score ?? notAvailable}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        fraud risk
+                        {t('providers.ipqualityscore.fraudRisk')}
                       </Typography>
                     </Box>
                   </foreignObject>

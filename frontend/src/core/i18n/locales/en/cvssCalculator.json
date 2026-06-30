@@ -1,0 +1,129 @@
+{
+  "common": {
+    "severityNone": "None",
+    "severityLow": "Low",
+    "severityMedium": "Medium",
+    "severityHigh": "High",
+    "severityCritical": "Critical",
+    "overallScore": "Overall Score",
+    "vectorString": "Vector String: {{vector}}",
+    "exportCalculation": "Export calculation",
+    "exportAsMarkdown": "Export as markdown",
+    "exportAsJson": "Export as JSON",
+    "showMetricInfo": "Show metric info",
+    "close": "close",
+    "exploitabilityMetrics": "Exploitability Metrics",
+    "impactMetrics": "Impact Metrics"
+  },
+  "cvss31": {
+    "overallScoreTitle": "Overall CVSS 3.1 Score",
+    "chartTitle": "CVSS 3.1 Metrics",
+    "base": {
+      "accordionTitle": "Base Score Metrics (required)",
+      "description": "The Base metric group represents the intrinsic characteristics of a vulnerability that are constant over time and across user environments. It is composed of two sets of metrics: the Exploitability metrics and the Impact metrics. The Exploitability metrics reflect the ease and technical means by which the vulnerability can be exploited. That is, they represent characteristics of the thing that is vulnerable, which we refer to formally as the vulnerable component. On the other hand, the Impact metrics reflect the direct consequence of a successful exploit, and represent the consequence to the thing that suffers the impact, which we refer to formally as the impacted component.",
+      "exploitabilityMetrics": "Exploitability Metrics",
+      "impactMetrics": "Impact Metrics",
+      "scopeLabel": "Scope (S)",
+      "scopeUnchanged": "Unchanged",
+      "scopeChanged": "Changed",
+      "scopeInfo": "The Scope metric captures whether a vulnerability in one vulnerable component impacts resources in components beyond its security scope. The Base Score is greatest when a scope change occurs."
+    },
+    "temporal": {
+      "accordionTitle": "Temporal Score Metrics",
+      "description": "The Temporal metrics measure the current state of exploit techniques or code availability, the existence of any patches or workarounds, or the confidence that one has in the description of a vulnerability. Temporal metrics will almost certainly change over time."
+    },
+    "environmental": {
+      "accordionTitle": "Environmental Score Metrics",
+      "description": "These metrics enable the analyst to customize the CVSS score depending on the importance of the affected IT asset to a user's organization, measured in terms of complementary/alternative security controls in place, Confidentiality, Integrity, and Availability. The metrics are the modified equivalent of base metrics and are assigned metrics value based on the component placement in organization infrastructure.",
+      "exploitabilityMetrics": "Exploitability Metrics",
+      "impactMetrics": "Impact Metrics",
+      "impactSubscoreModifiers": "Impact Subscore Modifiers"
+    },
+    "export": {
+      "markdownTitle": "# CVSS 3.1 score",
+      "baseScoreMetricsHeading": "Base Score Metrics (Score: {{score}})",
+      "exploitabilityMetricsHeading": "Exploitability Metrics (Score: {{score}})",
+      "impactMetricsHeading": "Impact Metrics (Score: {{score}})",
+      "scopeHeading": "Scope (S): {{value}}",
+      "temporalScoreHeading": "Temporal Score Metrics (Score: {{score}})",
+      "environmentalScoreHeading": "Environmental Score Metrics (Score: {{score}})",
+      "impactSubscoreModifiersHeading": "Impact Subscore Modifiers (Score: {{score}})",
+      "overallScoreHeading": "Overall Score: {{score}}",
+      "attackVector": "Attack Vector (AV): {{value}}",
+      "attackComplexity": "Attack Complexity (AC): {{value}}",
+      "privilegesRequired": "Privileges Required (PR): {{value}}",
+      "userInteraction": "User Interaction (UI): {{value}}",
+      "confidentialityImpact": "Confidentiality Impact (CI): {{value}}",
+      "integrityImpact": "Integrity Impact (I): {{value}}",
+      "availabilityImpact": "Availability Impact (AI): {{value}}",
+      "exploitCodeMaturity": "Exploit Code Maturity (E): {{value}}",
+      "remediationLevel": "Remediation Level (RL): {{value}}",
+      "reportConfidence": "Report Confidence (RC): {{value}}",
+      "modifiedAttackVector": "Attack Vector (MAV): {{value}}",
+      "modifiedAttackComplexity": "Attack Complexity (MAC): {{value}}",
+      "modifiedPrivilegesRequired": "Privileges Required (MPR): {{value}}",
+      "modifiedUserInteraction": "User Interaction (MUI): {{value}}",
+      "modifiedScope": "Scope (MS): {{value}}",
+      "modifiedConfidentialityImpact": "Confidentiality Impact (MC): {{value}}",
+      "modifiedIntegrityImpact": "Integrity Impact (MI): {{value}}",
+      "modifiedAvailabilityImpact": "Availability Impact (MAI): {{value}}",
+      "confidentialityRequirement": "Confidentiality Requirement (CR): {{value}}",
+      "integrityRequirement": "Integrity Requirement (IR): {{value}}",
+      "availabilityRequirement": "Availability Requirement (AR): {{value}}"
+    }
+  },
+  "cvss40": {
+    "overallScoreTitle": "Overall CVSS 4.0 Score",
+    "chartTitle": "CVSS 4.0 Metrics",
+    "base": {
+      "accordionTitle": "Base Score Metrics (required)",
+      "description": "The Base metric group represents the intrinsic characteristics of a vulnerability that are constant over time and across user environments. It is composed of the Exploitability metrics and the Impact metrics. The Exploitability metrics reflect the ease and technical means by which the vulnerability can be exploited. The Impact metrics reflect the direct consequence of a successful exploit.",
+      "exploitabilityMetrics": "Exploitability Metrics",
+      "vulnerableSystemImpact": "Vulnerable System Impact",
+      "subsequentSystemImpact": "Subsequent System Impact"
+    },
+    "threat": {
+      "accordionTitle": "Threat Metrics (optional)",
+      "description": "The Threat metrics measure the current state of exploit techniques or code availability. These metrics are optional and can be used to customize the CVSS score based on the current threat landscape."
+    },
+    "supplemental": {
+      "accordionTitle": "Supplemental Metrics (optional)",
+      "description": "The Supplemental metric group is intended to be used by organizations to customize the CVSS score based on additional organization-specific or use-case-specific considerations. These metrics do not affect the base score but provide additional context for vulnerability assessment.",
+      "part1": "Supplemental Metrics (Part 1)",
+      "part2": "Supplemental Metrics (Part 2)"
+    },
+    "environmental": {
+      "accordionTitle": "Environmental (Modified Base Metrics) (optional)",
+      "description": "The Environmental metric group enables the analyst to customize the CVSS score depending on the importance of the affected IT asset to a user's organization, measured in terms of Confidentiality, Integrity, and Availability. These metrics modify the base metrics to reflect the characteristics of the user's environment.",
+      "modifiedExploitabilityMetrics": "Modified Exploitability Metrics",
+      "modifiedImpactMetrics": "Modified Impact Metrics"
+    },
+    "export": {
+      "markdownTitle": "# CVSS 4.0 Score",
+      "baseScoreHeading": "Base Score: {{score}} ({{severity}})",
+      "baseDescription": "The Base metric group represents the intrinsic characteristics of a vulnerability that are constant over time and across user environments. It is composed of the Exploitability metrics and the Impact metrics.",
+      "exploitabilityMetricsHeading": "Exploitability Metrics",
+      "vulnerableSystemImpactHeading": "Vulnerable System Impact",
+      "subsequentSystemImpactHeading": "Subsequent System Impact",
+      "threatMetricsHeading": "Threat Metrics",
+      "threatMetricsDescription": "The Threat metrics measure the current state of exploit techniques or code availability.",
+      "overallScoreHeading": "Overall Score: {{score}} ({{severity}})",
+      "attackVector": "**Attack Vector (AV)**: {{value}}",
+      "attackComplexity": "**Attack Complexity (AC)**: {{value}}",
+      "attackRequirements": "**Attack Requirements (AT)**: {{value}}",
+      "privilegesRequired": "**Privileges Required (PR)**: {{value}}",
+      "userInteraction": "**User Interaction (UI)**: {{value}}",
+      "vulnerableSystemConfidentiality": "**Confidentiality (VC)**: {{value}}",
+      "vulnerableSystemIntegrity": "**Integrity (VI)**: {{value}}",
+      "vulnerableSystemAvailability": "**Availability (VA)**: {{value}}",
+      "subsequentSystemConfidentiality": "**Confidentiality (SC)**: {{value}}",
+      "subsequentSystemIntegrity": "**Integrity (SI)**: {{value}}",
+      "subsequentSystemAvailability": "**Availability (SA)**: {{value}}",
+      "exploitMaturity": "**Exploit Maturity (E)**: {{value}}"
+    }
+  },
+  "chart": {
+    "score": "Score: {{score}}/10",
+    "value": "Value: {{value}}"
+  }
+}

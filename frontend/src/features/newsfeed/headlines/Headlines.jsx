@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import FormControl from '@mui/material/FormControl';
@@ -28,6 +29,7 @@ import { TIME_RANGE_OPTIONS } from "../constants/newsfeedConstants";
 const isValidUrl = (url) => /^https?:\/\//i.test(url);
 
 export default function Headlines() {
+  const { t } = useTranslation('newsfeed');
   const {
     timeFilter,
     setTimeFilter,
@@ -50,11 +52,11 @@ export default function Headlines() {
   return (
     <Box sx={{ width: "100%" }}>
       <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-        <TextField label="Filter Source" size="small" value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} />
-        <TextField label="Filter Title" size="small" value={titleFilter} onChange={(e) => setTitleFilter(e.target.value)} />
+        <TextField label={t('headlines.filterSource')} size="small" value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} />
+        <TextField label={t('headlines.filterTitle')} size="small" value={titleFilter} onChange={(e) => setTitleFilter(e.target.value)} />
         <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Time Range</InputLabel>
-          <Select value={timeFilter} label="Time Range" onChange={(e) => setTimeFilter(e.target.value)}>
+          <InputLabel>{t('headlines.timeRange')}</InputLabel>
+          <Select value={timeFilter} label={t('headlines.timeRange')} onChange={(e) => setTimeFilter(e.target.value)}>
             {TIME_RANGE_OPTIONS.map((range) => (
               <MenuItem key={range.value} value={range.value}>
                 {range.label}
@@ -62,8 +64,8 @@ export default function Headlines() {
             ))}
           </Select>
         </FormControl>
-        <Tooltip title="Refresh">
-          <IconButton onClick={handleRefresh} aria-label="Refresh">
+        <Tooltip title={t('headlines.refresh')}>
+          <IconButton onClick={handleRefresh} aria-label={t('headlines.refresh')}>
             <RefreshIcon />
           </IconButton>
         </Tooltip>
@@ -75,20 +77,20 @@ export default function Headlines() {
             <TableRow>
               <TableCell>
                 <TableSortLabel active={orderBy === "feedname"} direction={orderBy === "feedname" ? order : "asc"} onClick={() => handleSort("feedname")}>
-                  Source
+                  {t('headlines.source')}
                 </TableSortLabel>
               </TableCell>
               <TableCell>
                 <TableSortLabel active={orderBy === "title"} direction={orderBy === "title" ? order : "asc"} onClick={() => handleSort("title")}>
-                  Title
+                  {t('headlines.title')}
                 </TableSortLabel>
               </TableCell>
               <TableCell align="right">
                 <TableSortLabel active={orderBy === "date"} direction={orderBy === "date" ? order : "asc"} onClick={() => handleSort("date")}>
-                  Time
+                  {t('headlines.time')}
                 </TableSortLabel>
               </TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell align="right">{t('headlines.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -100,7 +102,7 @@ export default function Headlines() {
                 <TableCell>{headline.title}</TableCell>
                 <TableCell align="right">{formatDate(headline.date)}</TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Open source">
+                  <Tooltip title={t('headlines.openSource')}>
                     <IconButton
                       size="small"
                       onClick={() => {
@@ -109,7 +111,7 @@ export default function Headlines() {
                         }
                       }}
                       disabled={!isValidUrl(headline.url)}
-                      aria-label="Open article"
+                      aria-label={t('headlines.openArticle')}
                     >
                       <LaunchIcon fontSize="small" />
                     </IconButton>

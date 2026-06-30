@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -11,6 +12,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { emailUtils } from '../../utils/emailUtils';
 
 export default function SecurityCheck({ result }) {
+  const { t } = useTranslation('emailAnalyzer');
   const [expanded, setExpanded] = useState(true);
 
   return (
@@ -27,7 +29,7 @@ export default function SecurityCheck({ result }) {
       >
         <Box display="flex" alignItems="center">
           <VerifiedUserIcon sx={{ mr: 1 }} fontSize="small" />
-          <Typography variant="subtitle1" fontWeight="medium">Basic security checks</Typography>
+          <Typography variant="subtitle1" fontWeight="medium">{t('securityCheck.title')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ p: 1 }}>

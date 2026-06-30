@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import BarChartIcon from "@mui/icons-material/BarChart";
 import Card from "@mui/material/Card";
@@ -18,6 +19,7 @@ import Typography from "@mui/material/Typography";
 import Circle from "./Circle";
 
 export default function CvssMetrics(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       variant="outlined"
@@ -25,7 +27,7 @@ export default function CvssMetrics(props) {
       sx={{ m: 1, p: 2, borderRadius: 5, boxShadow: 0 }}
     >
       <Typography variant="h5" gutterBottom component="div">
-        CVSS 3.1 metrics
+        {t('providers.nistnvd.cvssMetrics')}
       </Typography>
       <>
         <List>
@@ -36,7 +38,7 @@ export default function CvssMetrics(props) {
                   <PolylineIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Vector string"
+                  primary={t('providers.nistnvd.vectorString')}
                   secondary={props.metrics.cvssData.vectorString}
                 />
               </ListItem>
@@ -47,7 +49,7 @@ export default function CvssMetrics(props) {
                   <SourceIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Source"
+                  primary={t('providers.nistnvd.source')}
                   secondary={props.metrics.source}
                 />
               </ListItem>
@@ -57,7 +59,7 @@ export default function CvssMetrics(props) {
                 <ListItemIcon>
                   <CategoryIcon />
                 </ListItemIcon>
-                <ListItemText primary="Type" secondary={props.metrics.type} />
+                <ListItemText primary={t('providers.common.type')} secondary={props.metrics.type} />
               </ListItem>
             </Grid>
           </Grid>
@@ -65,7 +67,7 @@ export default function CvssMetrics(props) {
         <Divider>
           <Chip
             icon={<BarChartIcon />}
-            label="Base Score"
+            label={t('providers.nistnvd.baseScore')}
             sx={{
               fontSize: "20px",
               p: 1.25,
@@ -76,36 +78,36 @@ export default function CvssMetrics(props) {
         <Grid container spacing={2} mt={2} p={1}>
           <Grid size={4}>
             <Typography variant="h6" gutterBottom component="div">
-              Exploitability (Score: {props.metrics.exploitabilityScore})
+              {t('providers.nistnvd.exploitabilityScore', { score: props.metrics.exploitabilityScore })}
             </Typography>
             <List>
               <ListItem>
                 <ListItemText
-                  primary="Attack vector (AV)"
+                  primary={t('providers.nistnvd.attackVector')}
                   secondary={props.metrics.cvssData.attackVector}
                 />
               </ListItem>
               <ListItem>
                 <ListItemText
-                  primary="Attack complexity (AC)"
+                  primary={t('providers.nistnvd.attackComplexity')}
                   secondary={props.metrics.cvssData.attackComplexity}
                 />
               </ListItem>
               <ListItem>
                 <ListItemText
-                  primary="Privileges required (PR)"
+                  primary={t('providers.nistnvd.privilegesRequired')}
                   secondary={props.metrics.cvssData.privilegesRequired}
                 />
               </ListItem>
               <ListItem>
                 <ListItemText
-                  primary="User interaction (UI)"
+                  primary={t('providers.nistnvd.userInteraction')}
                   secondary={props.metrics.cvssData.userInteraction}
                 />
               </ListItem>
               <ListItem>
                 <ListItemText
-                  primary="Scope (S)"
+                  primary={t('providers.nistnvd.scope')}
                   secondary={props.metrics.cvssData.scope}
                 />
               </ListItem>
@@ -113,24 +115,24 @@ export default function CvssMetrics(props) {
           </Grid>
           <Grid size={4}>
             <Typography variant="h6" gutterBottom component="div">
-              Impact (Score: {props.metrics.impactScore})
+              {t('providers.nistnvd.impactScore', { score: props.metrics.impactScore })}
             </Typography>
             <List>
               <ListItem>
                 <ListItemText
-                  primary="Confidentiality impact (CI)"
+                  primary={t('providers.nistnvd.confidentialityImpact')}
                   secondary={props.metrics.cvssData.confidentialityImpact}
                 />
               </ListItem>
               <ListItem>
                 <ListItemText
-                  primary="Integrity impact (II)"
+                  primary={t('providers.nistnvd.integrityImpact')}
                   secondary={props.metrics.cvssData.integrityImpact}
                 />
               </ListItem>
               <ListItem>
                 <ListItemText
-                  primary="Availability impact (AI)"
+                  primary={t('providers.nistnvd.availabilityImpact')}
                   secondary={props.metrics.cvssData.availabilityImpact}
                 />
               </ListItem>

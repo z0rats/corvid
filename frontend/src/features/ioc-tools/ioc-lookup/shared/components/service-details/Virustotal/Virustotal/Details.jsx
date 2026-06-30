@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -21,6 +22,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Typography from '@mui/material/Typography';
 
 export default function Details(props) {
+  const { t } = useTranslation('iocTools');
   return (
     <Card
       sx={{
@@ -34,7 +36,7 @@ export default function Details(props) {
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <InfoIcon />
-        <Typography variant="h6" component="h2">General Information</Typography>
+        <Typography variant="h6" component="h2">{t('providers.common.generalInformation')}</Typography>
       </Box>
       <List dense>
         <ListItem alignItems="flex-start">
@@ -44,7 +46,7 @@ export default function Details(props) {
             />
           </ListItemIcon>
           <ListItemText
-            primary={`Detected as malicious by ${props.malCount} engine(s)`}
+            primary={t('providers.virustotal.detectedAsMalicious', { count: props.malCount })}
           />
         </ListItem>
         {props.result["data"]["attributes"]["regional_internet_registry"] && (
@@ -53,7 +55,7 @@ export default function Details(props) {
               <RouterOutlinedIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary="Internet registry"
+              primary={t('providers.virustotal.internetRegistry')}
               secondary={
                 props.result["data"]["attributes"]["regional_internet_registry"]
               }
@@ -66,7 +68,7 @@ export default function Details(props) {
               <LanIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary="Network"
+              primary={t('providers.virustotal.network')}
               secondary={props.result["data"]["attributes"]["network"]}
             />
           </ListItem>
@@ -77,7 +79,7 @@ export default function Details(props) {
               <LanguageOutlinedIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary="Country"
+              primary={t('providers.common.country')}
               secondary={props.result["data"]["attributes"]["country"]}
             />
           </ListItem>
@@ -88,7 +90,7 @@ export default function Details(props) {
               <BusinessIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary="AS owner"
+              primary={t('providers.virustotal.asOwner')}
               secondary={props.result["data"]["attributes"]["as_owner"]}
             />
           </ListItem>
@@ -99,7 +101,7 @@ export default function Details(props) {
               <ExtensionOutlinedIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary="Type extension"
+              primary={t('providers.virustotal.typeExtension')}
               secondary={props.result["data"]["attributes"]["type_extension"]}
             />
           </ListItem>
@@ -110,7 +112,7 @@ export default function Details(props) {
               <AutoFixHighIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary="Magic"
+              primary={t('providers.virustotal.magic')}
               secondary={props.result["data"]["attributes"]["magic"]}
             />
           </ListItem>
@@ -193,7 +195,7 @@ export default function Details(props) {
               <CategoryOutlinedIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary="Unique sources"
+              primary={t('providers.virustotal.uniqueSources')}
               secondary={props.result["data"]["attributes"]["unique_sources"]}
             />
           </ListItem>

@@ -1,9 +1,10 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Path, status, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, BackgroundTasks, Path, status, WebSocket, WebSocketDisconnect
 
 from app.core.config.settings import settings
+from app.core.exceptions import AppHTTPException
 from app.core.dependencies import ReadSessionDep, SessionDep, SkipQuery, LimitQuery
 from ..crud import alerts_crud
 from ..schemas.alerts_schemas import AlertSchema, AlertCreateSchema, AlertUpdateSchema, AlertBulkActionResponse, UnreadCountResponse
@@ -153,7 +154,11 @@ async def get_alert(alert_id: AlertId, db: ReadSessionDep) -> AlertSchema:
     """Get a specific alert by ID"""
     alert = await alerts_crud.get_alert_by_id(db, alert_id)
     if not alert:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alert not found",
+            error_code="ALERT_NOT_FOUND",
+        )
     return alert
 
 
@@ -169,7 +174,11 @@ async def update_alert(alert_id: AlertId, update_data: AlertUpdateSchema, db: Se
     """Partially update an alert (e.g. mark as read or unread)"""
     alert = await alerts_crud.update_alert_read_status(db, alert_id, update_data.read)
     if not alert:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alert not found",
+            error_code="ALERT_NOT_FOUND",
+        )
     logger.info("Set alert %s read status to %s", alert_id, update_data.read)
     return alert
 
@@ -185,5 +194,9 @@ async def delete_single_alert(alert_id: AlertId, db: SessionDep) -> None:
     """Delete a specific alert"""
     alert = await alerts_crud.delete_alert_by_id(db, alert_id)
     if not alert:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alert not found")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alert not found",
+            error_code="ALERT_NOT_FOUND",
+        )
     logger.info("Deleted alert %s", alert_id)

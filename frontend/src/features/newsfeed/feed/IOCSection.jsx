@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -15,6 +16,7 @@ import { IOC_TYPES } from "../constants/newsfeedConstants";
 import { parseIOCs } from "../utils/iocParser";
 
 export default function IOCSection({ item }) {
+  const { t } = useTranslation('newsfeed');
   const parsedIOCs = parseIOCs(item.iocs);
 
   const handleCopy = (text) => {
@@ -57,7 +59,7 @@ export default function IOCSection({ item }) {
                     {ioc.label} ({iocValues.length})
                   </Typography>
                 </Stack>
-                <Tooltip title="Copy All" arrow>
+                <Tooltip title={t('feed.iocs.copyAll')} arrow>
                   <IconButton
                     component="span"
                     size="small"
@@ -65,7 +67,7 @@ export default function IOCSection({ item }) {
                       e.stopPropagation();
                       handleCopy(iocValues.join("\n"));
                     }}
-                    aria-label="Copy All"
+                    aria-label={t('feed.iocs.copyAll')}
                     sx={{ mr: 1 }}
                   >
                     <ContentCopyIcon fontSize="small" />
@@ -85,7 +87,7 @@ export default function IOCSection({ item }) {
                           handleCopy(value);
                         }}
                       >
-                        <Tooltip title="Copy">
+                        <Tooltip title={t('feed.iocs.copy')}>
                           <ContentCopyIcon />
                         </Tooltip>
                       </IconButton>

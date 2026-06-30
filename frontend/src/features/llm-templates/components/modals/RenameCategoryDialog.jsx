@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -7,6 +8,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 
 export default function RenameCategoryDialog({ open, category, onClose, onConfirm }) {
+  const { t } = useTranslation('llmTemplates');
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -22,12 +24,12 @@ export default function RenameCategoryDialog({ open, category, onClose, onConfir
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Rename Group</DialogTitle>
+      <DialogTitle>{t('renameCategoryDialog.title')}</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
           fullWidth
-          label="Group name"
+          label={t('renameCategoryDialog.nameLabel')}
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleConfirm()}
@@ -35,9 +37,9 @@ export default function RenameCategoryDialog({ open, category, onClose, onConfir
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('renameCategoryDialog.cancelButton')}</Button>
         <Button onClick={handleConfirm} variant="contained" disabled={!name.trim()}>
-          Save
+          {t('renameCategoryDialog.saveButton')}
         </Button>
       </DialogActions>
     </Dialog>

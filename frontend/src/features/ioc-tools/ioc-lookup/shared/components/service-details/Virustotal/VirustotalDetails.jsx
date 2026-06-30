@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from 'react-i18next';
 
 import Box from "@mui/material/Box";
 
@@ -18,28 +19,29 @@ import ThreatClassification from "./Virustotal/ThreatClassification";
 import NoDetails from "../NoDetails"; 
 
 export default function VirustotalDetailsComponent({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
 
-  if (!result) { 
+  if (!result) {
      return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message="Loading VirusTotal details..." />
+        <NoDetails message={t('providers.virustotal.loading')} />
       </Box>
     );
   }
-  
+
   if (result.notFound) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`IOC "${ioc}" was not found on VirusTotal`} />
+        <NoDetails message={t('providers.virustotal.notFound', { ioc })} />
       </Box>
     );
   }
 
   if (result.error || result.data?.error) {
-    const errorMessage = result.message || result.error?.message || result.data?.error?.message || result.error || "Unknown error";
+    const errorMessage = result.message || result.error?.message || result.data?.error?.message || result.error || t('providers.crowdstrike.unknown');
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`Error fetching VirusTotal details: ${errorMessage}`} />
+        <NoDetails message={t('providers.virustotal.errorFetching', { error: errorMessage })} />
       </Box>
     );
   }
@@ -47,7 +49,7 @@ export default function VirustotalDetailsComponent({ result, ioc }) {
   if (!result.data || !result.data.attributes) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`No detailed VirusTotal attributes found for "${ioc}". The API response might be incomplete or the IOC was not found.`} />
+        <NoDetails message={t('providers.virustotal.noAttributesFound', { ioc })} />
       </Box>
     );
   }

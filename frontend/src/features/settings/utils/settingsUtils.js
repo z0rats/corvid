@@ -1,4 +1,4 @@
-import { TIER_PALETTE_KEYS, TIER_LABELS } from '../constants/settingsConstants';
+import { TIER_PALETTE_KEYS } from '../constants/settingsConstants';
 
 /**
  * Get color for a tier chip from theme palette
@@ -9,13 +9,6 @@ export function getTierColor(tier, theme) {
     return theme.palette[paletteKey].main;
   }
   return theme?.palette?.text?.disabled || '#616161';
-}
-
-/**
- * Get label for a tier
- */
-export function getTierLabel(tier) {
-  return TIER_LABELS[tier] || tier;
 }
 
 /**

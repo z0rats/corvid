@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialOceanic } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ReactMarkdown from 'react-markdown';
@@ -25,6 +26,7 @@ function normalizeEmailBody(input) {
 }
 
 export default function ShowAiAnswer({ input }) {
+  const { t } = useTranslation('emailAnalyzer');
   const { result, loading, hasLlmKey, analyzeMailBody } = useAiAnalysis();
   const normalizedInput = useMemo(() => normalizeEmailBody(input), [input]);
 
@@ -42,7 +44,7 @@ export default function ShowAiAnswer({ input }) {
           disabled={loading}
           onClick={() => analyzeMailBody(normalizedInput)}
         >
-          Analyze message body with AI
+          {t('showAiAnswer.analyzeButton')}
         </Button>
       </Box>
 
@@ -111,7 +113,7 @@ export default function ShowAiAnswer({ input }) {
             }}
           >
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              AI message-body analysis
+              {t('showAiAnswer.resultTitle')}
             </Typography>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}

@@ -4,6 +4,7 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Body, HTTPException, Path, status
+from app.core.exceptions import AppHTTPException
 
 from app.core.dependencies import SessionDep
 from app.features.newsfeed.crud.news_articles_crud import get_news_article_by_id
@@ -41,7 +42,7 @@ async def analyze_news_article(
 
     article = await get_news_article_by_id(db=db, article_id=article_id)
     if not article:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found")
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found", error_code="ARTICLE_NOT_FOUND")
 
     model_id = params.model_id or await get_default_model_id(db, "newsfeed_analysis")
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
@@ -9,6 +10,7 @@ import worldCountries from '../../../data/world_countries.json';
 import { transformDataForPie, transformDataForMap } from './utils/crowdSecDataUtils';
 
 export default function CrowdSecCountriesSection({ targetCountries }) {
+  const { t } = useTranslation('iocTools');
   const theme = useTheme();
   if (!targetCountries || Object.keys(targetCountries).length === 0) return null;
 
@@ -18,7 +20,7 @@ export default function CrowdSecCountriesSection({ targetCountries }) {
     <Grid size={12}>
       <Card sx={{ mt: 2, p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
         <Typography variant="h6" component="h3" gutterBottom>
-          Target Countries by Report Count
+          {t('providers.crowdsec.targetCountriesByReportCount')}
         </Typography>
         <Grid container spacing={2} alignItems="stretch">
           <Grid size={{ xs: 12, md: 5 }} sx={{ height: "400px" }}>

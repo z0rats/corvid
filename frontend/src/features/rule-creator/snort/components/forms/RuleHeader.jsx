@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -8,6 +9,7 @@ import Grid from '@mui/material/Grid';
 import { SNORT_CONSTANTS } from '../../constants/snortConstants';
 
 export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
+  const { t } = useTranslation('ruleCreator');
   const handleChange = (field, value) => {
     handleRuleHeaderChange(prev => ({
       ...prev,
@@ -19,10 +21,10 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, sm: 6, md: 2 }}>
         <FormControl fullWidth size="small">
-          <InputLabel>Action</InputLabel>
+          <InputLabel>{t('snort.ruleHeader.actionLabel')}</InputLabel>
           <Select
             value={ruleHeader.action}
-            label="Action"
+            label={t('snort.ruleHeader.actionLabel')}
             onChange={(e) => handleChange('action', e.target.value)}
           >
             {Object.values(SNORT_CONSTANTS.ACTIONS).map((action) => (
@@ -36,10 +38,10 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
       
       <Grid size={{ xs: 12, sm: 6, md: 2 }}>
         <FormControl fullWidth size="small">
-          <InputLabel>Protocol</InputLabel>
+          <InputLabel>{t('snort.ruleHeader.protocolLabel')}</InputLabel>
           <Select
             value={ruleHeader.protocol}
-            label="Protocol"
+            label={t('snort.ruleHeader.protocolLabel')}
             onChange={(e) => handleChange('protocol', e.target.value)}
           >
             {Object.values(SNORT_CONSTANTS.PROTOCOLS).map((protocol) => (
@@ -54,7 +56,7 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
       <Grid size={{ xs: 6, sm: 3, md: 2 }}>
         <TextField
           fullWidth
-          label="Source IP"
+          label={t('snort.ruleHeader.sourceIpLabel')}
           value={ruleHeader.sourceIP}
           onChange={(e) => handleChange('sourceIP', e.target.value)}
           size="small"
@@ -66,7 +68,7 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
       <Grid size={{ xs: 6, sm: 3, md: 1 }}>
         <TextField
           fullWidth
-          label="Source Port"
+          label={t('snort.ruleHeader.sourcePortLabel')}
           value={ruleHeader.sourcePort}
           onChange={(e) => handleChange('sourcePort', e.target.value)}
           size="small"
@@ -77,10 +79,10 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
 
       <Grid size={{ xs: 6, sm: 3, md: 1 }}>
         <FormControl fullWidth size="small">
-          <InputLabel>Direction</InputLabel>
+          <InputLabel>{t('snort.ruleHeader.directionLabel')}</InputLabel>
           <Select
             value={ruleHeader.direction}
-            label="Direction"
+            label={t('snort.ruleHeader.directionLabel')}
             onChange={(e) => handleChange('direction', e.target.value)}
           >
             {Object.values(SNORT_CONSTANTS.DIRECTIONS).map((direction) => (
@@ -95,7 +97,7 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
       <Grid size={{ xs: 6, sm: 3, md: 2 }}>
         <TextField
           fullWidth
-          label="Dest IP"
+          label={t('snort.ruleHeader.destIpLabel')}
           value={ruleHeader.destIP}
           onChange={(e) => handleChange('destIP', e.target.value)}
           size="small"
@@ -107,7 +109,7 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
       <Grid size={{ xs: 6, sm: 3, md: 2 }}>
         <TextField
           fullWidth
-          label="Dest Port"
+          label={t('snort.ruleHeader.destPortLabel')}
           value={ruleHeader.destPort}
           onChange={(e) => handleChange('destPort', e.target.value)}
           size="small"

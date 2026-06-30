@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
@@ -8,11 +9,12 @@ import Grid from '@mui/material/Grid';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 
 export default function KeywordsInput({ keywords, onAddKeyword, onDeleteKeyword }) {
+  const { t } = useTranslation('ruleCreator');
   const [keywordInput, setKeywordInput] = useState('');
 
   const handleAdd = () => {
     if (keywordInput.trim() === '') {
-      alert('Keyword is required.');
+      alert(t('sigma.keywordsInput.requiredAlert'));
       return;
     }
     onAddKeyword(keywordInput.trim());
@@ -25,12 +27,12 @@ export default function KeywordsInput({ keywords, onAddKeyword, onDeleteKeyword 
         <Grid size={{ xs: 12, sm: 11 }}>
           <TextField
             fullWidth
-            label="Keyword"
+            label={t('sigma.keywordsInput.label')}
             value={keywordInput}
             onChange={(e) => setKeywordInput(e.target.value)}
             size="small"
             variant="outlined"
-            placeholder="Enter keyword and press Enter or click Add"
+            placeholder={t('sigma.keywordsInput.placeholder')}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -40,8 +42,8 @@ export default function KeywordsInput({ keywords, onAddKeyword, onDeleteKeyword 
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 1 }}>
-          <Tooltip title="Add Keyword">
-            <IconButton onClick={handleAdd} size="small" aria-label="Add keyword">
+          <Tooltip title={t('sigma.keywordsInput.addTooltip')}>
+            <IconButton onClick={handleAdd} size="small" aria-label={t('sigma.keywordsInput.addAria')}>
               <AddCircleIcon fontSize="small" />
             </IconButton>
           </Tooltip>

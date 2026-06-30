@@ -1,28 +1,23 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 
-const SUPPORTED_IOC_TYPES_INFO = [
-  { title: "IP Addresses", description: "IPv4 and IPv6 addresses for threat analysis" },
-  { title: "Domains", description: "Domain names and subdomains" },
-  { title: "URLs", description: "Web addresses and endpoints" },
-  { title: "Email Addresses", description: "Known malicious or suspicious email addresses" },
-  { title: "Hashes", description: "MD5, SHA1, and SHA256 file hashes" },
-  { title: "CVEs", description: "Common Vulnerabilities and Exposures identifiers" },
-  { title: "Crypto Addresses", description: "EVM addresses (0x...) and Bitcoin addresses (legacy, P2SH, bech32)" },
+const SUPPORTED_IOC_TYPE_KEYS = [
+  'ipAddresses',
+  'domains',
+  'urls',
+  'emailAddresses',
+  'hashes',
+  'cves',
+  'cryptoAddresses',
 ];
 
-const ADDRESS_REPUTATION_CHECKS_INFO = [
-  {
-    title: "OFAC SDN (Sanctions)",
-    description: "Checked against the U.S. Treasury's Specially Designated Nationals list, including digital currency addresses tied to sanctioned entities. Refreshed daily.",
-  },
-  {
-    title: "ScamSniffer (Phishing)",
-    description: "Checked against ScamSniffer's open-source blacklist of EVM addresses linked to known phishing scams. Refreshed daily.",
-  },
+const ADDRESS_REPUTATION_CHECK_KEYS = [
+  'ofacSdn',
+  'scamSniffer',
 ];
 
 const FeatureCard = ({ title, description }) => (
@@ -39,43 +34,47 @@ const FeatureCard = ({ title, description }) => (
 );
 
 export default function WelcomeScreen() {
+  const { t } = useTranslation('iocTools');
   return (
     <Paper sx={{ p: { xs: 2, sm: 3 } }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" component="h1" gutterBottom>
-          Single IOC Lookup
+          {t('singleLookup.welcomeScreen.title')}
         </Typography>
         <Typography paragraph>
-          Investigate various Indicators of Compromise (IOCs) using multiple threat
-          intelligence sources like VirusTotal, AlienVault, AbuseIPDB, and more,
-          to gain detailed insights into potential security threats.
+          {t('singleLookup.welcomeScreen.intro')}
         </Typography>
         <Typography>
-          The tool automatically identifies the IOC type and correlates data
-          from relevant sources, enabling rapid threat assessment and
-          informed security decision-making.
+          {t('singleLookup.welcomeScreen.description')}
         </Typography>
       </Box>
 
       <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-        Supported IOC Types
+        {t('singleLookup.welcomeScreen.supportedIocTypesTitle')}
       </Typography>
       <Grid container spacing={1}>
-        {SUPPORTED_IOC_TYPES_INFO.map(item => (
-          <FeatureCard key={item.title} title={item.title} description={item.description} />
+        {SUPPORTED_IOC_TYPE_KEYS.map(key => (
+          <FeatureCard
+            key={key}
+            title={t(`singleLookup.welcomeScreen.iocTypes.${key}.title`)}
+            description={t(`singleLookup.welcomeScreen.iocTypes.${key}.description`)}
+          />
         ))}
       </Grid>
 
       <Typography variant="h6" component="h2" sx={{ mt: 4, mb: 2 }}>
-        Address Reputation Checks
+        {t('singleLookup.welcomeScreen.addressReputationChecksTitle')}
       </Typography>
       <Typography variant="body2" color="text.secondary" paragraph>
-        Crypto addresses are screened against a self-hosted blacklist built from open,
-        no-key data sources — no third-party API calls are made for this check.
+        {t('singleLookup.welcomeScreen.addressReputationChecksIntro')}
       </Typography>
       <Grid container spacing={1}>
-        {ADDRESS_REPUTATION_CHECKS_INFO.map(item => (
-          <FeatureCard key={item.title} title={item.title} description={item.description} />
+        {ADDRESS_REPUTATION_CHECK_KEYS.map(key => (
+          <FeatureCard
+            key={key}
+            title={t(`singleLookup.welcomeScreen.addressReputationChecks.${key}.title`)}
+            description={t(`singleLookup.welcomeScreen.addressReputationChecks.${key}.description`)}
+          />
         ))}
       </Grid>
     </Paper>

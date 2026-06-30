@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -11,6 +12,7 @@ import ReferencesSection from './ReferencesSection';
 import BasicMetadataSection from './BasicMetadataSection';
 
 export default function RuleOptions({ ruleOptions, handleRuleOptionsChange }) {
+  const { t } = useTranslation('ruleCreator');
   const handleChange = (field, value) => {
     handleRuleOptionsChange(prev => ({ ...prev, [field]: value }));
   };
@@ -29,65 +31,65 @@ export default function RuleOptions({ ruleOptions, handleRuleOptionsChange }) {
         <Grid size={12}>
           <TextField
             fullWidth
-            label="Message"
+            label={t('snort.ruleOptions.messageLabel')}
             value={ruleOptions.msg}
             onChange={(e) => handleChange('msg', e.target.value)}
             required
             size="small"
             variant="outlined"
-            placeholder="Brief description of what this rule detects"
+            placeholder={t('snort.ruleOptions.messagePlaceholder')}
           />
         </Grid>
 
         <Grid size={{ xs: 6, sm: 4 }}>
           <TextField
             fullWidth
-            label="SID"
+            label={t('snort.ruleOptions.sidLabel')}
             value={ruleOptions.sid}
             onChange={(e) => handleChange('sid', e.target.value)}
             required
             size="small"
             variant="outlined"
             type="number"
-            placeholder="Unique rule identifier"
+            placeholder={t('snort.ruleOptions.sidPlaceholder')}
           />
         </Grid>
 
         <Grid size={{ xs: 6, sm: 4 }}>
           <TextField
             fullWidth
-            label="Revision"
+            label={t('snort.ruleOptions.revisionLabel')}
             value={ruleOptions.rev}
             onChange={(e) => handleChange('rev', e.target.value)}
             size="small"
             variant="outlined"
             type="number"
-            placeholder="Rule revision number"
+            placeholder={t('snort.ruleOptions.revisionPlaceholder')}
           />
         </Grid>
 
         <Grid size={{ xs: 6, sm: 4 }}>
           <TextField
             fullWidth
-            label="Priority"
+            label={t('snort.ruleOptions.priorityLabel')}
             value={ruleOptions.priority}
             onChange={(e) => handleChange('priority', e.target.value)}
             size="small"
             variant="outlined"
             type="number"
-            placeholder="1-4 (1=highest)"
+            placeholder={t('snort.ruleOptions.priorityPlaceholder')}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>Class Type</InputLabel>
+            <InputLabel>{t('snort.ruleOptions.classTypeLabel')}</InputLabel>
             <Select
               value={ruleOptions.classtype}
-              label="Class Type"
+              label={t('snort.ruleOptions.classTypeLabel')}
               onChange={(e) => handleChange('classtype', e.target.value)}
             >
-              <MenuItem value="">None</MenuItem>
+              <MenuItem value="">{t('common.none')}</MenuItem>
               {SNORT_CONSTANTS.CLASSTYPES.map((classtype) => (
                 <MenuItem key={classtype} value={classtype}>
                   {classtype}

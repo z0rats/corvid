@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Dialog from '@mui/material/Dialog';
@@ -18,6 +19,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialOceanic } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export default function TemplateExampleDialog({ open, onClose, template }) {
+  const { t } = useTranslation('llmTemplates');
   if (!template) return null;
 
   return (
@@ -29,7 +31,7 @@ export default function TemplateExampleDialog({ open, onClose, template }) {
         </Typography>
         <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
           <Chip icon={<CodeIcon fontSize="small" />} label={template.model} size="small" variant="outlined" />
-          <Chip icon={<ThermostatIcon fontSize="small" />} label={`Temperature: ${template.temperature?.toFixed(2)}`} size="small" variant="outlined" />
+          <Chip icon={<ThermostatIcon fontSize="small" />} label={t('exampleDialog.temperatureLabel', { value: template.temperature?.toFixed(2) })} size="small" variant="outlined" />
         </Stack>
       </DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
@@ -37,7 +39,7 @@ export default function TemplateExampleDialog({ open, onClose, template }) {
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Stack direction="row" alignItems="center" spacing={1} mb={1}>
               <PersonIcon fontSize="small" color="primary" />
-              <Typography variant="subtitle2" color="primary">Agent Role</Typography>
+              <Typography variant="subtitle2" color="primary">{t('exampleDialog.agentRole')}</Typography>
             </Stack>
             <Typography variant="body2">{template.ai_agent_role}</Typography>
           </Paper>
@@ -45,13 +47,13 @@ export default function TemplateExampleDialog({ open, onClose, template }) {
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Stack direction="row" alignItems="center" spacing={1} mb={1}>
               <TaskAltIcon fontSize="small" color="primary" />
-              <Typography variant="subtitle2" color="primary">Agent Task</Typography>
+              <Typography variant="subtitle2" color="primary">{t('exampleDialog.agentTask')}</Typography>
             </Stack>
             <Typography variant="body2">{template.ai_agent_task}</Typography>
           </Paper>
 
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-            <Typography variant="subtitle2" color="primary" mb={1}>Example</Typography>
+            <Typography variant="subtitle2" color="primary" mb={1}>{t('exampleDialog.example')}</Typography>
             <Box sx={{
               '& > *:first-of-type': { mt: 0 },
               '& > *:last-child': { mb: 0 },
@@ -74,14 +76,14 @@ export default function TemplateExampleDialog({ open, onClose, template }) {
                   },
                 }}
               >
-                {template.example_input_output || 'No example provided'}
+                {template.example_input_output || t('exampleDialog.noExample')}
               </ReactMarkdown>
             </Box>
           </Paper>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('exampleDialog.closeButton')}</Button>
       </DialogActions>
     </Dialog>
   );

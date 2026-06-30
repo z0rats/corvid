@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import IocLookupDialog from '../../../ioc-tools/ioc-lookup/shared/components/IocLookupDialog';
 import { useIocLookupDialog } from '../../../ioc-tools/ioc-lookup/shared/hooks/useIocLookupDialog';
 import { emailUtils } from '../../utils/emailUtils';
@@ -16,6 +17,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function GeneralInfo({ result, hashes }) {
+  const { t } = useTranslation('emailAnalyzer');
   const [expanded, setExpanded] = useState(true);
   const { open, ioc, iocType, openDialog, closeDialog } = useIocLookupDialog();
 
@@ -35,7 +37,7 @@ export default function GeneralInfo({ result, hashes }) {
       >
         <Box display="flex" alignItems="center">
           <InfoIcon sx={{ mr: 1 }} />
-          <Typography variant="subtitle1" fontWeight="medium">General information</Typography>
+          <Typography variant="subtitle1" fontWeight="medium">{t('generalInfo.title')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 2, py: 1 }}>
@@ -50,7 +52,7 @@ export default function GeneralInfo({ result, hashes }) {
                 sx={{ py: 0.25, px: 1.5, fontSize: '0.8125rem' }}
                 onClick={() => openDialog(senderEmail, EMAIL_CONSTANTS.IOC_TYPES.EMAIL)}
               >
-                Analyze sender address
+                {t('generalInfo.analyzeSenderButton')}
               </Button>
             </Box>
           </Box>
@@ -59,7 +61,7 @@ export default function GeneralInfo({ result, hashes }) {
 
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              .eml file hashes
+              {t('generalInfo.emlFileHashes')}
             </Typography>
             <EmlHashValues hashes={hashes} />
           </Box>

@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -18,6 +19,7 @@ import { getFeedIconUrl } from "../../../utils/urlUtils";
 const hasCustomIcon = (feed) => feed.icon !== "default.png" && feed.icon_id;
 
 function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchIcon }) {
+  const { t } = useTranslation('newsfeed');
   const [refetchLoading, setRefetchLoading] = useState(false);
 
   const handleRefetch = useCallback(async () => {
@@ -37,12 +39,12 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
       }}
       secondaryAction={
         <Stack direction="row" spacing={0.5} alignItems="center">
-          <Tooltip title="Refresh favicon">
+          <Tooltip title={t('settings.feeds.refreshFavicon')}>
             <span>
               <IconButton
                 onClick={handleRefetch}
                 disabled={refetchLoading}
-                aria-label="Refresh icon"
+                aria-label={t('settings.feeds.refreshFavicon')}
               >
                 {refetchLoading ? <CircularProgress size={20} /> : <Refresh />}
               </IconButton>
@@ -51,11 +53,11 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
 
           <Switch checked={feed.enabled} onChange={() => onToggle(name)} size="small" />
 
-          <Tooltip title="Delete feed">
+          <Tooltip title={t('settings.feeds.deleteFeed')}>
             <IconButton
               color="error"
               onClick={() => onDelete(name)}
-              aria-label="Delete feed"
+              aria-label={t('settings.feeds.deleteFeed')}
             >
               <Delete />
             </IconButton>
@@ -78,7 +80,7 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
             sx={{ width: 36, height: 36 }}
           />
           {hasCustomIcon(feed) && (
-            <Tooltip title="Remove custom icon">
+            <Tooltip title={t('settings.feeds.removeCustomIcon')}>
               <Box
                 className="delete-icon-overlay"
                 sx={{

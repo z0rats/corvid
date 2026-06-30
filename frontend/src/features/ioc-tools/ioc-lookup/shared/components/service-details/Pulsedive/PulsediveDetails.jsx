@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -17,14 +18,14 @@ import GeoIcon from '@mui/icons-material/Public';
 import TimeIcon from '@mui/icons-material/Schedule';
 import RiskIcon from '@mui/icons-material/Security';
 
-import NoDetails from '../NoDetails'; 
+import NoDetails from '../NoDetails';
 
-const DetailListItem = ({ icon, primary, secondary, secondaryIsBlock = false }) => (
+const DetailListItem = ({ icon, primary, secondary, secondaryIsBlock = false, notAvailable }) => (
   <ListItem dense disableGutters sx={{alignItems: secondaryIsBlock ? 'flex-start' : 'center'}}>
     <ListItemIcon sx={{minWidth: 36}}>{icon || <InfoIcon color="action" />}</ListItemIcon>
-    <ListItemText 
-      primary={primary} 
-      secondary={secondary || "N/A"} 
+    <ListItemText
+      primary={primary}
+      secondary={secondary || notAvailable}
       primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
       secondaryTypographyProps={{ variant: 'body2', color: 'text.secondary', component: secondaryIsBlock ? 'div' : 'span' }}
     />
@@ -32,12 +33,14 @@ const DetailListItem = ({ icon, primary, secondary, secondaryIsBlock = false }) 
 );
 
 
-export default function PulsediveDetails({ result, ioc }) { 
+export default function PulsediveDetails({ result, ioc }) {
+  const { t } = useTranslation('iocTools');
+  const notAvailable = t('providers.common.notAvailable');
 
   if (!result) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message="Loading Pulsedive details..." />
+        <NoDetails message={t('providers.pulsedive.loading')} />
       </Box>
     );
   }
@@ -45,7 +48,7 @@ export default function PulsediveDetails({ result, ioc }) {
   if (result.error) {
     return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`Error fetching Pulsedive details: ${result.message || result.error}`} />
+        <NoDetails message={t('providers.pulsedive.errorFetching', { error: result.message || result.error })} />
       </Box>
     );
   }
@@ -53,95 +56,100 @@ export default function PulsediveDetails({ result, ioc }) {
   if (result.status === "Not found" || !result.results || result.results.length === 0) {
      return (
       <Box sx={{ margin: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 100 }}>
-        <NoDetails message={`Indicator "${ioc}" not found or no details in Pulsedive.`} />
+        <NoDetails message={t('providers.pulsedive.notFound', { ioc })} />
       </Box>
     );
   }
 
   const data = result.results[0];
 
-  const getProperty = (path, defaultValue = "N/A") => {
+  const getProperty = (path, defaultValue = notAvailable) => {
     const value = path.split('.').reduce((obj, key) => (obj && obj[key] !== undefined) ? obj[key] : undefined, data.summary?.properties);
     return value ?? defaultValue;
   };
-  
+
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return notAvailable;
     return new Date(dateString).toLocaleString();
   }
 
   return (
-    <Box sx={{ margin: 1, mt:0 }}> 
+    <Box sx={{ margin: 1, mt:0 }}>
       <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
           <Grid container spacing={1} alignItems="center" mb={2}>
             <RiskIcon color="action" />
             <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-              Pulsedive Analysis for: <Typography component="span" sx={{wordBreak: 'break-all'}}>{data.indicator || ioc}</Typography>
+              {t('providers.pulsedive.analysisFor')} <Typography component="span" sx={{wordBreak: 'break-all'}}>{data.indicator || ioc}</Typography>
             </Typography>
           </Grid>
 
           <List dense>
-            <DetailListItem 
+            <DetailListItem
               icon={<RiskIcon />}
-              primary="Risk Level" 
-              secondary={data.risk ? data.risk.charAt(0).toUpperCase() + data.risk.slice(1) : "N/A"}
+              primary={t('providers.pulsedive.riskLevel')}
+              secondary={data.risk ? data.risk.charAt(0).toUpperCase() + data.risk.slice(1) : notAvailable}
+              notAvailable={notAvailable}
             />
-            <DetailListItem 
+            <DetailListItem
               icon={<TimeIcon />}
-              primary="Timestamps"
+              primary={t('providers.pulsedive.timestamps')}
               secondaryIsBlock={true}
+              notAvailable={notAvailable}
               secondary={
                 <Box>
-                  <Typography variant="caption" display="block">Added: {formatDate(data.stamp_added)}</Typography>
-                  <Typography variant="caption" display="block">Updated: {formatDate(data.stamp_updated)}</Typography>
-                  <Typography variant="caption" display="block">Last Seen: {formatDate(data.stamp_seen)}</Typography>
+                  <Typography variant="caption" display="block">{t('providers.pulsedive.added')} {formatDate(data.stamp_added)}</Typography>
+                  <Typography variant="caption" display="block">{t('providers.pulsedive.updated')} {formatDate(data.stamp_updated)}</Typography>
+                  <Typography variant="caption" display="block">{t('providers.pulsedive.lastSeen')} {formatDate(data.stamp_seen)}</Typography>
                 </Box>
               }
             />
-            
+
             <Divider sx={{my:1}}/>
-            <Typography variant="subtitle1" sx={{mt:1, mb:0.5, fontWeight:'medium'}}>Properties:</Typography>
+            <Typography variant="subtitle1" sx={{mt:1, mb:0.5, fontWeight:'medium'}}>{t('providers.pulsedive.properties')}</Typography>
 
             {data.summary?.properties?.dns && (
-              <DetailListItem 
+              <DetailListItem
                 icon={<DnsIcon />}
-                primary="DNS PTR" 
-                secondary={getProperty('dns.ptr')} 
+                primary={t('providers.pulsedive.dnsPtr')}
+                secondary={getProperty('dns.ptr')}
+                notAvailable={notAvailable}
               />
             )}
 
             {data.summary?.properties?.geo && (
-              <DetailListItem 
+              <DetailListItem
                 icon={<GeoIcon />}
-                primary="Geolocation" 
+                primary={t('providers.pulsedive.geolocation')}
                 secondaryIsBlock={true}
+                notAvailable={notAvailable}
                 secondary={
                   <Box>
-                    <Typography variant="caption" display="block">Country: {getProperty('geo.country')} ({getProperty('geo.countrycode')})</Typography>
-                    <Typography variant="caption" display="block">City: {getProperty('geo.city')}</Typography>
-                    <Typography variant="caption" display="block">Organization: {getProperty('geo.org')}</Typography>
+                    <Typography variant="caption" display="block">{t('providers.pulsedive.country')} {getProperty('geo.country')} ({getProperty('geo.countrycode')})</Typography>
+                    <Typography variant="caption" display="block">{t('providers.pulsedive.city')} {getProperty('geo.city')}</Typography>
+                    <Typography variant="caption" display="block">{t('providers.pulsedive.organization')} {getProperty('geo.org')}</Typography>
                   </Box>
                 }
               />
             )}
 
             {data.summary?.properties?.http && (
-              <DetailListItem 
+              <DetailListItem
                 icon={<WebIcon />}
-                primary="HTTP Properties" 
+                primary={t('providers.pulsedive.httpProperties')}
                 secondaryIsBlock={true}
+                notAvailable={notAvailable}
                 secondary={
                   <Box>
-                    <Typography variant="caption" display="block">Content Type: {getProperty('http.++content-type')}</Typography>
-                    <Typography variant="caption" display="block">Status Code: {getProperty('http.++code')}</Typography>
+                    <Typography variant="caption" display="block">{t('providers.pulsedive.contentType')} {getProperty('http.++content-type')}</Typography>
+                    <Typography variant="caption" display="block">{t('providers.pulsedive.statusCode')} {getProperty('http.++code')}</Typography>
                   </Box>
                 }
               />
             )}
-            
+
             {Object.keys(data.summary?.properties || {}).length === 0 && (
-                <Typography variant="caption" color="text.secondary" sx={{pl:5.5}}>No specific properties found.</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{pl:5.5}}>{t('providers.pulsedive.noProperties')}</Typography>
             )}
 
           </List>

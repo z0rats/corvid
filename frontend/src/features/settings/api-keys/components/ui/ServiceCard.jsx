@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -7,10 +8,11 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTheme, alpha } from '@mui/material/styles';
-import { getTierColor, getTierLabel, generateKeyDisplayName } from '../../../utils/settingsUtils';
+import { getTierColor, generateKeyDisplayName } from '../../../utils/settingsUtils';
 import ApiKeyInput from '../../../components/forms/ApiKeyInput';
 
 export default function ServiceCard({ serviceKey, service }) {
+  const { t } = useTranslation('settings');
   const theme = useTheme();
   const isFullyConfigured = service.available;
 
@@ -26,7 +28,7 @@ export default function ServiceCard({ serviceKey, service }) {
                   {service.name}
                 </Typography>
                 <Chip
-                  label={getTierLabel(service.tier)}
+                  label={t(`apiKeys.tierLabels.${service.tier}`, { defaultValue: service.tier })}
                   size="small"
                   sx={{
                     backgroundColor: alpha(getTierColor(service.tier, theme), 0.08),
@@ -47,7 +49,7 @@ export default function ServiceCard({ serviceKey, service }) {
           {/* Capabilities */}
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-              Supported IoC Types
+              {t('apiKeys.supportedIocTypes')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
               {service.supported_ioc_types.map((capability) => (
@@ -70,7 +72,7 @@ export default function ServiceCard({ serviceKey, service }) {
           {service.required_keys.length === 0 ? (
             <Box sx={{ p: 2, backgroundColor: alpha(theme.palette.success.main, 0.03), borderRadius: 1 }}>
               <Typography variant="body2" color="success.main" sx={{ fontWeight: 500 }}>
-                No API key required - Ready to use
+                {t('apiKeys.noKeyRequired')}
               </Typography>
             </Box>
           ) : (

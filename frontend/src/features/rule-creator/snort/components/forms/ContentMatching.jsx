@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -18,11 +19,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import { SNORT_CONSTANTS } from '../../constants/snortConstants';
 
 export default function ContentMatching({ contentList, onContentChange }) {
+  const { t } = useTranslation('ruleCreator');
   const [currentContent, setCurrentContent] = useState({ value: '', modifiers: [] });
 
   const handleAdd = () => {
     if (!currentContent.value.trim()) {
-      alert('Content value is required.');
+      alert(t('snort.contentMatching.requiredAlert'));
       return;
     }
     onContentChange([...contentList, {
@@ -40,18 +42,18 @@ export default function ContentMatching({ contentList, onContentChange }) {
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant="subtitle2" gutterBottom>
-        Content Matching
+        {t('snort.contentMatching.header')}
       </Typography>
       <Grid container spacing={1} alignItems="center">
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
-            label="Content"
+            label={t('snort.contentMatching.contentLabel')}
             value={currentContent.value}
             onChange={(e) => setCurrentContent(prev => ({ ...prev, value: e.target.value }))}
             size="small"
             variant="outlined"
-            placeholder="String to match (e.g., GET /admin)"
+            placeholder={t('snort.contentMatching.contentPlaceholder')}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
@@ -61,7 +63,7 @@ export default function ContentMatching({ contentList, onContentChange }) {
             value={currentContent.modifiers}
             onChange={(_, newValue) => setCurrentContent(prev => ({ ...prev, modifiers: newValue }))}
             renderInput={(params) => (
-              <TextField {...params} label="Modifiers" placeholder="Select modifiers" size="small" />
+              <TextField {...params} label={t('snort.contentMatching.modifiersLabel')} placeholder={t('snort.contentMatching.modifiersPlaceholder')} size="small" />
             )}
             renderTags={(value, getTagProps) =>
               value.map((option, index) => (
@@ -80,7 +82,7 @@ export default function ContentMatching({ contentList, onContentChange }) {
             size="small"
             fullWidth
           >
-            Add
+            {t('common.actions.add')}
           </Button>
         </Grid>
       </Grid>
@@ -91,8 +93,8 @@ export default function ContentMatching({ contentList, onContentChange }) {
             <ListItem
               key={content.id}
               secondaryAction={
-                <Tooltip title="Delete Content">
-                  <IconButton edge="end" onClick={() => handleDelete(content.id)} size="small" aria-label="Delete content">
+                <Tooltip title={t('snort.contentMatching.deleteTooltip')}>
+                  <IconButton edge="end" onClick={() => handleDelete(content.id)} size="small" aria-label={t('snort.contentMatching.deleteAria')}>
                     <DeleteIcon fontSize="small" color="error" />
                   </IconButton>
                 </Tooltip>
@@ -104,7 +106,7 @@ export default function ContentMatching({ contentList, onContentChange }) {
               </ListItemIcon>
               <ListItemText
                 primary={`"${content.value}"`}
-                secondary={content.modifiers.length > 0 ? `Modifiers: ${content.modifiers.join(', ')}` : 'No modifiers'}
+                secondary={content.modifiers.length > 0 ? t('snort.contentMatching.modifiersDisplay', { modifiers: content.modifiers.join(', ') }) : t('snort.contentMatching.noModifiers')}
               />
             </ListItem>
           ))}
