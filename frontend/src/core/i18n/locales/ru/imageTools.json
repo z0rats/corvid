@@ -8,7 +8,7 @@
   },
   "upload": {
     "title": "Загрузка изображения",
-    "dropzonePrompt": "Перетащите изображение сюда или нажмите для выбора файла",
+    "dropzonePrompt": "Перетащите изображение сюда, нажмите для выбора файла или вставьте (Ctrl+V)",
     "acceptedFormats": "(JPEG, PNG, TIFF, WEBP, HEIC, BMP, GIF)",
     "analyzeButton": "Анализировать"
   },

@@ -1,5 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { determineIocType } from '../../../shared/utils/iocDefinitions';
+import { lookupHistoryApi } from '../../services/api/lookupHistoryApi';
+import { createLogger } from '../../../../../../core/utils/logger';
+
+const logger = createLogger('SingleLookupHistory');
 
 export function useSingleLookup() {
   const [searchValue, setSearchValue] = useState('');
@@ -49,6 +53,12 @@ export function useSingleLookup() {
     setSnackbarOpen(false);
   }, []);
 
+  const handleSearchComplete = useCallback(({ ioc, iocType, results }) => {
+    lookupHistoryApi.saveSearch(ioc, iocType, results).catch((err) => {
+      logger.error('Failed to save search to history:', err);
+    });
+  }, []);
+
   return {
     searchValue,
     currentIocType,
@@ -58,5 +68,6 @@ export function useSingleLookup() {
     handleSubmitSearch,
     handleKeyPress,
     handleCloseError,
+    handleSearchComplete,
   };
 }

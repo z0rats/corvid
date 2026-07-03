@@ -21,7 +21,8 @@ AVAILABLE_MODULES = [
     "ioc_tools",
     "llm_templates",
     "newsfeed",
-    "rule_creator"
+    "rule_creator",
+    "username_search"
 ]
 
 # Module name validation constraints

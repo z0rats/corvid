@@ -1,0 +1,76 @@
+{
+  "page": {
+    "title": "Username Search"
+  },
+
+  "toolInfo": {
+    "poweredBy": "Powered by {{tool}} v{{version}}",
+    "sitesUpdated": "{{count}} sites, database updated {{date}}",
+    "sitesBundled": "{{count}} sites (bundled database)"
+  },
+
+  "form": {
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. johndoe",
+    "searchButton": "Search",
+    "tagsLabel": "Site tags",
+    "tagsPlaceholder": "All sites",
+    "tagsHelp": "Only scan sites with at least one of the selected tags (leave empty to scan all)"
+  },
+
+  "scan": {
+    "progress": "Checked {{checked}} of {{total}} sites",
+    "checking": "checking {{site}}",
+    "failed": "Search failed: {{error}}",
+    "completed": "Checked {{checked}} sites, found {{found}}",
+    "cancelled": "Cancelled after checking {{checked}} sites, found {{found}}",
+    "cancelButton": "Cancel"
+  },
+
+  "results": {
+    "empty": "No profiles found",
+    "foundCount": "{{count}} profile(s) found"
+  },
+
+  "history": {
+    "empty": "No past searches yet",
+    "notFound": "Search run not found",
+    "summary": "Checked {{checked}} sites, found {{found}}",
+    "tagsUsed": "Tags",
+    "headers": {
+      "username": "Username",
+      "status": "Status",
+      "found": "Found",
+      "started": "Started",
+      "actions": "Actions"
+    },
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    }
+  },
+
+  "settings": {
+    "title": "Username Search Settings",
+    "description": "Configure how Maigret scans sites when searching for a username.",
+    "timeoutSeconds": "Timeout (seconds)",
+    "timeoutSecondsHelp": "Per-site request timeout",
+    "maxConcurrency": "Max concurrency",
+    "maxConcurrencyHelp": "Maximum number of sites checked in parallel",
+    "topSitesCount": "Top sites count",
+    "topSitesCountHelp": "Number of top-ranked sites to scan (0 = all sites)",
+    "proxyUrl": "Proxy URL",
+    "proxyUrlHelp": "Optional proxy used for site checks (e.g. socks5://127.0.0.1:9050)",
+    "updateSuccess": "Settings updated successfully",
+    "updateError": "Failed to update settings",
+    "dbUpdateSection": "Site Database",
+    "autoUpdateDbDescription": "Periodically check for an updated Maigret site database",
+    "autoUpdateIntervalHours": "Check interval (hours)",
+    "dbStatusUpdated": "{{count}} sites, last checked {{date}}",
+    "dbStatusBundled": "{{count}} sites (bundled database, never checked for updates)",
+    "refreshDbNow": "Check for update now",
+    "dbRefreshSuccess": "Site database refresh complete"
+  }
+}

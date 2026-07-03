@@ -10,11 +10,14 @@ from app.core.database import managed_session
 from app.features.newsfeed.crud.newsfeed_config_crud import get_newsfeed_config
 from app.features.newsfeed.service.feed_processing_service import fetch_and_store_news
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.blacklist_refresh_service import refresh_blacklist
+from app.core.settings.username_search.crud.username_search_settings_crud import get_username_search_config
+from app.features.username_search.service.db_refresh_service import refresh_database as refresh_maigret_database
 
 logger = logging.getLogger(__name__)
 
 NEWS_FETCH_JOB_ID = 'news_fetch'
 BLACKLIST_REFRESH_JOB_ID = 'blacklist_refresh'
+MAIGRET_DB_REFRESH_JOB_ID = 'maigret_db_refresh'
 
 _scheduler: AsyncIOScheduler | None = None
 
@@ -60,6 +63,66 @@ def add_blacklist_refresh_job(interval_hours: int) -> None:
         logger.info("Blacklist refresh job scheduled with %s hour interval", interval_hours)
     except Exception as e:
         logger.error("Error adding blacklist refresh job: %s", e)
+        raise
+
+
+async def execute_maigret_db_refresh_job() -> None:
+    """Execute the Maigret site-database refresh with error handling to prevent scheduler job removal."""
+    try:
+        async with managed_session() as db:
+            config = await get_username_search_config(db)
+            site_count = await refresh_maigret_database(db, check_interval_hours=config.auto_update_interval_hours)
+        logger.debug("Maigret DB refresh job completed successfully: %s sites", site_count)
+    except Exception as e:
+        logger.error("Error in Maigret DB refresh job: %s", e)
+
+
+def add_maigret_db_refresh_job(interval_hours: int) -> None:
+    """Add the Maigret site-database refresh job to the scheduler with the given interval."""
+    try:
+        get_scheduler().add_job(
+            execute_maigret_db_refresh_job,
+            IntervalTrigger(hours=interval_hours),
+            id=MAIGRET_DB_REFRESH_JOB_ID,
+            replace_existing=True,
+            max_instances=settings.scheduler.max_job_instances
+        )
+        logger.info("Maigret DB refresh job scheduled with %s hour interval", interval_hours)
+    except Exception as e:
+        logger.error("Error adding Maigret DB refresh job: %s", e)
+        raise
+
+
+def configure_maigret_db_scheduler(enabled: bool, interval_hours: int) -> None:
+    """Configure the Maigret site-database refresh scheduler with given parameters."""
+    try:
+        remove_existing_job(MAIGRET_DB_REFRESH_JOB_ID)
+
+        if enabled:
+            add_maigret_db_refresh_job(interval_hours)
+            logger.info("Maigret DB refresh scheduler enabled with %s hour interval", interval_hours)
+        else:
+            logger.info("Maigret DB refresh scheduler disabled as per configuration")
+
+    except Exception as e:
+        logger.error("Error configuring Maigret DB refresh scheduler: %s", e)
+        raise
+
+
+async def update_maigret_db_scheduler_configuration() -> None:
+    """Update the Maigret DB refresh scheduler with new configuration from database."""
+    try:
+        if not get_scheduler().running:
+            logger.warning("Attempting to update non-running scheduler")
+            return
+
+        async with managed_session() as db:
+            config = await get_username_search_config(db)
+        configure_maigret_db_scheduler(config.auto_update_db_enabled, config.auto_update_interval_hours)
+        logger.info("Maigret DB refresh scheduler configuration updated successfully")
+
+    except Exception as e:
+        logger.error("Failed to update Maigret DB refresh scheduler configuration: %s", e)
         raise
 
 
@@ -121,6 +184,13 @@ async def initialize_scheduler() -> None:
         enabled, interval = await fetch_scheduler_configuration()
         configure_news_scheduler(enabled, interval)
         add_blacklist_refresh_job(settings.scheduler.blacklist_refresh_interval_hours)
+
+        async with managed_session() as db:
+            username_search_config = await get_username_search_config(db)
+        configure_maigret_db_scheduler(
+            username_search_config.auto_update_db_enabled,
+            username_search_config.auto_update_interval_hours,
+        )
 
         if not get_scheduler().running:
             get_scheduler().start()

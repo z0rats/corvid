@@ -35,7 +35,8 @@ async def create_default_module_settings(db: AsyncSession) -> None:
         ("domain_finder", True),
         ("llm_templates", True),
         ("cvss_calculator", True),
-        ("rule_creator", True)
+        ("rule_creator", True),
+        ("username_search", True)
     ]
 
     for name, enabled in default_modules:

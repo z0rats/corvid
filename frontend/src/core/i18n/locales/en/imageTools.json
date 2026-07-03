@@ -8,7 +8,7 @@
   },
   "upload": {
     "title": "Image Upload",
-    "dropzonePrompt": "Drag 'n' drop an image here, or click to select a file",
+    "dropzonePrompt": "Drag 'n' drop an image here, click to select a file, or paste (Ctrl+V)",
     "acceptedFormats": "(JPEG, PNG, TIFF, WEBP, HEIC, BMP, GIF)",
     "analyzeButton": "Analyze"
   },

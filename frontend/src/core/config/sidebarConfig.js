@@ -22,6 +22,8 @@ import CreateIcon from "@mui/icons-material/Create";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import NetworkCheckIcon from "@mui/icons-material/NetworkCheck";
+import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import HistoryIcon from "@mui/icons-material/History";
 
 const MAIN_MENU_ITEMS_CONFIG = [
   {
@@ -66,6 +68,12 @@ const MAIN_MENU_ITEMS_CONFIG = [
     path: "/rules",
     moduleId: "rule_creator",
   },
+  {
+    i18nKey: "nav.usernameSearch",
+    icon: <PersonSearchIcon />,
+    path: "/username-search",
+    moduleId: "username_search",
+  },
 ];
 
 const AI_TEMPLATES_TABS_CONFIG = [
@@ -86,6 +94,11 @@ const IOC_TOOLS_TABS_CONFIG = [
     i18nKey: "nav.iocToolsTabs.singleLookup",
     path: "/ioc-tools/lookup",
     icon: <SearchIcon />,
+  },
+  {
+    i18nKey: "nav.iocToolsTabs.lookupHistory",
+    path: "/ioc-tools/lookup/history",
+    icon: <HistoryIcon />,
   },
   {
     i18nKey: "nav.iocToolsTabs.bulkLookup",
@@ -182,6 +195,12 @@ const RULES_TABS_CONFIG = [
   { i18nKey: "nav.rulesTabs.snort", path: "/rules/snort", icon: <NetworkCheckIcon /> },
 ];
 
+const USERNAME_SEARCH_TABS_CONFIG = [
+  { i18nKey: "nav.usernameSearchTabs.newSearch", path: "/username-search/new", icon: <PersonSearchIcon /> },
+  { i18nKey: "nav.usernameSearchTabs.history", path: "/username-search/history", icon: <HistoryIcon /> },
+  { i18nKey: "nav.usernameSearchTabs.settings", path: "/username-search/settings", icon: <SettingsIcon /> },
+];
+
 const translateItem = (t, { i18nKey, children, ...rest }) => ({
   ...rest,
   label: t(i18nKey),
@@ -196,3 +215,4 @@ export const getNewsfeedTabs = (t) => NEWSFEED_TABS_CONFIG.map(item => translate
 export const getSettingsTabs = (t) => SETTINGS_TABS_CONFIG.map(item => translateItem(t, item));
 export const getCvssTabs = (t) => CVSS_TABS_CONFIG.map(item => translateItem(t, item));
 export const getRulesTabs = (t) => RULES_TABS_CONFIG.map(item => translateItem(t, item));
+export const getUsernameSearchTabs = (t) => USERNAME_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));

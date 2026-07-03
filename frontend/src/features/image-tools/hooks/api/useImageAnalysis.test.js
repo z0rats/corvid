@@ -1,4 +1,6 @@
+import { createElement } from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
 import { useImageAnalysis } from './useImageAnalysis';
 import { imageAnalyzerApi } from '../../services/api/imageAnalyzerApi';
 
@@ -14,13 +16,23 @@ function makeFile() {
   return new File(['fake image content'], 'photo.jpg', { type: 'image/jpeg' });
 }
 
+// useImageAnalysis reads/writes a module-scoped Jotai atom (shared across the
+// whole app on purpose, so state survives route changes). Each test needs its
+// own store so results don't leak between it() blocks.
+function renderImageAnalysisHook() {
+  const store = createStore();
+  return renderHook(() => useImageAnalysis(), {
+    wrapper: ({ children }) => createElement(Provider, { store }, children),
+  });
+}
+
 describe('useImageAnalysis', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   it('starts with no result and no error', () => {
-    const { result } = renderHook(() => useImageAnalysis());
+    const { result } = renderImageAnalysisHook();
 
     expect(result.current.result).toBeNull();
     expect(result.current.error).toBeNull();
@@ -28,7 +40,7 @@ describe('useImageAnalysis', () => {
   });
 
   it('sets an error and does not call the API when no file is provided', async () => {
-    const { result } = renderHook(() => useImageAnalysis());
+    const { result } = renderImageAnalysisHook();
 
     await act(async () => {
       await result.current.analyzeImage(null);
@@ -42,7 +54,7 @@ describe('useImageAnalysis', () => {
     const mockResult = { file_info: { filename: 'photo.jpg' }, hashes: {}, exif: {} };
     imageAnalyzerApi.analyzeImage.mockResolvedValue(mockResult);
 
-    const { result } = renderHook(() => useImageAnalysis());
+    const { result } = renderImageAnalysisHook();
 
     await act(async () => {
       await result.current.analyzeImage(makeFile());
@@ -61,7 +73,7 @@ describe('useImageAnalysis', () => {
       response: { data: { detail: 'Image analysis failed' } },
     });
 
-    const { result } = renderHook(() => useImageAnalysis());
+    const { result } = renderImageAnalysisHook();
 
     await act(async () => {
       await result.current.analyzeImage(makeFile());
@@ -74,7 +86,7 @@ describe('useImageAnalysis', () => {
 
   it('resets state', async () => {
     imageAnalyzerApi.analyzeImage.mockResolvedValue({ file_info: {}, hashes: {}, exif: {} });
-    const { result } = renderHook(() => useImageAnalysis());
+    const { result } = renderImageAnalysisHook();
 
     await act(async () => {
       await result.current.analyzeImage(makeFile());

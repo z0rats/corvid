@@ -1,40 +1,36 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useAtom } from 'jotai';
 import { getStreamUrl } from '../../utils/urlUtils';
 import { createLogger } from '../../../../core/utils/logger';
+import { reportAnalysisStateAtom, REPORT_ANALYSIS_INITIAL_STATE } from '../../state/reportAnalysisAtoms';
 
 const logger = createLogger('ReportAnalysis');
 
-export function useReportAnalysis() {
-  const [step, setStep] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [infoMessage, setInfoMessage] = useState(null);
-  const [ranking, setRanking] = useState([]);
-  const [analysisResults, setAnalysisResults] = useState([]);
-  const eventSourceRef = useRef(null);
+// Module-scoped, not a ref: the report must keep streaming and updating
+// reportAnalysisStateAtom even after the component that started it unmounts
+// (e.g. the user switches to another feature tab and back).
+let activeEventSource = null;
 
-  useEffect(() => {
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-    };
-  }, []);
+export function useReportAnalysis() {
+  const [state, setState] = useAtom(reportAnalysisStateAtom);
+  const { step, isLoading, error, infoMessage, ranking, analysisResults } = state;
 
   const showStopButton = step >= 1 && step < 5;
 
   const startAnalysis = useCallback(() => {
-    setStep(1);
-    setIsLoading(true);
-    setError(null);
-    setInfoMessage(null);
-    setRanking([]);
-    setAnalysisResults([]);
+    if (activeEventSource) {
+      activeEventSource.close();
+    }
+
+    setState({
+      ...REPORT_ANALYSIS_INITIAL_STATE,
+      step: 1,
+      isLoading: true,
+    });
 
     const url = getStreamUrl();
     const es = new EventSource(url);
-    eventSourceRef.current = es;
+    activeEventSource = es;
 
     es.onmessage = (event) => {
       const rawData = event.data;
@@ -45,22 +41,28 @@ export function useReportAnalysis() {
 
         switch (parsed.type) {
           case 'ranking':
-            setStep(3);
-            setRanking(parsed.articles || []);
-            if (parsed.info) setInfoMessage(parsed.info);
+            setState(prev => ({
+              ...prev,
+              step: 3,
+              ranking: parsed.articles || [],
+              infoMessage: parsed.info || prev.infoMessage,
+            }));
             break;
           case 'analysis':
-            setStep(4);
             if (parsed.article_result) {
-              setAnalysisResults(prev => [...prev, parsed.article_result]);
+              setState(prev => ({
+                ...prev,
+                step: 4,
+                analysisResults: [...prev.analysisResults, parsed.article_result],
+              }));
+            } else {
+              setState(prev => ({ ...prev, step: 4 }));
             }
             break;
           case 'complete':
-            setStep(5);
-            setIsLoading(false);
-            setInfoMessage(parsed.message);
+            setState(prev => ({ ...prev, step: 5, isLoading: false, infoMessage: parsed.message }));
             es.close();
-            eventSourceRef.current = null;
+            activeEventSource = null;
             break;
           default:
             break;
@@ -71,25 +73,21 @@ export function useReportAnalysis() {
     };
 
     es.onerror = () => {
-      setError('An error occurred while streaming data.');
-      setIsLoading(false);
-      setStep(0);
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+      setState(prev => ({ ...prev, error: 'An error occurred while streaming data.', isLoading: false, step: 0 }));
+      if (activeEventSource) {
+        activeEventSource.close();
+        activeEventSource = null;
       }
     };
-  }, []);
+  }, [setState]);
 
   const stopAnalysis = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
+    if (activeEventSource) {
+      activeEventSource.close();
+      activeEventSource = null;
     }
-    setStep(0);
-    setIsLoading(false);
-    setInfoMessage('Analysis stream stopped by user.');
-  }, []);
+    setState(prev => ({ ...prev, step: 0, isLoading: false, infoMessage: 'Analysis stream stopped by user.' }));
+  }, [setState]);
 
   return {
     step,

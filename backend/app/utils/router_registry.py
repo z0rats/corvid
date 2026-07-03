@@ -8,6 +8,7 @@ from app.core.settings.ai_settings.routers import ai_settings_routes
 from app.core.settings.general.routers import general_settings_routes
 from app.core.settings.keywords.routers import keywords_settings_routes
 from app.core.settings.modules.routers import modules_settings_routes
+from app.core.settings.username_search.routers import username_search_settings_routes
 from app.features.cvss_calculator.routers import cvss_routes
 from app.features.ioc_tools.domain_finder.routers import domain_routes
 from app.features.email_analyzer.routers import email_routes
@@ -15,8 +16,9 @@ from app.features.image_tools.routers import image_routes
 from app.features.ioc_tools.ioc_defanger.routers import internal_defang_routes
 from app.features.ioc_tools.ioc_extractor.routers import internal_ioc_extractor_routes
 from app.features.ioc_tools.ioc_lookup.bulk_lookup.routers import bulk_ioc_lookup_routes
-from app.features.ioc_tools.ioc_lookup.single_lookup.routers import unified_routes
+from app.features.ioc_tools.ioc_lookup.single_lookup.routers import lookup_history_routes, unified_routes
 from app.features.llm_templates.routers import llm_template_routes, template_category_routes
+from app.features.username_search.routers import username_search_routes
 from app.features.newsfeed.routers import (
     external_newsfeed_routes,
     newsfeed_settings_routes,
@@ -50,6 +52,7 @@ def get_settings_routers() -> list[APIRouter]:
         keywords_settings_routes.router,
         cti_profile_routes.router,
         trends_blacklist_routes.router,
+        username_search_settings_routes.router,
     ]
 
 
@@ -70,6 +73,8 @@ def get_feature_routers() -> list[APIRouter]:
         external_newsfeed_routes.router,
         bulk_ioc_lookup_routes.router,
         unified_routes.router,
+        lookup_history_routes.router,
+        username_search_routes.router,
     ]
 
 

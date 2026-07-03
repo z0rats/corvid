@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -26,6 +26,26 @@ export default function ImageTools() {
   const handleFileUpload = (file) => {
     analyzeImage(file);
   };
+
+  useEffect(() => {
+    const handlePaste = (event) => {
+      if (isLoading) return;
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      const imageItem = Array.from(items).find((item) => item.type.startsWith('image/'));
+      if (!imageItem) return;
+
+      const file = imageItem.getAsFile();
+      if (!file) return;
+
+      event.preventDefault();
+      analyzeImage(file);
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isLoading, analyzeImage]);
 
   return (
     <Box>

@@ -2,6 +2,8 @@
 
 Self-hostable, single-user OSINT/security-analyst web app. FastAPI backend + React frontend, runs via Docker Compose. Not production-hardened (early prototype, per README).
 
+**Maintenance:** update this file after any important project change (new feature, new external dependency, architectural shift). Keep it short and specific — no speculative or redundant detail.
+
 ## Stack
 
 - **Backend**: Python 3.14, FastAPI, SQLAlchemy 2.0 (async, `aiosqlite`/`asyncpg`), Alembic migrations, APScheduler for background jobs, `pydantic-ai` for LLM features (Anthropic/OpenAI/Google/Groq/Mistral/xAI/Cohere/Bedrock all wired via `pydantic-ai-slim` extras), `slowapi` for rate limiting, pytest for tests.
@@ -17,18 +19,21 @@ Layout under `backend/app/`:
 - `core/` — cross-cutting: `config/` (settings, CORS, security headers, rate limiting, request-id, body-limit middleware), `settings/` (persisted app settings: `api_keys`, `ai_settings`, `general`, `keywords`, `modules`, `cti_profile` — each has its own models/schemas/crud/routers under `core/settings/<name>/`), `alerts/` (WebSocket alerts), `database.py`, `scheduler.py`, `dependencies.py`, `exceptions.py`, `healthcheck.py`.
 - `features/` — one directory per product feature, each typically split into `routers/`, `service/`, `schemas/`, `models/`, `crud/`, `utils/`, `config/`:
   - `newsfeed/` — RSS aggregation, IOC extraction from articles, MITRE ATT&CK mapping, trends/analytics.
-  - `ioc_tools/` — `ioc_lookup` (single + bulk lookups against AbuseIPDB, AlienVault, VirusTotal, Shodan, etc.), `ioc_extractor`, `ioc_defanger`, `domain_finder` (URLScan.io-based typosquat/phishing domain discovery).
+  - `ioc_tools/` — `ioc_lookup` (single + bulk lookups against AbuseIPDB, AlienVault, VirusTotal, Shodan, etc.; single-lookup searches are auto-saved to history once every queried service responds, via `POST/GET/DELETE /api/ioc-lookup/history`, persisted as `SingleLookupSearch`/`SingleLookupResult`), `ioc_extractor`, `ioc_defanger`, `domain_finder` (URLScan.io-based typosquat/phishing domain discovery).
   - `email_analyzer/` — `.eml` parsing, header/IOC checks, AI-assisted analysis.
   - `image_tools/` — EXIF/metadata extraction, hashing, reverse image search deep-links (no API key needed).
   - `llm_templates/` — user-defined AI prompt templates (categories + templates).
   - `cvss_calculator/` — CVSS 3.1/4.0 scoring.
+  - `username_search/` — Maigret-based username OSINT search across 3000+ sites, called in-process (not subprocess) via `maigret.checking.maigret()`, live progress streamed over SSE (`POST /api/username-search/scan`), found-site results persisted (`MaigretSearch`/`MaigretSiteResult`); per-run settings under `core/settings/username_search/` (timeout/concurrency/top-sites-count/proxy).
 - All routers are aggregated in `backend/app/utils/router_registry.py` via `get_core_routers()`, `get_settings_routers()`, `get_feature_routers()`, then mounted in `main.py`.
 - Migrations: Alembic, config at `backend/alembic.ini`, scripts in `backend/migrations/versions/`. Run after schema changes: `docker compose run --rm backend alembic upgrade head`.
 - Tests: `backend/tests/`, run with pytest (`pytest.ini` sets `testpaths = tests`, `pythonpath = .`). Currently sparse coverage (only `tests/features/image_tools`).
 
 ## Frontend architecture
 
-`frontend/src/features/` mirrors the backend feature split — one directory per module (`newsfeed`, `ioc-tools`, `email-analyzer`, `image-tools`, `llm-templates`, `cvss-calculator`, `rule-creator` (Sigma/Yara/Snort rule builder), `settings`). Each feature dir typically has its own `components/`, `hooks/`, `services/` (API calls), `constants/`, `utils/`. Entry: `src/App.js` → `src/index.js`. `src/core/` holds shared/cross-feature code.
+`frontend/src/features/` mirrors the backend feature split — one directory per module (`newsfeed`, `ioc-tools`, `email-analyzer`, `image-tools`, `llm-templates`, `cvss-calculator`, `rule-creator` (Sigma/Yara/Snort rule builder), `username-search`, `settings`). Each feature dir typically has its own `components/`, `hooks/`, `services/` (API calls), `constants/`, `utils/`. Entry: `src/App.js` → `src/index.js`. `src/core/` holds shared/cross-feature code.
+
+New top-level features need edits in three places beyond their own directory: `src/core/config/routes.js` (lazy route), `src/core/config/sidebarConfig.js` (nav entry + tabs config), and `src/core/components/layout/Layout.jsx` (`currentTabs` path match for the new tabs getter). i18n: add a `<featureName>.json` under both `src/core/i18n/locales/en/` and `ru/`, register in `src/core/i18n/index.js`, and add `nav.*` keys to `common.json` (both locales).
 
 ## Integrated external services
 
@@ -40,6 +45,7 @@ IOC/threat-intel lookups across IPs, domains, URLs, emails, hashes, CVEs via: Ab
 - In route handlers, prefer injecting settings via dependency (`SettingsDep`) rather than importing the module-level `settings` singleton, so tests can override via `app.dependency_overrides`.
 - Feature module layering pattern: `routers` (HTTP) → `service` (business logic) → `crud` (DB access) → `models`/`schemas`. New features should follow this same split.
 - AGPL-3.0 licensed (versions ≤ v0.1.0 are MIT). Be mindful of this when adding dependencies or discussing licensing.
+- `backend/requirements.txt` is compiled (pip-compile/`uv pip compile` style, hand-merged since no `requirements.in` is committed) — `maigret` declares `lxml>=6.0.2` but `newspaper4k` pins `lxml<6.0.0`; resolved via `backend/lxml-override.txt` (`lxml==5.4.0`, passed as `--override` in `Dockerfile`) since maigret doesn't actually import lxml directly. Don't bump lxml without re-checking this.
 
 ## Useful commands
 

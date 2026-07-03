@@ -20,6 +20,7 @@ export default function SingleLookup() {
     handleSubmitSearch,
     handleKeyPress,
     handleCloseError,
+    handleSearchComplete,
   } = useSingleLookup();
 
   return (
@@ -57,6 +58,7 @@ export default function SingleLookup() {
         <ResultTable
           ioc={searchValue}
           iocType={currentIocType}
+          onSearchComplete={handleSearchComplete}
         />
       ) : (
         <WelcomeScreen />

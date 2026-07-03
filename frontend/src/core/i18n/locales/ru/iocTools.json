@@ -83,6 +83,16 @@
         "result": "Результат"
       }
     },
+    "history": {
+      "empty": "История поисков пуста.",
+      "notFound": "Поиск не найден.",
+      "headers": {
+        "ioc": "IOC",
+        "iocType": "Тип",
+        "searched": "Дата поиска",
+        "actions": "Действия"
+      }
+    },
     "serviceFetcherRow": {
       "unknownService": "Неизвестный сервис"
     },

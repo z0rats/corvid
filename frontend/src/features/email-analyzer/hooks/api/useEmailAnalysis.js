@@ -1,47 +1,41 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useAtom } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { emailAnalyzerApi } from '../../services/api/emailAnalyzerApi';
+import { emailAnalysisStateAtom, EMAIL_ANALYSIS_INITIAL_STATE } from '../../state/emailAnalysisAtoms';
+
+// Module-scoped, not refs: an in-flight analysis must keep running and
+// updating emailAnalysisStateAtom even after the component that started it
+// unmounts (e.g. the user switches to another feature tab and back).
+let progressInterval = null;
+let completionTimeout = null;
+let activeAbortController = null;
 
 export function useEmailAnalysis() {
   const { t } = useTranslation('emailAnalyzer');
-  const [result, setResult] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const progressIntervalRef = useRef(null);
-  const completionTimeoutRef = useRef(null);
-  const abortControllerRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      clearInterval(progressIntervalRef.current);
-      clearTimeout(completionTimeoutRef.current);
-      abortControllerRef.current?.abort();
-    };
-  }, []);
+  const [state, setState] = useAtom(emailAnalysisStateAtom);
+  const { result, isLoading, error, uploadProgress } = state;
 
   const analyzeEmail = useCallback(async (file) => {
     if (!file) {
-      setError(t('errors.noFileProvided'));
+      setState(prev => ({ ...prev, error: t('errors.noFileProvided') }));
       return;
     }
 
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-    const { signal } = abortControllerRef.current;
+    activeAbortController?.abort();
+    activeAbortController = new AbortController();
+    const { signal } = activeAbortController;
 
     try {
-      setIsLoading(true);
-      setError(null);
-      setUploadProgress(0);
+      setState({ ...EMAIL_ANALYSIS_INITIAL_STATE, isLoading: true });
 
-      progressIntervalRef.current = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressIntervalRef.current);
+      progressInterval = setInterval(() => {
+        setState(prev => {
+          if (prev.uploadProgress >= 90) {
+            clearInterval(progressInterval);
             return prev;
           }
-          return prev + 10;
+          return { ...prev, uploadProgress: prev.uploadProgress + 10 };
         });
       }, 200);
 
@@ -49,32 +43,32 @@ export function useEmailAnalysis() {
 
       if (signal.aborted) return;
 
-      clearInterval(progressIntervalRef.current);
-      setUploadProgress(100);
+      clearInterval(progressInterval);
+      setState(prev => ({ ...prev, uploadProgress: 100 }));
 
-      completionTimeoutRef.current = setTimeout(() => {
+      completionTimeout = setTimeout(() => {
         if (signal.aborted) return;
-        setResult(analysisResult);
-        setUploadProgress(0);
-        setIsLoading(false);
+        setState(prev => ({ ...prev, result: analysisResult, uploadProgress: 0, isLoading: false }));
       }, 300);
 
     } catch (err) {
       if (signal.aborted) return;
-      clearInterval(progressIntervalRef.current);
-      setError(err.response?.data?.detail || err.message || t('errors.analysisFailed'));
-      setUploadProgress(0);
-      setIsLoading(false);
+      clearInterval(progressInterval);
+      setState(prev => ({
+        ...prev,
+        error: err.response?.data?.detail || err.message || t('errors.analysisFailed'),
+        uploadProgress: 0,
+        isLoading: false,
+      }));
     }
-  }, [t]);
+  }, [t, setState]);
 
   const reset = useCallback(() => {
-    abortControllerRef.current?.abort();
-    setResult(null);
-    setError(null);
-    setUploadProgress(0);
-    setIsLoading(false);
-  }, []);
+    activeAbortController?.abort();
+    clearInterval(progressInterval);
+    clearTimeout(completionTimeout);
+    setState(EMAIL_ANALYSIS_INITIAL_STATE);
+  }, [setState]);
 
   return {
     result,

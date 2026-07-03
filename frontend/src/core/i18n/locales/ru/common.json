@@ -15,6 +15,7 @@
 
     "iocToolsTabs": {
       "singleLookup": "Одиночный поиск",
+      "lookupHistory": "История поиска",
       "bulkLookup": "Массовый поиск",
       "domainFinder": "Поиск доменов",
       "extractor": "Экстрактор",
@@ -49,6 +50,13 @@
       "sigma": "Sigma",
       "yara": "Yara",
       "snort": "Snort"
+    },
+
+    "usernameSearch": "Поиск по никнейму",
+    "usernameSearchTabs": {
+      "newSearch": "Новый поиск",
+      "history": "История",
+      "settings": "Настройки"
     }
   },
 

@@ -1,15 +1,13 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useAtom } from 'jotai';
 import { determineIocType, IOC_TYPES } from '../../shared/utils/iocDefinitions';
 import { getOverallTlp } from '../../shared/utils/tlpUtils';
 import { SERVICE_DEFINITIONS } from '../../shared/config/serviceConfig';
 import { iocLookupApi } from '../../../shared/services/api/iocLookupApi';
 import { createLogger } from '../../../../../core/utils/logger';
+import { bulkLookupStateAtom } from '../state/bulkLookupAtoms';
 
 const logger = createLogger('BulkLookupProcessor');
-
-const initialCategorizedIocsState = Object.fromEntries(
-  Object.values(IOC_TYPES).map(type => [type, []])
-);
 
 const PREFERRED_IOC_ORDER = [
   IOC_TYPES.IPV4, IOC_TYPES.IPV6, IOC_TYPES.DOMAIN, IOC_TYPES.URL,
@@ -17,18 +15,38 @@ const PREFERRED_IOC_ORDER = [
   IOC_TYPES.EMAIL, IOC_TYPES.CVE, IOC_TYPES.UNKNOWN
 ];
 
-export function useBulkLookupProcessor() {
-  const [categorizedIocs, setCategorizedIocs] = useState(initialCategorizedIocsState);
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [processorError, setProcessorError] = useState('');
+// Module-scoped, not refs: a run must keep streaming and updating
+// bulkLookupStateAtom even after the component that started it unmounts
+// (e.g. the user switches to another feature tab and back).
+let iocMap = new Map();
+let activeAbortController = null;
 
-  const iocMapRef = useRef(new Map());
-  const abortControllerRef = useRef(null);
+export function useBulkLookupProcessor() {
+  const [state, setState] = useAtom(bulkLookupStateAtom);
+  const { categorizedIocs, loading, progress, processorError } = state;
+
+  const setCategorizedIocs = useCallback((updater) => {
+    setState(prev => ({
+      ...prev,
+      categorizedIocs: typeof updater === 'function' ? updater(prev.categorizedIocs) : updater,
+    }));
+  }, [setState]);
+
+  const setLoading = useCallback((value) => {
+    setState(prev => ({ ...prev, loading: value }));
+  }, [setState]);
+
+  const setProgress = useCallback((value) => {
+    setState(prev => ({ ...prev, progress: value }));
+  }, [setState]);
+
+  const setProcessorError = useCallback((value) => {
+    setState(prev => ({ ...prev, processorError: value }));
+  }, [setState]);
 
   const updateIocServiceData = useCallback((iocValue, serviceName, updates) => {
     setCategorizedIocs(prev => {
-      const iocToUpdate = iocMapRef.current.get(iocValue);
+      const iocToUpdate = iocMap.get(iocValue);
       if (!iocToUpdate) return prev;
 
       const iocType = iocToUpdate.type;
@@ -52,11 +70,11 @@ export function useBulkLookupProcessor() {
 
       const newTypeArray = [...prev[iocType]];
       newTypeArray[iocIndex] = updatedIoc;
-      iocMapRef.current.set(iocValue, updatedIoc);
+      iocMap.set(iocValue, updatedIoc);
 
       return { ...prev, [iocType]: newTypeArray };
     });
-  }, []);
+  }, [setCategorizedIocs]);
 
   const processSSEStream = useCallback(async (stream, uniqueIocs, selectedServices, signal) => {
     const reader = stream.getReader();
@@ -130,7 +148,7 @@ export function useBulkLookupProcessor() {
     } finally {
       reader.releaseLock();
     }
-  }, [updateIocServiceData]);
+  }, [updateIocServiceData, setProgress]);
 
   const performLookup = useCallback(async (iocsInput, selectedServices) => {
     setProcessorError('');
@@ -139,15 +157,15 @@ export function useBulkLookupProcessor() {
       return;
     }
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (activeAbortController) {
+      activeAbortController.abort();
     }
-    abortControllerRef.current = new AbortController();
-    const { signal } = abortControllerRef.current;
+    activeAbortController = new AbortController();
+    const { signal } = activeAbortController;
 
     setLoading(true);
     setProgress(0);
-    iocMapRef.current.clear();
+    iocMap.clear();
 
     const freshInitialCategorizedIocs = Object.fromEntries(
       Object.values(IOC_TYPES).map(type => [type, []])
@@ -175,7 +193,7 @@ export function useBulkLookupProcessor() {
       const iocObject = { id: iocId, value: iocStr, type, services, overallTlp: 'WHITE' };
       if (freshInitialCategorizedIocs[type]) {
         freshInitialCategorizedIocs[type].push(iocObject);
-        iocMapRef.current.set(iocStr, iocObject);
+        iocMap.set(iocStr, iocObject);
       }
     });
     setCategorizedIocs(freshInitialCategorizedIocs);
@@ -193,15 +211,7 @@ export function useBulkLookupProcessor() {
         setProgress(100);
       }
     }
-  }, [processSSEStream]);
-
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
+  }, [processSSEStream, setProcessorError, setLoading, setProgress, setCategorizedIocs]);
 
   const orderedIocTypes = useMemo(() => {
     const typesPresent = Object.keys(categorizedIocs).filter(type => categorizedIocs[type]?.length > 0);

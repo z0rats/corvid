@@ -32,6 +32,7 @@ import {
   getRulesTabs,
   getIocToolsTabs,
   getCvssTabs,
+  getUsernameSearchTabs,
 } from '../../config/sidebarConfig';
 import ot_logo_dark from '../../static/images/ot_logo_dark.png';
 import { useTheme, alpha } from '@mui/material/styles';
@@ -103,6 +104,7 @@ function Layout() {
     if (location.pathname.startsWith('/rules')) return getRulesTabs(t);
     if (location.pathname.startsWith('/ioc-tools')) return getIocToolsTabs(t);
     if (location.pathname.startsWith('/cvss-calculator')) return getCvssTabs(t);
+    if (location.pathname.startsWith('/username-search')) return getUsernameSearchTabs(t);
     return null;
   }, [location.pathname, hasLlmKey, t]);
 

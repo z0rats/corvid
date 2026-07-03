@@ -15,6 +15,7 @@
 
     "iocToolsTabs": {
       "singleLookup": "Single Lookup",
+      "lookupHistory": "Lookup History",
       "bulkLookup": "Bulk Lookup",
       "domainFinder": "Domain Finder",
       "extractor": "Extractor",
@@ -49,6 +50,13 @@
       "sigma": "Sigma",
       "yara": "Yara",
       "snort": "Snort"
+    },
+
+    "usernameSearch": "Username Search",
+    "usernameSearchTabs": {
+      "newSearch": "New Search",
+      "history": "History",
+      "settings": "Settings"
     }
   },
 

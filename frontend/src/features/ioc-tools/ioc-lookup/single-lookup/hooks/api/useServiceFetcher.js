@@ -4,7 +4,7 @@ import { createLogger } from '../../../../../../core/utils/logger';
 
 const logger = createLogger('ServiceFetcher');
 
-export function useServiceFetcher(ioc, iocType, serviceConfigEntry) {
+export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult) {
   const [loading, setLoading] = useState(true);
   const [apiResult, setApiResult] = useState(null);
   const [displayProps, setDisplayProps] = useState({ summary: 'Loading...', tlp: 'WHITE' });
@@ -22,9 +22,24 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry) {
     return { summary: 'Data received, no summary available', tlp: 'BLUE' };
   };
 
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
+
   useEffect(() => {
     const abortController = new AbortController();
     const getDisplayData = (data) => getDisplayDataRef.current(data);
+
+    const reportResult = (data, display) => {
+      if (!onResultRef.current || !serviceConfigEntry?.key) return;
+      const status = data?.notFound ? 'not_found' : data?.error ? 'error' : 'found';
+      onResultRef.current(serviceConfigEntry.key, {
+        service_name: serviceConfigEntry.name,
+        status,
+        summary: display.summary,
+        tlp: display.tlp,
+        data,
+      });
+    };
 
     const fetchData = async () => {
       setLoading(true);
@@ -53,7 +68,9 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry) {
           data = response.data;
         }
         setApiResult(data);
-        setDisplayProps(getDisplayData(data));
+        const display = getDisplayData(data);
+        setDisplayProps(display);
+        reportResult(data, display);
       } catch (error) {
         if (error.name === 'AbortError' || error.name === 'CanceledError') {
           return;
@@ -66,7 +83,9 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry) {
           ...error.response?.data,
         };
         setApiResult(errorData);
-        setDisplayProps(getDisplayData(errorData));
+        const display = getDisplayData(errorData);
+        setDisplayProps(display);
+        reportResult(errorData, display);
       } finally {
         if (!abortController.signal.aborted) {
           setLoading(false);

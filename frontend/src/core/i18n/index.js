@@ -20,6 +20,8 @@ import enNewsfeed from './locales/en/newsfeed.json';
 import ruNewsfeed from './locales/ru/newsfeed.json';
 import enRuleCreator from './locales/en/ruleCreator.json';
 import ruRuleCreator from './locales/ru/ruleCreator.json';
+import enUsernameSearch from './locales/en/usernameSearch.json';
+import ruUsernameSearch from './locales/ru/usernameSearch.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -34,6 +36,7 @@ export const NAMESPACES = [
   'llmTemplates',
   'newsfeed',
   'ruleCreator',
+  'usernameSearch',
 ];
 
 i18n
@@ -51,6 +54,7 @@ i18n
         llmTemplates: enLlmTemplates,
         newsfeed: enNewsfeed,
         ruleCreator: enRuleCreator,
+        usernameSearch: enUsernameSearch,
       },
       ru: {
         common: ruCommon,
@@ -62,6 +66,7 @@ i18n
         llmTemplates: ruLlmTemplates,
         newsfeed: ruNewsfeed,
         ruleCreator: ruRuleCreator,
+        usernameSearch: ruUsernameSearch,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,

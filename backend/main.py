@@ -59,6 +59,8 @@ async def _create_database_tables() -> None:
     import app.features.llm_templates.models.llm_template_models
     import app.features.llm_templates.models.template_category_models
     import app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models
+    import app.core.settings.username_search.models.username_search_settings_models
+    import app.features.username_search.models.username_search_models
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

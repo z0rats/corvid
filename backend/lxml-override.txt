@@ -1,0 +1,8 @@
+# maigret's packaged metadata declares lxml>=6.0.2, but maigret's own code
+# never imports lxml directly (verified: no `lxml` references anywhere in
+# the installed package) - the floor appears to be an incidental version
+# bump, not a functional requirement. newspaper4k pins lxml<6.0.0, so the
+# two direct dependencies are otherwise unresolvable together. This
+# override tells the resolver/installer to accept the lxml version already
+# pinned in requirements.txt regardless of maigret's stated floor.
+lxml==5.4.0

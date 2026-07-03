@@ -1,47 +1,39 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useAtom } from 'jotai';
 import { imageAnalyzerApi } from '../../services/api/imageAnalyzerApi';
+import { imageAnalysisStateAtom, IMAGE_ANALYSIS_INITIAL_STATE } from '../../state/imageAnalysisAtoms';
+
+// Module-scoped, not refs: an in-flight analysis must keep running and
+// updating imageAnalysisStateAtom even after the component that started it
+// unmounts (e.g. the user switches to another feature tab and back).
+let progressInterval = null;
+let completionTimeout = null;
+let activeAbortController = null;
 
 export function useImageAnalysis() {
-  const [result, setResult] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const progressIntervalRef = useRef(null);
-  const completionTimeoutRef = useRef(null);
-  const abortControllerRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      clearInterval(progressIntervalRef.current);
-      clearTimeout(completionTimeoutRef.current);
-      abortControllerRef.current?.abort();
-    };
-  }, []);
+  const [state, setState] = useAtom(imageAnalysisStateAtom);
+  const { result, previewUrl, isLoading, error, uploadProgress } = state;
 
   const analyzeImage = useCallback(async (file) => {
     if (!file) {
-      setError('No file provided');
+      setState(prev => ({ ...prev, error: 'No file provided' }));
       return;
     }
 
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-    const { signal } = abortControllerRef.current;
+    activeAbortController?.abort();
+    activeAbortController = new AbortController();
+    const { signal } = activeAbortController;
 
     try {
-      setIsLoading(true);
-      setError(null);
-      setUploadProgress(0);
-      setPreviewUrl(URL.createObjectURL(file));
+      setState({ ...IMAGE_ANALYSIS_INITIAL_STATE, isLoading: true, previewUrl: URL.createObjectURL(file) });
 
-      progressIntervalRef.current = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressIntervalRef.current);
+      progressInterval = setInterval(() => {
+        setState(prev => {
+          if (prev.uploadProgress >= 90) {
+            clearInterval(progressInterval);
             return prev;
           }
-          return prev + 10;
+          return { ...prev, uploadProgress: prev.uploadProgress + 10 };
         });
       }, 200);
 
@@ -49,33 +41,32 @@ export function useImageAnalysis() {
 
       if (signal.aborted) return;
 
-      clearInterval(progressIntervalRef.current);
-      setUploadProgress(100);
+      clearInterval(progressInterval);
+      setState(prev => ({ ...prev, uploadProgress: 100 }));
 
-      completionTimeoutRef.current = setTimeout(() => {
+      completionTimeout = setTimeout(() => {
         if (signal.aborted) return;
-        setResult(analysisResult);
-        setUploadProgress(0);
-        setIsLoading(false);
+        setState(prev => ({ ...prev, result: analysisResult, uploadProgress: 0, isLoading: false }));
       }, 300);
 
     } catch (err) {
       if (signal.aborted) return;
-      clearInterval(progressIntervalRef.current);
-      setError(err.response?.data?.detail || err.message || 'Failed to analyze image');
-      setUploadProgress(0);
-      setIsLoading(false);
+      clearInterval(progressInterval);
+      setState(prev => ({
+        ...prev,
+        error: err.response?.data?.detail || err.message || 'Failed to analyze image',
+        uploadProgress: 0,
+        isLoading: false,
+      }));
     }
-  }, []);
+  }, [setState]);
 
   const reset = useCallback(() => {
-    abortControllerRef.current?.abort();
-    setResult(null);
-    setPreviewUrl(null);
-    setError(null);
-    setUploadProgress(0);
-    setIsLoading(false);
-  }, []);
+    activeAbortController?.abort();
+    clearInterval(progressInterval);
+    clearTimeout(completionTimeout);
+    setState(IMAGE_ANALYSIS_INITIAL_STATE);
+  }, [setState]);
 
   return {
     result,

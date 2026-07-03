@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SingleLookup from './ioc-lookup/single-lookup/SingleLookup';
+import HistoryList from './ioc-lookup/single-lookup/components/history/HistoryList';
+import HistoryDetail from './ioc-lookup/single-lookup/components/history/HistoryDetail';
 import BulkLookup from './ioc-lookup/bulk-lookup/BulkLookup';
 import IocExtractor from './ioc-extractor/IocExtractor';
 import IocDefanger from './ioc-defanger/IocDefanger';
@@ -11,6 +13,8 @@ const IocTools = () => {
     <Routes>
       <Route index element={<Navigate to="lookup" replace />} />
       <Route path="lookup" element={<SingleLookup />} />
+      <Route path="lookup/history" element={<HistoryList />} />
+      <Route path="lookup/history/:id" element={<HistoryDetail />} />
       <Route path="bulk/*" element={<BulkLookup />} />
       <Route path="domain-finder" element={<DomainFinder />} />
       <Route path="extractor" element={<IocExtractor />} />

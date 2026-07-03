@@ -83,6 +83,16 @@
         "result": "Result"
       }
     },
+    "history": {
+      "empty": "No past lookups yet.",
+      "notFound": "Search not found.",
+      "headers": {
+        "ioc": "IOC",
+        "iocType": "Type",
+        "searched": "Searched",
+        "actions": "Actions"
+      }
+    },
     "serviceFetcherRow": {
       "unknownService": "Unknown Service"
     },

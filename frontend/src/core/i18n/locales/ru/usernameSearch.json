@@ -1,0 +1,76 @@
+{
+  "page": {
+    "title": "Поиск по никнейму"
+  },
+
+  "toolInfo": {
+    "poweredBy": "На основе {{tool}} v{{version}}",
+    "sitesUpdated": "{{count}} сайтов, база обновлена {{date}}",
+    "sitesBundled": "{{count}} сайтов (встроенная база)"
+  },
+
+  "form": {
+    "usernameLabel": "Никнейм",
+    "usernamePlaceholder": "например, johndoe",
+    "searchButton": "Искать",
+    "tagsLabel": "Теги сайтов",
+    "tagsPlaceholder": "Все сайты",
+    "tagsHelp": "Проверять только сайты хотя бы с одним из выбранных тегов (оставьте пустым, чтобы проверить все)"
+  },
+
+  "scan": {
+    "progress": "Проверено {{checked}} из {{total}} сайтов",
+    "checking": "проверка {{site}}",
+    "failed": "Ошибка поиска: {{error}}",
+    "completed": "Проверено сайтов: {{checked}}, найдено: {{found}}",
+    "cancelled": "Отменено после проверки {{checked}} сайтов, найдено: {{found}}",
+    "cancelButton": "Отменить"
+  },
+
+  "results": {
+    "empty": "Профили не найдены",
+    "foundCount": "Найдено профилей: {{count}}"
+  },
+
+  "history": {
+    "empty": "Пока нет истории поиска",
+    "notFound": "Поиск не найден",
+    "summary": "Проверено сайтов: {{checked}}, найдено: {{found}}",
+    "tagsUsed": "Теги",
+    "headers": {
+      "username": "Никнейм",
+      "status": "Статус",
+      "found": "Найдено",
+      "started": "Начат",
+      "actions": "Действия"
+    },
+    "status": {
+      "running": "Выполняется",
+      "completed": "Завершён",
+      "cancelled": "Отменён",
+      "failed": "Ошибка"
+    }
+  },
+
+  "settings": {
+    "title": "Настройки поиска по никнейму",
+    "description": "Настройте, как Maigret проверяет сайты при поиске по никнейму.",
+    "timeoutSeconds": "Таймаут (сек)",
+    "timeoutSecondsHelp": "Таймаут запроса к одному сайту",
+    "maxConcurrency": "Максимум параллельных запросов",
+    "maxConcurrencyHelp": "Максимальное количество сайтов, проверяемых одновременно",
+    "topSitesCount": "Количество топ-сайтов",
+    "topSitesCountHelp": "Количество сайтов из топ-рейтинга для проверки (0 = все сайты)",
+    "proxyUrl": "URL прокси",
+    "proxyUrlHelp": "Опциональный прокси для проверки сайтов (например, socks5://127.0.0.1:9050)",
+    "updateSuccess": "Настройки успешно обновлены",
+    "updateError": "Не удалось обновить настройки",
+    "dbUpdateSection": "База сайтов",
+    "autoUpdateDbDescription": "Периодически проверять обновление базы сайтов Maigret",
+    "autoUpdateIntervalHours": "Интервал проверки (часы)",
+    "dbStatusUpdated": "{{count}} сайтов, последняя проверка {{date}}",
+    "dbStatusBundled": "{{count}} сайтов (встроенная база, обновления ещё не проверялись)",
+    "refreshDbNow": "Проверить обновление сейчас",
+    "dbRefreshSuccess": "Обновление базы сайтов завершено"
+  }
+}

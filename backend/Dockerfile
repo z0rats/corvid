@@ -21,9 +21,11 @@ RUN mkdir -p /backend/data
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
     uv pip install --system "lxml[html-clean]==5.4.0"
 
-COPY ./requirements.txt /backend/requirements.txt
+COPY ./requirements.txt ./lxml-override.txt /backend/
+# --override forces lxml==5.4.0 despite maigret's declared floor of lxml>=6.0.2
+# (maigret doesn't actually use lxml directly; see lxml-override.txt).
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
-    uv pip install --system --upgrade -r /backend/requirements.txt
+    uv pip install --system --upgrade -r /backend/requirements.txt --override /backend/lxml-override.txt
 COPY ./ /backend/
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
