@@ -45,6 +45,19 @@ class APISettings(BaseSettings):
     ws_secret_token: str = Field(default="", description="WebSocket auth token (empty = no auth enforced)")
 
 
+class SecuritySettings(BaseSettings):
+    """Security-related configuration settings"""
+    model_config = SettingsConfigDict(env_prefix="SECURITY_", env_file=".env", env_file_encoding="utf-8")
+
+    allow_private_network_targets: bool = Field(
+        default=False,
+        description=(
+            "Allow SSRF-guarded outbound requests (e.g. favicon fetching) to target "
+            "private/loopback/link-local addresses. For dev/testing only."
+        ),
+    )
+
+
 class SchedulerSettings(BaseSettings):
     """Scheduler configuration settings"""
     model_config = SettingsConfigDict(env_prefix="SCHEDULER_", env_file=".env", env_file_encoding="utf-8")
@@ -66,6 +79,7 @@ class AppSettings(BaseSettings):
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     api: APISettings = Field(default_factory=APISettings)
     scheduler: SchedulerSettings = Field(default_factory=SchedulerSettings)
+    security: SecuritySettings = Field(default_factory=SecuritySettings)
 
 
 @lru_cache

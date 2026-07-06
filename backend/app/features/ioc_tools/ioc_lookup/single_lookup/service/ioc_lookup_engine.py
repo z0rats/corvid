@@ -6,7 +6,6 @@ from typing import Any
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ApplicationError
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey, get_apikeys
 from .service_registry import get_service, get_all_services, register_services
 from app.features.ioc_tools.ioc_lookup.single_lookup.service import external_api_clients as service_functions
@@ -124,17 +123,17 @@ async def lookup_ioc(service_name: str, ioc: str, ioc_type: str, db: AsyncSessio
 
     if ioc_type not in service_config.get('supported_ioc_types', []):
         logger.warning("Unsupported IOC type %s for service %s", ioc_type, service_name)
-        raise ApplicationError(
+        return _make_error_result(
+            ioc, service_name, LookupStatus.ERROR,
             f"Service '{service_name}' does not support IOC type '{ioc_type}'.",
-            status_code=400,
         )
 
     api_keys = await _get_api_keys(service_config, db)
     if api_keys is None and _requires_api_key(service_config):
         logger.error("Missing API keys for service: %s", service_name)
-        raise ApplicationError(
+        return _make_error_result(
+            ioc, service_name, LookupStatus.UNAUTHORIZED,
             f"Required API key(s) for '{service_name}' are missing or inactive.",
-            status_code=401,
         )
 
     extra_args = {'db': db} if service_config.get('requires_db') else None

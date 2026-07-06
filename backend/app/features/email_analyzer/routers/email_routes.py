@@ -1,7 +1,8 @@
 import asyncio
 import logging
+from typing import Literal
 
-from fastapi import APIRouter, File, Request, UploadFile, status
+from fastapi import APIRouter, File, Request, Response, UploadFile, status
 from pydantic import BaseModel, Field
 
 from app.core.config.rate_limit_config import limiter
@@ -11,6 +12,7 @@ from ..config.email_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
 from ..schemas.email_schemas import EmailAnalysisResponse, EmailHealthResponse
 from ..service.email_ai_analysis_service import analyze_email_body
 from ..service.email_analyzer_service import analyze_email_content
+from ..service.report_service import generate_analysis_report
 from ..utils.validation_utils import validate_file_upload
 
 logger = logging.getLogger(__name__)
@@ -115,6 +117,24 @@ async def ai_analyze_email_body(
     return {"analysis_result": result}
 
 
+@router.post(
+    "/report",
+    summary="Export an email analysis result as a report",
+    description="Render a previously computed analysis result (as returned by /analyze) as an HTML or PDF report",
+)
+async def export_analysis_report(
+    result: EmailAnalysisResponse,
+    format: Literal["html", "pdf"] = "html",
+    locale: Literal["en", "ru"] = "en",
+) -> Response:
+    content, media_type, filename = generate_analysis_report(result, format, locale)
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get(
     "/health",
     response_model=EmailHealthResponse,
@@ -125,7 +145,7 @@ async def health_check() -> EmailHealthResponse:
     return EmailHealthResponse(
         service="email_analyzer",
         status="healthy",
-        endpoints=["/api/email/analyze", "/api/email/health"],
+        endpoints=["/api/email/analyze", "/api/email/report", "/api/email/health"],
         supported_formats=ALLOWED_FILE_EXTENSIONS,
         max_file_size=f"{MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB",
     )

@@ -8,6 +8,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service.ioc_lookup_engine i
     lookup_ioc, get_all_service_configs
 )
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
+from app.features.ioc_tools.ioc_lookup.schemas.lookup_schemas import LookupStatus
 from app.features.ioc_tools.ioc_lookup.config.rate_limiting_config import (
     get_service_rate_limit,
     get_concurrency_limit,
@@ -45,30 +46,35 @@ async def run_single_lookup_with_rate_limit(
     db: AsyncSession,
     semaphore: asyncio.Semaphore
 ) -> dict[str, Any]:
-    """Execute a single IOC lookup with rate limiting and concurrency control"""
+    """Execute a single IOC lookup with rate limiting and concurrency control.
+
+    Always returns a dict with a "status" key set to a `LookupStatus` value, so
+    callers can distinguish "no key" / "rate limited" / "real error" / "success"
+    without parsing message text.
+    """
     async with semaphore:
         try:
             service_config = get_service(service_name)
             if not service_config:
                 logger.warning("Service not configured: %s", service_name)
-                return {"error": f"Service '{service_name}' not configured"}
+                return {"status": LookupStatus.ERROR.value, "error": f"Service '{service_name}' not configured"}
 
             if ioc_type not in service_config.get('supported_ioc_types', []):
                 logger.debug("Service %s doesn't support IOC type %s", service_name, ioc_type)
-                return {"error": f"Service '{service_name}' doesn't support {ioc_type}"}
+                return {"status": LookupStatus.ERROR.value, "error": f"Service '{service_name}' doesn't support {ioc_type}"}
 
             await apply_rate_limit(service_name)
 
             result = await lookup_ioc(service_name, ioc, ioc_type, db)
 
             logger.debug("Completed lookup for %s: %s", service_name, ioc)
-            if result.error:
-                return {"error": result.status.value, "message": result.error}
-            return result.data
+            if result.status != LookupStatus.SUCCESS:
+                return {"status": result.status.value, "error": result.error}
+            return {"status": LookupStatus.SUCCESS.value, "data": result.data}
 
         except Exception as e:
             logger.error("Exception in %s lookup for %s: %s", service_name, ioc, str(e), exc_info=True)
-            return {"error": f"Exception in {service_name} lookup: {str(e)}"}
+            return {"status": LookupStatus.ERROR.value, "error": str(e)}
 
 
 async def process_bulk_lookups_with_rate_limiting(
@@ -98,6 +104,7 @@ async def process_bulk_lookups_with_rate_limiting(
     if not services_to_query:
         logger.warning("No services available for bulk lookup")
         yield {
+            "status": LookupStatus.ERROR.value,
             "error": "No selected services are available or enabled for bulk lookup.",
             "service": "system",
             "available_services": [s.key for s in all_service_configs if s.is_configured]
@@ -117,6 +124,7 @@ async def process_bulk_lookups_with_rate_limiting(
             yield {
                 "ioc": ioc_value,
                 "service": "system",
+                "status": LookupStatus.ERROR.value,
                 "error": "Unknown IOC type"
             }
             continue
@@ -138,23 +146,27 @@ async def process_bulk_lookups_with_rate_limiting(
     for ioc_value, service_name, task in tasks:
         try:
             result = await task
-            if isinstance(result, dict) and 'error' in result:
+            status_value = result.get("status", LookupStatus.ERROR.value)
+            if status_value == LookupStatus.SUCCESS.value:
                 yield {
                     "ioc": ioc_value,
                     "service": service_name,
-                    "error": result.get("message", result.get("error", "Service error"))
+                    "status": status_value,
+                    "data": result.get("data")
                 }
             else:
                 yield {
                     "ioc": ioc_value,
                     "service": service_name,
-                    "data": result
+                    "status": status_value,
+                    "error": result.get("error", "Service error")
                 }
         except Exception as e:
             logger.error("Error awaiting task for %s/%s: %s", ioc_value, service_name, str(e))
             yield {
                 "ioc": ioc_value,
                 "service": service_name,
+                "status": LookupStatus.ERROR.value,
                 "error": str(e)
             }
 

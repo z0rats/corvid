@@ -25,7 +25,6 @@ class LookupStatus(str, Enum):
     """Status of a lookup operation"""
     SUCCESS = "success"
     ERROR = "error"
-    NOT_FOUND = "not_found"
     RATE_LIMITED = "rate_limited"
     UNAUTHORIZED = "unauthorized"
     SERVICE_UNAVAILABLE = "service_unavailable"

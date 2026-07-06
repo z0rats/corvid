@@ -1,6 +1,7 @@
 import logging
+from typing import Literal
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
@@ -15,6 +16,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.schemas.lookup_history_sche
     SearchDetail,
     SearchSummary,
 )
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.report_service import generate_search_report
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,30 @@ async def read_search(search_id: int, db: ReadSessionDep) -> SearchDetail:
     if not search:
         raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search not found", error_code="LOOKUP_HISTORY_NOT_FOUND")
     return search
+
+
+@router.get(
+    "/{search_id}/report",
+    summary="Export a single-IOC lookup search as a report",
+    description="Download a past search as an HTML or PDF report",
+    responses={404: {"description": "Search not found"}},
+)
+async def export_search_report(
+    search_id: int,
+    db: ReadSessionDep,
+    format: Literal["html", "pdf"] = "html",
+    locale: Literal["en", "ru"] = "en",
+) -> Response:
+    search = await get_search_with_results(db, search_id)
+    if not search:
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search not found", error_code="LOOKUP_HISTORY_NOT_FOUND")
+
+    content, media_type, filename = generate_search_report(search, format, locale)
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.delete(
