@@ -2,11 +2,15 @@ import asyncio
 import logging
 import os
 import uuid
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 from bs4 import BeautifulSoup
 from PIL import Image, ImageStat
 import io
+
+from app.core.config.settings import settings
+from app.core.security.ssrf_guard import validate_public_url
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +81,24 @@ class FaviconDownloader:
             logger.error("Error saving favicon for %s: %s", site_url, e)
             return False, None, str(e)
 
+    async def _safe_get(self, url: str) -> httpx.Response:
+        """GET `url` after validating and pinning it to a non-private IP.
+
+        `feed.url` (and every URL derived from a page's HTML/manifest) is user-supplied,
+        so this is an SSRF-prone code path. We resolve the hostname ourselves, reject
+        private/loopback/link-local/metadata addresses, and connect directly to the
+        vetted IP (Host header + SNI kept as the original hostname) instead of letting
+        httpx re-resolve the hostname later, which would reopen a DNS-rebinding gap.
+        """
+        url = str(url)
+        parsed = urlsplit(url)
+        ip = validate_public_url(url, allow_private=settings.security.allow_private_network_targets)
+        pinned_host = f"[{ip}]" if ":" in ip else ip
+        pinned_netloc = f"{pinned_host}:{parsed.port}" if parsed.port else pinned_host
+        pinned_url = urlunsplit((parsed.scheme, pinned_netloc, parsed.path or '/', parsed.query, parsed.fragment))
+        extensions = {"sni_hostname": parsed.hostname} if parsed.scheme == "https" else {}
+        return await self._client.get(pinned_url, headers={"Host": parsed.hostname}, extensions=extensions)
+
     async def _download(self, site_url: str) -> tuple[bool, bytes | None, str | None]:
         """Try several strategies to locate and download favicon image data."""
         parsed = httpx.URL(site_url)
@@ -116,7 +138,7 @@ class FaviconDownloader:
     async def _fetch_from_html(self, url: str) -> str | None:
         """Parse HTML to find <link rel="icon"> href."""
         try:
-            resp = await self._client.get(url)
+            resp = await self._safe_get(url)
             if resp.status_code != 200 or 'html' not in resp.headers.get('Content-Type', ''):
                 return None
             soup = BeautifulSoup(resp.text, 'lxml')
@@ -131,7 +153,7 @@ class FaviconDownloader:
     async def _fetch_manifest_from_html(self, url: str) -> str | None:
         """Parse HTML to find <link rel="manifest"> href and return its JSON 'src'."""
         try:
-            resp = await self._client.get(url)
+            resp = await self._safe_get(url)
             if resp.status_code != 200 or 'html' not in resp.headers.get('Content-Type', ''):
                 return None
             soup = BeautifulSoup(resp.text, 'lxml')
@@ -139,7 +161,7 @@ class FaviconDownloader:
             if tag and tag.get('href'):
                 manifest_url = self._normalize_url(tag['href'], url)
                 # fetch manifest and pick largest icon
-                resp2 = await self._client.get(manifest_url)
+                resp2 = await self._safe_get(manifest_url)
                 if resp2.status_code == 200 and 'json' in resp2.headers.get('Content-Type', ''):
                     doc = resp2.json()
                     icons = doc.get('icons', [])
@@ -158,7 +180,7 @@ class FaviconDownloader:
         """Fetch /site.webmanifest at root and return largest icon's src."""
         manifest_url = f"{parsed_url.scheme}://{parsed_url.host}/site.webmanifest"
         try:
-            resp = await self._client.get(manifest_url)
+            resp = await self._safe_get(manifest_url)
             if resp.status_code == 200 and 'json' in resp.headers.get('Content-Type', ''):
                 doc = resp.json()
                 icons = doc.get('icons', [])
@@ -184,7 +206,7 @@ class FaviconDownloader:
     async def _try_fetch_icon(self, icon_url: str, base: str) -> tuple[bool, bytes | None]:
         """Download, validate, and process an icon URL."""
         try:
-            resp = await self._client.get(icon_url)
+            resp = await self._safe_get(icon_url)
             if resp.status_code != 200:
                 logger.debug("HTTP %s at %s", resp.status_code, icon_url)
                 return False, None

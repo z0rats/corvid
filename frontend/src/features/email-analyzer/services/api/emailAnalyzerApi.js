@@ -11,5 +11,13 @@ export const emailAnalyzerApi = {
     
     const response = await api.post('/api/email/analyze', formData, config);
     return response.data;
-  }
+  },
+
+  async exportReport(result, format, locale) {
+    const response = await api.post('/api/email/report', result, {
+      params: { format, locale },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 };

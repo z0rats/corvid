@@ -8,9 +8,11 @@ from app.core.dependencies import ReadSessionDep
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.ioc_lookup_engine import (
     lookup_ioc, get_all_service_configs, build_service_definitions,
 )
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
 from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import determine_ioc_type, IOC_TYPES
 from app.features.ioc_tools.ioc_lookup.schemas.lookup_schemas import (
     LookupResult,
+    LookupStatus,
     ServicesResponse,
     ServiceDefinitionsResponse,
     IOCTypesResponse,
@@ -44,10 +46,28 @@ async def unified_lookup(
     if detected_ioc_type == IOC_TYPES['UNKNOWN']:
         raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or unsupported IOC format", error_code="IOC_INVALID_FORMAT")
 
+    service_config = get_service(service)
+    if service_config is None:
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Service '{service}' not found.", error_code="IOC_SERVICE_NOT_FOUND")
+
+    if detected_ioc_type not in service_config.get('supported_ioc_types', []):
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Service '{service}' does not support IOC type '{detected_ioc_type}'.",
+            error_code="IOC_UNSUPPORTED_TYPE",
+        )
+
     result = await lookup_ioc(service, ioc, detected_ioc_type, db)
 
     if result is None:
         raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Service '{service}' not found.", error_code="IOC_SERVICE_NOT_FOUND")
+
+    if result.status == LookupStatus.UNAUTHORIZED:
+        raise AppHTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=result.error or f"Required API key(s) for '{service}' are missing or inactive.",
+            error_code="IOC_UNAUTHORIZED",
+        )
 
     return result
 
