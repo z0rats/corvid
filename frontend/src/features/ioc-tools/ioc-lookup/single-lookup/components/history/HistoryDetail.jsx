@@ -10,13 +10,11 @@ import LinearProgress from '@mui/material/LinearProgress';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/Download';
-
-const EXPORT_FORMATS = ['html', 'pdf'];
-
 import HistoryResultTable from './HistoryResultTable';
 import { lookupHistoryApi } from '../../services/api/lookupHistoryApi';
 import { createLogger } from '../../../../../../core/utils/logger';
 
+const EXPORT_FORMATS = ['html', 'pdf'];
 const logger = createLogger('SingleLookupHistoryDetail');
 
 export default function HistoryDetail() {
