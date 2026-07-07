@@ -25,7 +25,7 @@ const ExampleCard = ({ icon, title, subtitle, description, examples }) => (
     <Card variant="outlined">
       <CardHeader avatar={icon} title={title} subheader={subtitle} />
       <CardContent>
-        <Typography variant="body2" paragraph>
+        <Typography variant="body2" sx={{ mb: 2 }}>
           {description}
         </Typography>
         <Box sx={{ fontFamily: 'monospace', fontSize: '0.875rem', p: 1, borderRadius: 1 }}>

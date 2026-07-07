@@ -98,9 +98,9 @@ export default function PulsediveDetails({ result, ioc }) {
               notAvailable={notAvailable}
               secondary={
                 <Box>
-                  <Typography variant="caption" display="block">{t('providers.pulsedive.added')} {formatDate(data.stamp_added)}</Typography>
-                  <Typography variant="caption" display="block">{t('providers.pulsedive.updated')} {formatDate(data.stamp_updated)}</Typography>
-                  <Typography variant="caption" display="block">{t('providers.pulsedive.lastSeen')} {formatDate(data.stamp_seen)}</Typography>
+                  <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.added')} {formatDate(data.stamp_added)}</Typography>
+                  <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.updated')} {formatDate(data.stamp_updated)}</Typography>
+                  <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.lastSeen')} {formatDate(data.stamp_seen)}</Typography>
                 </Box>
               }
             />
@@ -125,9 +125,9 @@ export default function PulsediveDetails({ result, ioc }) {
                 notAvailable={notAvailable}
                 secondary={
                   <Box>
-                    <Typography variant="caption" display="block">{t('providers.pulsedive.country')} {getProperty('geo.country')} ({getProperty('geo.countrycode')})</Typography>
-                    <Typography variant="caption" display="block">{t('providers.pulsedive.city')} {getProperty('geo.city')}</Typography>
-                    <Typography variant="caption" display="block">{t('providers.pulsedive.organization')} {getProperty('geo.org')}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.country')} {getProperty('geo.country')} ({getProperty('geo.countrycode')})</Typography>
+                    <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.city')} {getProperty('geo.city')}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.organization')} {getProperty('geo.org')}</Typography>
                   </Box>
                 }
               />
@@ -141,8 +141,8 @@ export default function PulsediveDetails({ result, ioc }) {
                 notAvailable={notAvailable}
                 secondary={
                   <Box>
-                    <Typography variant="caption" display="block">{t('providers.pulsedive.contentType')} {getProperty('http.++content-type')}</Typography>
-                    <Typography variant="caption" display="block">{t('providers.pulsedive.statusCode')} {getProperty('http.++code')}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.contentType')} {getProperty('http.++content-type')}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block' }}>{t('providers.pulsedive.statusCode')} {getProperty('http.++code')}</Typography>
                   </Box>
                 }
               />

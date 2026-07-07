@@ -191,7 +191,7 @@ export default function ShodanDetails({ result, ioc }) {
                 <CollapsibleSection title={t('providers.shodan.domainsAndHostnames')} icon={DomainIcon} defaultExpanded>
                 {result.domains?.length > 0 && (
                     <Box sx={{ mb: result.hostnames?.length > 0 ? 1: 0, mt: 0.5 }}>
-                    <Typography variant="caption" color="text.secondary" display="block">{t('providers.shodan.domainsCount', { count: result.domains.length })}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{t('providers.shodan.domainsCount', { count: result.domains.length })}</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {result.domains.map((domain) => ( <Chip key={`dom-${domain}`} label={domain} size="small" variant="outlined" /> ))}
                     </Box>
@@ -200,7 +200,7 @@ export default function ShodanDetails({ result, ioc }) {
 
                 {result.hostnames?.length > 0 && (
                     <Box sx={{mt: 0.5}}>
-                    <Typography variant="caption" color="text.secondary" display="block">{t('providers.shodan.hostnamesCount', { count: result.hostnames.length })}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{t('providers.shodan.hostnamesCount', { count: result.hostnames.length })}</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {result.hostnames.map((hostname) => ( <Chip key={`host-${hostname}`} label={hostname} size="small" variant="outlined" /> ))}
                     </Box>

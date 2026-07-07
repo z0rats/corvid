@@ -57,6 +57,13 @@
       "newSearch": "New Search",
       "history": "History",
       "settings": "Settings"
+    },
+
+    "emailSearch": "Email Search",
+    "emailSearchTabs": {
+      "newSearch": "New Search",
+      "history": "History",
+      "settings": "Settings"
     }
   },
 
@@ -66,7 +73,8 @@
     "switchToLightMode": "Switch to light mode",
     "switchToDarkMode": "Switch to dark mode",
     "toggleDarkMode": "Toggle dark mode",
-    "settings": "Settings"
+    "settings": "Settings",
+    "more": "More"
   },
 
   "settings": {

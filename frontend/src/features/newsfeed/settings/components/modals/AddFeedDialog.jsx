@@ -111,13 +111,13 @@ export default function AddFeedDialog({ open, onClose, onSubmit, processIconFile
                 sx={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (
-              <Typography variant="caption" color="text.secondary" textAlign="center">
+              <Typography variant="caption" color="text.secondary" align="center">
                 {t('settings.feeds.dialog.dropIcon')}
               </Typography>
             )}
           </Box>
         </Box>
-        <Typography variant="caption" color="text.secondary" display="block" textAlign="center" sx={{ mb: 2 }}>
+        <Typography variant="caption" color="text.secondary" align="center" sx={{ display: 'block', mb: 2 }}>
           {t('settings.feeds.dialog.iconOptionalHelper')}
         </Typography>
 

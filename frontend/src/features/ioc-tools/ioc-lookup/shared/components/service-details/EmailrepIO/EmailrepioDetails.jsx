@@ -139,7 +139,7 @@ export default function EmailrepioDetails({ result, ioc }) {
                         {t('providers.emailrepio.onlineProfiles')}
                     </Typography>
                 </Grid>
-                <Typography variant="caption" color="text.disabled" display="block" mb={1}>
+                <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }} mb={1}>
                     {t('providers.emailrepio.onlineProfilesHelper')}
                 </Typography>
                 {details.profiles && details.profiles.length > 0 ? (

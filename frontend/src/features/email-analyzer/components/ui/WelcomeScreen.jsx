@@ -14,7 +14,7 @@ export default function WelcomeScreen() {
         {t('welcomeScreen.title')}
       </Typography>
       <Box sx={{ mb: 4 }}>
-        <Typography paragraph>
+        <Typography sx={{ mb: 2 }}>
           {t('welcomeScreen.description1')}
         </Typography>
         <Typography>

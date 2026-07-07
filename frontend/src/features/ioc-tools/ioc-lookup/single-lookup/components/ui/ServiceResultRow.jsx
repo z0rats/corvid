@@ -110,7 +110,7 @@ function ServiceResultRow({
 
     return (
       <Box sx={{ p: 2, overflowX: 'auto' }}>
-        <Typography variant="caption" display="block" gutterBottom color="text.secondary">{t('singleLookup.serviceResultRow.rawJsonLabel')}</Typography>
+        <Typography variant="caption" sx={{ display: 'block' }} gutterBottom color="text.secondary">{t('singleLookup.serviceResultRow.rawJsonLabel')}</Typography>
         <Box
           component="pre"
           sx={{

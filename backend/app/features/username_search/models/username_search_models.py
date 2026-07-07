@@ -13,6 +13,7 @@ class MaigretSearch(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(100), index=True)
+    source: Mapped[str] = mapped_column(String(30), default="maigret", server_default="maigret", index=True)
     status: Mapped[str] = mapped_column(String(20), default="running", index=True)
     total_sites_checked: Mapped[int] = mapped_column(Integer, default=0)
     found_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -40,5 +41,7 @@ class MaigretSiteResult(Base):
     site_name: Mapped[str] = mapped_column(String(200))
     url_user: Mapped[str] = mapped_column(String(2000))
     http_status: Mapped[int | None] = mapped_column(Integer)
+    extra: Mapped[dict | None] = mapped_column(JSON)
+    """Source-specific extras not worth their own columns (e.g. social-analyzer's match rate/title)."""
 
     search: Mapped["MaigretSearch"] = relationship(back_populates="site_results")

@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
 import { useUsernameSearchSettings } from '../hooks/api/useUsernameSearchSettings';
+import { useSocialAnalyzerSettings } from '../hooks/api/useSocialAnalyzerSettings';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
 import AppSnackbar from '../../../core/components/ui/AppSnackbar';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
@@ -22,8 +23,42 @@ const logger = createLogger('UsernameSearchSettings');
 export default function Settings() {
   const { t } = useTranslation('usernameSearch');
   const { config, loading, saving, updateConfig } = useUsernameSearchSettings();
+  const {
+    config: saConfig,
+    loading: saLoading,
+    saving: saSaving,
+    updateConfig: updateSaConfig,
+    setConfig: setSaConfig,
+  } = useSocialAnalyzerSettings();
   const { notification, showSuccess, showError, hideNotification } = useNotification();
   const [refreshing, setRefreshing] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const handleSaChange = useCallback(async (field, value) => {
+    const result = await updateSaConfig({ [field]: value });
+    if (result.success) {
+      showSuccess(t('settings.updateSuccess'));
+    } else {
+      handleError(result.error);
+    }
+  }, [updateSaConfig, showSuccess, t]);
+
+  const handleCheckUpdate = useCallback(async () => {
+    setCheckingUpdate(true);
+    try {
+      const info = await usernameSearchApi.checkSocialAnalyzerUpdate();
+      setSaConfig((prev) => ({
+        ...prev,
+        latest_pypi_version: info.latest_version,
+        pypi_checked_at: new Date().toISOString(),
+      }));
+      showSuccess(t('settings.pypiCheckSuccess'));
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }, [setSaConfig, showSuccess, t]);
 
   const handleError = useCallback((error) => {
     logger.error('Settings error:', error);
@@ -155,6 +190,69 @@ export default function Settings() {
         >
           {t('settings.refreshDbNow')}
         </Button>
+      </Card>
+
+      <Card sx={{ p: 3, maxWidth: 480, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>{t('settings.saTitle')}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t('settings.saDescription')}
+        </Typography>
+
+        <Divider sx={{ my: 2 }} />
+
+        {saLoading ? (
+          <Skeleton variant="rectangular" height={100} />
+        ) : (
+          <>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                type="number"
+                label={t('settings.saTimeoutSeconds')}
+                helperText={t('settings.saTimeoutSecondsHelp')}
+                value={saConfig.timeout_seconds}
+                onChange={(e) => handleSaChange('timeout_seconds', Number(e.target.value))}
+                disabled={saSaving}
+                size="small"
+                slotProps={{ htmlInput: { min: 0, max: 120 } }}
+              />
+              <TextField
+                type="number"
+                label={t('settings.topSitesCount')}
+                helperText={t('settings.topSitesCountHelp')}
+                value={saConfig.top_sites_count}
+                onChange={(e) => handleSaChange('top_sites_count', Number(e.target.value))}
+                disabled={saSaving}
+                size="small"
+                slotProps={{ htmlInput: { min: 0 } }}
+              />
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            <Typography variant="subtitle1" gutterBottom>{t('settings.saVersionSection')}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {saConfig.latest_pypi_version
+                ? t('settings.saVersionStatus', {
+                    latest: saConfig.latest_pypi_version,
+                    date: saConfig.pypi_checked_at ? new Date(saConfig.pypi_checked_at).toLocaleString() : '',
+                  })
+                : t('settings.saVersionNeverChecked')}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              {t('settings.saUpdateRequiresRebuild')}
+            </Typography>
+
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={checkingUpdate ? <CircularProgress size={16} /> : <RefreshIcon />}
+              onClick={handleCheckUpdate}
+              disabled={checkingUpdate}
+            >
+              {t('settings.saCheckUpdate')}
+            </Button>
+          </>
+        )}
       </Card>
 
       <AppSnackbar

@@ -95,7 +95,7 @@ export default function TemplateDetailPanel({
         </Box>
 
         {template.description && (
-          <Typography variant="body2" color="text.secondary" paragraph sx={{ mt: 1 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
             {template.description}
           </Typography>
         )}

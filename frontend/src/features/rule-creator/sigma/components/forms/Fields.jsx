@@ -29,7 +29,7 @@ export default function Fields({ fields, handleFieldsChange }) {
   return (
     <>
       {/* Info text */}
-      <Typography variant="caption" display="block" gutterBottom>
+      <Typography variant="caption" sx={{ display: 'block' }} gutterBottom>
         {t('sigma.fields.helpText')}
       </Typography>
 

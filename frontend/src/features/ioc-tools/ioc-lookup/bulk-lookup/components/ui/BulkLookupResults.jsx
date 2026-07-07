@@ -51,7 +51,7 @@ export default function BulkLookupResults({
     return (
       <Box sx={{ width: '100%', mb: 2 }}>
         <LinearProgress variant="determinate" value={progress} />
-        <Typography variant="caption" display="block" textAlign="center">
+        <Typography variant="caption" sx={{ display: 'block' }} align="center">
           {t('bulkLookup.results.progress', { percent: Math.round(progress) })}
         </Typography>
       </Box>

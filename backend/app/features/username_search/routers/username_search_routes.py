@@ -9,8 +9,17 @@ from fastapi.responses import StreamingResponse
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
+from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
+    get_social_analyzer_config,
+    record_pypi_check,
+)
 from app.core.settings.username_search.crud.username_search_settings_crud import get_username_search_config
 from app.features.username_search.config.maigret_config import get_available_tags, get_maigret_database
+from app.features.username_search.config.social_analyzer_config import (
+    fetch_latest_pypi_version,
+    get_bundled_site_count,
+    get_installed_version as get_social_analyzer_version,
+)
 from app.features.username_search.crud.username_search_crud import (
     delete_search_run,
     get_search_run_with_results,
@@ -29,7 +38,11 @@ from app.features.username_search.service.report_service import (
     has_scan_results,
     load_scan_results,
 )
-from app.features.username_search.service.username_search_service import cancel_scan, run_scan
+from app.features.username_search.service.social_analyzer_service import (
+    cancel_scan as cancel_social_analyzer_scan,
+    run_scan as run_social_analyzer_scan,
+)
+from app.features.username_search.service.username_search_service import cancel_scan as cancel_maigret_scan, run_scan as run_maigret_scan
 
 logger = logging.getLogger(__name__)
 
@@ -39,20 +52,23 @@ router = APIRouter(prefix="/api/username-search", tags=["Username Search"])
 @router.post(
     "/scan",
     summary="Start a username search",
-    description="Start a Maigret username search, streaming live per-site progress as Server-Sent Events",
+    description="Start a username search (Maigret or social-analyzer), streaming progress as Server-Sent Events",
 )
 @limiter.limit("3/minute")
 async def start_scan(request: Request, scan_request: ScanRequest):
     """Start a new username search and stream its progress"""
-    logger.info("Starting username search for '%s'", scan_request.username)
+    logger.info("Starting %s username search for '%s'", scan_request.source, scan_request.username)
 
     queue: asyncio.Queue = asyncio.Queue()
-    asyncio.create_task(run_scan(
-        scan_request.username,
-        queue,
-        tags=scan_request.tags,
-        excluded_tags=scan_request.excluded_tags,
-    ))
+    if scan_request.source == "social_analyzer":
+        asyncio.create_task(run_social_analyzer_scan(scan_request.username, queue))
+    else:
+        asyncio.create_task(run_maigret_scan(
+            scan_request.username,
+            queue,
+            tags=scan_request.tags,
+            excluded_tags=scan_request.excluded_tags,
+        ))
 
     async def event_stream():
         while True:
@@ -80,8 +96,8 @@ async def start_scan(request: Request, scan_request: ScanRequest):
     responses={404: {"description": "No running search with that ID"}},
 )
 async def cancel_scan_endpoint(search_id: int) -> None:
-    """Cancel a running scan"""
-    cancelled = cancel_scan(search_id)
+    """Cancel a running scan, regardless of which source is running it"""
+    cancelled = cancel_maigret_scan(search_id) or cancel_social_analyzer_scan(search_id)
     if not cancelled:
         raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="USERNAME_SEARCH_NOT_RUNNING")
     logger.info("Cancellation requested for username search run %s", search_id)
@@ -100,30 +116,45 @@ async def read_available_tags() -> list[str]:
 
 @router.get(
     "/info",
-    response_model=UsernameSearchInfo,
-    summary="Get search tool info",
-    description="Get the underlying search tool's name, version, and site database freshness",
+    response_model=list[UsernameSearchInfo],
+    summary="Get search tools info",
+    description="Get each underlying search tool's name, version, and site database freshness",
 )
-async def read_info(db: ReadSessionDep) -> UsernameSearchInfo:
-    """Get info about the search tool and its site database"""
-    config = await get_username_search_config(db)
-    db_site_count = config.db_site_count or len(get_maigret_database().sites)
-    return UsernameSearchInfo(
-        tool="maigret",
-        version=maigret.__version__,
-        site_count=db_site_count,
-        db_last_updated_at=config.db_last_updated_at,
+async def read_info(db: ReadSessionDep) -> list[UsernameSearchInfo]:
+    """Get info about both search tools and their site databases"""
+    maigret_config = await get_username_search_config(db)
+    maigret_site_count = maigret_config.db_site_count or len(get_maigret_database().sites)
+
+    sa_config = await get_social_analyzer_config(db)
+    sa_update_available = (
+        bool(sa_config.latest_pypi_version) and sa_config.latest_pypi_version != get_social_analyzer_version()
     )
+
+    return [
+        UsernameSearchInfo(
+            tool="maigret",
+            version=maigret.__version__,
+            site_count=maigret_site_count,
+            db_last_updated_at=maigret_config.db_last_updated_at,
+        ),
+        UsernameSearchInfo(
+            tool="social_analyzer",
+            version=get_social_analyzer_version(),
+            site_count=get_bundled_site_count(),
+            latest_version=sa_config.latest_pypi_version,
+            update_available=sa_update_available if sa_config.latest_pypi_version else None,
+        ),
+    ]
 
 
 @router.post(
     "/refresh-db",
     response_model=UsernameSearchInfo,
-    summary="Refresh the site database now",
+    summary="Refresh the Maigret site database now",
     description="Force-check for and download a Maigret site database update, bypassing the scheduled interval",
 )
 async def refresh_db_endpoint(db: SessionDep) -> UsernameSearchInfo:
-    """Manually trigger a site database refresh"""
+    """Manually trigger a Maigret site database refresh"""
     site_count = await refresh_database(db, force=True)
     config = await get_username_search_config(db)
     return UsernameSearchInfo(
@@ -131,6 +162,27 @@ async def refresh_db_endpoint(db: SessionDep) -> UsernameSearchInfo:
         version=maigret.__version__,
         site_count=site_count,
         db_last_updated_at=config.db_last_updated_at,
+    )
+
+
+@router.post(
+    "/social-analyzer/check-update",
+    response_model=UsernameSearchInfo,
+    summary="Check PyPI for a social-analyzer update",
+    description="Check PyPI for the latest published social-analyzer version. Doesn't install anything - "
+    "a newer version still requires a container rebuild, since site data ships inside the pip package.",
+)
+async def check_social_analyzer_update(db: SessionDep) -> UsernameSearchInfo:
+    """Manually check PyPI for a newer social-analyzer release"""
+    latest_version = await fetch_latest_pypi_version()
+    config = await record_pypi_check(db, latest_version)
+    installed_version = get_social_analyzer_version()
+    return UsernameSearchInfo(
+        tool="social_analyzer",
+        version=installed_version,
+        site_count=get_bundled_site_count(),
+        latest_version=config.latest_pypi_version,
+        update_available=bool(config.latest_pypi_version) and config.latest_pypi_version != installed_version,
     )
 
 

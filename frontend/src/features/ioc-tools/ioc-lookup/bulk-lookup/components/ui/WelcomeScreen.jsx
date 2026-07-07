@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
         <Typography variant="h6" component="h1" gutterBottom>
           {t('bulkLookup.welcomeScreen.title')}
         </Typography>
-        <Typography paragraph>
+        <Typography sx={{ mb: 2 }}>
           {t('bulkLookup.welcomeScreen.intro')}
         </Typography>
         <Typography>

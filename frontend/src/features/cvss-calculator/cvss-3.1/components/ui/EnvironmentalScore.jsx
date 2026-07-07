@@ -65,7 +65,7 @@ export default function EnvironmentalScore() {
       <AccordionDetails sx={{ px: 1, py: 1 }}>
         <Grid container spacing={2} sx={{ alignItems: "stretch" }}>
           <Box sx={{ m: 1, p: 1, flex: 1, minWidth: 0 }}>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body1" sx={{ mb: 2 }}>
               {t('cvss31.environmental.description')}
             </Typography>
           </Box>

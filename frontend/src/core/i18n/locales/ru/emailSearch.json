@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "Поиск по email",
+    "description": "Найдите, на каких почтовых провайдерах зарегистрирован никнейм, с помощью mailcat."
+  },
+
+  "toolInfo": {
+    "poweredBy": "На основе {{tool}} v{{version}}",
+    "providerCount": "проверяется провайдеров: {{count}}",
+    "updateAvailable": "доступно обновление: v{{version}}"
+  },
+
+  "form": {
+    "usernameLabel": "Никнейм",
+    "usernamePlaceholder": "например, johndoe",
+    "searchButton": "Искать"
+  },
+
+  "scan": {
+    "progress": "Проверено {{checked}} из {{total}} провайдеров",
+    "checking": "проверка {{provider}}",
+    "failed": "Ошибка поиска: {{error}}",
+    "completed": "Проверено провайдеров: {{checked}}, найдено: {{found}}",
+    "cancelled": "Отменено после проверки {{checked}} провайдеров, найдено: {{found}}",
+    "cancelButton": "Отменить"
+  },
+
+  "results": {
+    "empty": "Регистрация не найдена ни у одного провайдера",
+    "foundCount": "Найдено провайдеров: {{count}}"
+  },
+
+  "history": {
+    "empty": "Пока нет истории поиска",
+    "notFound": "Поиск не найден",
+    "summary": "Проверено провайдеров: {{checked}}, найдено: {{found}}",
+    "headers": {
+      "username": "Никнейм",
+      "status": "Статус",
+      "found": "Найдено",
+      "started": "Начат",
+      "actions": "Действия"
+    },
+    "status": {
+      "running": "Выполняется",
+      "completed": "Завершён",
+      "cancelled": "Отменён",
+      "failed": "Ошибка"
+    }
+  },
+
+  "settings": {
+    "title": "Настройки поиска по email",
+    "description": "Настройте, как mailcat проверяет почтовых провайдеров при поиске по никнейму.",
+    "timeoutSeconds": "Таймаут (сек)",
+    "timeoutSecondsHelp": "Таймаут запроса к одному провайдеру",
+    "maxConcurrency": "Максимум параллельных запросов",
+    "maxConcurrencyHelp": "Максимальное количество провайдеров, проверяемых одновременно",
+    "proxyUrl": "URL прокси",
+    "proxyUrlHelp": "Опциональный прокси для проверки провайдеров (например, socks5://127.0.0.1:9050)",
+    "updateSuccess": "Настройки успешно обновлены",
+    "updateError": "Не удалось обновить настройки",
+    "optionalCheckersSection": "Дополнительные проверки",
+    "useTorDescription": "Направлять проверки через локальный Tor SOCKS5-прокси (127.0.0.1:9050) вместо прямого соединения",
+    "enableSmtpChecksDescription": "Включить проверки через SMTP (Gmail, Yandex, mail.de) - требуют исходящий TCP/25, обычно заблокирован без Tor или прокси",
+    "enableHeadlessChecksDescription": "Включить проверки через headless Chromium (Fastmail, int.pl, onet.pl) - при первом использовании скачивается бинарник Chromium",
+    "versionSection": "Версия пакета",
+    "versionStatus": "Последняя версия на PyPI: v{{latest}} (проверено {{date}})",
+    "versionNeverChecked": "Проверка обновлений на PyPI ещё не выполнялась",
+    "updateRequiresRebuild": "mailcat-osint устанавливается из PyPI - установка новой версии потребует пересборки backend-контейнера, эта проверка только показывает, что доступно",
+    "checkUpdate": "Проверить обновления на PyPI",
+    "pypiCheckSuccess": "Проверка PyPI выполнена успешно"
+  }
+}

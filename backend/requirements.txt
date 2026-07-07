@@ -22,6 +22,8 @@ aiohttp-socks==0.11.0
     # via maigret
 aiosignal==1.4.0
     # via aiohttp
+aiosmtplib==5.1.2
+    # via mailcat-osint
 aiosqlite==0.22.1
     # via -r requirements.in
 alembic==1.18.4
@@ -52,6 +54,8 @@ anyio==4.14.0
     #   sse-starlette
     #   starlette
     #   watchfiles
+appdirs==1.4.4
+    # via pyppeteer
 apscheduler==3.11.2
     # via -r requirements.in
 arabic-reshaper==3.0.1
@@ -79,7 +83,9 @@ attrs==26.1.0
     #   cyclopts
     #   jsonschema
     #   jsonschema-path
+    #   outcome
     #   referencing
+    #   trio
 authlib==1.7.2
     # via fastmcp-slim
 beartype==0.22.9
@@ -88,6 +94,7 @@ beautifulsoup4==4.15.0
     # via
     #   -r requirements.in
     #   newspaper4k
+    #   social-analyzer
 blinker==1.9.0
     # via flask
 boto3==1.43.36
@@ -98,6 +105,8 @@ botocore==1.43.36
     #   s3transfer
 brotli==1.2.0
     # via newspaper4k
+bs4==0.0.2
+    # via mailcat-osint
 cachebox==5.2.3
     # via deepdiff
 cachetools==7.1.4
@@ -109,6 +118,7 @@ certifi==2026.6.17
     #   httpcore
     #   httpx
     #   requests
+    #   selenium
     #   sentry-sdk
 cffi==2.0.0
     # via cryptography
@@ -133,6 +143,8 @@ cryptography==49.0.0
     #   google-auth
     #   joserfc
     #   pyjwt
+cssselect==1.4.0
+    # via pyquery
 cssselect2==0.9.0
     # via svglib
 curl-cffi==0.15.0
@@ -177,6 +189,8 @@ executing==2.2.1
     # via logfire
 exifread==3.5.1
     # via -r requirements.in
+fake-useragent==2.2.0
+    # via requests-html
 fastapi[all]==0.138.0
     # via -r requirements.in
 fastapi-cli[standard]==0.0.27
@@ -209,6 +223,8 @@ frozenlist==1.8.0
     #   aiosignal
 fsspec==2026.6.0
     # via huggingface-hub
+galeodes==0.7
+    # via social-analyzer
 genai-prices==0.0.66
     # via pydantic-ai-slim
 google-auth[requests]==2.55.0
@@ -284,6 +300,7 @@ idna==3.18
     #   httpx2
     #   requests
     #   tldextract
+    #   trio
     #   yarl
 importlib-metadata==8.7.1
     # via opentelemetry-api
@@ -331,6 +348,8 @@ jsonschema-specifications==2025.9.1
     # via jsonschema
 keyring==25.7.0
     # via py-key-value-aio
+langdetect==1.0.9
+    # via social-analyzer
 limits==5.8.0
     # via slowapi
 logfire[httpx]==4.37.0
@@ -345,9 +364,12 @@ lxml[html-clean]==5.4.0
     # via
     #   -r requirements.in
     #   newspaper4k
+    #   social-analyzer
 lxml-html-clean
     # via lxml
 maigret==0.6.2
+    # via -r requirements.in
+mailcat-osint==0.1.1
     # via -r requirements.in
 mako==1.3.12
     # via alembic
@@ -440,6 +462,10 @@ orderly-set==5.5.0
     # via deepdiff
 oscrypto==1.3.0
     # via pyhanko-certvalidator
+outcome==1.3.0.post0
+    # via
+    #   trio
+    #   trio-websocket
 packaging==25.0
     # via
     #   fastmcp-slim
@@ -451,6 +477,8 @@ packaging==25.0
     #   xai-sdk
 pandas==3.0.3
     # via mitreattack-python
+parse==1.22.1
+    # via requests-html
 parso==0.8.7
     # via jedi
 pathable==0.6.0
@@ -460,6 +488,7 @@ pexpect==4.9.0
 pillow==12.2.0
     # via
     #   -r requirements.in
+    #   galeodes
     #   mitreattack-python
     #   newspaper4k
 platformdirs==4.10.0
@@ -548,6 +577,8 @@ pydantic-settings==2.14.2
     #   fastapi
     #   fastmcp-slim
     #   mcp
+pyee==13.0.1
+    # via pyppeteer
 pygments==2.20.0
     # via
     #   rich
@@ -566,8 +597,16 @@ pyperclip==1.11.0
     # via
     #   fastmcp-slim
     #   pydantic-ai-slim
+pyppeteer==0.0.25
+    # via
+    #   mailcat-osint
+    #   requests-html
+pyquery==2.0.1
+    # via requests-html
 pysocks==1.7.1
-    # via maigret
+    # via
+    #   maigret
+    #   urllib3
 pytest==9.1.1
     # via -r requirements.in
 python-bidi==0.6.11
@@ -622,6 +661,7 @@ requests==2.34.2
     # via
     #   -r requirements.in
     #   cohere
+    #   galeodes
     #   google-auth
     #   google-genai
     #   mitreattack-python
@@ -631,6 +671,7 @@ requests==2.34.2
     #   pydantic-ai-slim
     #   requests-file
     #   requests-oauthlib
+    #   social-analyzer
     #   stix2
     #   tiktoken
     #   tldextract
@@ -638,6 +679,8 @@ requests==2.34.2
     #   xai-sdk
 requests-file==3.0.1
     # via tldextract
+requests-html==0.10.0
+    # via mailcat-osint
 requests-oauthlib==2.0.0
     # via tweepy
 rich==15.0.0
@@ -665,6 +708,8 @@ rpds-py==2026.5.1
     #   referencing
 s3transfer==0.19.0
     # via boto3
+selenium==4.45.0
+    # via galeodes
 sentry-sdk==2.63.0
     # via fastapi-cloud-cli
 sgmllib3k==1.0.0
@@ -674,7 +719,9 @@ shellingham==1.5.4
 simplejson==4.1.1
     # via stix2
 six==1.17.0
-    # via python-dateutil
+    # via
+    #   langdetect
+    #   python-dateutil
 slowapi==0.1.10
     # via -r requirements.in
 sniffio==1.3.1
@@ -683,8 +730,13 @@ sniffio==1.3.1
     #   google-genai
     #   groq
     #   openai
+    #   trio
+social-analyzer==0.45
+    # via -r requirements.in
 socid-extractor==0.1.0
     # via maigret
+sortedcontainers==2.4.0
+    # via trio
 soupsieve==2.8.4
     # via beautifulsoup4
 sqlalchemy==2.0.51
@@ -716,12 +768,16 @@ tenacity==9.1.4
     # via
     #   google-genai
     #   pydantic-ai-slim
+termcolor==3.3.0
+    # via social-analyzer
 tiktoken==0.13.0
     # via pydantic-ai-slim
 tinycss2==1.5.1
     # via
     #   cssselect2
     #   svglib
+tld==0.13.2
+    # via social-analyzer
 tldextract==5.3.1
     # via newspaper4k
 tokenizers==0.23.1
@@ -735,6 +791,12 @@ traitlets==5.15.1
     # via
     #   ipython
     #   matplotlib-inline
+trio==0.33.0
+    # via
+    #   selenium
+    #   trio-websocket
+trio-websocket==0.12.2
+    # via selenium
 truststore==0.10.4
     # via
     #   httpcore2
@@ -779,6 +841,7 @@ typing-extensions==4.15.0
     #   pydantic-core
     #   pydantic-extra-types
     #   rich-toolkit
+    #   selenium
     #   sqlalchemy
     #   temporalio
     #   typing-inspection
@@ -797,10 +860,11 @@ uncalled-for==0.3.2
     # via fastmcp-slim
 uritools==6.1.2
     # via pyhanko-certvalidator
-urllib3==2.7.0
+urllib3[socks]==2.7.0
     # via
     #   botocore
     #   requests
+    #   selenium
     #   sentry-sdk
     #   types-requests
 uvicorn[standard]==0.49.0
@@ -823,6 +887,8 @@ wcwidth==0.8.1
     # via prompt-toolkit
 webencodings==0.5.1
     # via html5lib
+websocket-client==1.9.0
+    # via selenium
 websockets==16.0
     # via
     #   fastmcp-slim
@@ -837,6 +903,8 @@ wrapt==1.17.3
     #   deprecated
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-httpx
+wsproto==1.3.2
+    # via trio-websocket
 xai-sdk==1.17.0
     # via pydantic-ai-slim
 xhtml2pdf==0.2.17

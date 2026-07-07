@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "Email Search",
+    "description": "Find which mail providers a username is registered at, using mailcat."
+  },
+
+  "toolInfo": {
+    "poweredBy": "Powered by {{tool}} v{{version}}",
+    "providerCount": "{{count}} providers checked",
+    "updateAvailable": "update available: v{{version}}"
+  },
+
+  "form": {
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. johndoe",
+    "searchButton": "Search"
+  },
+
+  "scan": {
+    "progress": "Checked {{checked}} of {{total}} providers",
+    "checking": "checking {{provider}}",
+    "failed": "Search failed: {{error}}",
+    "completed": "Checked {{checked}} providers, found {{found}}",
+    "cancelled": "Cancelled after checking {{checked}} providers, found {{found}}",
+    "cancelButton": "Cancel"
+  },
+
+  "results": {
+    "empty": "No registered providers found",
+    "foundCount": "{{count}} provider(s) found"
+  },
+
+  "history": {
+    "empty": "No past searches yet",
+    "notFound": "Search run not found",
+    "summary": "Checked {{checked}} providers, found {{found}}",
+    "headers": {
+      "username": "Username",
+      "status": "Status",
+      "found": "Found",
+      "started": "Started",
+      "actions": "Actions"
+    },
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    }
+  },
+
+  "settings": {
+    "title": "Email Search Settings",
+    "description": "Configure how mailcat checks mail providers when searching for a username.",
+    "timeoutSeconds": "Timeout (seconds)",
+    "timeoutSecondsHelp": "Per-provider request timeout",
+    "maxConcurrency": "Max concurrency",
+    "maxConcurrencyHelp": "Maximum number of providers checked in parallel",
+    "proxyUrl": "Proxy URL",
+    "proxyUrlHelp": "Optional proxy used for provider checks (e.g. socks5://127.0.0.1:9050)",
+    "updateSuccess": "Settings updated successfully",
+    "updateError": "Failed to update settings",
+    "optionalCheckersSection": "Optional Checkers",
+    "useTorDescription": "Route provider checks through a local Tor SOCKS5 proxy (127.0.0.1:9050), instead of a direct connection",
+    "enableSmtpChecksDescription": "Enable SMTP-based checks (Gmail, Yandex, mail.de) - these need outbound TCP/25, usually blocked unless routed via Tor or a proxy",
+    "enableHeadlessChecksDescription": "Enable headless-Chromium-based checks (Fastmail, int.pl, onet.pl) - downloads a Chromium binary on first use",
+    "versionSection": "Package Version",
+    "versionStatus": "Latest available on PyPI: v{{latest}} (checked {{date}})",
+    "versionNeverChecked": "PyPI has not been checked for a newer version yet",
+    "updateRequiresRebuild": "mailcat-osint is installed from PyPI - installing a newer version requires rebuilding the backend container, this only checks what's available",
+    "checkUpdate": "Check PyPI for updates",
+    "pypiCheckSuccess": "PyPI checked successfully"
+  }
+}

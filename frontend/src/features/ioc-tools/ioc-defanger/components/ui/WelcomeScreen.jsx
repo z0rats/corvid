@@ -30,7 +30,7 @@ export default function WelcomeScreen() {
         <Typography variant="h6" component="h1" gutterBottom>
           {t('iocDefanger.welcomeScreen.subtitle')}
         </Typography>
-        <Typography paragraph>
+        <Typography sx={{ mb: 2 }}>
           {t('iocDefanger.welcomeScreen.description')}
         </Typography>
       </Box>

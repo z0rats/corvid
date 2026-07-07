@@ -24,6 +24,7 @@ import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import NetworkCheckIcon from "@mui/icons-material/NetworkCheck";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import HistoryIcon from "@mui/icons-material/History";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 
 const MAIN_MENU_ITEMS_CONFIG = [
   {
@@ -73,6 +74,12 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <PersonSearchIcon />,
     path: "/username-search",
     moduleId: "username_search",
+  },
+  {
+    i18nKey: "nav.emailSearch",
+    icon: <MarkEmailReadIcon />,
+    path: "/email-search",
+    moduleId: "email_search",
   },
 ];
 
@@ -201,6 +208,12 @@ const USERNAME_SEARCH_TABS_CONFIG = [
   { i18nKey: "nav.usernameSearchTabs.settings", path: "/username-search/settings", icon: <SettingsIcon /> },
 ];
 
+const EMAIL_SEARCH_TABS_CONFIG = [
+  { i18nKey: "nav.emailSearchTabs.newSearch", path: "/email-search/new", icon: <MarkEmailReadIcon /> },
+  { i18nKey: "nav.emailSearchTabs.history", path: "/email-search/history", icon: <HistoryIcon /> },
+  { i18nKey: "nav.emailSearchTabs.settings", path: "/email-search/settings", icon: <SettingsIcon /> },
+];
+
 const translateItem = (t, { i18nKey, children, ...rest }) => ({
   ...rest,
   label: t(i18nKey),
@@ -216,3 +229,4 @@ export const getSettingsTabs = (t) => SETTINGS_TABS_CONFIG.map(item => translate
 export const getCvssTabs = (t) => CVSS_TABS_CONFIG.map(item => translateItem(t, item));
 export const getRulesTabs = (t) => RULES_TABS_CONFIG.map(item => translateItem(t, item));
 export const getUsernameSearchTabs = (t) => USERNAME_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
+export const getEmailSearchTabs = (t) => EMAIL_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));

@@ -22,6 +22,8 @@ import enRuleCreator from './locales/en/ruleCreator.json';
 import ruRuleCreator from './locales/ru/ruleCreator.json';
 import enUsernameSearch from './locales/en/usernameSearch.json';
 import ruUsernameSearch from './locales/ru/usernameSearch.json';
+import enEmailSearch from './locales/en/emailSearch.json';
+import ruEmailSearch from './locales/ru/emailSearch.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -37,6 +39,7 @@ export const NAMESPACES = [
   'newsfeed',
   'ruleCreator',
   'usernameSearch',
+  'emailSearch',
 ];
 
 i18n
@@ -55,6 +58,7 @@ i18n
         newsfeed: enNewsfeed,
         ruleCreator: enRuleCreator,
         usernameSearch: enUsernameSearch,
+        emailSearch: enEmailSearch,
       },
       ru: {
         common: ruCommon,
@@ -67,6 +71,7 @@ i18n
         newsfeed: ruNewsfeed,
         ruleCreator: ruRuleCreator,
         usernameSearch: ruUsernameSearch,
+        emailSearch: ruEmailSearch,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,

@@ -26,18 +26,21 @@ export default function FoundSitesList({ sites }) {
       </Typography>
       <List dense>
         {sites.map((site) => (
-          <ListItem key={site.site_name}>
+          <ListItem key={`${site.site_name}-${site.url_user}`}>
             <ListItemIcon sx={{ minWidth: 32 }}>
               <CheckCircleIcon color="success" fontSize="small" />
             </ListItemIcon>
             <ListItemText
-              primary={site.site_name}
+              primary={site.extra?.title || site.site_name}
               secondary={
                 <Link href={site.url_user} target="_blank" rel="noopener noreferrer">
                   {site.url_user}
                 </Link>
               }
             />
+            {site.extra?.rate && (
+              <Typography variant="caption" color="text.secondary">{site.extra.rate}</Typography>
+            )}
           </ListItem>
         ))}
       </List>

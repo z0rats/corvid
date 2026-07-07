@@ -108,7 +108,7 @@ export default function ThreatfoxDetails({ result, ioc }) {
               {t('providers.threatfox.intelligenceFor')} <Typography component="span" sx={{wordBreak: 'break-all'}}>{ioc}</Typography>
             </Typography>
         </Grid>
-        <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }} mb={2}>
             {t('providers.threatfox.displayingRecords', { count: result.data.length })}
         </Typography>
         {result.data.map((entry, index) => (
