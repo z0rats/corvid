@@ -122,7 +122,7 @@ export default function BulkLookupForm({
               />
               <Typography
                 variant="body2"
-                textAlign="center"
+                align="center"
                 sx={{
                   color: processing ? 'grey.400' : 'text.secondary',
                   px: 1,
@@ -133,7 +133,7 @@ export default function BulkLookupForm({
               </Typography>
               <Typography
                 variant="caption"
-                textAlign="center"
+                align="center"
                 sx={{
                   color: processing ? 'grey.400' : 'text.secondary',
                   mt: 0.5

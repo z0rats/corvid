@@ -40,22 +40,22 @@ export default function Detection({
 
   return (
     <Box>
-      <Typography variant="caption" display="block" gutterBottom>
+      <Typography variant="caption" sx={{ display: 'block' }} gutterBottom>
         {t('sigma.detection.helpNoSingleList')}
       </Typography>
-      <Typography variant="caption" display="block" gutterBottom>
+      <Typography variant="caption" sx={{ display: 'block' }} gutterBottom>
         {t('sigma.detection.helpLowercase')}
       </Typography>
-      <Typography variant="caption" display="block" gutterBottom>
+      <Typography variant="caption" sx={{ display: 'block' }} gutterBottom>
         {t('sigma.detection.helpComments')}
       </Typography>
-      <Typography variant="caption" display="block" gutterBottom>
+      <Typography variant="caption" sx={{ display: 'block' }} gutterBottom>
         {t('sigma.detection.helpNoRegex')}
       </Typography>
-      <Typography variant="caption" display="block" gutterBottom>
+      <Typography variant="caption" sx={{ display: 'block' }} gutterBottom>
         {t('sigma.detection.helpFieldNames')}
       </Typography>
-      <Typography variant="caption" display="block" gutterBottom>
+      <Typography variant="caption" sx={{ display: 'block' }} gutterBottom>
         {t('sigma.detection.helpNoSiemLogic')}
       </Typography>
 

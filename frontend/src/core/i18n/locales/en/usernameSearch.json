@@ -6,13 +6,16 @@
   "toolInfo": {
     "poweredBy": "Powered by {{tool}} v{{version}}",
     "sitesUpdated": "{{count}} sites, database updated {{date}}",
-    "sitesBundled": "{{count}} sites (bundled database)"
+    "sitesBundled": "{{count}} sites (bundled database)",
+    "updateAvailable": "update available: v{{version}}"
   },
 
   "form": {
     "usernameLabel": "Username",
     "usernamePlaceholder": "e.g. johndoe",
     "searchButton": "Search",
+    "sourceMaigret": "Maigret",
+    "sourceSocialAnalyzer": "Social Analyzer",
     "tagsLabel": "Site tags",
     "tagsPlaceholder": "All sites",
     "tagsHelp": "Only scan sites with at least one of the selected tags (leave empty to scan all)"
@@ -21,6 +24,7 @@
   "scan": {
     "progress": "Checked {{checked}} of {{total}} sites",
     "checking": "checking {{site}}",
+    "scanning": "Scanning...",
     "failed": "Search failed: {{error}}",
     "completed": "Checked {{checked}} sites, found {{found}}",
     "cancelled": "Cancelled after checking {{checked}} sites, found {{found}}",
@@ -39,6 +43,7 @@
     "tagsUsed": "Tags",
     "headers": {
       "username": "Username",
+      "source": "Source",
       "status": "Status",
       "found": "Found",
       "started": "Started",
@@ -71,6 +76,16 @@
     "dbStatusUpdated": "{{count}} sites, last checked {{date}}",
     "dbStatusBundled": "{{count}} sites (bundled database, never checked for updates)",
     "refreshDbNow": "Check for update now",
-    "dbRefreshSuccess": "Site database refresh complete"
+    "dbRefreshSuccess": "Site database refresh complete",
+    "saTitle": "Social Analyzer Settings",
+    "saDescription": "Configure the social-analyzer additional search source.",
+    "saTimeoutSeconds": "Delay between requests (seconds)",
+    "saTimeoutSecondsHelp": "social-analyzer's own request throttling, not a request timeout",
+    "saVersionSection": "Package Version",
+    "saVersionStatus": "Latest available on PyPI: v{{latest}} (checked {{date}})",
+    "saVersionNeverChecked": "PyPI has not been checked for a newer version yet",
+    "saUpdateRequiresRebuild": "social-analyzer's site data ships inside the pip package - installing a newer version requires rebuilding the backend container, this only checks what's available",
+    "saCheckUpdate": "Check PyPI for updates",
+    "pypiCheckSuccess": "PyPI checked successfully"
   }
 }

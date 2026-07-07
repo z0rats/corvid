@@ -57,6 +57,13 @@
       "newSearch": "Новый поиск",
       "history": "История",
       "settings": "Настройки"
+    },
+
+    "emailSearch": "Поиск по email",
+    "emailSearchTabs": {
+      "newSearch": "Новый поиск",
+      "history": "История",
+      "settings": "Настройки"
     }
   },
 
@@ -66,7 +73,8 @@
     "switchToLightMode": "Переключить на светлую тему",
     "switchToDarkMode": "Переключить на тёмную тему",
     "toggleDarkMode": "Переключить тёмный режим",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "more": "Ещё"
   },
 
   "settings": {

@@ -41,7 +41,7 @@ export default function WelcomeScreen() {
         <Typography variant="h6" component="h1" gutterBottom>
           {t('singleLookup.welcomeScreen.title')}
         </Typography>
-        <Typography paragraph>
+        <Typography sx={{ mb: 2 }}>
           {t('singleLookup.welcomeScreen.intro')}
         </Typography>
         <Typography>
@@ -65,7 +65,7 @@ export default function WelcomeScreen() {
       <Typography variant="h6" component="h2" sx={{ mt: 4, mb: 2 }}>
         {t('singleLookup.welcomeScreen.addressReputationChecksTitle')}
       </Typography>
-      <Typography variant="body2" color="text.secondary" paragraph>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t('singleLookup.welcomeScreen.addressReputationChecksIntro')}
       </Typography>
       <Grid container spacing={1}>

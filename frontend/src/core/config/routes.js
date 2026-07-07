@@ -15,6 +15,7 @@ const Settings = lazy(() => import("../../features/settings/Settings"));
 const RuleCreator = lazy(() => import("../../features/rule-creator/RuleCreator"));
 const AiTemplates = lazy(() => import("../../features/llm-templates/AiTemplates"));
 const UsernameSearch = lazy(() => import("../../features/username-search/UsernameSearch"));
+const EmailSearch = lazy(() => import("../../features/email-search/EmailSearch"));
 
 const LoadingFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -37,6 +38,7 @@ export const AppRoutes = () => {
           <Route path="cvss-calculator/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><CvssCalculator /></Suspense></ErrorBoundary>} />
           <Route path="rules/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RuleCreator /></Suspense></ErrorBoundary>} />
           <Route path="username-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><UsernameSearch /></Suspense></ErrorBoundary>} />
+          <Route path="email-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><EmailSearch /></Suspense></ErrorBoundary>} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

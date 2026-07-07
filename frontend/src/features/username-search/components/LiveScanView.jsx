@@ -11,18 +11,21 @@ import FoundSitesList from './FoundSitesList';
 
 export default function LiveScanView({ scan }) {
   const { t } = useTranslation('usernameSearch');
-  const { phase, checked, totalSites, currentSite, foundSites, error, cancelScan } = scan;
+  const { phase, source, checked, totalSites, currentSite, foundSites, error, cancelScan } = scan;
+  const isCoarseProgress = source === 'social_analyzer';
   const progress = totalSites > 0 ? Math.min(100, (checked / totalSites) * 100) : 0;
 
   return (
     <Box>
       {phase === 'running' && (
         <Box sx={{ mb: 2 }}>
-          <LinearProgress variant="determinate" value={progress} />
+          <LinearProgress variant={isCoarseProgress ? 'indeterminate' : 'determinate'} value={progress} />
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
             <Typography variant="caption">
-              {t('scan.progress', { checked, total: totalSites })}
-              {currentSite ? ` — ${t('scan.checking', { site: currentSite })}` : ''}
+              {isCoarseProgress
+                ? t('scan.scanning')
+                : t('scan.progress', { checked, total: totalSites })}
+              {!isCoarseProgress && currentSite ? ` — ${t('scan.checking', { site: currentSite })}` : ''}
             </Typography>
             <Button size="small" color="error" startIcon={<CancelIcon />} onClick={cancelScan}>
               {t('scan.cancelButton')}

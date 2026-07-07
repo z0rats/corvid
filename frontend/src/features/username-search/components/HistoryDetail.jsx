@@ -50,12 +50,19 @@ export default function HistoryDetail() {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5">{run.username}</Typography>
+        <Chip size="small" variant="outlined" label={t(`form.source${run.source === 'social_analyzer' ? 'SocialAnalyzer' : 'Maigret'}`)} />
         <Chip size="small" label={t(`history.status.${run.status}`)} color={STATUS_COLORS[run.status] || 'default'} />
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
         {t('history.summary', { checked: run.total_sites_checked, found: run.found_count })}
       </Typography>
+
+      {run.status === 'failed' && run.error_message && (
+        <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+          {run.error_message}
+        </Typography>
+      )}
 
       {run.tags && run.tags.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ mb: 2 }}>

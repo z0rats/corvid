@@ -7,9 +7,11 @@ from sqlalchemy.orm import selectinload
 from app.features.username_search.models.username_search_models import MaigretSearch, MaigretSiteResult
 
 
-async def create_search_run(db: AsyncSession, username: str, tags: list[str] | None = None) -> MaigretSearch:
+async def create_search_run(
+    db: AsyncSession, username: str, tags: list[str] | None = None, source: str = "maigret"
+) -> MaigretSearch:
     """Create a new search run in the 'running' state"""
-    search = MaigretSearch(username=username, status="running", tags=tags)
+    search = MaigretSearch(username=username, status="running", tags=tags, source=source)
     db.add(search)
     await db.flush()
     await db.refresh(search)
@@ -38,6 +40,7 @@ async def complete_search_run(
             site_name=site["site_name"],
             url_user=site["url_user"],
             http_status=site.get("http_status"),
+            extra=site.get("extra"),
         ))
 
     await db.flush()
@@ -67,6 +70,7 @@ async def cancel_search_run(
             site_name=site["site_name"],
             url_user=site["url_user"],
             http_status=site.get("http_status"),
+            extra=site.get("extra"),
         ))
 
     await db.flush()

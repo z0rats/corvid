@@ -17,6 +17,7 @@ AVAILABLE_MODULES = [
     "cvss_calculator",
     "domain_finder",
     "email_analyzer",
+    "email_search",
     "image_tools",
     "ioc_tools",
     "llm_templates",

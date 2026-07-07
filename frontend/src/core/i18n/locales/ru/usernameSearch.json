@@ -6,13 +6,16 @@
   "toolInfo": {
     "poweredBy": "На основе {{tool}} v{{version}}",
     "sitesUpdated": "{{count}} сайтов, база обновлена {{date}}",
-    "sitesBundled": "{{count}} сайтов (встроенная база)"
+    "sitesBundled": "{{count}} сайтов (встроенная база)",
+    "updateAvailable": "доступно обновление: v{{version}}"
   },
 
   "form": {
     "usernameLabel": "Никнейм",
     "usernamePlaceholder": "например, johndoe",
     "searchButton": "Искать",
+    "sourceMaigret": "Maigret",
+    "sourceSocialAnalyzer": "Social Analyzer",
     "tagsLabel": "Теги сайтов",
     "tagsPlaceholder": "Все сайты",
     "tagsHelp": "Проверять только сайты хотя бы с одним из выбранных тегов (оставьте пустым, чтобы проверить все)"
@@ -21,6 +24,7 @@
   "scan": {
     "progress": "Проверено {{checked}} из {{total}} сайтов",
     "checking": "проверка {{site}}",
+    "scanning": "Идёт сканирование...",
     "failed": "Ошибка поиска: {{error}}",
     "completed": "Проверено сайтов: {{checked}}, найдено: {{found}}",
     "cancelled": "Отменено после проверки {{checked}} сайтов, найдено: {{found}}",
@@ -39,6 +43,7 @@
     "tagsUsed": "Теги",
     "headers": {
       "username": "Никнейм",
+      "source": "Источник",
       "status": "Статус",
       "found": "Найдено",
       "started": "Начат",
@@ -71,6 +76,16 @@
     "dbStatusUpdated": "{{count}} сайтов, последняя проверка {{date}}",
     "dbStatusBundled": "{{count}} сайтов (встроенная база, обновления ещё не проверялись)",
     "refreshDbNow": "Проверить обновление сейчас",
-    "dbRefreshSuccess": "Обновление базы сайтов завершено"
+    "dbRefreshSuccess": "Обновление базы сайтов завершено",
+    "saTitle": "Настройки Social Analyzer",
+    "saDescription": "Настройте дополнительный источник поиска social-analyzer.",
+    "saTimeoutSeconds": "Задержка между запросами (сек)",
+    "saTimeoutSecondsHelp": "Собственный троттлинг запросов social-analyzer, а не таймаут запроса",
+    "saVersionSection": "Версия пакета",
+    "saVersionStatus": "Последняя версия на PyPI: v{{latest}} (проверено {{date}})",
+    "saVersionNeverChecked": "Проверка обновлений на PyPI ещё не выполнялась",
+    "saUpdateRequiresRebuild": "Данные сайтов social-analyzer поставляются внутри pip-пакета — установка новой версии потребует пересборки backend-контейнера, эта проверка только показывает, что доступно",
+    "saCheckUpdate": "Проверить обновления на PyPI",
+    "pypiCheckSuccess": "Проверка PyPI выполнена успешно"
   }
 }

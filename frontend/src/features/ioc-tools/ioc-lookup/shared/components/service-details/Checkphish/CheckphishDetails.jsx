@@ -145,8 +145,7 @@ export default function CheckphishDetails({ result, ioc }) {
                   href={result.screenshot_path}
                   target="_blank"
                   rel="noopener noreferrer"
-                  display="block"
-                  sx={{mt:1}}
+                  sx={{ display: 'block', mt: 1 }}
                 >
                   <Box
                     component="img"

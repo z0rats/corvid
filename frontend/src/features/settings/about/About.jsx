@@ -26,7 +26,7 @@ export default function About() {
         <Typography variant="h4" component="h2" gutterBottom>
           {t('about.title')} {appVersion && `v${appVersion}`}
         </Typography>
-        <Typography variant="body1" paragraph>
+        <Typography variant="body1" sx={{ mb: 2 }}>
           {t('about.body')}
         </Typography>
         <Typography variant="body1">
@@ -60,7 +60,7 @@ export default function About() {
         <Typography variant="h5" component="h2" gutterBottom>
           {t('about.donateTitle')}
         </Typography>
-        <Typography variant="body1" paragraph>
+        <Typography variant="body1" sx={{ mb: 2 }}>
           {t('about.donateBody')}
         </Typography>
         

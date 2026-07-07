@@ -132,7 +132,7 @@ const Breaches = ({ breaches, t, notAvailable }) => {
                     {account.IsVerified && <Typography component="span" variant="caption" color="success.main" sx={{ml:1}}>{t('providers.hibp.verified')}</Typography>}
                   </Typography>
                 )}
-                 {account.Domain && <Typography variant="caption" color="text.secondary" display="block">{t('providers.hibp.domain')} {account.Domain}</Typography>}
+                 {account.Domain && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{t('providers.hibp.domain')} {account.Domain}</Typography>}
                 <Divider sx={{ my: 0.5 }} />
               </Box>
             ))
@@ -272,17 +272,17 @@ const Pastes = ({ pastes, t, notAvailable }) => {
                     </Typography>
                 </Tooltip>
                 {paste.Source && (
-                  <Typography variant="caption" display="block">
+                  <Typography variant="caption" sx={{ display: 'block' }}>
                     <b>{t('providers.hibp.source')}</b> {paste.Source}
                   </Typography>
                 )}
                 {paste.Date && (
-                  <Typography variant="caption" display="block">
+                  <Typography variant="caption" sx={{ display: 'block' }}>
                     <b>{t('providers.hibp.date')}</b> {new Date(paste.Date).toLocaleDateString()}
                   </Typography>
                 )}
                 {typeof paste.EmailCount !== 'undefined' && (
-                  <Typography variant="caption" display="block">
+                  <Typography variant="caption" sx={{ display: 'block' }}>
                     <b>{t('providers.hibp.emailCount')}</b> {paste.EmailCount}
                   </Typography>
                 )}

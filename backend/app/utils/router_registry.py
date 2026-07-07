@@ -5,11 +5,13 @@ from app.core.alerts.routes import alerts_routes
 from app.core.settings.api_keys.routers import api_keys_settings_routes, service_config_routes
 from app.core.settings.cti_profile.routers import cti_profile_routes
 from app.core.settings.ai_settings.routers import ai_settings_routes
+from app.core.settings.email_search.routers import email_search_settings_routes
 from app.core.settings.general.routers import general_settings_routes
 from app.core.settings.keywords.routers import keywords_settings_routes
 from app.core.settings.modules.routers import modules_settings_routes
-from app.core.settings.username_search.routers import username_search_settings_routes
+from app.core.settings.username_search.routers import social_analyzer_settings_routes, username_search_settings_routes
 from app.features.cvss_calculator.routers import cvss_routes
+from app.features.email_search.routers import email_search_routes
 from app.features.ioc_tools.domain_finder.routers import domain_routes
 from app.features.email_analyzer.routers import email_routes
 from app.features.image_tools.routers import image_routes
@@ -53,6 +55,8 @@ def get_settings_routers() -> list[APIRouter]:
         cti_profile_routes.router,
         trends_blacklist_routes.router,
         username_search_settings_routes.router,
+        social_analyzer_settings_routes.router,
+        email_search_settings_routes.router,
     ]
 
 
@@ -75,6 +79,7 @@ def get_feature_routers() -> list[APIRouter]:
         unified_routes.router,
         lookup_history_routes.router,
         username_search_routes.router,
+        email_search_routes.router,
     ]
 
 

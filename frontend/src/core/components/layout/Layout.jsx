@@ -11,7 +11,6 @@ import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
-import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -24,6 +23,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import SidebarTabs from '../ui/SidebarTabs';
+import TopNavMenu from './TopNavMenu';
 import {
   getMainMenuItems,
   getAiTemplatesTabs,
@@ -33,9 +33,10 @@ import {
   getIocToolsTabs,
   getCvssTabs,
   getUsernameSearchTabs,
+  getEmailSearchTabs,
 } from '../../config/sidebarConfig';
 import ot_logo_dark from '../../static/images/ot_logo_dark.png';
-import { useTheme, alpha } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 
 const defaultDrawerWidth = 240;
 const minDrawerWidth = 180;
@@ -105,6 +106,7 @@ function Layout() {
     if (location.pathname.startsWith('/ioc-tools')) return getIocToolsTabs(t);
     if (location.pathname.startsWith('/cvss-calculator')) return getCvssTabs(t);
     if (location.pathname.startsWith('/username-search')) return getUsernameSearchTabs(t);
+    if (location.pathname.startsWith('/email-search')) return getEmailSearchTabs(t);
     return null;
   }, [location.pathname, hasLlmKey, t]);
 
@@ -206,34 +208,12 @@ function Layout() {
 
           <Box component="img" src={ot_logo_dark} alt="Logo" sx={{ height: 36, mr: 2 }} />
 
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              flexGrow: 1,
-              ml: 2,
-            }}
-          >
-            {filteredMenuItems.map((item, idx) => (
-              <Button
-                key={item.path}
-                component={Link}
-                to={item.path}
-                color="inherit"
-                startIcon={item.icon}
-                sx={{
-                  ml: idx === 0 ? 0 : 2,
-                  bgcolor: location.pathname.startsWith(item.path)
-                    ? alpha(theme.palette.common.white, 0.2)
-                    : 'transparent',
-                  '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.3) },
-                }}
-              >
-                {item.name}
-              </Button>
-            ))}
-          </Box>
+          <TopNavMenu
+            items={filteredMenuItems}
+            isActive={(path) => location.pathname.startsWith(path)}
+          />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', flexShrink: 0, pl: 2 }}>
             <Tooltip title={currentLanguage === 'en' ? 'Русский' : 'English'}>
               <IconButton
                 color="inherit"

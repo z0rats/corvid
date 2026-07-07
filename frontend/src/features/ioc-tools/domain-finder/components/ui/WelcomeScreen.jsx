@@ -13,10 +13,10 @@ export default function WelcomeScreen() {
         <Typography variant="h6" component="h1" gutterBottom>
           {t('domainFinder.welcomeScreen.title')}
         </Typography>
-        <Typography paragraph>
+        <Typography sx={{ mb: 2 }}>
           {t('domainFinder.welcomeScreen.intro')}
         </Typography>
-        <Typography paragraph>
+        <Typography sx={{ mb: 2 }}>
           {t('domainFinder.welcomeScreen.description')}
         </Typography>
         <Typography variant="body2" sx={{

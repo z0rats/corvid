@@ -99,7 +99,7 @@ export default function Report() {
         return (
           <Box>
             <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>{t('report.analysisComplete')}</Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {t('report.restartMessage')}
             </Typography>
             <Button variant="contained" onClick={handleExportMarkdown}>
@@ -114,7 +114,7 @@ export default function Report() {
   return (
     <Box sx={{ width: "100%", py: 4, px: 2 }}>
       <Typography variant="h4" gutterBottom>{t('report.pageTitle')}</Typography>
-      <Typography variant="body1" color="text.secondary" paragraph>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         {t('report.pageDescription')}
       </Typography>
 

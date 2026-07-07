@@ -60,6 +60,7 @@ async def _create_database_tables() -> None:
     import app.features.llm_templates.models.template_category_models
     import app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models
     import app.core.settings.username_search.models.username_search_settings_models
+    import app.core.settings.username_search.models.social_analyzer_settings_models
     import app.features.username_search.models.username_search_models
 
     async with engine.begin() as conn:

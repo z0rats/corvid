@@ -34,7 +34,7 @@ export default function ExtractorWelcomeScreen() {
       </Typography>
 
       <Box sx={{ mb: 4 }}>
-        <Typography paragraph>
+        <Typography sx={{ mb: 2 }}>
           {t('iocExtractor.welcomeScreen.intro')}
         </Typography>
         <Typography>

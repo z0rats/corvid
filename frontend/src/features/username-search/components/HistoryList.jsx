@@ -63,6 +63,7 @@ export default function HistoryList() {
         <TableHead>
           <TableRow>
             <TableCell>{t('history.headers.username')}</TableCell>
+            <TableCell>{t('history.headers.source')}</TableCell>
             <TableCell>{t('history.headers.status')}</TableCell>
             <TableCell>{t('history.headers.found')}</TableCell>
             <TableCell>{t('history.headers.started')}</TableCell>
@@ -78,6 +79,9 @@ export default function HistoryList() {
               onClick={() => navigate(`/username-search/history/${run.id}`)}
             >
               <TableCell>{run.username}</TableCell>
+              <TableCell>
+                <Chip size="small" variant="outlined" label={t(`form.source${run.source === 'social_analyzer' ? 'SocialAnalyzer' : 'Maigret'}`)} />
+              </TableCell>
               <TableCell>
                 <Chip size="small" label={t(`history.status.${run.status}`)} color={STATUS_COLORS[run.status] || 'default'} />
               </TableCell>

@@ -1,7 +1,7 @@
 import api, { baseURL } from '../../../../core/services/baseApi';
 
 export const usernameSearchApi = {
-  async startScan(username, { tags, excludedTags, signal } = {}) {
+  async startScan(username, { source, tags, excludedTags, signal } = {}) {
     const response = await fetch(`${baseURL}/api/username-search/scan`, {
       method: 'POST',
       headers: {
@@ -10,6 +10,7 @@ export const usernameSearchApi = {
       },
       body: JSON.stringify({
         username,
+        source: source || 'maigret',
         tags: tags && tags.length ? tags : undefined,
         excluded_tags: excludedTags && excludedTags.length ? excludedTags : undefined,
       }),
@@ -42,6 +43,11 @@ export const usernameSearchApi = {
     return response.data;
   },
 
+  async checkSocialAnalyzerUpdate() {
+    const response = await api.post('/api/username-search/social-analyzer/check-update');
+    return response.data;
+  },
+
   async listRuns(skip = 0, limit = 100) {
     const response = await api.get('/api/username-search/runs', { params: { skip, limit } });
     return response.data;
@@ -67,6 +73,16 @@ export const usernameSearchApi = {
 
   async updateConfig(config) {
     const response = await api.put('/api/settings/username-search', config);
+    return response.data;
+  },
+
+  async getSocialAnalyzerConfig() {
+    const response = await api.get('/api/settings/social-analyzer');
+    return response.data;
+  },
+
+  async updateSocialAnalyzerConfig(config) {
+    const response = await api.put('/api/settings/social-analyzer', config);
     return response.data;
   },
 };

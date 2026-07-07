@@ -110,7 +110,7 @@ export default function HunterioDetails({ result, ioc }) {
                   {t('providers.hunterio.sourcesCount', { count: sources.length })}
                 </Typography>
               </Grid>
-              <Typography variant="caption" color="text.disabled" display="block" mb={2}>
+              <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }} mb={2}>
                 {t('providers.hunterio.sourcesHelper')}
               </Typography>
               {sources.length > 0 ? (
