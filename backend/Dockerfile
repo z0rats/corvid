@@ -27,5 +27,15 @@ COPY ./requirements.txt ./lxml-override.txt /backend/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
     uv pip install --system --upgrade -r /backend/requirements.txt --override /backend/lxml-override.txt
 COPY ./ /backend/
+
+# Non-root app user. `-m` gives it a real home dir, needed at runtime for
+# maigret's site-database auto-update cache (~/.maigret) and, if headless
+# email-search checks are enabled, pyppeteer's Chromium download
+# (~/.local/share/pyppeteer) - both write under $HOME, not /backend/data.
+RUN groupadd -g 1000 appuser && \
+    useradd -m -u 1000 -g appuser -s /usr/sbin/nologin appuser && \
+    chown -R appuser:appuser /backend
+
 EXPOSE 8000
+ENTRYPOINT ["python3", "/backend/docker-entrypoint.py"]
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

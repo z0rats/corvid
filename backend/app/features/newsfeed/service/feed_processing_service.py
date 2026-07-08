@@ -51,7 +51,7 @@ async def check_article_exists_async(link: str) -> bool:
 async def get_full_text_async(link: str) -> str:
     """Get full text of article asynchronously"""
     try:
-        return await asyncio.to_thread(fetch_article_full_text, link)
+        return await fetch_article_full_text(link)
     except Exception as e:
         logger.warning("Failed to fetch full text for %s: %s", link, e)
         return ""
@@ -190,7 +190,7 @@ async def process_feed_chunk(
 
     for entry in feeds:
         try:
-            feed = await asyncio.to_thread(parse_feed, entry['url'])
+            feed = await parse_feed(entry['url'])
             if not feed or not feed.entries:
                 logger.warning("No entries found in feed: %s", entry['name'])
                 continue

@@ -3,15 +3,6 @@ from typing import Any
 from .settings import settings
 
 
-def get_contact_info() -> dict[str, str]:
-    """Get API contact information"""
-    return {
-        "name": "Lars Ursprung",
-        "url": "https://github.com/dev-lu",
-        "email": "larsursprung@gmail.com",
-    }
-
-
 def get_license_info() -> dict[str, str]:
     """Get API license information"""
     return {
@@ -84,14 +75,15 @@ def get_fastapi_config() -> dict[str, Any]:
         "title": settings.api.title,
         "version": settings.api.version,
         "description": settings.api.description,
-        "contact": get_contact_info(),
         "license_info": get_license_info(),
         "openapi_tags": get_tags_metadata(),
         "swagger_ui_parameters": get_swagger_ui_parameters(),
         "debug": settings.api.debug,
-        "docs_url": "/docs" if settings.environment != "production" else None,
-        "redoc_url": "/redoc" if settings.environment != "production" else None,
-        "openapi_url": "/openapi.json" if settings.environment != "production" else None,
+        # Disabled here unconditionally: main.py adds its own /docs, /redoc, and
+        # /openapi.json routes gated behind the access-token dependency instead.
+        "docs_url": None,
+        "redoc_url": None,
+        "openapi_url": None,
     }
 
 

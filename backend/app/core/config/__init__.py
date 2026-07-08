@@ -2,7 +2,6 @@ from .settings import settings, get_settings
 from .fastapi_config import (
     get_fastapi_config,
     get_cors_config,
-    get_contact_info,
     get_license_info,
     get_tags_metadata,
     get_swagger_ui_parameters
@@ -24,7 +23,6 @@ __all__ = [
     # FastAPI configuration
     "get_fastapi_config",
     "get_cors_config",
-    "get_contact_info",
     "get_license_info",
     "get_tags_metadata",
     "get_swagger_ui_parameters",

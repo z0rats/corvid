@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import uuid
-from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 from bs4 import BeautifulSoup
@@ -10,7 +9,7 @@ from PIL import Image, ImageStat
 import io
 
 from app.core.config.settings import settings
-from app.core.security.ssrf_guard import validate_public_url
+from app.core.security.ssrf_guard import safe_get
 
 logger = logging.getLogger(__name__)
 
@@ -85,19 +84,11 @@ class FaviconDownloader:
         """GET `url` after validating and pinning it to a non-private IP.
 
         `feed.url` (and every URL derived from a page's HTML/manifest) is user-supplied,
-        so this is an SSRF-prone code path. We resolve the hostname ourselves, reject
-        private/loopback/link-local/metadata addresses, and connect directly to the
-        vetted IP (Host header + SNI kept as the original hostname) instead of letting
-        httpx re-resolve the hostname later, which would reopen a DNS-rebinding gap.
+        so this is an SSRF-prone code path - see `ssrf_guard.safe_get`.
         """
-        url = str(url)
-        parsed = urlsplit(url)
-        ip = validate_public_url(url, allow_private=settings.security.allow_private_network_targets)
-        pinned_host = f"[{ip}]" if ":" in ip else ip
-        pinned_netloc = f"{pinned_host}:{parsed.port}" if parsed.port else pinned_host
-        pinned_url = urlunsplit((parsed.scheme, pinned_netloc, parsed.path or '/', parsed.query, parsed.fragment))
-        extensions = {"sni_hostname": parsed.hostname} if parsed.scheme == "https" else {}
-        return await self._client.get(pinned_url, headers={"Host": parsed.hostname}, extensions=extensions)
+        return await safe_get(
+            self._client, str(url), allow_private=settings.security.allow_private_network_targets
+        )
 
     async def _download(self, site_url: str) -> tuple[bool, bytes | None, str | None]:
         """Try several strategies to locate and download favicon image data."""

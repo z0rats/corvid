@@ -80,10 +80,7 @@
   "about": {
     "title": "About - OSINT Toolkit",
     "body": "OSINT Toolkit is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday investigative tasks. Optimized for single-user operation, OSINT Toolkit runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, OSINT Toolkit integrates generative AI capabilities, providing additional support for analysis and decision-making. Beyond its practical applications, the project also serves as a personal playground for experimenting with new technologies and automation possibilities, potentially laying the foundation for a future commercial cloud platform.",
-    "nameNote": "The name OSINT Toolkit is a temporary name. The name may be changed in the future.",
-    "madeBy": "Made by Lars Ursprung",
-    "donateTitle": "Donate to support the development",
-    "donateBody": "If you want to support the development of OSINT Toolkit, you can donate using a service of your choice."
+    "nameNote": "The name OSINT Toolkit is a temporary name. The name may be changed in the future."
   },
   "notifications": {
     "apiKeySaved": "API key configured successfully.",

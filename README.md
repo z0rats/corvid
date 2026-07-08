@@ -79,6 +79,41 @@ The Detection Rules module is a GUI for creating Sigma, Yara and Snort/Suricate 
 In case the database schema changed, run a migration before starting the container:
 `docker compose run --rm backend alembic upgrade head`
 
+### Access token
+
+The app has no user accounts, so it's protected by a single access token instead of a login form.
+On first startup, a token is generated automatically and printed to the backend logs
+(`docker compose logs backend`) and saved to `data/.access_token` on the host. Open
+http://localhost:4000, and you'll be asked to paste that token once — it's then remembered in
+the browser.
+
+To set your own fixed token instead of the auto-generated one, set `API_ACCESS_TOKEN` in `.env`
+before starting the container.
+
+### Configuration
+
+Copy [`.env.example`](.env.example) to `.env` to override any setting (all of them have working
+defaults, so this is optional). `.env` is read automatically by `docker compose up`.
+
+### Operational security notes
+
+This tool talks to third-party services (VirusTotal, Shodan, target mail servers via
+`email_search`'s SMTP checks, etc.) using your own infrastructure's IP, and stores investigation
+history in a local database. Some practices worth following, especially for sensitive engagements:
+
+- **Isolate the instance.** Run it on a dedicated VM/VPS or an isolated host, not your daily-driver
+  machine — a target under investigation can potentially see inbound lookups against them.
+- **Route sensitive lookups through Tor/a proxy.** `email_search` supports `use_tor`/`proxy_url`,
+  and `username_search`'s maigret source has its own proxy setting, for when a target could
+  plausibly monitor who's probing them.
+- **Never enable `SECURITY_ALLOW_PRIVATE_NETWORK_TARGETS` outside dev/testing** — it's a direct
+  SSRF opt-out.
+- **Segment and rotate API keys** per engagement where the provider supports multiple keys, so a
+  compromised key from one case doesn't expose others.
+- **Don't cross-contaminate identities.** Some features (e.g. Image Tools' reverse-search
+  deep-links) open external services directly in your browser — use a separate, logged-out
+  browser profile for sensitive lookups so they don't tie back to your personal accounts.
+
 ## License
 
 OSINT Toolkit is licensed under the [GNU Affero General Public License v3.0](LICENSE).

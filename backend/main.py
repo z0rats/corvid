@@ -3,10 +3,11 @@ import logging
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -22,6 +23,7 @@ from app.core.config.validation import ensure_required_directories, log_validati
 from app.core.database import Base, engine, managed_session, dispose_database_engine
 from app.core.exceptions import register_exception_handlers
 from app.core.scheduler import initialize_scheduler, stop_scheduler
+from app.core.security.access_control import get_access_token, verify_access_token
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import close_client
 from app.utils.startup_service import initialize_application_defaults
 from app.utils.router_registry import register_all_routers
@@ -100,6 +102,7 @@ async def handle_application_startup() -> None:
     """Handle application startup tasks"""
     logger.info("Application starting up...")
     try:
+        get_access_token()  # eager: prints/persists the token now, not on first request
         await _create_database_tables()
         await _run_application_defaults()
         asyncio.create_task(_fetch_favicons_in_background())
@@ -150,8 +153,38 @@ def create_fastapi_application() -> FastAPI:
 
     register_exception_handlers(app)
     register_all_routers(app)
+    add_protected_docs_routes(app)
 
     return app
+
+
+def add_protected_docs_routes(app: FastAPI) -> None:
+    """Re-add /docs, /redoc and /openapi.json behind the access-token dependency.
+
+    fastapi_config.py disables FastAPI's own auto-registered docs routes
+    unconditionally so they can't be reached without a token; these replacements
+    stay off entirely in production, matching the previous behaviour.
+    """
+    if settings.environment == "production":
+        return
+
+    protected = [Depends(verify_access_token)]
+
+    @app.get("/openapi.json", include_in_schema=False, dependencies=protected)
+    async def get_openapi_json():
+        return app.openapi()
+
+    @app.get("/docs", include_in_schema=False, dependencies=protected)
+    async def get_docs():
+        return get_swagger_ui_html(
+            openapi_url="/openapi.json",
+            title=f"{app.title} - Swagger UI",
+            swagger_ui_parameters=app.swagger_ui_parameters,
+        )
+
+    @app.get("/redoc", include_in_schema=False, dependencies=protected)
+    async def get_redoc():
+        return get_redoc_html(openapi_url="/openapi.json", title=f"{app.title} - ReDoc")
 
 
 def initialize_application() -> FastAPI:

@@ -1,10 +1,11 @@
+import hmac
 import logging
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Path, status, WebSocket, WebSocketDisconnect
 
-from app.core.config.settings import settings
 from app.core.exceptions import AppHTTPException
+from app.core.security.access_control import get_access_token
 from app.core.dependencies import ReadSessionDep, SessionDep, SkipQuery, LimitQuery
 from ..crud import alerts_crud
 from ..schemas.alerts_schemas import AlertSchema, AlertCreateSchema, AlertUpdateSchema, AlertBulkActionResponse, UnreadCountResponse
@@ -23,11 +24,11 @@ ModuleName = Annotated[str, Path(min_length=1, max_length=100, description="Modu
 async def websocket_endpoint(websocket: WebSocket, token: str = ""):
     """WebSocket endpoint for real-time alert notifications.
 
-    When API_WS_SECRET_TOKEN is set, the token query parameter must match.
-    Leave the setting empty to allow all connections (development default).
+    Requires the same access token as the rest of the API (see
+    core/security/access_control.py), passed as a query param since browsers
+    can't attach a custom Authorization header to a WebSocket handshake.
     """
-    configured_token = settings.api.ws_secret_token
-    if configured_token and token != configured_token:
+    if not hmac.compare_digest(token, get_access_token()):
         await websocket.close(code=4001)
         logger.warning("WebSocket connection rejected: invalid token from %s", websocket.client)
         return

@@ -3,6 +3,7 @@ import logging.handlers
 import sys
 from pathlib import Path
 
+from .log_redaction import SecretRedactionFilter
 from .request_id_config import RequestIdLogFilter
 from .settings import settings
 
@@ -26,6 +27,7 @@ def create_console_handler(log_level: int) -> logging.StreamHandler:
     handler.setLevel(log_level)
     handler.setFormatter(create_detailed_formatter())
     handler.addFilter(RequestIdLogFilter())
+    handler.addFilter(SecretRedactionFilter())
     return handler
 
 
@@ -40,6 +42,7 @@ def create_file_handler(log_file: Path, log_level: int, max_bytes: int, backup_c
     handler.setLevel(log_level)
     handler.setFormatter(create_detailed_formatter())
     handler.addFilter(RequestIdLogFilter())
+    handler.addFilter(SecretRedactionFilter())
     return handler
 
 
@@ -54,6 +57,7 @@ def create_error_handler(log_file: Path, max_bytes: int, backup_count: int) -> l
     handler.setLevel(logging.ERROR)
     handler.setFormatter(create_detailed_formatter())
     handler.addFilter(RequestIdLogFilter())
+    handler.addFilter(SecretRedactionFilter())
     return handler
 
 

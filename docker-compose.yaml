@@ -6,6 +6,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
+    env_file:
+      - path: .env
+        required: false
     volumes:
       - ./data:/backend/data
 

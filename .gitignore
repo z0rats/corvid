@@ -9,6 +9,10 @@ package-lock.json
 **/*.back.*/
 build/
 data/
+
+.env
+.env.*
+!.env.example
 backend/app/static/feedicons/*
 !backend/app/static/feedicons/default.png
 

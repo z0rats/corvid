@@ -1,6 +1,7 @@
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 
 from app.core import healthcheck
+from app.core.security.access_control import verify_access_token
 from app.core.alerts.routes import alerts_routes
 from app.core.settings.api_keys.routers import api_keys_settings_routes, service_config_routes
 from app.core.settings.cti_profile.routers import cti_profile_routes
@@ -32,12 +33,24 @@ from app.features.newsfeed.routers import (
 )
 
 
+def get_public_routers() -> list[APIRouter]:
+    """Routers that stay reachable without the access token.
+
+    - healthcheck: no sensitive data, useful for uptime monitors/orchestrators.
+    - alerts_routes.ws_router: browsers can't attach a custom Authorization
+      header to a WebSocket handshake, so it checks the same access token
+      itself via a query param instead (see access_control.py, alerts_routes.py).
+    """
+    return [
+        healthcheck.router,
+        alerts_routes.ws_router,
+    ]
+
+
 def get_core_routers() -> list[APIRouter]:
     """Get core application routers"""
     return [
-        healthcheck.router,
         alerts_routes.router,
-        alerts_routes.ws_router,
     ]
 
 
@@ -85,5 +98,8 @@ def get_feature_routers() -> list[APIRouter]:
 
 def register_all_routers(app: FastAPI) -> None:
     """Register all routers with the FastAPI application"""
-    for router in [*get_core_routers(), *get_settings_routers(), *get_feature_routers()]:
+    for router in get_public_routers():
         app.include_router(router)
+
+    for router in [*get_core_routers(), *get_settings_routers(), *get_feature_routers()]:
+        app.include_router(router, dependencies=[Depends(verify_access_token)])

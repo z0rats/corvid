@@ -2,32 +2,29 @@ import asyncio
 import logging
 import re
 from typing import Any
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 import html2text
+
+from app.core.config.settings import settings
+from app.core.security.ssrf_guard import safe_get, SSRFValidationError
 
 logger = logging.getLogger(__name__)
 
 class WebContentFetcher:
     """Secure web content fetcher for LLM templates with safety measures."""
-    
+
     MAX_CONTENT_SIZE = 5 * 1024 * 1024  # 5MB
     MAX_REDIRECTS = 5
     TIMEOUT = 30
-    
+
     ALLOWED_SCHEMES = {'http', 'https'}
-    
-    BLOCKED_DOMAINS = {
-        'localhost', '127.0.0.1', '0.0.0.0', '::1',
-        '10.', '172.16.', '192.168.',  # Private IP ranges
-    }
-    
+
     def __init__(self):
         self.client = httpx.AsyncClient(
             timeout=self.TIMEOUT,
-            follow_redirects=True,
-            max_redirects=self.MAX_REDIRECTS,
+            follow_redirects=False,  # safe_get() follows redirects itself, re-validating each hop
             headers={
                 'User-Agent': 'OSINT-Toolkit-WebFetcher/1.0',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -51,30 +48,20 @@ class WebContentFetcher:
         await self.client.aclose()
     
     def _validate_url(self, url: str) -> tuple[bool, str | None]:
-        """Validate URL for security and format."""
+        """Basic format validation. Real SSRF protection (private/loopback/link-local
+        IP resolution) happens in safe_get(), which resolves and pins the actual host."""
         try:
             parsed = urlparse(url)
-            
-            # Check scheme
+
             if parsed.scheme not in self.ALLOWED_SCHEMES:
                 return False, f"Unsupported scheme: {parsed.scheme}"
-            
-            # Check for blocked domains/IPs
-            hostname = parsed.hostname
-            if not hostname:
+            if not parsed.hostname:
                 return False, "Invalid hostname"
-            
-            hostname_lower = hostname.lower()
-            for blocked in self.BLOCKED_DOMAINS:
-                if hostname_lower == blocked or hostname_lower.startswith(blocked):
-                    return False, f"Blocked domain/IP: {hostname}"
-            
-            # Basic format validation
             if not parsed.netloc:
                 return False, "Invalid URL format"
-            
+
             return True, None
-            
+
         except Exception as e:
             return False, f"URL validation error: {str(e)}"
     
@@ -127,10 +114,14 @@ class WebContentFetcher:
         
         try:
             logger.info("Fetching content from: %s", url)
-            
-            response = await self.client.get(url)
+
+            response = await safe_get(
+                self.client, url,
+                allow_private=settings.security.allow_private_network_targets,
+                max_redirects=self.MAX_REDIRECTS,
+            )
             response.raise_for_status()
-            
+
             content_type = response.headers.get('content-type', '').lower()
             if 'text/html' not in content_type and 'application/xhtml' not in content_type:
                 return False, f"Unsupported content type: {content_type}", None
@@ -153,11 +144,16 @@ class WebContentFetcher:
             logger.info("Successfully fetched content from %s (%s characters)", url, len(content))
             return True, content, title
             
+        except SSRFValidationError as e:
+            error_msg = f"URL validation failed: {e}"
+            logger.warning(error_msg)
+            return False, error_msg, None
+
         except httpx.TimeoutException:
             error_msg = f"Timeout while fetching {url}"
             logger.error(error_msg)
             return False, error_msg, None
-            
+
         except httpx.HTTPStatusError as e:
             error_msg = f"HTTP {e.response.status_code} error for {url}"
             logger.error(error_msg)

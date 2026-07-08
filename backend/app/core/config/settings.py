@@ -42,7 +42,14 @@ class APISettings(BaseSettings):
     max_request_body_bytes: int = Field(default=50 * 1024 * 1024, description="Maximum request body size in bytes")
     cors_origins: list[str] = Field(default=["http://localhost:3000"], description="CORS allowed origins")
     trusted_hosts: list[str] = Field(default=["localhost", "127.0.0.1"], description="Allowed Host header values")
-    ws_secret_token: str = Field(default="", description="WebSocket auth token (empty = no auth enforced)")
+    access_token: str = Field(
+        default="",
+        description=(
+            "Bearer token required on every /api/* request (and on the alerts WebSocket, "
+            "as a query param). If empty, one is auto-generated and persisted to "
+            "<data_dir>/.access_token on first startup."
+        ),
+    )
 
 
 class SecuritySettings(BaseSettings):
@@ -54,6 +61,13 @@ class SecuritySettings(BaseSettings):
         description=(
             "Allow SSRF-guarded outbound requests (e.g. favicon fetching) to target "
             "private/loopback/link-local addresses. For dev/testing only."
+        ),
+    )
+    encryption_key: str = Field(
+        default="",
+        description=(
+            "Secret used to derive the key that encrypts API keys at rest. "
+            "If empty, a key is auto-generated and persisted to <data_dir>/.encryption_key."
         ),
     )
 

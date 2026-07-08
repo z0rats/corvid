@@ -1,10 +1,30 @@
 import datetime
 
-from sqlalchemy import String, Boolean, DateTime
+from sqlalchemy import String, Boolean, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column, validates
+from sqlalchemy.types import TypeDecorator
+
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+from app.core.security.secrets_crypto import encrypt_value, decrypt_value
+
+
+class EncryptedString(TypeDecorator):
+    """Transparently encrypts/decrypts a string column at rest (see secrets_crypto)."""
+
+    impl = Text
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        return encrypt_value(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        return decrypt_value(value)
 
 
 class Apikey(Base):
@@ -17,8 +37,8 @@ class Apikey(Base):
         comment="Unique name of the API key provider"
     )
     key: Mapped[str] = mapped_column(
-        String(500), default="",
-        comment="The API key value"
+        EncryptedString, default="",
+        comment="The API key value (encrypted at rest)"
     )
     is_active: Mapped[bool] = mapped_column(
         default=False,

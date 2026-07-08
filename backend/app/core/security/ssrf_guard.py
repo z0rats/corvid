@@ -7,7 +7,9 @@ services on the internal docker network, or localhost-only admin interfaces.
 """
 import ipaddress
 import socket
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit, urljoin
+
+import httpx
 
 
 class SSRFValidationError(Exception):
@@ -59,3 +61,36 @@ def validate_public_url(url: str, *, allow_private: bool = False) -> str:
     if not parsed.hostname:
         raise SSRFValidationError(f"URL has no host: {url}")
     return resolve_validated_ip(parsed.hostname, allow_private=allow_private)
+
+
+async def safe_get(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    allow_private: bool = False,
+    max_redirects: int = 5,
+    **kwargs,
+) -> httpx.Response:
+    """SSRF-safe GET: validates and pins every request to a vetted public IP.
+
+    Redirects are followed manually (up to `max_redirects`), re-validating and
+    re-pinning each hop. Pass a client configured with `follow_redirects=False`:
+    httpx's own redirect handling would re-resolve the `Location` header's host
+    without going through this validation, reopening the SSRF/DNS-rebinding gap
+    this function exists to close.
+    """
+    extra_headers = kwargs.pop("headers", None) or {}
+    for _ in range(max_redirects + 1):
+        parsed = urlsplit(url)
+        ip = validate_public_url(url, allow_private=allow_private)
+        pinned_host = f"[{ip}]" if ":" in ip else ip
+        pinned_netloc = f"{pinned_host}:{parsed.port}" if parsed.port else pinned_host
+        pinned_url = urlunsplit((parsed.scheme, pinned_netloc, parsed.path or "/", parsed.query, parsed.fragment))
+        extensions = {"sni_hostname": parsed.hostname} if parsed.scheme == "https" else {}
+        headers = {**extra_headers, "Host": parsed.hostname}
+        response = await client.get(pinned_url, headers=headers, extensions=extensions, **kwargs)
+        if response.is_redirect and response.has_redirect_location:
+            url = urljoin(url, response.headers["location"])
+            continue
+        return response
+    raise SSRFValidationError(f"Too many redirects while fetching {url}")
