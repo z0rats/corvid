@@ -26,7 +26,7 @@ jobs:
           sudo apt-get install -y build-essential libxml2-dev libxslt-dev liblzma-dev zlib1g-dev
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v8.3.2
         with:
           enable-cache: true
           cache-dependency-glob: backend/requirements.txt
@@ -88,7 +88,7 @@ jobs:
         run: docker compose -f docker-compose.yaml build
 
       - name: Scan backend image for known CVEs (Trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         continue-on-error: true # report-only until the existing findings are triaged
         with:
           image-ref: osint_toolkit-backend:latest
@@ -96,7 +96,7 @@ jobs:
           format: table
 
       - name: Scan frontend image for known CVEs (Trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         continue-on-error: true
         with:
           image-ref: osint_toolkit-frontend:latest
@@ -133,11 +133,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4.37.0
         with:
           languages: ${{ matrix.language }}
 
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4.37.0
 
   secret-scan:
     runs-on: ubuntu-latest
