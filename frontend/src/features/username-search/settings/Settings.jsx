@@ -34,6 +34,11 @@ export default function Settings() {
   const [refreshing, setRefreshing] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
 
+  const handleError = useCallback((error) => {
+    logger.error('Settings error:', error);
+    showError(error.response?.data?.detail || error.message || t('settings.updateError'));
+  }, [showError, t]);
+
   const handleSaChange = useCallback(async (field, value) => {
     const result = await updateSaConfig({ [field]: value });
     if (result.success) {
@@ -41,7 +46,7 @@ export default function Settings() {
     } else {
       handleError(result.error);
     }
-  }, [updateSaConfig, showSuccess, t]);
+  }, [updateSaConfig, showSuccess, handleError, t]);
 
   const handleCheckUpdate = useCallback(async () => {
     setCheckingUpdate(true);
@@ -58,12 +63,7 @@ export default function Settings() {
     } finally {
       setCheckingUpdate(false);
     }
-  }, [setSaConfig, showSuccess, t]);
-
-  const handleError = useCallback((error) => {
-    logger.error('Settings error:', error);
-    showError(error.response?.data?.detail || error.message || t('settings.updateError'));
-  }, [showError, t]);
+  }, [setSaConfig, showSuccess, handleError, t]);
 
   const handleChange = useCallback(async (field, value) => {
     const result = await updateConfig({ [field]: value });
