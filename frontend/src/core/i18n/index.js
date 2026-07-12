@@ -24,6 +24,8 @@ import enUsernameSearch from './locales/en/usernameSearch.json';
 import ruUsernameSearch from './locales/ru/usernameSearch.json';
 import enEmailSearch from './locales/en/emailSearch.json';
 import ruEmailSearch from './locales/ru/emailSearch.json';
+import enRedditSearch from './locales/en/redditSearch.json';
+import ruRedditSearch from './locales/ru/redditSearch.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -40,6 +42,7 @@ export const NAMESPACES = [
   'ruleCreator',
   'usernameSearch',
   'emailSearch',
+  'redditSearch',
 ];
 
 i18n
@@ -59,6 +62,7 @@ i18n
         ruleCreator: enRuleCreator,
         usernameSearch: enUsernameSearch,
         emailSearch: enEmailSearch,
+        redditSearch: enRedditSearch,
       },
       ru: {
         common: ruCommon,
@@ -72,6 +76,7 @@ i18n
         ruleCreator: ruRuleCreator,
         usernameSearch: ruUsernameSearch,
         emailSearch: ruEmailSearch,
+        redditSearch: ruRedditSearch,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,

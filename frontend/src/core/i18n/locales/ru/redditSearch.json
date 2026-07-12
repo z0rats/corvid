@@ -1,0 +1,54 @@
+{
+  "page": {
+    "title": "Поиск по Reddit",
+    "description": "Найдите полную историю постов и комментариев пользователя Reddit, включая удалённый модератором или автором контент, используя публичные архивы Arctic Shift и PullPush.",
+    "poweredBy": "На основе Arctic Shift и PullPush (по мотивам Rosint)"
+  },
+
+  "form": {
+    "usernameLabel": "Никнейм",
+    "usernamePlaceholder": "например, spez, u/spez или ссылка на профиль",
+    "filtersButton": "Фильтры",
+    "searchButton": "Искать"
+  },
+
+  "filters": {
+    "subredditLabel": "Сабреддит",
+    "subredditPlaceholder": "например, AskReddit",
+    "dateFromLabel": "С",
+    "dateToLabel": "По",
+    "includeNsfwLabel": "Включать NSFW"
+  },
+
+  "results": {
+    "postsTab": "Посты ({{count}})",
+    "commentsTab": "Комментарии ({{count}})",
+    "empty": "Результаты для этого пользователя не найдены.",
+    "bothSourcesDown": "Оба архива недоступны - попробуйте позже.",
+    "partialSources": "Ответил только {{source}} - результаты могут быть неполными.",
+    "score": "{{score}} очков",
+    "comments": "комментариев: {{count}}",
+    "viewOnReddit": "Открыть на Reddit",
+    "prevPage": "Предыдущая страница",
+    "nextPage": "Следующая страница",
+    "page": "Страница {{page}}"
+  },
+
+  "badges": {
+    "removed": "Удалено модератором",
+    "deleted": "Удалено автором",
+    "nsfw": "NSFW"
+  },
+
+  "history": {
+    "empty": "Пока нет истории поиска",
+    "notFound": "Поиск не найден",
+    "summary": "результатов: {{count}}, выполнен {{date}}",
+    "headers": {
+      "username": "Никнейм",
+      "results": "Результаты",
+      "searched": "Выполнен",
+      "actions": "Действия"
+    }
+  }
+}

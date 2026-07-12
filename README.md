@@ -65,6 +65,10 @@ The CVSS Calculator module allows you to calculate the CVSS 3.1 score of a vulne
 The Detection Rules module is a GUI for creating Sigma, Yara and Snort/Suricate rules.
 
 
+### Reddit Search
+The Reddit Search module finds a Reddit user's full post and comment history, including content removed by moderators or deleted by its author, by querying the public Arctic Shift and PullPush archive APIs in parallel — no API key required. Filter by subreddit, date range, or NSFW status, and page through results by post or comment. Each search is saved to history so you can revisit it later.
+
+
 
 ## Deploy with docker
 1. Download the repository and extract the files

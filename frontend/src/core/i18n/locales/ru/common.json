@@ -64,6 +64,12 @@
       "newSearch": "Новый поиск",
       "history": "История",
       "settings": "Настройки"
+    },
+
+    "redditSearch": "Поиск по Reddit",
+    "redditSearchTabs": {
+      "newSearch": "Новый поиск",
+      "history": "История"
     }
   },
 

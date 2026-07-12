@@ -1,0 +1,54 @@
+{
+  "page": {
+    "title": "Reddit Search",
+    "description": "Find a Reddit user's full post and comment history, including removed and deleted content, via the Arctic Shift and PullPush public archives.",
+    "poweredBy": "Powered by Arctic Shift & PullPush (inspired by Rosint)"
+  },
+
+  "form": {
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. spez, u/spez, or a profile URL",
+    "filtersButton": "Filters",
+    "searchButton": "Search"
+  },
+
+  "filters": {
+    "subredditLabel": "Subreddit",
+    "subredditPlaceholder": "e.g. AskReddit",
+    "dateFromLabel": "From",
+    "dateToLabel": "To",
+    "includeNsfwLabel": "Include NSFW"
+  },
+
+  "results": {
+    "postsTab": "Posts ({{count}})",
+    "commentsTab": "Comments ({{count}})",
+    "empty": "No results found for this user.",
+    "bothSourcesDown": "Both archives were unreachable - try again later.",
+    "partialSources": "Only {{source}} responded - results may be incomplete.",
+    "score": "{{score}} pts",
+    "comments": "{{count}} comments",
+    "viewOnReddit": "View on Reddit",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "page": "Page {{page}}"
+  },
+
+  "badges": {
+    "removed": "Removed",
+    "deleted": "Deleted",
+    "nsfw": "NSFW"
+  },
+
+  "history": {
+    "empty": "No past searches yet",
+    "notFound": "Search not found",
+    "summary": "{{count}} results, searched {{date}}",
+    "headers": {
+      "username": "Username",
+      "results": "Results",
+      "searched": "Searched",
+      "actions": "Actions"
+    }
+  }
+}
