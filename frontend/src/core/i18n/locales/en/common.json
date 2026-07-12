@@ -64,6 +64,12 @@
       "newSearch": "New Search",
       "history": "History",
       "settings": "Settings"
+    },
+
+    "redditSearch": "Reddit Search",
+    "redditSearchTabs": {
+      "newSearch": "New Search",
+      "history": "History"
     }
   },
 

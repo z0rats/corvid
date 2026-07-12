@@ -21,6 +21,7 @@ from app.features.ioc_tools.ioc_extractor.routers import internal_ioc_extractor_
 from app.features.ioc_tools.ioc_lookup.bulk_lookup.routers import bulk_ioc_lookup_routes
 from app.features.ioc_tools.ioc_lookup.single_lookup.routers import lookup_history_routes, unified_routes
 from app.features.llm_templates.routers import llm_template_routes, template_category_routes
+from app.features.reddit_search.routers import reddit_search_routes
 from app.features.username_search.routers import username_search_routes
 from app.features.newsfeed.routers import (
     external_newsfeed_routes,
@@ -93,6 +94,7 @@ def get_feature_routers() -> list[APIRouter]:
         lookup_history_routes.router,
         username_search_routes.router,
         email_search_routes.router,
+        reddit_search_routes.router,
     ]
 
 

@@ -25,6 +25,7 @@ import NetworkCheckIcon from "@mui/icons-material/NetworkCheck";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import HistoryIcon from "@mui/icons-material/History";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
+import RedditIcon from "@mui/icons-material/Reddit";
 
 const MAIN_MENU_ITEMS_CONFIG = [
   {
@@ -80,6 +81,12 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <MarkEmailReadIcon />,
     path: "/email-search",
     moduleId: "email_search",
+  },
+  {
+    i18nKey: "nav.redditSearch",
+    icon: <RedditIcon />,
+    path: "/reddit-search",
+    moduleId: "reddit_search",
   },
 ];
 
@@ -214,6 +221,11 @@ const EMAIL_SEARCH_TABS_CONFIG = [
   { i18nKey: "nav.emailSearchTabs.settings", path: "/email-search/settings", icon: <SettingsIcon /> },
 ];
 
+const REDDIT_SEARCH_TABS_CONFIG = [
+  { i18nKey: "nav.redditSearchTabs.newSearch", path: "/reddit-search/new", icon: <RedditIcon /> },
+  { i18nKey: "nav.redditSearchTabs.history", path: "/reddit-search/history", icon: <HistoryIcon /> },
+];
+
 const translateItem = (t, { i18nKey, children, ...rest }) => ({
   ...rest,
   label: t(i18nKey),
@@ -230,3 +242,4 @@ export const getCvssTabs = (t) => CVSS_TABS_CONFIG.map(item => translateItem(t, 
 export const getRulesTabs = (t) => RULES_TABS_CONFIG.map(item => translateItem(t, item));
 export const getUsernameSearchTabs = (t) => USERNAME_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getEmailSearchTabs = (t) => EMAIL_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
+export const getRedditSearchTabs = (t) => REDDIT_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
