@@ -36,7 +36,7 @@ def _load_or_create_token_file() -> str:
         )
         print(
             f"\n{'=' * 64}\n"
-            f"OSINT Toolkit access token (enter this in the browser):\n\n"
+            f"Corvid access token (enter this in the browser):\n\n"
             f"  {value}\n\n"
             f"Also saved to: {path}\n"
             f"{'=' * 64}\n",
