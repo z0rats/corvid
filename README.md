@@ -1,11 +1,10 @@
-![ost_logo](https://user-images.githubusercontent.com/44299200/210261186-1f0486a7-79e8-41b6-85f1-9e69915123aa.png)
 
-# OSINT Toolkit
+# Corvid
 > **Warning**
-> OSINT Toolkit is not production ready yet. This is an early prototype, that still needs some work to be done. 
+> Corvid is not production ready yet. This is an early prototype, that still needs some work to be done. 
 ## A fullstack web application built for security analysts
 
-OSINT Toolkit is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday tasks. Optimized for single-user operation, OSINT Toolkit runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, OSINT Toolkit integrates generative AI capabilities, providing additional support for analysis and decision-making. 
+Corvid is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday tasks. Optimized for single-user operation, Corvid runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, Corvid integrates generative AI capabilities, providing additional support for analysis and decision-making. 
 
 
 ## Integrated services
@@ -69,6 +68,10 @@ The Detection Rules module is a GUI for creating Sigma, Yara and Snort/Suricate 
 The Reddit Search module finds a Reddit user's full post and comment history, including content removed by moderators or deleted by its author, by querying the public Arctic Shift and PullPush archive APIs in parallel — no API key required. Filter by subreddit, date range, or NSFW status, and page through results by post or comment. Each search is saved to history so you can revisit it later.
 
 
+### Git Recon
+The Git Recon module correlates names, emails, and GitHub logins from git commit history using [gitcolombo](https://github.com/Soxoj/gitcolombo). Search mode queries GitHub's API only (PGP-key UIDs + public commit search) for a username, no cloning required. Repo/user modes clone one repository or every public repository of a GitHub user/org and cross-reference author vs. committer identities to surface aliases and shared-identity clusters. A GitHub personal access token (configured under Settings > API Keys) is optional but recommended to avoid unauthenticated GitHub rate limits.
+
+
 
 ## Deploy with docker
 1. Download the repository and extract the files
@@ -80,8 +83,9 @@ The Reddit Search module finds a Reddit user's full post and comment history, in
    - `make rebuild-backend` / `make rebuild-frontend` — rebuild and start a single service
 4. Once the container is running, you can access the application in your browser at http://localhost:4000
 
-In case the database schema changed, run a migration before starting the container:
-`docker compose run --rm backend alembic upgrade head`
+Database migrations run automatically on container startup — no manual step needed after
+`make rebuild`. If you need to run one by hand (e.g. to check for pending migrations without
+starting the app), you can still run: `docker compose run --rm backend alembic upgrade head`
 
 ### Access token
 
@@ -98,6 +102,34 @@ before starting the container.
 
 Copy [`.env.example`](.env.example) to `.env` to override any setting (all of them have working
 defaults, so this is optional). `.env` is read automatically by `docker compose up`.
+
+### Backup
+
+Everything Corvid needs to keep running lives under the host-mounted `data/` directory — back it
+up as a whole (stop the container first for a consistent SQLite snapshot, or use `sqlite3 .backup`
+for a live one):
+
+- `data/corvid.db` — the SQLite database: investigation history, settings, and encrypted API keys.
+- `data/.encryption_key` — decrypts the API keys stored in the database. Losing this file makes
+  stored keys unrecoverable even though the database itself is intact; re-entering the keys is the
+  only fix.
+- `data/.access_token` — the bearer token protecting the app. Losing it isn't a data-loss risk — a
+  new one is generated on next startup and you just re-enter it in the browser.
+- `data/logs/` — optional, rotated application logs.
+
+Losing `data/` entirely means starting over from a blank instance; there is no other durable state.
+
+### Disk usage
+
+`data/` has no total-size guard, so keep an eye on the host mount over time. Rough steady-state
+contributors: the SQLite database and rotated logs stay small (tens of MB); maigret's site
+database and its own image-hash cache add tens of MB; `email_search`'s headless checkers
+(if enabled) lazily download a Chromium binary the first time they run (~150-300 MB, plus its own
+runtime footprint); exported reports accumulate if you generate a lot of them and never clean up.
+The backend logs a warning at startup (and the `disk` field in
+`GET /api/healthcheck/detailed` reports `"status": "low"`) once free space on the `data/` mount
+drops below 1 GB, but nothing actively stops writes past that point — treat it as an early signal,
+not a hard limit.
 
 ### Operational security notes
 
@@ -120,7 +152,7 @@ history in a local database. Some practices worth following, especially for sens
 
 ## License
 
-OSINT Toolkit is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+Corvid is licensed under the [GNU Affero General Public License v3.0](LICENSE).
 
 You are free to use, modify, and distribute this software, provided that any
 modified versions or services built on it are also made available under AGPL-3.0,
@@ -129,10 +161,10 @@ including when offered as a network service.
 ### Commercial Licensing
 
 If AGPL-3.0 doesn't fit your use case — for example, if you want to integrate
-OSINT Toolkit into a proprietary product or offer it as a managed service without
+Corvid into a proprietary product or offer it as a managed service without
 open-sourcing your modifications — a commercial license is available.
 
-Contact: [contact@osint-toolkit.com]
+Contact: [z0rats.alex@gmail.com]
 
 ### Prior Versions
 
