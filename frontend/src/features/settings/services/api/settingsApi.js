@@ -64,6 +64,11 @@ export const settingsApi = {
     return response.data;
   },
 
+  async getQuotaStatus() {
+    const response = await api.get('/api/services/quota');
+    return response.data;
+  },
+
   // AI Settings API calls
   async getAiSettings() {
     const response = await api.get('/api/settings/ai');
