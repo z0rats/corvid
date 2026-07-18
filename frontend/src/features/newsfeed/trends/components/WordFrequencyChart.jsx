@@ -4,13 +4,13 @@ import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { ResponsiveBar } from "@nivo/bar";
 
 import { createChartTheme } from "../../utils/chartTheme";
 import { modeValue } from "../../../../core/utils/themeUtils";
+import LoadingState from "../../../../core/components/ui/LoadingState";
 
 function BlacklistLayer({ bars, onBlacklist, t }) {
   return bars.map((bar) => {
@@ -70,9 +70,7 @@ export default function WordFrequencyChart({ data, loading, error, onSelectArtic
       <Card sx={{ minHeight: "450px", height: "100%" }}>
         <CardContent>
           <Typography variant="h6" color="text.primary" mb={2}>{t('trends.wordFrequency.title')}</Typography>
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-            <CircularProgress />
-          </Box>
+          <LoadingState minHeight="400px" />
         </CardContent>
       </Card>
     );

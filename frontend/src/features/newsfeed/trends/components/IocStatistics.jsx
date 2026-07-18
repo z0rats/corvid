@@ -4,7 +4,6 @@ import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -16,6 +15,7 @@ import { ResponsiveBar } from "@nivo/bar";
 import { useTopIocs } from "../../hooks/api/useTrendsApi";
 import { createChartTheme } from "../../utils/chartTheme";
 import { IOC_TYPE_SELECT_OPTIONS } from "../../constants/newsfeedConstants";
+import LoadingState from "../../../../core/components/ui/LoadingState";
 
 function BlacklistLayer({ bars, onBlacklist, t }) {
   return bars.map((bar) => {
@@ -70,11 +70,7 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
   );
 
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="250px">
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingState minHeight="250px" />;
   }
 
   return (
