@@ -26,7 +26,7 @@ class WebContentFetcher:
             timeout=self.TIMEOUT,
             follow_redirects=False,  # safe_get() follows redirects itself, re-validating each hop
             headers={
-                'User-Agent': 'OSINT-Toolkit-WebFetcher/1.0',
+                'User-Agent': 'Corvid-WebFetcher/1.0',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'Accept-Encoding': 'gzip, deflate',
