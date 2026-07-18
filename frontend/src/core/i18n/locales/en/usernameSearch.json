@@ -77,6 +77,8 @@
     "dbStatusBundled": "{{count}} sites (bundled database, never checked for updates)",
     "refreshDbNow": "Check for update now",
     "dbRefreshSuccess": "Site database refresh complete",
+    "maigretVersionSection": "Package Version",
+    "maigretUpdateRequiresRebuild": "maigret is installed at image-build time - installing a newer version requires rebuilding the backend container, this only checks what's available",
     "saTitle": "Social Analyzer Settings",
     "saDescription": "Configure the social-analyzer additional search source.",
     "saTimeoutSeconds": "Delay between requests (seconds)",

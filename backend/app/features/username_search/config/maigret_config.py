@@ -1,10 +1,14 @@
 import json
+import logging
 import os
 import sys
 from functools import lru_cache
 
+import httpx
 from maigret.db_updater import BUNDLED_DB_PATH, CACHED_DB_PATH
 from maigret.sites import MaigretDatabase, MaigretSite
+
+logger = logging.getLogger(__name__)
 
 # Defaults mirror Maigret's own CLI/settings.json defaults (resources/settings.json),
 # not the bare library function's fallback values, so a scan here behaves like
@@ -14,6 +18,25 @@ MAX_CONCURRENCY_DEFAULT = 100
 TOP_SITES_COUNT_DEFAULT = 500  # 0 means "all sites" (CLI's --all-sites)
 AUTO_UPDATE_DB_ENABLED_DEFAULT = True
 AUTO_UPDATE_INTERVAL_HOURS_DEFAULT = 24  # matches Maigret's own autoupdate_check_interval_hours
+
+PACKAGE_NAME = "maigret"
+PYPI_JSON_URL = f"https://pypi.org/pypi/{PACKAGE_NAME}/json"
+
+
+async def fetch_latest_pypi_version(timeout_seconds: float = 5.0) -> str | None:
+    """Check PyPI for the latest published maigret version.
+
+    Returns None on any network/parsing error rather than raising - this is
+    a best-effort "is an update available" check, not a required operation.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
+            response = await client.get(PYPI_JSON_URL)
+            response.raise_for_status()
+            return response.json()["info"]["version"]
+    except (httpx.HTTPError, KeyError, ValueError) as exc:
+        logger.warning("Failed to check PyPI for latest maigret version: %s", exc)
+        return None
 
 
 def _best_local_db_path() -> str:

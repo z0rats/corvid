@@ -26,3 +26,5 @@ class UsernameSearchConfig(Base):
     auto_update_interval_hours: Mapped[int] = mapped_column(Integer, default=AUTO_UPDATE_INTERVAL_HOURS_DEFAULT)
     db_last_updated_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True))
     db_site_count: Mapped[int] = mapped_column(Integer, default=0)
+    latest_pypi_version: Mapped[str | None] = mapped_column(String(50))
+    pypi_checked_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True))

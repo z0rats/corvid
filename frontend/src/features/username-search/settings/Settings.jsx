@@ -22,7 +22,7 @@ const logger = createLogger('UsernameSearchSettings');
 
 export default function Settings() {
   const { t } = useTranslation('usernameSearch');
-  const { config, loading, saving, updateConfig } = useUsernameSearchSettings();
+  const { config, loading, saving, updateConfig, setConfig } = useUsernameSearchSettings();
   const {
     config: saConfig,
     loading: saLoading,
@@ -33,6 +33,7 @@ export default function Settings() {
   const { notification, showSuccess, showError, hideNotification } = useNotification();
   const [refreshing, setRefreshing] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [checkingMaigretUpdate, setCheckingMaigretUpdate] = useState(false);
 
   const handleError = useCallback((error) => {
     logger.error('Settings error:', error);
@@ -64,6 +65,23 @@ export default function Settings() {
       setCheckingUpdate(false);
     }
   }, [setSaConfig, showSuccess, handleError, t]);
+
+  const handleCheckMaigretUpdate = useCallback(async () => {
+    setCheckingMaigretUpdate(true);
+    try {
+      const info = await usernameSearchApi.checkMaigretUpdate();
+      setConfig((prev) => ({
+        ...prev,
+        latest_pypi_version: info.latest_version,
+        pypi_checked_at: new Date().toISOString(),
+      }));
+      showSuccess(t('settings.pypiCheckSuccess'));
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setCheckingMaigretUpdate(false);
+    }
+  }, [setConfig, showSuccess, handleError, t]);
 
   const handleChange = useCallback(async (field, value) => {
     const result = await updateConfig({ [field]: value });
@@ -189,6 +207,31 @@ export default function Settings() {
           disabled={refreshing}
         >
           {t('settings.refreshDbNow')}
+        </Button>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="subtitle1" gutterBottom>{t('settings.maigretVersionSection')}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {config.latest_pypi_version
+            ? t('settings.saVersionStatus', {
+                latest: config.latest_pypi_version,
+                date: config.pypi_checked_at ? new Date(config.pypi_checked_at).toLocaleString() : '',
+              })
+            : t('settings.saVersionNeverChecked')}
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+          {t('settings.maigretUpdateRequiresRebuild')}
+        </Typography>
+
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={checkingMaigretUpdate ? <CircularProgress size={16} /> : <RefreshIcon />}
+          onClick={handleCheckMaigretUpdate}
+          disabled={checkingMaigretUpdate}
+        >
+          {t('settings.saCheckUpdate')}
         </Button>
       </Card>
 

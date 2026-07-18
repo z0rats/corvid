@@ -43,3 +43,13 @@ async def record_db_refresh(db: AsyncSession, site_count: int) -> UsernameSearch
     await db.flush()
     await db.refresh(config)
     return config
+
+
+async def record_pypi_check(db: AsyncSession, latest_version: str | None) -> UsernameSearchConfig:
+    """Record the result of a PyPI latest-version check for the maigret package"""
+    config = await get_username_search_config(db)
+    config.latest_pypi_version = latest_version
+    config.pypi_checked_at = datetime.datetime.now(datetime.timezone.utc)
+    await db.flush()
+    await db.refresh(config)
+    return config

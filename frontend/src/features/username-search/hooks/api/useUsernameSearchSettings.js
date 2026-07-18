@@ -13,6 +13,8 @@ const DEFAULT_CONFIG = {
   auto_update_interval_hours: 24,
   db_last_updated_at: null,
   db_site_count: 0,
+  latest_pypi_version: null,
+  pypi_checked_at: null,
 };
 
 export function useUsernameSearchSettings() {
@@ -60,5 +62,7 @@ export function useUsernameSearchSettings() {
     }
   }, [config, saving]);
 
-  return { config, loading, saving, error, updateConfig };
+  const setConfigDirect = useCallback((newConfig) => setConfig(newConfig), []);
+
+  return { config, loading, saving, error, updateConfig, setConfig: setConfigDirect };
 }
