@@ -42,6 +42,8 @@
     "pgpKeys": "PGP key UIDs ({{count}})",
     "commitSearch": "Commit search hits ({{count}})",
     "alsoKnownAs": "also known as",
+    "mentionCount_one": "{{count}} commit",
+    "mentionCount_other": "{{count}} commits",
     "stats": {
       "repos": "{{count}} repos",
       "commits": "{{count}} commits",
@@ -72,9 +74,15 @@
     "empty": "No past searches yet",
     "notFound": "Search not found",
     "summary": "{{mode}} scan, searched {{date}}",
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
     "headers": {
       "mode": "Mode",
       "target": "Target",
+      "status": "Status",
       "persons": "Persons",
       "repos": "Repos",
       "searched": "Searched",

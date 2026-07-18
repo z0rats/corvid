@@ -1,9 +1,24 @@
-import api from '../../../../core/services/baseApi';
+import api, { baseURL } from '../../../../core/services/baseApi';
+import { getAccessToken } from '../../../../core/utils/accessToken';
 
 export const gitReconApi = {
-  async scan(payload) {
-    const response = await api.post('/api/git-recon/scan', payload);
-    return response.data;
+  async startScan(payload, { signal } = {}) {
+    const response = await fetch(`${baseURL}/api/git-recon/scan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+        'Authorization': `Bearer ${getAccessToken()}`,
+      },
+      body: JSON.stringify(payload),
+      signal,
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(`Server error: ${response.statusText}`);
+    }
+
+    return response.body;
   },
 
   async listHistory(skip = 0, limit = 100) {

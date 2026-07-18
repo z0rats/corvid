@@ -52,6 +52,15 @@ class PersonAlias(BaseModel):
     is_noreply: bool = False
 
 
+class PersonMention(BaseModel):
+    """One repo this identity was seen in, with a representative commit to link to"""
+
+    repo_url: str
+    sample_commit: str
+    as_author: int = 0
+    as_committer: int = 0
+
+
 class GitPerson(BaseModel):
     key: str
     name: str
@@ -61,6 +70,7 @@ class GitPerson(BaseModel):
     github_login: str | None = None
     is_noreply: bool = False
     aliases: list[PersonAlias] = Field(default_factory=list)
+    mentions: list[PersonMention] = Field(default_factory=list)
 
 
 class SharedNameGroup(BaseModel):
@@ -91,17 +101,6 @@ class GitReconResult(BaseModel):
     gpg_keys: list[GpgKeyEmail] = Field(default_factory=list)
     commit_hits: list[CommitSearchHit] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
-
-
-class ScanResponse(BaseModel):
-    """Result of a completed git_recon scan"""
-
-    search_id: int = Field(..., description="ID of the search this result was persisted under")
-    mode: str
-    target: str
-    status: str
-    error: str | None = None
-    result: GitReconResult
 
 
 class SearchSummary(BaseModel):

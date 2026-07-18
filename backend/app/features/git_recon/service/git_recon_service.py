@@ -1,16 +1,22 @@
 import asyncio
+import json
 import logging
 import re
 import shutil
 import tempfile
+import urllib.error
+import urllib.request
+from collections import defaultdict
 
 import gitcolombo
 
+from app.core.database import managed_session
 from app.features.git_recon.config.git_recon_config import (
     CLONE_WORKERS,
     MAX_REPOS_PER_SCAN,
     WALL_CLOCK_TIMEOUT_SECONDS,
 )
+from app.features.git_recon.crud.git_recon_crud import complete_search, create_running_search, fail_search
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +50,61 @@ def validate_github_nickname(nickname: str) -> str:
     return nickname
 
 
-def _person_to_dict(person: "gitcolombo.Person") -> dict:
+def _authed_github_get_json(url: str, token: str | None):
+    """gitcolombo's own get_public_repos_count()/get_github_repos() (used below
+    for 'nickname' mode's repo-discovery step) never send an Authorization
+    header - only get_gpg_keys_emails()/search_commits_by_author() ('search'
+    mode) accept a token. Unauthenticated GitHub API calls cap at 60/hour, so
+    repo discovery can spuriously report "no public repos" well before that
+    limit is visible anywhere else, even with a PAT configured in Settings.
+    Reimplemented here (gitcolombo's own public URL/timeout constants, same
+    request shape as its private _gh_authed) rather than depending on that
+    private helper directly.
+    """
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": gitcolombo.HTTP_USER_AGENT}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=gitcolombo.HTTP_TIMEOUT) as resp:
+            payload = resp.read()
+    except (urllib.error.URLError, TimeoutError) as exc:
+        logger.debug("GET %s failed: %s", url, exc)
+        return None
+    try:
+        return json.loads(payload.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        logger.debug("Bad JSON from %s: %s", url, exc)
+        return None
+
+
+def _get_public_repos_count(nickname: str, token: str | None) -> int:
+    data = _authed_github_get_json(gitcolombo.GITHUB_USER_URL.format(nickname=nickname), token)
+    if not data:
+        return 0
+    return int(data.get("public_repos", 0))
+
+
+def _get_github_repos(nickname: str, repos_count: int, include_forks: bool, token: str | None) -> set[str]:
+    if repos_count <= 0:
+        return set()
+    per_page = gitcolombo.GITHUB_PER_PAGE
+    last_page = (repos_count + per_page - 1) // per_page
+    repos: set[str] = set()
+    for page in range(1, last_page + 1):
+        data = _authed_github_get_json(
+            gitcolombo.GITHUB_REPOS_URL.format(nickname=nickname, per_page=per_page, page=page), token,
+        )
+        if not data:
+            continue
+        for repo in data:
+            if repo.get("fork") and not include_forks:
+                continue
+            repos.add(repo["html_url"])
+    return repos
+
+
+def _person_to_dict(person: "gitcolombo.Person", mentions: dict[str, dict] | None = None) -> dict:
     return {
         "key": person.key,
         "name": person.name,
@@ -61,10 +121,29 @@ def _person_to_dict(person: "gitcolombo.Person") -> dict:
             }
             for alias in person.also_known.values()
         ],
+        "mentions": sorted(
+            (mentions or {}).values(),
+            key=lambda m: m["as_author"] + m["as_committer"],
+            reverse=True,
+        ),
     }
 
 
-def _analyst_to_result(analyst: "gitcolombo.GitAnalyst", repo_outcomes: list[dict], notes: list[str]) -> dict:
+def _record_mention(
+    mentions: dict[str, dict[str, dict]], person_key: str, repo_url: str, commit_hash: str, *, role: str,
+) -> None:
+    entry = mentions[person_key].setdefault(
+        repo_url, {"repo_url": repo_url, "sample_commit": commit_hash, "as_author": 0, "as_committer": 0},
+    )
+    entry[role] += 1
+
+
+def _analyst_to_result(
+    analyst: "gitcolombo.GitAnalyst",
+    repo_outcomes: list[dict],
+    notes: list[str],
+    mentions: dict[str, dict[str, dict]] | None = None,
+) -> dict:
     shared_name_groups = [
         {"name": name, "emails": sorted(emails)}
         for name, emails in analyst.name_to_emails.items()
@@ -75,7 +154,7 @@ def _analyst_to_result(analyst: "gitcolombo.GitAnalyst", repo_outcomes: list[dic
         for names, emails in analyst.same_emails_persons.values()
     ]
     persons = [
-        _person_to_dict(p)
+        _person_to_dict(p, (mentions or {}).get(p.key))
         for p in sorted(analyst.persons.values(), key=lambda p: p.as_author + p.as_committer, reverse=True)
     ]
     return {
@@ -121,9 +200,21 @@ def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_l
     repo_outcomes = [{"url": url, "cloned": path is not None} for url, path in cloned.items()]
 
     analyst = gitcolombo.GitAnalyst(repos_dir=repos_dir)
+    # gitcolombo.Person only tracks a single last-seen repo/commit per identity
+    # (overwritten on every _upsert), so it can't answer "which repos/commits
+    # mention this person" itself. analyst.commits is a flat list with no repo
+    # attached to each Commit either - the only place that association exists
+    # is here, at the per-url append() call site, so we slice out each repo's
+    # own commits right after appending them to build that mapping ourselves.
+    mentions: dict[str, dict[str, dict]] = defaultdict(dict)
     for url, path in cloned.items():
-        if path:
-            analyst.append(url, cloned_path=path)
+        if not path:
+            continue
+        start = len(analyst.commits)
+        analyst.append(url, cloned_path=path)
+        for commit in analyst.commits[start:]:
+            _record_mention(mentions, commit.author, url, commit.hash, role="as_author")
+            _record_mention(mentions, commit.committer, url, commit.hash, role="as_committer")
 
     failed = sum(1 for o in repo_outcomes if not o["cloned"])
     if failed:
@@ -132,7 +223,7 @@ def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_l
     if resolve_github_logins and analyst.persons:
         analyst.resolve_persons()
 
-    return _analyst_to_result(analyst, repo_outcomes, notes)
+    return _analyst_to_result(analyst, repo_outcomes, notes, mentions)
 
 
 async def run_scan(
@@ -149,8 +240,7 @@ async def run_scan(
 
     All of gitcolombo's I/O is blocking (subprocess + urllib), so each stage runs
     via asyncio.to_thread; the whole operation is bounded by WALL_CLOCK_TIMEOUT_SECONDS
-    so a wedged clone/API call can't hang the request indefinitely (raises
-    TimeoutError, mapped to a 504 by the router).
+    so a wedged clone/API call can't hang the request indefinitely (raises TimeoutError).
     """
     if mode == "search":
         username = validate_github_nickname(target)
@@ -164,13 +254,13 @@ async def run_scan(
         discovered_count = 1
     elif mode == "nickname":
         nickname = validate_github_nickname(target)
-        count = await asyncio.to_thread(gitcolombo.get_public_repos_count, nickname)
+        count = await asyncio.to_thread(_get_public_repos_count, nickname, github_token)
         if not count:
             raise GitReconError(
                 f"No public repos found for '{nickname}' (or rate-limited - try adding a GitHub PAT in Settings)"
             )
-        repos = await asyncio.to_thread(gitcolombo.get_github_repos, nickname, count, include_forks)
-        # get_github_repos() returns html_url straight from GitHub's own API response
+        repos = await asyncio.to_thread(_get_github_repos, nickname, count, include_forks, github_token)
+        # _get_github_repos() returns html_url straight from GitHub's own API response
         # (not user input), but re-validate defensively before any of it reaches
         # git_clone()'s subprocess call.
         sources = sorted(r for r in repos if _REPO_URL_RE.match(r))
@@ -202,3 +292,87 @@ async def run_scan(
             f"found {discovered_count} public repo(s), scanning only the first {MAX_REPOS_PER_SCAN}"
         )
     return result
+
+
+async def run_scan_task(
+    *,
+    mode: str,
+    target: str,
+    include_forks: bool,
+    resolve_github_logins: bool,
+    ignore_noreply: bool,
+    github_token: str | None,
+    queue: asyncio.Queue,
+) -> None:
+    """Run one gitcolombo scan, persisting its result and streaming coarse-grained
+    progress via the given queue.
+
+    Spawned as a background task by the route handler so the request isn't held
+    open for the scan's full duration (which can run up to WALL_CLOCK_TIMEOUT_SECONDS
+    - long enough that a reverse proxy in front of this app would otherwise time
+    out the connection well before the scan finishes). Runs independently of the
+    SSE client's connection: it keeps running and persists its result even if the
+    client disconnects mid-scan. gitcolombo has no per-item progress callback (git
+    cloning/GitHub API calls, not per-site checks like maigret), so this only
+    emits "started" and a single terminal event, same as social_analyzer_service.py.
+    """
+    async with managed_session() as db:
+        search = await create_running_search(db, mode=mode, target=target)
+        search_id = search.id
+
+    queue.put_nowait({"type": "started", "search_id": search_id, "mode": mode, "target": target})
+
+    try:
+        result = await run_scan(
+            mode=mode,
+            target=target,
+            include_forks=include_forks,
+            resolve_github_logins=resolve_github_logins,
+            ignore_noreply=ignore_noreply,
+            github_token=github_token,
+        )
+    except GitReconError as exc:
+        async with managed_session() as db:
+            await fail_search(db, search_id, error=str(exc))
+        queue.put_nowait({"type": "failed", "search_id": search_id, "error": str(exc)})
+        queue.put_nowait(None)
+        return
+    except TimeoutError:
+        error = "Scan timed out"
+        async with managed_session() as db:
+            await fail_search(db, search_id, error=error)
+        queue.put_nowait({"type": "failed", "search_id": search_id, "error": error})
+        queue.put_nowait(None)
+        return
+    except Exception as exc:
+        logger.error("Git recon %s scan for '%s' failed: %s", mode, target, exc, exc_info=True)
+        async with managed_session() as db:
+            await fail_search(db, search_id, error=str(exc))
+        queue.put_nowait({"type": "failed", "search_id": search_id, "error": str(exc)})
+        queue.put_nowait(None)
+        return
+
+    repo_outcomes = result.get("repos", [])
+    repos_scanned = sum(1 for r in repo_outcomes if r["cloned"])
+    repos_failed = sum(1 for r in repo_outcomes if not r["cloned"])
+    persons_found = len(result.get("persons", []))
+
+    async with managed_session() as db:
+        await complete_search(
+            db, search_id,
+            repos_scanned=repos_scanned, repos_failed=repos_failed, persons_found=persons_found, result=result,
+        )
+
+    logger.info(
+        "Git recon %s scan for '%s': %d person(s), %d repo(s) scanned",
+        mode, target, persons_found, repos_scanned,
+    )
+
+    queue.put_nowait({
+        "type": "completed",
+        "search_id": search_id,
+        "repos_scanned": repos_scanned,
+        "repos_failed": repos_failed,
+        "persons_found": persons_found,
+    })
+    queue.put_nowait(None)

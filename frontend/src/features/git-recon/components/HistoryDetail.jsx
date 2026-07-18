@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -12,6 +13,7 @@ import { gitReconApi } from '../services/api/gitReconApi';
 import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('GitReconHistoryDetail');
+const STATUS_COLORS = { running: 'info', completed: 'success', failed: 'error' };
 
 export default function HistoryDetail() {
   const { t } = useTranslation('gitRecon');
@@ -44,11 +46,18 @@ export default function HistoryDetail() {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5">{search.target}</Typography>
+        <Chip size="small" label={t(`history.status.${search.status}`)} color={STATUS_COLORS[search.status] || 'default'} />
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t('history.summary', { mode: t(`form.modes.${search.mode}`), date: new Date(search.searched_at).toLocaleString() })}
       </Typography>
+
+      {search.status === 'failed' && search.error && (
+        <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+          {search.error}
+        </Typography>
+      )}
 
       <ResultsView result={search.result} />
     </Box>
