@@ -119,7 +119,7 @@ export const calculateCVSS31 = (metrics) => {
     ? 6.42 * (1 - (1 - c) * (1 - i) * (1 - a))
     : 7.52 * (1 - (1 - c) * (1 - i) * (1 - a)) - 0.029 - 3.25 * Math.pow(1 - (1 - c) * (1 - i) * (1 - a), 0.02);
 
-  let baseScore = 0;
+  let baseScore;
   if (impactScore <= 0) {
     baseScore = 0;
   } else if (scope === 'U') {
@@ -162,7 +162,7 @@ export const calculateCVSS31 = (metrics) => {
     ? 6.42 * modifiedImpactSubScore
     : 7.52 * modifiedImpactSubScore - 0.029 - 3.25 * Math.pow(modifiedImpactSubScore, 0.02);
 
-  let environmentalScore = 0;
+  let environmentalScore;
   if (modifiedImpactScore <= 0) {
     environmentalScore = 0;
   } else if (effectiveModifiedScope === 'U') {

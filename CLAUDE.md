@@ -77,6 +77,6 @@ IOC/threat-intel lookups across IPs, domains, URLs, emails, hashes, CVEs via: Ab
 - `make up` / `make rebuild` — start (or rebuild + start) full stack via Docker.
 - `make up-backend` / `make rebuild-backend`, `make up-frontend` / `make rebuild-frontend` — per-service.
 - `docker compose run --rm backend alembic upgrade head` — apply DB migrations.
-- Backend tests: `cd backend && pytest`.
+- Backend tests: `cd backend && pytest`. Sync your venv first — `uv pip install -r requirements.txt --override lxml-override.txt` (same command CI's blocking test step uses) — since a stale/partial local venv can pass locally while silently missing an import error that CI's full install would catch (or vice versa).
 - Frontend dev: `cd frontend && yarn start` (uses `--openssl-legacy-provider`); build: `yarn build`; test: `yarn test`.
 - App served at `http://localhost:4000` once containers are up.

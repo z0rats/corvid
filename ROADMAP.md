@@ -34,9 +34,6 @@ Ideas for expanding investigative capability itself, rather than hardening what 
 - **[M] Missing indexes on hot lookup paths.** Worth auditing: `SingleLookupSearch`/`SingleLookupResult`, `MaigretSearch`/`MaigretSiteResult`, `RedditSearchResult` (unique on `search_id`+`kind`+`reddit_id` — is that backed by an actual index, or just an app-level check?), and newsfeed article tables queried by the trends/analytics feature. Add indexes on FK columns and any column used in `ORDER BY`/`WHERE` for history listing endpoints.
 - **[M] Newsfeed IOC/MITRE extraction cost.** If article IOC extraction and MITRE ATT&CK mapping run synchronously inline on ingest for every fetched article, consider whether it should be a separate APScheduler-driven batch step so a slow regex/NLP pass doesn't block the fetch cycle.
 
-## UI / UX
-
-
 ## Security
 
 - **[M] SQLite file permissions & backup story.** `data/corvid.db` holds encrypted API keys but the encryption key itself (`<data_dir>/.encryption_key`) and access token (`<data_dir>/.access_token`) live next to it on the same bind mount. Document (README) that backing up `data/` without also protecting host filesystem permissions defeats the encryption-at-rest story — the key travels with the ciphertext.
@@ -48,3 +45,4 @@ Ideas for expanding investigative capability itself, rather than hardening what 
 Done: subprocess resilience, per-feed fetch health, and disk-space warnings (see `CLAUDE.md` for the current shape of each). Remaining ideas:
 
 - **[S] Disk-space threshold configurability.** `LOW_DISK_SPACE_THRESHOLD_BYTES` (`core/dependencies.py`) is a hardcoded 1 GiB. Fine for now, but if a deployment legitimately runs closer to the edge (small VPS), consider making it an env-configurable `AppSettings` field instead of a constant.
+

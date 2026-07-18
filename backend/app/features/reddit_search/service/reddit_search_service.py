@@ -90,6 +90,32 @@ async def _safe_fetch(client: httpx.AsyncClient, url: str) -> list[dict] | None:
         return None
 
 
+def _merge_and_sort(
+    arctic_items: list[dict] | None,
+    pullpush_items: list[dict] | None,
+    kind: str,
+    include_nsfw: bool,
+) -> list[dict]:
+    """Dedupe by Reddit item ID (Arctic Shift wins ties, since it's merged first)
+    and sort desc by created_utc. Pulled out of fetch_both() so this logic is
+    testable without a network round-trip."""
+    seen: set[str] = set()
+    merged: list[dict] = []
+    for item in (arctic_items or []) + (pullpush_items or []):
+        item_id = item.get("id")
+        if item_id and item_id not in seen:
+            seen.add(item_id)
+            merged.append(item)
+
+    # PullPush ignores over_18 server-side, so filter client-side (posts only;
+    # comments have no over_18 field). Arctic results already match this filter.
+    if kind == "posts" and not include_nsfw:
+        merged = [p for p in merged if p.get("over_18") is False]
+
+    merged.sort(key=lambda i: i.get("created_utc") or 0, reverse=True)
+    return merged
+
+
 async def fetch_both(
     username: str,
     kind: str,
@@ -128,20 +154,7 @@ async def fetch_both(
         sources.append("PullPush")
     arctic_down = arctic_items is None
 
-    seen: set[str] = set()
-    merged: list[dict] = []
-    for item in (arctic_items or []) + (pullpush_items or []):
-        item_id = item.get("id")
-        if item_id and item_id not in seen:
-            seen.add(item_id)
-            merged.append(item)
-
-    # PullPush ignores over_18 server-side, so filter client-side (posts only;
-    # comments have no over_18 field). Arctic results already match this filter.
-    if kind == "posts" and not include_nsfw:
-        merged = [p for p in merged if p.get("over_18") is False]
-
-    merged.sort(key=lambda i: i.get("created_utc") or 0, reverse=True)
+    merged = _merge_and_sort(arctic_items, pullpush_items, kind, include_nsfw)
     return merged, sources, arctic_down
 
 
