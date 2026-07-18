@@ -1,0 +1,47 @@
+{
+  "page": {
+    "title": "Dork Runner",
+    "description": "Run a library of parameterized search-engine dorks against a domain, username, or email and aggregate the results."
+  },
+
+  "welcomeScreen": {
+    "title": "Automated Dork Runner",
+    "intro": "Enter a domain, username, or email above and select which dork templates to run.",
+    "description": "DuckDuckGo is used by default since it's far less likely to block scripted queries than Google or Bing. Queries run one at a time with a short delay between them."
+  },
+
+  "engineWarning": {
+    "title": "Best-effort engine",
+    "message": "Google and Bing actively block/CAPTCHA scripted queries, often after a single request. Results from this engine may be empty even when DuckDuckGo would find something."
+  },
+
+  "form": {
+    "targetLabel": "Target",
+    "targetPlaceholder": "e.g. example.com, johndoe, user@example.com",
+    "runButton": "Run",
+    "templatesLabel": "Dork templates"
+  },
+
+  "targetTypes": {
+    "domain": "Domain",
+    "username": "Username",
+    "email": "Email"
+  },
+
+  "engines": {
+    "duckduckgo": "DuckDuckGo (recommended)",
+    "google": "Google (best-effort)",
+    "bing": "Bing (best-effort)"
+  },
+
+  "results": {
+    "summary": "Found {{count}} results across {{queries}} queries",
+    "empty": "No results found",
+    "someQueriesFailed": "{{count}} queries failed or returned nothing (this is expected for blocked/CAPTCHA'd engines)",
+    "columns": {
+      "template": "Dork",
+      "title": "Result",
+      "snippet": "Snippet"
+    }
+  }
+}
