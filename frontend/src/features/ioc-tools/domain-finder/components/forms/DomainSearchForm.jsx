@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { domainUtils } from '../../utils/domainUtils';
 import SearchBar from '../../../../../core/components/ui/SearchBar';
 
-export default function DomainSearchForm({ onSearch, onError }) {
+export default function DomainSearchForm({ onSearch, onError, initialValue = '' }) {
   const { t } = useTranslation('iocTools');
-  const [domainValue, setDomainValue] = useState('');
+  const [domainValue, setDomainValue] = useState(initialValue);
+
+  useEffect(() => {
+    if (initialValue) {
+      setDomainValue(initialValue);
+    }
+  }, [initialValue]);
 
   const handleSearch = () => {
     const inputValue = domainValue.trim();
