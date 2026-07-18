@@ -30,7 +30,7 @@ SUSPICIOUS_MAILER_PATTERNS = ['php', 'script', 'bulk', 'mass']
 SUPPORTED_HASH_ALGORITHMS = ['md5', 'sha1', 'sha256']
 
 # URL extraction patterns
-URL_PATTERN = r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
+URL_PATTERN = r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$_@.&+-]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
 EMAIL_PATTERN = r'[\w\.-]+@[\w\.-]+'
 
 # HTML security patterns

@@ -33,7 +33,7 @@ def check_homograph_attack(text: str | bytes | None) -> bool:
         return False
 
     try:
-        cleaned_text = re.sub(r'[<@.,-_> "]', '', str(text))
+        cleaned_text = re.sub(r'[<@.,_> "-]', '', str(text))
         scripts: set[str] = {ud.name(char).split(' ')[0] for char in cleaned_text}
         scripts.discard('LATIN')
         return len(scripts) > 1

@@ -2,6 +2,7 @@
 
 import base64
 import logging
+import re
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
@@ -41,6 +42,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["Newsfeed"])
 
 FEED_ICONS_DIR = Path(settings.static_dir) / "feedicons"
+_SAFE_ICON_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def _decode_feed_name(encoded_name: str) -> str:
@@ -236,6 +238,10 @@ async def get_feed_icon(icon_name: str) -> FileResponse:
     """Serve a feed icon by name, falling back to the default icon if not found"""
     icons_base = FEED_ICONS_DIR.resolve()
     icon_name_base = icon_name.rsplit(".png", 1)[0]
+
+    if not _SAFE_ICON_NAME.fullmatch(icon_name_base):
+        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid icon name", error_code="FEED_ICON_INVALID_NAME")
+
     target = (FEED_ICONS_DIR / f"{icon_name_base}.png").resolve()
 
     if not target.is_relative_to(icons_base):

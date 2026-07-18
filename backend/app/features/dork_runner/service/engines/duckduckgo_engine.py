@@ -21,7 +21,9 @@ def _resolve_result_url(href: str) -> str:
     if href.startswith("//"):
         href = f"https:{href}"
     parsed = urlparse(href)
-    if "duckduckgo.com" in parsed.netloc and parsed.path.startswith("/l/"):
+    hostname = parsed.hostname or ""
+    is_duckduckgo = hostname == "duckduckgo.com" or hostname.endswith(".duckduckgo.com")
+    if is_duckduckgo and parsed.path.startswith("/l/"):
         target = parse_qs(parsed.query).get("uddg")
         if target:
             return target[0]

@@ -67,7 +67,7 @@ async def bulk_ioc_lookup(
                 
         except Exception as e:
             logger.error("Error in bulk lookup stream: %s", str(e), exc_info=True)
-            error_data = json.dumps({"error": str(e), "service": "system"})
+            error_data = json.dumps({"error": "An internal error occurred during bulk lookup", "service": "system"})
             yield f"data: {error_data}\n\n"
     
     return StreamingResponse(
