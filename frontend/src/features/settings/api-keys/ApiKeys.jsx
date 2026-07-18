@@ -7,6 +7,7 @@ import { calculateCompletionPercentage, getConfiguredCount } from '../utils/sett
 import ApiKeysHeader from './components/ui/ApiKeysHeader';
 import ApiKeysFilters from './components/ui/ApiKeysFilters';
 import ServiceCard from './components/ui/ServiceCard';
+import QuotaPanel from './components/ui/QuotaPanel';
 
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -88,6 +89,8 @@ export default function ApiKeys() {
         expanded={headerExpanded}
         onToggle={() => setHeaderExpanded(!headerExpanded)}
       />
+
+      <QuotaPanel />
 
       <ApiKeysFilters
         searchFilter={searchFilter}
