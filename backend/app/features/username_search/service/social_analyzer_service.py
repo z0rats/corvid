@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from app.core.database import managed_session
 from app.core.settings.username_search.crud.social_analyzer_settings_crud import get_social_analyzer_config
-from app.features.username_search.config.social_analyzer_config import find_binary
+from app.features.username_search.config.social_analyzer_config import PROCESS_WATCHDOG_SECONDS, find_binary
 from app.features.username_search.crud.username_search_crud import (
     cancel_search_run,
     complete_search_run,
@@ -106,7 +106,7 @@ async def run_scan(
 
     try:
         try:
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=PROCESS_WATCHDOG_SECONDS)
         except asyncio.CancelledError:
             process.kill()
             await process.wait()
@@ -117,6 +117,16 @@ async def run_scan(
             })
             queue.put_nowait(None)
             raise
+        except asyncio.TimeoutError:
+            process.kill()
+            await process.wait()
+            error = f"social-analyzer scan exceeded the maximum runtime of {PROCESS_WATCHDOG_SECONDS}s and was terminated"
+            logger.error("%s ('%s')", error, username)
+            async with managed_session() as db:
+                await fail_search_run(db, search_id, error)
+            queue.put_nowait({"type": "failed", "search_id": search_id, "error": error})
+            queue.put_nowait(None)
+            return
 
         if search_id in _cancelled_search_ids:
             async with managed_session() as db:

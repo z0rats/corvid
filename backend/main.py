@@ -21,6 +21,7 @@ from app.core.config.security_config import SecurityHeadersMiddleware
 from app.core.config.settings import settings
 from app.core.config.validation import ensure_required_directories, log_validation_results
 from app.core.database import Base, engine, managed_session, dispose_database_engine
+from app.core.dependencies import get_disk_space_health
 from app.core.exceptions import register_exception_handlers
 from app.core.scheduler import initialize_scheduler, stop_scheduler
 from app.core.security.access_control import get_access_token, verify_access_token
@@ -81,6 +82,30 @@ async def _fetch_favicons_in_background() -> None:
         logger.error("Background favicon fetch failed: %s", e)
 
 
+async def _reconcile_stale_scans() -> None:
+    """Mark username/email search runs still 'running' from a previous process as failed.
+
+    Both scans are driven by a detached `asyncio.create_task()` (see their
+    `routers/*_routes.py` `start_scan` handlers) that outlives the SSE request but
+    not the process itself, so a container stop/crash mid-scan leaves the row
+    stuck at 'running' with nothing to ever move it out of that state.
+    """
+    from app.features.username_search.crud.username_search_crud import interrupt_running_search_runs
+    from app.features.email_search.crud.email_search_crud import (
+        interrupt_running_search_runs as interrupt_running_mail_runs,
+    )
+
+    async with managed_session() as db:
+        maigret_count = await interrupt_running_search_runs(db)
+        mail_count = await interrupt_running_mail_runs(db)
+        if maigret_count or mail_count:
+            logger.info(
+                "Reconciled stale scan runs left 'running' by a previous process: "
+                "%s username-search, %s email-search",
+                maigret_count, mail_count,
+            )
+
+
 async def _populate_blacklist_if_empty_in_background() -> None:
     """On first-ever startup (empty table), populate the address blacklist immediately
     in the background rather than waiting for the next scheduled refresh."""
@@ -98,12 +123,24 @@ async def _populate_blacklist_if_empty_in_background() -> None:
         logger.error("Background blacklist populate failed: %s", e)
 
 
+def _check_disk_space() -> None:
+    """Warn (don't block startup) if the data_dir mount is running low on free space"""
+    health = get_disk_space_health(settings)
+    if health.get("status") == "low":
+        logger.warning(
+            "Low disk space on data directory mount: %s GB free of %s GB total (%s)",
+            health.get("free_gb"), health.get("total_gb"), settings.data_dir,
+        )
+
+
 async def handle_application_startup() -> None:
     """Handle application startup tasks"""
     logger.info("Application starting up...")
     try:
         get_access_token()  # eager: prints/persists the token now, not on first request
+        _check_disk_space()
         await _create_database_tables()
+        await _reconcile_stale_scans()
         await _run_application_defaults()
         asyncio.create_task(_fetch_favicons_in_background())
         asyncio.create_task(_populate_blacklist_if_empty_in_background())

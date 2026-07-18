@@ -1,27 +1,46 @@
+name: corvid
+
 services:
   backend:
     networks:
-      - otk-network
+      - corvid-network
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
+    restart: unless-stopped
     env_file:
       - path: .env
         required: false
     volumes:
       - ./data:/backend/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/healthcheck', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   frontend:
     networks:
-        - otk-network
+        - corvid-network
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     ports:
       - "4000:80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
 networks:
-  otk-network:
+  corvid-network:
     driver: bridge

@@ -94,6 +94,38 @@ def validate_environment_variables() -> list[str]:
         if "*" in settings.api.cors_origins:
             errors.append("CORS origins should be restricted in production")
 
+        default_cors_origins = ["http://localhost:3000"]
+        if settings.api.cors_origins == default_cors_origins:
+            errors.append(
+                "CORS origins are still at the localhost development default "
+                f"({default_cors_origins}) while ENVIRONMENT=production — set "
+                "API_CORS_ORIGINS to the actual origin(s) this is served from"
+            )
+
+        default_trusted_hosts = ["localhost", "127.0.0.1"]
+        if settings.api.trusted_hosts == default_trusted_hosts:
+            errors.append(
+                "Trusted hosts are still at the localhost development default "
+                f"({default_trusted_hosts}) while ENVIRONMENT=production — set "
+                "API_TRUSTED_HOSTS to the actual host(s) this is served from, or "
+                "requests may be rejected by TrustedHostMiddleware"
+            )
+
+    return errors
+
+
+def validate_security_settings() -> list[str]:
+    """Validate security-related configuration settings"""
+    errors = []
+
+    if settings.security.allow_private_network_targets:
+        errors.append(
+            "SECURITY_ALLOW_PRIVATE_NETWORK_TARGETS is enabled — the SSRF guard will "
+            "allow outbound requests to private/loopback/link-local/reserved targets. "
+            "Dev/testing only; disable this in any deployment reachable from a "
+            "sensitive network"
+        )
+
     return errors
 
 
@@ -104,6 +136,7 @@ def validate_all_settings() -> dict[str, list[str]]:
         "logging": validate_logging_settings(),
         "api": validate_api_settings(),
         "environment": validate_environment_variables(),
+        "security": validate_security_settings(),
     }
     
     return validation_results

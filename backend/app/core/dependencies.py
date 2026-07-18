@@ -1,4 +1,5 @@
 import logging
+import shutil
 from functools import lru_cache
 from collections.abc import AsyncGenerator
 from typing import Annotated
@@ -85,6 +86,30 @@ async def get_database_health() -> dict[str, str]:
 
 
 DatabaseHealthDep = Annotated[dict[str, str], Depends(get_database_health)]
+
+
+def get_disk_space_health(settings: AppSettings = Depends(get_settings)) -> dict[str, str]:
+    """Check free disk space on the data directory's mount.
+
+    Warns rather than blocks: DB, logs, maigret's site database, pyppeteer's
+    Chromium download, and exported reports all live under data_dir with no
+    total-size guard, so this is meant to surface a slowly-filling volume
+    before it turns into a write failure somewhere unrelated.
+    """
+    try:
+        usage = shutil.disk_usage(settings.data_dir)
+        status = "healthy" if usage.free >= settings.low_disk_space_threshold_bytes else "low"
+        return {
+            "status": status,
+            "free_gb": f"{usage.free / (1024 ** 3):.2f}",
+            "total_gb": f"{usage.total / (1024 ** 3):.2f}",
+        }
+    except OSError as e:
+        logger.error("Error checking disk space: %s", e)
+        return {"status": "unknown", "error": str(e)}
+
+
+DiskSpaceHealthDep = Annotated[dict[str, str], Depends(get_disk_space_health)]
 
 # Reusable query parameter aliases for consistent pagination across all endpoints
 SkipQuery = Annotated[int, Query(ge=0, description="Number of items to skip")]
