@@ -31,7 +31,9 @@ EXPORT_FORMATS: dict[str, tuple[str, str]] = {
 
 
 def _results_path(search_id: int) -> str:
-    return os.path.join(REPORTS_DIR, f"{search_id}.pkl")
+    # int() re-validates at the boundary rather than trusting the type hint, so this
+    # can never format anything but digits into the filename (no path traversal).
+    return os.path.join(REPORTS_DIR, f"{int(search_id)}.pkl")
 
 
 def save_scan_results(search_id: int, results: dict) -> None:
