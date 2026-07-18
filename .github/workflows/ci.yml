@@ -68,6 +68,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Check i18n locale keys are in sync
+        run: yarn check:i18n
+
       - name: Build (lints via CRA's eslint-webpack-plugin, CI=true fails on warnings)
         run: yarn build
 
@@ -91,7 +94,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         continue-on-error: true # report-only until the existing findings are triaged
         with:
-          image-ref: osint_toolkit-backend:latest
+          image-ref: corvid-backend:latest
           severity: HIGH,CRITICAL
           format: table
 
@@ -99,7 +102,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         continue-on-error: true
         with:
-          image-ref: osint_toolkit-frontend:latest
+          image-ref: corvid-frontend:latest
           severity: HIGH,CRITICAL
           format: table
 
