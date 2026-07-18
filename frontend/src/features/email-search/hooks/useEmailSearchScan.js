@@ -6,14 +6,18 @@ import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('EmailSearchScan');
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Module-scoped, not a ref: the scan must keep reading its SSE stream and
 // updating emailScanStateAtom even after the component that started it
 // unmounts (e.g. the user switches to another feature tab and back).
 let activeAbortController = null;
 
 const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-const RECONCILE_POLL_INTERVAL_MS = 2000;
-const RECONCILE_POLL_MAX_ATTEMPTS = 150; // ~5 minutes
+const RECONCILE_POLL_INITIAL_MS = 1000;
+const RECONCILE_POLL_MAX_MS = 15000;
+const RECONCILE_POLL_BACKOFF_FACTOR = 1.5;
+const RECONCILE_POLL_TIMEOUT_MS = 5 * 60 * 1000; // give up waiting after ~5 minutes total
 
 export function useEmailSearchScan() {
   const [state, setState] = useAtom(emailScanStateAtom);
@@ -81,7 +85,10 @@ export function useEmailSearchScan() {
   // instead of assuming failure, so the UI doesn't show "failed" for a scan that actually
   // succeeded.
   const reconcileAfterStreamError = useCallback(async (searchId, signal) => {
-    for (let attempt = 0; attempt < RECONCILE_POLL_MAX_ATTEMPTS; attempt++) {
+    const startedAt = Date.now();
+    let delay = RECONCILE_POLL_INITIAL_MS;
+
+    while (Date.now() - startedAt < RECONCILE_POLL_TIMEOUT_MS) {
       if (signal.aborted) return;
       let run;
       try {
@@ -103,7 +110,8 @@ export function useEmailSearchScan() {
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, RECONCILE_POLL_INTERVAL_MS));
+      await sleep(delay);
+      delay = Math.min(delay * RECONCILE_POLL_BACKOFF_FACTOR, RECONCILE_POLL_MAX_MS);
     }
     // Gave up waiting - the run may still genuinely be in progress server-side,
     // but there's no live connection left to keep watching it from here.

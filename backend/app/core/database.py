@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import StaticPool
@@ -42,6 +43,15 @@ def create_database_engine() -> AsyncEngine:
             echo=echo,
             poolclass=StaticPool,
         )
+
+        @event.listens_for(engine.sync_engine, "connect")
+        def _set_sqlite_pragma(dbapi_connection, connection_record) -> None:
+            """Enable WAL so readers (e.g. SSE progress polling) aren't blocked by
+            the scheduler or an in-progress scan holding a write lock."""
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.close()
     else:
         engine = create_async_engine(
             db_url,

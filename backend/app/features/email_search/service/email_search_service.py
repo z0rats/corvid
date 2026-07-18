@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+import psutil
 from mailcat import simple_session, via_proxy, via_tor
 
 from app.core.database import managed_session
@@ -31,6 +32,32 @@ def cancel_scan(search_id: int) -> bool:
     return True
 
 
+_CHROMIUM_PROCESS_NAMES = {"chrome", "chromium", "headless_shell", "chrome-headless-shell"}
+
+
+def _kill_orphaned_chromium(before_pids: set[int]) -> None:
+    """Best-effort safety net for the pyppeteer-driven checkers (fastmail/intpl/onet).
+
+    mailcat closes its own browser handle in a `finally` block that runs even on
+    checker cancellation, but that's a cooperative asyncio-level close - if the
+    Chromium process itself is wedged and never responds, cancelling our side
+    doesn't reap the OS process. Diff the checker's child processes before/after
+    and kill anything Chromium-shaped left behind.
+    """
+    try:
+        for child in psutil.Process().children(recursive=True):
+            if child.pid in before_pids:
+                continue
+            try:
+                if child.name().lower() in _CHROMIUM_PROCESS_NAMES:
+                    child.kill()
+                    logger.warning("Killed orphaned Chromium process (pid=%s) after checker timeout", child.pid)
+            except psutil.NoSuchProcess:
+                pass
+    except psutil.Error:
+        logger.debug("Chromium orphan cleanup failed", exc_info=True)
+
+
 def _normalize_emails(value) -> list[str]:
     if isinstance(value, str):
         return [value]
@@ -47,10 +74,17 @@ async def _run_checker(checker, username: str, req_session_fun, timeout: int, se
     checker_name = checker.__name__
     async with semaphore:
         try:
+            before_pids = {c.pid for c in psutil.Process().children(recursive=True)}
+        except psutil.Error:
+            before_pids = set()
+
+        try:
             res = await asyncio.wait_for(checker(username, req_session_fun, timeout), timeout=timeout + 0.5)
         except Exception as exc:
             logger.debug("Checker %s failed for '%s': %s", checker_name, username, exc)
             return {"checker_name": checker_name, "found": False, "error": str(exc)}
+        finally:
+            _kill_orphaned_chromium(before_pids)
 
         error = None
         if isinstance(res, tuple):

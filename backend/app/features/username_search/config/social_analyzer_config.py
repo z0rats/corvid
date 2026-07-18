@@ -10,6 +10,12 @@ PACKAGE_NAME = "social-analyzer"
 BINARY_NAME = "social-analyzer"
 PYPI_JSON_URL = f"https://pypi.org/pypi/{PACKAGE_NAME}/json"
 
+# Hard ceiling on total subprocess runtime, independent of the per-site
+# `--timeout`/`--top` CLI flags (which can be user-configured to 0 = unbounded).
+# Guards against a hung/runaway subprocess never being reaped when nothing
+# calls cancel_scan() and no client is waiting on the SSE stream.
+PROCESS_WATCHDOG_SECONDS = 1800
+
 logger = logging.getLogger(__name__)
 
 

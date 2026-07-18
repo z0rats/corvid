@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter, Request, Response, status
 
-from app.core.dependencies import DatabaseHealthDep, SettingsDep
+from app.core.dependencies import DatabaseHealthDep, DiskSpaceHealthDep, SettingsDep
 from app.core.healthcheck_schemas import (
     DetailedHealthResponse,
     HealthResponse,
@@ -36,7 +36,14 @@ def _format_uptime(startup_time: float | None) -> str:
 def determine_overall_status(services: dict[str, Any]) -> str:
     """Determine overall system health based on service statuses"""
     database_status = services.get("database", {}).get("status", "unhealthy")
-    return "healthy" if database_status == "healthy" else "unhealthy"
+    if database_status != "healthy":
+        return "unhealthy"
+
+    disk_status = services.get("disk", {}).get("status", "healthy")
+    if disk_status == "low":
+        return "degraded"
+
+    return "healthy"
 
 
 @router.get(
@@ -78,12 +85,14 @@ async def detailed_healthcheck(
     request: Request,
     settings: SettingsDep,
     database_health: DatabaseHealthDep,
+    disk_health: DiskSpaceHealthDep,
     response: Response,
 ) -> DetailedHealthResponse:
     """Return comprehensive health information including database status"""
 
     services = {
         "database": database_health,
+        "disk": disk_health,
         "api": {
             "status": "healthy",
             "name": settings.api.title,
