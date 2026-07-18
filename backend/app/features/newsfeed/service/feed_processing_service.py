@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import managed_session
 from app.features.newsfeed.schemas.newsfeed_schemas import NewsArticleSchema
 from app.features.newsfeed.crud.news_articles_crud import check_article_exists, create_news_article
+from app.features.newsfeed.crud.newsfeed_settings_crud import record_feed_fetch_result
 from app.features.newsfeed.utils.fetching import parse_feed, fetch_article_full_text, extract_and_categorize_iocs
 from app.core.settings.keywords.crud.keywords_settings_crud import get_keywords
 
@@ -180,6 +181,15 @@ async def process_feed_entry(
         logger.warning("Failed to process feed entry %s: %s", post.get('title', 'Unknown'), e)
 
 
+async def record_feed_status(feed_name: str, success: bool, error: str | None = None) -> None:
+    """Persist the outcome of a fetch attempt for a feed using its own session"""
+    try:
+        async with managed_session() as db:
+            await record_feed_fetch_result(db, feed_name, success, error)
+    except Exception as e:
+        logger.error("Failed to record fetch status for feed %s: %s", feed_name, e)
+
+
 async def process_feed_chunk(
     feeds: list[dict[str, Any]],
     keyword_matching_enabled: bool,
@@ -193,14 +203,17 @@ async def process_feed_chunk(
             feed = await parse_feed(entry['url'])
             if not feed or not feed.entries:
                 logger.warning("No entries found in feed: %s", entry['name'])
+                await record_feed_status(entry['name'], success=False, error="Feed unreachable or returned no entries")
                 continue
 
+            await record_feed_status(entry['name'], success=True)
             tasks.extend([
                 process_feed_entry(entry, post, keyword_matching_enabled, keywords)
                 for post in feed.entries
             ])
         except Exception as e:
             logger.error("Error processing feed %s: %s", entry['name'], e)
+            await record_feed_status(entry['name'], success=False, error=str(e))
 
     if tasks:
         await asyncio.gather(*tasks)

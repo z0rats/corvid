@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
@@ -149,6 +151,24 @@ async def delete_custom_feed(db: AsyncSession, name: str) -> bool:
         await db.flush()
 
     return True
+
+
+async def record_feed_fetch_result(db: AsyncSession, feed_name: str, success: bool, error: str | None) -> None:
+    """Record the outcome of a fetch attempt for a feed, so a persistently failing
+    feed (bad URL, provider outage) surfaces to the user instead of only ever
+    appearing in server logs."""
+    result = await db.execute(select(NewsfeedSettings).where(NewsfeedSettings.name == feed_name))
+    feed = result.scalar_one_or_none()
+    if not feed:
+        return
+
+    feed.last_fetched_at = datetime.now(timezone.utc)
+    if success:
+        feed.last_success_at = feed.last_fetched_at
+        feed.last_error = None
+    else:
+        feed.last_error = error[:500] if error else None
+    await db.flush()
 
 
 async def get_feed_by_name(db: AsyncSession, name: str) -> NewsfeedSettings | None:

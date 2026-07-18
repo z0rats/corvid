@@ -150,6 +150,8 @@
       "bulkFetchSuccess": "Загружено {{succeeded}} из {{total}} отсутствующих иконок",
       "bulkFetchNoneError": "Не удалось загрузить ни одного favicon",
       "bulkFetchError": "Ошибка загрузки отсутствующих иконок",
+      "fetchFailingTooltip": "Последняя попытка загрузки не удалась: {{error}} (последняя успешная загрузка: {{date}})",
+      "neverSucceeded": "никогда",
       "dialog": {
         "title": "Добавить новую ленту",
         "dropIcon": "Перетащите иконку",

@@ -13,8 +13,10 @@ import Tooltip from "@mui/material/Tooltip";
 import Delete from "@mui/icons-material/Delete";
 import DeleteOutline from "@mui/icons-material/DeleteOutlined";
 import Refresh from "@mui/icons-material/Refresh";
+import WarningAmber from "@mui/icons-material/WarningAmber";
 
 import { getFeedIconUrl } from "../../../utils/urlUtils";
+import { formatDate } from "../../../utils/formatters";
 
 const hasCustomIcon = (feed) => feed.icon !== "default.png" && feed.icon_id;
 
@@ -110,9 +112,23 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
         </Box>
       </ListItemAvatar>
       <ListItemText
-        primary={name}
+        primary={
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <span>{name}</span>
+            {feed.last_error && (
+              <Tooltip
+                title={t('settings.feeds.fetchFailingTooltip', {
+                  error: feed.last_error,
+                  date: feed.last_success_at ? formatDate(feed.last_success_at) : t('settings.feeds.neverSucceeded'),
+                })}
+              >
+                <WarningAmber color="warning" fontSize="small" />
+              </Tooltip>
+            )}
+          </Stack>
+        }
         secondary={feed.url}
-        primaryTypographyProps={{ variant: "body2", fontWeight: 500 }}
+        primaryTypographyProps={{ variant: "body2", fontWeight: 500, component: "div" }}
         secondaryTypographyProps={{
           variant: "caption",
           noWrap: true,

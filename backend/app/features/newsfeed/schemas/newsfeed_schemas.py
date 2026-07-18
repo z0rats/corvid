@@ -13,6 +13,9 @@ class NewsfeedSettingsSchema(BaseModel):
     icon: str = Field(default="default.png", description="Feed icon filename")
     icon_id: str | None = Field(default=None, description="Unique icon identifier")
     enabled: bool = Field(default=True, description="Whether the feed is active")
+    last_fetched_at: datetime.datetime | None = Field(default=None, description="Timestamp of the most recent fetch attempt")
+    last_success_at: datetime.datetime | None = Field(default=None, description="Timestamp of the most recent successful fetch")
+    last_error: str | None = Field(default=None, description="Error from the most recent failed fetch attempt, if any")
 
     model_config = ConfigDict(from_attributes=True)
 

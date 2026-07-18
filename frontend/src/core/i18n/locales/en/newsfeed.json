@@ -150,6 +150,8 @@
       "bulkFetchSuccess": "Fetched {{succeeded}} of {{total}} missing icons",
       "bulkFetchNoneError": "No favicons could be downloaded",
       "bulkFetchError": "Error fetching missing icons",
+      "fetchFailingTooltip": "Last fetch failed: {{error}} (last successful fetch: {{date}})",
+      "neverSucceeded": "never",
       "dialog": {
         "title": "Add New Feed",
         "dropIcon": "Drop icon",
