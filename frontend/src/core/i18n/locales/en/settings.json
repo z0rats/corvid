@@ -78,9 +78,28 @@
     }
   },
   "about": {
-    "title": "About - OSINT Toolkit",
-    "body": "OSINT Toolkit is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday investigative tasks. Optimized for single-user operation, OSINT Toolkit runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, OSINT Toolkit integrates generative AI capabilities, providing additional support for analysis and decision-making. Beyond its practical applications, the project also serves as a personal playground for experimenting with new technologies and automation possibilities, potentially laying the foundation for a future commercial cloud platform.",
-    "nameNote": "The name OSINT Toolkit is a temporary name. The name may be changed in the future."
+    "title": "About - Corvid",
+    "body": "Corvid is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday investigative tasks. Optimized for single-user operation, Corvid runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, Corvid integrates generative AI capabilities, providing additional support for analysis and decision-making. Beyond its practical applications, the project also serves as a personal playground for experimenting with new technologies and automation possibilities, potentially laying the foundation for a future commercial cloud platform.",
+    "nameNote": "The name Corvid may still change in the future.",
+    "accessToken": {
+      "title": "Access Token",
+      "description": "The token this browser uses to authenticate with the backend. Copy it to unlock the app in another browser, or forget it to lock this one.",
+      "show": "Show token",
+      "hide": "Hide token",
+      "copy": "Copy token",
+      "copied": "Token copied to clipboard.",
+      "forgetButton": "Forget token on this browser",
+      "forgetConfirm": "This will sign you out of this browser. You'll need the token again (from the server logs, data/.access_token, or another already-unlocked browser) to get back in. Continue?"
+    }
+  },
+  "quota": {
+    "title": "API Quota",
+    "description": "Live remaining usage for the providers that expose a quota endpoint (VirusTotal, Shodan, Hunter.io).",
+    "refresh": "Refresh",
+    "notConfigured": "No API key configured",
+    "usedOfLimit": "{{used}} / {{limit}} used",
+    "remainingOnly": "{{remaining}} remaining",
+    "loadError": "Failed to load quota status."
   },
   "notifications": {
     "apiKeySaved": "API key configured successfully.",

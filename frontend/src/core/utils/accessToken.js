@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'otk_access_token';
+const STORAGE_KEY = 'corvid_access_token';
 
 export function getAccessToken() {
   return localStorage.getItem(STORAGE_KEY) || '';
