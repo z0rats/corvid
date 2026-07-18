@@ -35,6 +35,7 @@ import {
   getUsernameSearchTabs,
   getEmailSearchTabs,
   getRedditSearchTabs,
+  getGitReconTabs,
 } from '../../config/sidebarConfig';
 import ot_logo_dark from '../../static/images/ot_logo_dark.png';
 import { useTheme } from '@mui/material/styles';
@@ -109,6 +110,7 @@ function Layout() {
     if (location.pathname.startsWith('/username-search')) return getUsernameSearchTabs(t);
     if (location.pathname.startsWith('/email-search')) return getEmailSearchTabs(t);
     if (location.pathname.startsWith('/reddit-search')) return getRedditSearchTabs(t);
+    if (location.pathname.startsWith('/git-recon')) return getGitReconTabs(t);
     return null;
   }, [location.pathname, hasLlmKey, t]);
 

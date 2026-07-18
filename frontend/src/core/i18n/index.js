@@ -26,6 +26,10 @@ import enEmailSearch from './locales/en/emailSearch.json';
 import ruEmailSearch from './locales/ru/emailSearch.json';
 import enRedditSearch from './locales/en/redditSearch.json';
 import ruRedditSearch from './locales/ru/redditSearch.json';
+import enDorkRunner from './locales/en/dorkRunner.json';
+import ruDorkRunner from './locales/ru/dorkRunner.json';
+import enGitRecon from './locales/en/gitRecon.json';
+import ruGitRecon from './locales/ru/gitRecon.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -43,6 +47,8 @@ export const NAMESPACES = [
   'usernameSearch',
   'emailSearch',
   'redditSearch',
+  'dorkRunner',
+  'gitRecon',
 ];
 
 i18n
@@ -63,6 +69,8 @@ i18n
         usernameSearch: enUsernameSearch,
         emailSearch: enEmailSearch,
         redditSearch: enRedditSearch,
+        dorkRunner: enDorkRunner,
+        gitRecon: enGitRecon,
       },
       ru: {
         common: ruCommon,
@@ -77,6 +85,8 @@ i18n
         usernameSearch: ruUsernameSearch,
         emailSearch: ruEmailSearch,
         redditSearch: ruRedditSearch,
+        dorkRunner: ruDorkRunner,
+        gitRecon: ruGitRecon,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,

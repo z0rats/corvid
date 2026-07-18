@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from app.core import healthcheck
 from app.core.security.access_control import verify_access_token
 from app.core.alerts.routes import alerts_routes
-from app.core.settings.api_keys.routers import api_keys_settings_routes, service_config_routes
+from app.core.settings.api_keys.routers import api_keys_settings_routes, quota_routes, service_config_routes
 from app.core.settings.cti_profile.routers import cti_profile_routes
 from app.core.settings.ai_settings.routers import ai_settings_routes
 from app.core.settings.email_search.routers import email_search_settings_routes
@@ -12,7 +12,9 @@ from app.core.settings.keywords.routers import keywords_settings_routes
 from app.core.settings.modules.routers import modules_settings_routes
 from app.core.settings.username_search.routers import social_analyzer_settings_routes, username_search_settings_routes
 from app.features.cvss_calculator.routers import cvss_routes
+from app.features.dork_runner.routers import dork_routes
 from app.features.email_search.routers import email_search_routes
+from app.features.git_recon.routers import git_recon_routes
 from app.features.ioc_tools.domain_finder.routers import domain_routes
 from app.features.email_analyzer.routers import email_routes
 from app.features.image_tools.routers import image_routes
@@ -61,6 +63,7 @@ def get_settings_routers() -> list[APIRouter]:
         ai_settings_routes.router,
         api_keys_settings_routes.router,
         service_config_routes.router,
+        quota_routes.router,
         general_settings_routes.router,
         newsfeed_settings_routes.router,
         feed_management_routes.router,
@@ -79,6 +82,7 @@ def get_feature_routers() -> list[APIRouter]:
     return [
         template_category_routes.router,
         llm_template_routes.router,
+        dork_routes.router,
         domain_routes.router,
         email_routes.router,
         image_routes.router,
@@ -95,6 +99,7 @@ def get_feature_routers() -> list[APIRouter]:
         username_search_routes.router,
         email_search_routes.router,
         reddit_search_routes.router,
+        git_recon_routes.router,
     ]
 
 

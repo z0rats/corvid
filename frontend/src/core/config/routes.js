@@ -17,6 +17,8 @@ const AiTemplates = lazy(() => import("../../features/llm-templates/AiTemplates"
 const UsernameSearch = lazy(() => import("../../features/username-search/UsernameSearch"));
 const EmailSearch = lazy(() => import("../../features/email-search/EmailSearch"));
 const RedditSearch = lazy(() => import("../../features/reddit-search/RedditSearch"));
+const DorkRunner = lazy(() => import("../../features/dork-runner/DorkRunner"));
+const GitRecon = lazy(() => import("../../features/git-recon/GitRecon"));
 
 const LoadingFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -41,6 +43,8 @@ export const AppRoutes = () => {
           <Route path="username-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><UsernameSearch /></Suspense></ErrorBoundary>} />
           <Route path="email-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><EmailSearch /></Suspense></ErrorBoundary>} />
           <Route path="reddit-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RedditSearch /></Suspense></ErrorBoundary>} />
+          <Route path="dork-runner/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><DorkRunner /></Suspense></ErrorBoundary>} />
+          <Route path="git-recon/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><GitRecon /></Suspense></ErrorBoundary>} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

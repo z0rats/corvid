@@ -26,6 +26,8 @@ import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import HistoryIcon from "@mui/icons-material/History";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import RedditIcon from "@mui/icons-material/Reddit";
+import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
+import GitHubIcon from "@mui/icons-material/GitHub";
 
 const MAIN_MENU_ITEMS_CONFIG = [
   {
@@ -87,6 +89,18 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <RedditIcon />,
     path: "/reddit-search",
     moduleId: "reddit_search",
+  },
+  {
+    i18nKey: "nav.dorkRunner",
+    icon: <TroubleshootIcon />,
+    path: "/dork-runner",
+    moduleId: "dork_runner",
+  },
+  {
+    i18nKey: "nav.gitRecon",
+    icon: <GitHubIcon />,
+    path: "/git-recon",
+    moduleId: "git_recon",
   },
 ];
 
@@ -226,6 +240,11 @@ const REDDIT_SEARCH_TABS_CONFIG = [
   { i18nKey: "nav.redditSearchTabs.history", path: "/reddit-search/history", icon: <HistoryIcon /> },
 ];
 
+const GIT_RECON_TABS_CONFIG = [
+  { i18nKey: "nav.gitReconTabs.newSearch", path: "/git-recon/new", icon: <GitHubIcon /> },
+  { i18nKey: "nav.gitReconTabs.history", path: "/git-recon/history", icon: <HistoryIcon /> },
+];
+
 const translateItem = (t, { i18nKey, children, ...rest }) => ({
   ...rest,
   label: t(i18nKey),
@@ -243,3 +262,4 @@ export const getRulesTabs = (t) => RULES_TABS_CONFIG.map(item => translateItem(t
 export const getUsernameSearchTabs = (t) => USERNAME_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getEmailSearchTabs = (t) => EMAIL_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getRedditSearchTabs = (t) => REDDIT_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
+export const getGitReconTabs = (t) => GIT_RECON_TABS_CONFIG.map(item => translateItem(t, item));
