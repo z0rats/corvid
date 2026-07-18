@@ -227,6 +227,8 @@ galeodes==0.7
     # via social-analyzer
 genai-prices==0.0.66
     # via pydantic-ai-slim
+gitcolombo==0.3.0
+    # via -r requirements.in
 google-auth[requests]==2.55.0
     # via
     #   google-genai
@@ -367,7 +369,7 @@ lxml[html-clean]==5.4.0
     #   social-analyzer
 lxml-html-clean
     # via lxml
-maigret==0.6.2
+maigret==0.6.3
     # via -r requirements.in
 mailcat-osint==0.1.1
     # via -r requirements.in
@@ -515,7 +517,9 @@ protobuf==6.33.6
 py-key-value-aio[filetree,keyring,memory]==0.4.5
     # via fastmcp-slim
 psutil==7.2.2
-    # via ipython
+    # via
+    #   ipython
+    #   corvid (email_search_service.py - orphaned Chromium process cleanup)
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
@@ -733,7 +737,7 @@ sniffio==1.3.1
     #   trio
 social-analyzer==0.45
     # via -r requirements.in
-socid-extractor==0.1.0
+socid-extractor==0.1.1
     # via maigret
 sortedcontainers==2.4.0
     # via trio

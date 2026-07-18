@@ -1,0 +1,84 @@
+{
+  "page": {
+    "title": "Git Recon",
+    "description": "Correlate names, emails, and GitHub identities from git repository history and the GitHub API.",
+    "poweredBy": "Powered by gitcolombo"
+  },
+
+  "form": {
+    "modes": {
+      "search": "Search",
+      "url": "Repo URL",
+      "nickname": "GitHub user/org"
+    },
+    "modeDescriptions": {
+      "search": "GitHub-API-only lookup for a username: PGP-key UIDs and public commit search across all of GitHub. No cloning.",
+      "url": "Clone and analyze a single GitHub repository's commit history.",
+      "nickname": "Clone and analyze every public repository owned by a GitHub user or org (forks skipped by default)."
+    },
+    "targetLabels": {
+      "search": "GitHub username",
+      "url": "Repository URL",
+      "nickname": "GitHub username or org"
+    },
+    "targetPlaceholders": {
+      "search": "e.g. octocat",
+      "url": "https://github.com/owner/repo",
+      "nickname": "e.g. octocat"
+    },
+    "optionsButton": "Options",
+    "scanButton": "Scan",
+    "includeForksLabel": "Include forked repositories",
+    "resolveGithubLoginsLabel": "Resolve GitHub logins (extra requests per identity)",
+    "ignoreNoreplyLabel": "Ignore service noreply addresses"
+  },
+
+  "results": {
+    "empty": "No results found for this target.",
+    "identities": "Identities ({{count}})",
+    "correlation": "Correlation",
+    "sharedEmails": "{{count}} emails",
+    "samePerson": "Same person",
+    "pgpKeys": "PGP key UIDs ({{count}})",
+    "commitSearch": "Commit search hits ({{count}})",
+    "alsoKnownAs": "also known as",
+    "stats": {
+      "repos": "{{count}} repos",
+      "commits": "{{count}} commits",
+      "persons": "{{count}} persons"
+    },
+    "headers": {
+      "name": "Name",
+      "email": "Email",
+      "asAuthor": "As author",
+      "asCommitter": "As committer",
+      "githubLogin": "GitHub",
+      "status": "Status",
+      "keyId": "Key ID",
+      "source": "Source",
+      "role": "Role",
+      "repo": "Repo",
+      "date": "Date"
+    }
+  },
+
+  "badges": {
+    "noreply": "noreply",
+    "verified": "verified",
+    "unverified": "unverified"
+  },
+
+  "history": {
+    "empty": "No past searches yet",
+    "notFound": "Search not found",
+    "summary": "{{mode}} scan, searched {{date}}",
+    "headers": {
+      "mode": "Mode",
+      "target": "Target",
+      "persons": "Persons",
+      "repos": "Repos",
+      "searched": "Searched",
+      "actions": "Actions"
+    }
+  }
+}
