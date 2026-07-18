@@ -4,13 +4,13 @@ import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import { ResponsiveBar } from "@nivo/bar";
 
 import { useTopCves } from "../../hooks/api/useTrendsApi";
 import { createChartTheme } from "../../utils/chartTheme";
 import { modeValue } from "../../../../core/utils/themeUtils";
+import LoadingState from "../../../../core/components/ui/LoadingState";
 
 export default function CveStatistics({ timeRange, refreshKey, onSelectArticleIds }) {
   const { t } = useTranslation('newsfeed');
@@ -28,11 +28,7 @@ export default function CveStatistics({ timeRange, refreshKey, onSelectArticleId
     : [];
 
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="250px">
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingState minHeight="250px" />;
   }
 
   return (

@@ -4,12 +4,12 @@ import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import { ResponsivePie } from "@nivo/pie";
 
 import { useIocDistribution } from "../../hooks/api/useTrendsApi";
 import { createChartTheme } from "../../utils/chartTheme";
+import LoadingState from "../../../../core/components/ui/LoadingState";
 
 export default function IocDistributionChart({ timeRange, refreshKey }) {
   const { t } = useTranslation('newsfeed');
@@ -18,11 +18,7 @@ export default function IocDistributionChart({ timeRange, refreshKey }) {
   const chartTheme = createChartTheme(theme);
 
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="350px">
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingState minHeight="350px" />;
   }
 
   return (
