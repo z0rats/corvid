@@ -15,6 +15,7 @@ DEFAULT_MODULE_SETTINGS: dict[str, Any] = {
 # Available modules in the system
 AVAILABLE_MODULES = [
     "cvss_calculator",
+    "dork_runner",
     "domain_finder",
     "email_analyzer",
     "email_search",
