@@ -1,25 +1,18 @@
+import asyncio
+import json
 import logging
 
 from fastapi import APIRouter, Request, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
-from app.features.git_recon.crud.git_recon_crud import (
-    create_search,
-    delete_search,
-    get_search,
-    list_searches,
-)
-from app.features.git_recon.schemas.git_recon_schemas import (
-    ScanRequest,
-    ScanResponse,
-    SearchDetail,
-    SearchSummary,
-)
-from app.features.git_recon.service.git_recon_service import GitReconError, run_scan
+from app.features.git_recon.crud.git_recon_crud import delete_search, get_search, list_searches
+from app.features.git_recon.schemas.git_recon_schemas import ScanRequest, SearchDetail, SearchSummary
+from app.features.git_recon.service.git_recon_service import run_scan_task
 
 logger = logging.getLogger(__name__)
 
@@ -37,56 +30,43 @@ async def _get_github_token(db: AsyncSession) -> str | None:
 
 @router.post(
     "/scan",
-    response_model=ScanResponse,
     summary="Correlate git/GitHub identities for a target",
     description="Run a gitcolombo scan: 'search' queries GitHub's API only (GPG-key UIDs + "
     "commit search) for a username; 'url'/'nickname' clone one repo or every public repo of a "
-    "user/org and correlate author/committer identities across their commit history",
-    responses={400: {"description": "Invalid target for the given mode, or nothing to scan"}},
+    "user/org and correlate author/committer identities across their commit history. Streams "
+    "progress as Server-Sent Events - a scan can run for several minutes (full, non-shallow "
+    "clones), too long to hold open as a single request behind most reverse proxies.",
 )
 @limiter.limit("5/minute")
-async def scan(request: Request, db: SessionDep, scan_request: ScanRequest) -> ScanResponse:
+async def scan(request: Request, db: SessionDep, scan_request: ScanRequest):
     github_token = await _get_github_token(db)
 
-    try:
-        result = await run_scan(
-            mode=scan_request.mode,
-            target=scan_request.target,
-            include_forks=scan_request.include_forks,
-            resolve_github_logins=scan_request.resolve_github_logins,
-            ignore_noreply=scan_request.ignore_noreply,
-            github_token=github_token,
-        )
-    except GitReconError as exc:
-        raise AppHTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc), error_code="GIT_RECON_INVALID_TARGET",
-        ) from exc
-    except TimeoutError as exc:
-        raise AppHTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Scan timed out", error_code="GIT_RECON_TIMEOUT",
-        ) from exc
-
-    repo_outcomes = result.get("repos", [])
-    search = await create_search(
-        db,
+    queue: asyncio.Queue = asyncio.Queue()
+    asyncio.create_task(run_scan_task(
         mode=scan_request.mode,
         target=scan_request.target,
-        status="completed",
-        error=None,
-        repos_scanned=sum(1 for r in repo_outcomes if r["cloned"]),
-        repos_failed=sum(1 for r in repo_outcomes if not r["cloned"]),
-        persons_found=len(result.get("persons", [])),
-        result=result,
-    )
+        include_forks=scan_request.include_forks,
+        resolve_github_logins=scan_request.resolve_github_logins,
+        ignore_noreply=scan_request.ignore_noreply,
+        github_token=github_token,
+        queue=queue,
+    ))
 
-    logger.info(
-        "Git recon %s scan for '%s': %d person(s), %d repo(s) scanned",
-        search.mode, search.target, search.persons_found, search.repos_scanned,
-    )
+    async def event_stream():
+        while True:
+            event = await queue.get()
+            if event is None:
+                break
+            yield f"data: {json.dumps(event)}\n\n"
 
-    return ScanResponse(
-        search_id=search.id, mode=search.mode, target=search.target, status=search.status,
-        error=search.error, result=result,
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

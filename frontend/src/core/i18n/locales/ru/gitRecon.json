@@ -42,6 +42,8 @@
     "pgpKeys": "UID PGP-ключей ({{count}})",
     "commitSearch": "Совпадения в поиске по коммитам ({{count}})",
     "alsoKnownAs": "также известен как",
+    "mentionCount_one": "{{count}} коммит",
+    "mentionCount_other": "{{count}} коммитов",
     "stats": {
       "repos": "{{count}} репозиториев",
       "commits": "{{count}} коммитов",
@@ -72,9 +74,15 @@
     "empty": "Пока нет прошлых поисков",
     "notFound": "Поиск не найден",
     "summary": "скан «{{mode}}», выполнен {{date}}",
+    "status": {
+      "running": "Выполняется",
+      "completed": "Завершён",
+      "failed": "Ошибка"
+    },
     "headers": {
       "mode": "Режим",
       "target": "Цель",
+      "status": "Статус",
       "persons": "Личности",
       "repos": "Репозитории",
       "searched": "Выполнен",

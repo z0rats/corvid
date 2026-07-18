@@ -23,6 +23,28 @@ function EmailChip({ email, isNoreply }) {
   );
 }
 
+function MentionsList({ mentions }) {
+  const { t } = useTranslation('gitRecon');
+  if (!mentions || mentions.length === 0) return null;
+  return (
+    <Stack spacing={0.25} sx={{ mt: 0.5 }}>
+      {mentions.map((m, i) => (
+        <Typography key={i} variant="caption" color="text.secondary" component="div">
+          <Link
+            href={`${m.repo_url}/commit/${m.sample_commit}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ mr: 0.5 }}
+          >
+            {m.repo_url.replace('https://github.com/', '')}
+          </Link>
+          ({t('results.mentionCount', { count: m.as_author + m.as_committer })})
+        </Typography>
+      ))}
+    </Stack>
+  );
+}
+
 function PersonRow({ person }) {
   const { t } = useTranslation('gitRecon');
   return (
@@ -39,6 +61,7 @@ function PersonRow({ person }) {
             ))}
           </Stack>
         )}
+        <MentionsList mentions={person.mentions} />
       </TableCell>
       <TableCell><EmailChip email={person.email} isNoreply={person.is_noreply} /></TableCell>
       <TableCell align="right">{person.as_author}</TableCell>
@@ -165,7 +188,13 @@ function CommitHitsTable({ commitHits }) {
                 <TableCell><Chip size="small" variant="outlined" label={c.role} /></TableCell>
                 <TableCell>
                   {c.repo ? (
-                    <Link href={`https://github.com/${c.repo}`} target="_blank" rel="noopener noreferrer">{c.repo}</Link>
+                    <Link
+                      href={c.sha ? `https://github.com/${c.repo}/commit/${c.sha}` : `https://github.com/${c.repo}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {c.repo}
+                    </Link>
                   ) : '-'}
                 </TableCell>
                 <TableCell>{c.date ? new Date(c.date).toLocaleDateString() : '-'}</TableCell>

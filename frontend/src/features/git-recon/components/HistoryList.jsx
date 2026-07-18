@@ -19,6 +19,7 @@ import { gitReconApi } from '../services/api/gitReconApi';
 import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('GitReconHistory');
+const STATUS_COLORS = { running: 'info', completed: 'success', failed: 'error' };
 
 export default function HistoryList() {
   const { t } = useTranslation('gitRecon');
@@ -63,6 +64,7 @@ export default function HistoryList() {
           <TableRow>
             <TableCell>{t('history.headers.mode')}</TableCell>
             <TableCell>{t('history.headers.target')}</TableCell>
+            <TableCell>{t('history.headers.status')}</TableCell>
             <TableCell>{t('history.headers.persons')}</TableCell>
             <TableCell>{t('history.headers.repos')}</TableCell>
             <TableCell>{t('history.headers.searched')}</TableCell>
@@ -79,6 +81,9 @@ export default function HistoryList() {
             >
               <TableCell><Chip size="small" label={t(`form.modes.${search.mode}`)} /></TableCell>
               <TableCell>{search.target}</TableCell>
+              <TableCell>
+                <Chip size="small" label={t(`history.status.${search.status}`)} color={STATUS_COLORS[search.status] || 'default'} />
+              </TableCell>
               <TableCell>{search.persons_found}</TableCell>
               <TableCell>{search.mode === 'search' ? '-' : `${search.repos_scanned}/${search.repos_scanned + search.repos_failed}`}</TableCell>
               <TableCell>{new Date(search.searched_at).toLocaleString()}</TableCell>

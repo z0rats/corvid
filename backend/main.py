@@ -83,10 +83,10 @@ async def _fetch_favicons_in_background() -> None:
 
 
 async def _reconcile_stale_scans() -> None:
-    """Mark username/email search runs still 'running' from a previous process as failed.
+    """Mark username/email/git-recon search runs still 'running' from a previous process as failed.
 
-    Both scans are driven by a detached `asyncio.create_task()` (see their
-    `routers/*_routes.py` `start_scan` handlers) that outlives the SSE request but
+    All three scans are driven by a detached `asyncio.create_task()` (see their
+    `routers/*_routes.py` `scan`/`start_scan` handlers) that outlives the SSE request but
     not the process itself, so a container stop/crash mid-scan leaves the row
     stuck at 'running' with nothing to ever move it out of that state.
     """
@@ -94,15 +94,17 @@ async def _reconcile_stale_scans() -> None:
     from app.features.email_search.crud.email_search_crud import (
         interrupt_running_search_runs as interrupt_running_mail_runs,
     )
+    from app.features.git_recon.crud.git_recon_crud import interrupt_running_searches as interrupt_running_git_recon
 
     async with managed_session() as db:
         maigret_count = await interrupt_running_search_runs(db)
         mail_count = await interrupt_running_mail_runs(db)
-        if maigret_count or mail_count:
+        git_recon_count = await interrupt_running_git_recon(db)
+        if maigret_count or mail_count or git_recon_count:
             logger.info(
                 "Reconciled stale scan runs left 'running' by a previous process: "
-                "%s username-search, %s email-search",
-                maigret_count, mail_count,
+                "%s username-search, %s email-search, %s git-recon",
+                maigret_count, mail_count, git_recon_count,
             )
 
 
