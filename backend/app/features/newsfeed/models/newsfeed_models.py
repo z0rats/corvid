@@ -21,6 +21,9 @@ class NewsfeedSettings(Base):
     icon_id: Mapped[str] = mapped_column(String, default=generate_icon_id)
     enabled: Mapped[bool] = mapped_column(default=True)
     deleted: Mapped[bool] = mapped_column(default=False)
+    last_fetched_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True))
+    last_success_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(String(500))
 
     articles: Mapped[list["NewsArticle"]] = relationship(back_populates="feed", passive_deletes=True)
 
