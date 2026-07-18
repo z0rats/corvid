@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getAccessToken, clearAccessToken } from '../utils/accessToken';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = import.meta.env.DEV;
 export const baseURL = isDevelopment
   ? 'http://localhost:8000'
   : '';

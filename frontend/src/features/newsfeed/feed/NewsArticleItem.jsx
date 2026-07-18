@@ -27,7 +27,6 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ShieldIcon from '@mui/icons-material/Shield';
 import { format } from "date-fns";
-import he from "he";
 
 import { hasLlmKeyAtom } from "../../../core/state/atoms";
 import { getFeedIconUrl } from "../utils/urlUtils";
@@ -38,6 +37,12 @@ import IOCSection from "./IOCSection";
 import KeywordsSection from "./KeywordsSection";
 
 const isValidUrl = (url) => /^https?:\/\//i.test(url);
+
+const decodeHtmlEntities = (str) => {
+  const el = document.createElement("textarea");
+  el.innerHTML = str;
+  return el.value;
+};
 
 const NewsArticleItem = React.memo(function NewsArticleItem({
   item,
@@ -208,7 +213,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
           {item.title}
         </Typography>
         <Typography sx={{ mb: 2 }}>
-          {item.summary ? he.decode(item.summary) : t('feed.noSummary')}
+          {item.summary ? decodeHtmlEntities(item.summary) : t('feed.noSummary')}
         </Typography>
 
         {item.analysis_result && <AnalyzeSection item={item} />}

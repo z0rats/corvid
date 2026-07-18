@@ -15,7 +15,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialOceanic } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export default function TemplateExampleDialog({ open, onClose, template }) {

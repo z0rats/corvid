@@ -5,7 +5,6 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import AssessmentIcon from '@mui/icons-material/Assessment';
@@ -15,13 +14,12 @@ import MandiantSummary from './MandiantSummary';
 import MandiantIndicators from './MandiantIndicators';
 import MandiantReports from './MandiantReports';
 import { buildCategoryStats, buildTimelineData, transformCategoryDataForPie } from './utils/mandiantDataUtils';
+import { foldExcessCategories } from '../../../../../../../core/utils/chartColors';
 
 export default function MandiantDetails({ result: dataFromParent }) {
   const { t } = useTranslation('iocTools');
   const [indicatorsPage, setIndicatorsPage] = useState(1);
   const [reportsPage, setReportsPage] = useState(1);
-  const theme = useTheme();
-  const currentTheme = theme.palette.mode;
 
   const { indicators, reports, categoryStats, lineChartData, riskScore } = useMemo(() => {
     if (!dataFromParent) {
@@ -45,15 +43,10 @@ export default function MandiantDetails({ result: dataFromParent }) {
     return { indicators: currentIndicators, reports: currentReports, categoryStats: {}, lineChartData: [], riskScore: 0 };
   }, [dataFromParent]);
 
-  const pieData = useMemo(() => transformCategoryDataForPie(categoryStats), [categoryStats]);
-
-  const chartTheme = useMemo(() => ({
-    tooltip: { container: { background: theme.palette.background.paper, color: theme.palette.text.primary, fontSize: '14px' } },
-    labels: { text: { fill: theme.palette.text.primary } },
-    legends: { text: { fill: theme.palette.text.primary } },
-    axis: { ticks: { line: { stroke: theme.palette.divider }, text: { fill: theme.palette.text.secondary } }, legend: { text: { fill: theme.palette.text.secondary } } },
-    grid: { line: { stroke: theme.palette.divider } },
-  }), [theme]);
+  const pieData = useMemo(
+    () => foldExcessCategories(transformCategoryDataForPie(categoryStats), t('providers.common.other')),
+    [categoryStats, t]
+  );
 
   if (!dataFromParent || (indicators.length === 0 && reports.length === 0)) {
     return <NoDetails message={t('providers.mandiant.noInfoFound')} />;
@@ -68,8 +61,6 @@ export default function MandiantDetails({ result: dataFromParent }) {
         riskScore={riskScore}
         indicatorCount={indicators.length}
         reportCount={reports.length}
-        chartTheme={chartTheme}
-        currentTheme={currentTheme}
       />
 
       {indicators.length > 0 && (

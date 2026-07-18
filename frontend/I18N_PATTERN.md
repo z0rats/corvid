@@ -75,6 +75,4 @@ Output: report per the deliverable format in I18N_PATTERN.md
 ```
 
 Do not paste the code pattern, the 6 rules, or the deliverable format into the subagent's
-prompt directly — that's what blew up token usage in the original batch-translation session
-(the same ~470-word boilerplate repeated verbatim across ~10 subagent prompts). Point at this
-file instead.
+prompt directly — that's what blew up token usage in the original batch-translation session (the same ~470-word boilerplate repeated verbatim across ~10 subagent prompts). Point at this file instead.

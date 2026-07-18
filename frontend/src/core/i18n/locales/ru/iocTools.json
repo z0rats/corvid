@@ -346,6 +346,7 @@
       "notAvailable": "Н/Д",
       "yes": "Да",
       "no": "Нет",
+      "other": "Другое",
       "noDetailsTitle": "Подробности недоступны",
       "noDetailsMessage": "Дополнительные сведения для этого элемента отсутствуют.",
       "generalInformation": "Общая информация",

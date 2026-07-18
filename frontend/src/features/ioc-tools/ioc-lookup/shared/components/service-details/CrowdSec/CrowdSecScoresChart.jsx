@@ -6,8 +6,11 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import InfoIcon from '@mui/icons-material/Info';
-import { ResponsiveBar } from '@nivo/bar';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import InfoModal from '../../../../../../../core/components/ui/InfoModal';
+import { getCategoricalColor } from '../../../../../../../core/utils/chartColors';
+
+const SCORE_KEYS = ["aggressiveness", "threat", "trust", "anomaly", "total"];
 
 export default function CrowdSecScoresChart({ scoreData }) {
   const { t } = useTranslation('iocTools');
@@ -31,42 +34,38 @@ export default function CrowdSecScoresChart({ scoreData }) {
         </IconButton>
       </Box>
       <Box sx={{ height: "380px" }}>
-        <ResponsiveBar
-          data={scoreData}
-          keys={["aggressiveness", "threat", "trust", "anomaly", "total"]}
-          indexBy="name"
-          margin={{ top: 20, right: 20, bottom: 60, left: 40 }}
-          padding={0.2}
-          innerPadding={2}
-          groupMode="stacked"
-          valueScale={{ type: 'linear', min: 0, max: 'auto' }}
-          colors={{ scheme: "spectral" }}
-          borderColor={{ from: "color", modifiers: [["darker", 0.6]] }}
-          borderWidth={1}
-          borderRadius={2}
-          axisTop={null}
-          axisRight={null}
-          axisBottom={{ tickSize: 5, tickPadding: 5, tickRotation: 0, legend: t('providers.crowdsec.period'), legendPosition: "middle", legendOffset: 40 }}
-          axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0, legend: t('providers.crowdsec.score'), legendPosition: "middle", legendOffset: -30 }}
-          enableLabel={false}
-          legends={[]}
-          animate={true}
-          motionStiffness={90}
-          motionDamping={15}
-          theme={{
-            axis: {
-              ticks: { text: { fontSize: 10, fill: theme.palette.text.secondary } },
-              legend: { text: { fontSize: 12, fill: theme.palette.text.primary } },
-            },
-            tooltip: {
-              container: {
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={scoreData} margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
+            <XAxis
+              dataKey="name"
+              label={{ value: t('providers.crowdsec.period'), position: 'insideBottom', offset: -10, fill: theme.palette.text.primary }}
+              tick={{ fontSize: 10, fill: theme.palette.text.secondary }}
+              axisLine={{ stroke: theme.palette.divider }}
+              tickLine={{ stroke: theme.palette.divider }}
+            />
+            <YAxis
+              label={{ value: t('providers.crowdsec.score'), angle: -90, position: 'insideLeft', fill: theme.palette.text.primary }}
+              tick={{ fontSize: 10, fill: theme.palette.text.secondary }}
+              axisLine={{ stroke: theme.palette.divider }}
+              tickLine={{ stroke: theme.palette.divider }}
+            />
+            <Tooltip
+              cursor={{ fill: theme.palette.action.hover }}
+              contentStyle={{
                 background: theme.palette.background.paper,
                 color: theme.palette.text.primary,
-                fontSize: "12px",
-              },
-            },
-          }}
-        />
+                fontSize: 12,
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: theme.shape.borderRadius,
+              }}
+            />
+            <Legend wrapperStyle={{ color: theme.palette.text.secondary, fontSize: 12 }} />
+            {SCORE_KEYS.map((key, index) => (
+              <Bar key={key} dataKey={key} stackId="scores" fill={getCategoricalColor(theme, index)} isAnimationActive={false} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
       </Box>
     </Card>
   );

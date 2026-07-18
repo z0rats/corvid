@@ -29,7 +29,7 @@ export default function Filenames(props) {
       </Grid>
       <List>
         {props.result["data"]["attributes"]["names"].map((name, index) => (
-          <ListItem>
+          <ListItem key={index}>
             <ListItemText primary={name} />
           </ListItem>
         ))}

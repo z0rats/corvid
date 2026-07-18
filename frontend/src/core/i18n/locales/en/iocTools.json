@@ -346,6 +346,7 @@
       "notAvailable": "N/A",
       "yes": "Yes",
       "no": "No",
+      "other": "Other",
       "noDetailsTitle": "No details available",
       "noDetailsMessage": "There are no further details available for this item.",
       "generalInformation": "General Information",
