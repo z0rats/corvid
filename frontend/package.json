@@ -1,5 +1,5 @@
 {
-  "name": "osint-toolkit",
+  "name": "corvid",
   "version": "1.1.0",
   "private": true,
   "dependencies": {
@@ -50,7 +50,8 @@
     "build": "GENERATE_SOURCEMAP=false react-scripts --openssl-legacy-provider build",
     "winBuild": "set \"GENERATE_SOURCEMAP=false\" && react-scripts --openssl-legacy-provider build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "check:i18n": "node scripts/check-i18n-keys.js"
   },
   "eslintConfig": {
     "extends": [
