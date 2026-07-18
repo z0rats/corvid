@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ResponsivePie } from '@nivo/pie';
-import { ResponsiveLine } from '@nivo/line';
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Paper from '@mui/material/Paper';
@@ -13,6 +12,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DonutLargeIcon from '@mui/icons-material/DonutLarge';
 import TimelineIcon from '@mui/icons-material/Timeline';
+import { getCategoricalColor } from '../../../../../../../core/utils/chartColors';
 
 export default function MandiantSummary({
   categoryStats,
@@ -21,12 +21,17 @@ export default function MandiantSummary({
   riskScore,
   indicatorCount,
   reportCount,
-  chartTheme,
-  currentTheme,
 }) {
   const { t } = useTranslation('iocTools');
   const notAvailable = t('providers.common.notAvailable');
   const theme = useTheme();
+  const tooltipStyle = {
+    background: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    fontSize: 12,
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: theme.shape.borderRadius,
+  };
 
   const summaryPaperSx = {
     p: 2,
@@ -55,22 +60,28 @@ export default function MandiantSummary({
           </Box>
           <Box sx={{ height: 300 }}>
             {Object.keys(categoryStats).length > 0 ? (
-              <ResponsivePie
-                data={pieData}
-                margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-                innerRadius={0.5}
-                padAngle={5}
-                cornerRadius={3}
-                colors={{ scheme: 'red_yellow_blue' }}
-                borderWidth={1}
-                borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
-                radialLabelsSkipAngle={10}
-                radialLabelsTextColor={theme.palette.text.primary}
-                radialLabelsLinkColor={{ from: 'color' }}
-                sliceLabelsSkipAngle={10}
-                sliceLabelsTextColor={theme.palette.background.paper}
-                theme={chartTheme}
-              />
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="label"
+                    innerRadius="50%"
+                    outerRadius="80%"
+                    paddingAngle={2}
+                    cornerRadius={3}
+                    stroke={theme.palette.background.paper}
+                    strokeWidth={1}
+                    isAnimationActive={false}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={entry.id} fill={getCategoricalColor(theme, index)} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ color: theme.palette.text.secondary, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
             ) : (
               <Box sx={emptyStateSx}>
                 <DonutLargeIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
@@ -86,24 +97,36 @@ export default function MandiantSummary({
             <Typography variant="h6" component="h4">{t('providers.mandiant.observationsTimeline')}</Typography>
           </Box>
           <Box sx={{ height: 300 }}>
-            {lineChartData.length > 0 && lineChartData[0].data.length > 0 ? (
-              <ResponsiveLine
-                data={lineChartData}
-                margin={{ top: 50, right: 50, bottom: 50, left: 60 }}
-                xScale={{ type: 'point' }}
-                yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false, reverse: false }}
-                curve="cardinal"
-                axisBottom={{ tickSize: 5, tickPadding: 5, tickRotation: 45, legend: t('providers.mandiant.month'), legendPosition: 'middle', legendOffset: 40 }}
-                axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0, legend: t('providers.mandiant.indicatorsAxisLabel'), legendPosition: 'middle', legendOffset: -50 }}
-                colors={{ scheme: 'category10' }}
-                pointSize={10}
-                pointColor={{ theme: 'background' }}
-                pointBorderWidth={2}
-                pointBorderColor={{ from: 'serieColor' }}
-                pointLabelYOffset={-12}
-                useMesh={true}
-                theme={chartTheme}
-              />
+            {lineChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={lineChartData} margin={{ top: 20, right: 30, bottom: 30, left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                  <XAxis
+                    dataKey="date"
+                    label={{ value: t('providers.mandiant.month'), position: 'insideBottom', offset: -10, fill: theme.palette.text.primary }}
+                    tick={{ fontSize: 11, fill: theme.palette.text.secondary }}
+                    axisLine={{ stroke: theme.palette.divider }}
+                    tickLine={{ stroke: theme.palette.divider }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    label={{ value: t('providers.mandiant.indicatorsAxisLabel'), angle: -90, position: 'insideLeft', fill: theme.palette.text.primary }}
+                    tick={{ fontSize: 11, fill: theme.palette.text.secondary }}
+                    axisLine={{ stroke: theme.palette.divider }}
+                    tickLine={{ stroke: theme.palette.divider }}
+                  />
+                  <Tooltip contentStyle={tooltipStyle} labelFormatter={(date) => date} />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    name={t('providers.mandiant.observationsTimeline')}
+                    stroke={getCategoricalColor(theme, 0)}
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: theme.palette.background.paper, stroke: getCategoricalColor(theme, 0), strokeWidth: 2 }}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             ) : (
               <Box sx={emptyStateSx}>
                 <TimelineIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2, opacity: 0.5 }} />

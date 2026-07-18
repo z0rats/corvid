@@ -4,12 +4,12 @@ import { createStore, Provider } from 'jotai';
 import { useImageAnalysis } from './useImageAnalysis';
 import { imageAnalyzerApi } from '../../services/api/imageAnalyzerApi';
 
-jest.mock('../../services/api/imageAnalyzerApi');
+vi.mock('../../services/api/imageAnalyzerApi');
 
 // jsdom does not implement createObjectURL/revokeObjectURL.
 beforeEach(() => {
-  global.URL.createObjectURL = jest.fn(() => 'blob:mock-preview-url');
-  global.URL.revokeObjectURL = jest.fn();
+  global.URL.createObjectURL = vi.fn(() => 'blob:mock-preview-url');
+  global.URL.revokeObjectURL = vi.fn();
 });
 
 function makeFile() {
@@ -28,7 +28,7 @@ function renderImageAnalysisHook() {
 
 describe('useImageAnalysis', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('starts with no result and no error', () => {

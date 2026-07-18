@@ -26,7 +26,8 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import DonutLargeIcon from '@mui/icons-material/DonutLarge';
 
 import NoDetails from '../NoDetails';
-import { ResponsivePie } from '@nivo/pie';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getCategoricalColor, foldExcessCategories } from '../../../../../../../core/utils/chartColors';
 
 const KILL_CHAIN_PHASE_IDS = [
   'reconnaissance',
@@ -110,12 +111,13 @@ export default function CrowdStrikeDetails({ result }) {
   }, [indicators]);
 
   const threatTypeData = useMemo(() => {
-    return Object.keys(threatTypes).map(key => ({
+    const entries = Object.keys(threatTypes).map(key => ({
       id: key,
       label: key,
       value: threatTypes[key],
     }));
-  }, [threatTypes]);
+    return foldExcessCategories(entries, t('providers.common.other'));
+  }, [threatTypes, t]);
 
   const activePhases = useMemo(() => {
     const phases = new Set();
@@ -138,26 +140,6 @@ export default function CrowdStrikeDetails({ result }) {
     backgroundColor: (t) => t.palette.mode === 'dark' ? t.palette.background.default : t.palette.grey[100],
     height: '100%',
   };
-
-  const chartTheme = useMemo(() => ({
-    tooltip: {
-      container: {
-        background: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-      },
-    },
-    labels: {
-      text: {
-        fill: theme.palette.text.primary,
-      },
-    },
-    legends: {
-      text: {
-        fill: theme.palette.text.primary,
-      },
-    },
-  }), [theme]);
-
 
   const confidenceScore = useMemo(() => {
     if (indicators.length === 0) return 0;
@@ -247,22 +229,40 @@ export default function CrowdStrikeDetails({ result }) {
                   </Typography>
                 </Box>
                 <Box sx={{ height: 300 }}>
-                  <ResponsivePie
-                    data={threatTypeData}
-                    margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-                    innerRadius={0.5}
-                    padAngle={5}
-                    cornerRadius={3}
-                    colors={{ scheme: 'red_yellow_blue' }}
-                    borderWidth={1}
-                    borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
-                    radialLabelsSkipAngle={10}
-                    radialLabelsTextColor={theme.palette.text.primary}
-                    radialLabelsLinkColor={{ from: 'color' }}
-                    sliceLabelsSkipAngle={10}
-                    sliceLabelsTextColor={theme.palette.background.paper}
-                    theme={chartTheme}
-                  />
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                      <Pie
+                        data={threatTypeData}
+                        dataKey="value"
+                        nameKey="label"
+                        innerRadius="50%"
+                        outerRadius="80%"
+                        paddingAngle={2}
+                        cornerRadius={3}
+                        stroke={theme.palette.background.paper}
+                        strokeWidth={1}
+                        isAnimationActive={false}
+                      >
+                        {threatTypeData.map((entry, index) => (
+                          <Cell key={entry.id} fill={getCategoricalColor(theme, index)} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          background: theme.palette.background.paper,
+                          color: theme.palette.text.primary,
+                          fontSize: 12,
+                          border: `1px solid ${theme.palette.divider}`,
+                          borderRadius: theme.shape.borderRadius,
+                        }}
+                      />
+                      <Legend
+                        verticalAlign="bottom"
+                        iconType="circle"
+                        wrapperStyle={{ color: theme.palette.text.secondary, fontSize: 12 }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </Box>
               </Grid>
             )}

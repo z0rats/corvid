@@ -4,15 +4,15 @@ import userEvent from '@testing-library/user-event';
 import ImageTools from './ImageTools';
 import { imageAnalyzerApi } from './services/api/imageAnalyzerApi';
 
-jest.mock('./services/api/imageAnalyzerApi');
+vi.mock('./services/api/imageAnalyzerApi');
 
 beforeEach(() => {
-  global.URL.createObjectURL = jest.fn(() => 'blob:mock-preview-url');
-  global.URL.revokeObjectURL = jest.fn();
+  global.URL.createObjectURL = vi.fn(() => 'blob:mock-preview-url');
+  global.URL.revokeObjectURL = vi.fn();
 });
 
 afterEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 function makeFile() {

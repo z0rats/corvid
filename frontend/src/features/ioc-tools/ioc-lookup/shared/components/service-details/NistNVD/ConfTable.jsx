@@ -60,7 +60,7 @@ export default function ConfTable(props) {
             node.cpeMatch
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((cpeMatch, index) => (
-                <TableRow>
+                <TableRow key={index}>
                   <TableCell>{cpeMatch.vulnerable ? yes : no}</TableCell>
                   <TableCell sx={{ whiteSpace: "pre-line" }}>
                     {cpeMatch.criteria}

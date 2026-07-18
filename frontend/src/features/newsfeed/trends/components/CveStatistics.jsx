@@ -5,18 +5,18 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import { ResponsiveBar } from "@nivo/bar";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, ResponsiveContainer } from "recharts";
 
 import { useTopCves } from "../../hooks/api/useTrendsApi";
-import { createChartTheme } from "../../utils/chartTheme";
 import { modeValue } from "../../../../core/utils/themeUtils";
 import LoadingState from "../../../../core/components/ui/LoadingState";
+import TrendsBarShape from "./shared/TrendsBarShape";
+import TrendsTooltipBox from "./shared/TrendsTooltipBox";
 
 export default function CveStatistics({ timeRange, refreshKey, onSelectArticleIds }) {
   const { t } = useTranslation('newsfeed');
   const theme = useTheme();
   const { data, loading } = useTopCves(timeRange, refreshKey);
-  const chartTheme = createChartTheme(theme);
 
   const barChartData = Array.isArray(data)
     ? data.map((item) => ({
@@ -40,36 +40,57 @@ export default function CveStatistics({ timeRange, refreshKey, onSelectArticleId
           </Typography>
         </Box>
 
-        <Box height="400px">
+        <Box sx={{ height: "400px" }}>
           {barChartData.length > 0 ? (
-            <ResponsiveBar
-              data={barChartData}
-              keys={["count"]}
-              indexBy="value"
-              margin={{ top: 20, right: 30, bottom: 100, left: 80 }}
-              padding={0.3}
-              valueScale={{ type: "linear" }}
-              colors={({ data }) => data.color}
-              borderColor={{ from: "color", modifiers: [["darker", modeValue(theme, 0.6, 1.6)]] }}
-              axisTop={null}
-              axisRight={null}
-              theme={chartTheme}
-              axisBottom={{ tickSize: 5, tickPadding: 12, tickRotation: -45, legendPosition: "middle", legendOffset: 90 }}
-              axisLeft={{ tickSize: 5, tickPadding: 8, tickRotation: 0, legendPosition: "middle", legendOffset: -60 }}
-              labelSkipWidth={12}
-              labelSkipHeight={12}
-              onClick={(node) => onSelectArticleIds(node.data.article_ids || [], t('trends.cve.selectedTitle', { value: node.data.value }))}
-              borderRadius={4}
-              tooltip={({ value, indexValue }) => (
-                <Box bgcolor="background.paper" p={1.5} border={1} borderColor="divider" borderRadius={1}>
-                  <Typography variant="body2" color="text.primary" fontWeight="medium">{indexValue}</Typography>
-                  <Typography variant="body2" color="text.secondary">{t('trends.cve.occurrences', { count: value })}</Typography>
-                  <Typography variant="caption" color="text.secondary">{t('trends.cve.clickToView')}</Typography>
-                </Box>
-              )}
-              role="application"
-              aria-label="Top CVEs bar chart"
-            />
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barChartData} margin={{ top: 20, right: 30, bottom: 80, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
+                <XAxis
+                  dataKey="value"
+                  angle={-45}
+                  textAnchor="end"
+                  tickMargin={20}
+                  interval={0}
+                  tick={{ fontSize: 12, fill: theme.palette.text.primary }}
+                  axisLine={{ stroke: theme.palette.divider }}
+                  tickLine={{ stroke: theme.palette.divider }}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                  axisLine={{ stroke: theme.palette.divider }}
+                  tickLine={{ stroke: theme.palette.divider }}
+                />
+                <Tooltip
+                  cursor={{ fill: theme.palette.action.hover }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const { value, count } = payload[0].payload;
+                    return (
+                      <TrendsTooltipBox
+                        title={value}
+                        lines={[
+                          { text: t('trends.cve.occurrences', { count }) },
+                          { text: t('trends.cve.clickToView'), variant: 'caption' },
+                        ]}
+                      />
+                    );
+                  }}
+                />
+                <Bar
+                  dataKey="count"
+                  isAnimationActive={false}
+                  shape={(props) => (
+                    <TrendsBarShape
+                      {...props}
+                      onSelect={() => onSelectArticleIds(props.payload.article_ids || [], t('trends.cve.selectedTitle', { value: props.payload.value }))}
+                    />
+                  )}
+                >
+                  <LabelList dataKey="count" position="top" style={{ fontSize: 12, fill: theme.palette.text.primary }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           ) : (
             <Box display="flex" justifyContent="center" alignItems="center" height="100%">
               <Typography variant="body1" color="text.secondary">

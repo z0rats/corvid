@@ -71,11 +71,14 @@ jobs:
       - name: Check i18n locale keys are in sync
         run: yarn check:i18n
 
-      - name: Build (lints via CRA's eslint-webpack-plugin, CI=true fails on warnings)
+      - name: Lint
+        run: yarn lint
+
+      - name: Build
         run: yarn build
 
       - name: Test
-        run: yarn test --watchAll=false
+        run: yarn test
 
       - name: Audit dependencies for known CVEs (yarn npm audit)
         continue-on-error: true

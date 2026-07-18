@@ -1,52 +1,20 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { ResponsiveBar } from "@nivo/bar";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList, ResponsiveContainer } from "recharts";
 
-import { createChartTheme } from "../../utils/chartTheme";
 import { modeValue } from "../../../../core/utils/themeUtils";
 import LoadingState from "../../../../core/components/ui/LoadingState";
-
-function BlacklistLayer({ bars, onBlacklist, t }) {
-  return bars.map((bar) => {
-    const x = bar.x + bar.width / 2;
-    const y = bar.y + bar.height + 12;
-
-    return (
-      <Tooltip key={`blacklist-${bar.key}`} title={t('trends.wordFrequency.hideFromTrends', { value: bar.data.indexValue })} arrow placement="bottom">
-        <g
-          transform={`translate(${x}, ${y})`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onBlacklist(bar.data.indexValue);
-          }}
-          style={{ cursor: "pointer" }}
-        >
-          <circle r={8} fill="transparent" />
-          <text
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={12}
-            fill="currentColor"
-            opacity={0.4}
-          >
-            ✕
-          </text>
-        </g>
-      </Tooltip>
-    );
-  });
-}
+import TrendsBarShape from "./shared/TrendsBarShape";
+import TrendsTooltipBox from "./shared/TrendsTooltipBox";
 
 export default function WordFrequencyChart({ data, loading, error, onSelectArticleIds, onBlacklistWord }) {
   const { t } = useTranslation('newsfeed');
   const theme = useTheme();
-  const chartTheme = createChartTheme(theme);
 
   const barChartData = Array.isArray(data)
     ? data.map((item, index) => ({
@@ -59,11 +27,6 @@ export default function WordFrequencyChart({ data, loading, error, onSelectArtic
         article_ids: item.article_ids || [],
       }))
     : [];
-
-  const blacklistLayer = useCallback(
-    (props) => <BlacklistLayer {...props} onBlacklist={onBlacklistWord} t={t} />,
-    [onBlacklistWord, t]
-  );
 
   if (loading) {
     return (
@@ -95,37 +58,59 @@ export default function WordFrequencyChart({ data, loading, error, onSelectArtic
     <Card sx={{ minHeight: "450px", height: "100%" }}>
       <CardContent>
         <Typography variant="h6" color="text.primary" mb={2}>{t('trends.wordFrequency.title')}</Typography>
-        <Box height="400px">
+        <Box sx={{ height: "400px" }}>
           {barChartData.length > 0 ? (
-            <ResponsiveBar
-              data={barChartData}
-              keys={["count"]}
-              indexBy="word"
-              margin={{ top: 50, right: 60, bottom: 100, left: 80 }}
-              padding={0.3}
-              valueScale={{ type: "linear" }}
-              colors={({ data }) => data.color}
-              borderColor={{ from: "color", modifiers: [["darker", modeValue(theme, 0.6, 1.6)]] }}
-              axisTop={null}
-              axisRight={null}
-              theme={chartTheme}
-              axisBottom={{ tickSize: 5, tickPadding: 26, tickRotation: -45, legendPosition: "middle", legendOffset: 100 }}
-              axisLeft={{ tickSize: 5, tickPadding: 8, tickRotation: 0, legendPosition: "middle", legendOffset: -60 }}
-              labelSkipWidth={12}
-              labelSkipHeight={12}
-              onClick={(node) => onSelectArticleIds(node.data.article_ids || [], t('trends.wordFrequency.selectedTitle', { word: node.data.word }))}
-              borderRadius={4}
-              layers={["grid", "axes", "bars", "markers", "legends", "annotations", ...(onBlacklistWord ? [blacklistLayer] : [])]}
-              tooltip={({ value, indexValue }) => (
-                <Box bgcolor="background.paper" p={1.5} border={1} borderColor="divider" borderRadius={1}>
-                  <Typography variant="body2" color="text.primary" fontWeight="medium">{indexValue}</Typography>
-                  <Typography variant="body2" color="text.secondary">{t('trends.wordFrequency.occurrences', { count: value })}</Typography>
-                  <Typography variant="caption" color="text.secondary">{t('trends.wordFrequency.clickToView')}</Typography>
-                </Box>
-              )}
-              role="application"
-              aria-label="Word frequency bar chart"
-            />
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barChartData} margin={{ top: 30, right: 30, bottom: 90, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
+                <XAxis
+                  dataKey="word"
+                  angle={-45}
+                  textAnchor="end"
+                  tickMargin={20}
+                  interval={0}
+                  tick={{ fontSize: 12, fill: theme.palette.text.primary }}
+                  axisLine={{ stroke: theme.palette.divider }}
+                  tickLine={{ stroke: theme.palette.divider }}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
+                  axisLine={{ stroke: theme.palette.divider }}
+                  tickLine={{ stroke: theme.palette.divider }}
+                />
+                <Tooltip
+                  cursor={{ fill: theme.palette.action.hover }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const { word, count } = payload[0].payload;
+                    return (
+                      <TrendsTooltipBox
+                        title={word}
+                        lines={[
+                          { text: t('trends.wordFrequency.occurrences', { count }) },
+                          { text: t('trends.wordFrequency.clickToView'), variant: 'caption' },
+                        ]}
+                      />
+                    );
+                  }}
+                />
+                <Bar
+                  dataKey="count"
+                  isAnimationActive={false}
+                  shape={(props) => (
+                    <TrendsBarShape
+                      {...props}
+                      onSelect={() => onSelectArticleIds(props.payload.article_ids || [], t('trends.wordFrequency.selectedTitle', { word: props.payload.word }))}
+                      onBlacklist={onBlacklistWord ? () => onBlacklistWord(props.payload.word) : null}
+                      blacklistTitle={onBlacklistWord ? t('trends.wordFrequency.hideFromTrends', { value: props.payload.word }) : undefined}
+                    />
+                  )}
+                >
+                  <LabelList dataKey="count" position="top" style={{ fontSize: 12, fill: theme.palette.text.primary }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           ) : (
             <Box display="flex" justifyContent="center" alignItems="center" height="100%">
               <Typography variant="body1" color="text.secondary">

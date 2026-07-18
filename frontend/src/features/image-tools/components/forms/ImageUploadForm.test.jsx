@@ -11,7 +11,7 @@ describe('ImageUploadForm', () => {
   it('disables the Analyze button until a file is selected', () => {
     render(
       <ImageUploadForm
-        onFileUpload={jest.fn()}
+        onFileUpload={vi.fn()}
         isLoading={false}
         uploadProgress={0}
         error={null}
@@ -22,7 +22,7 @@ describe('ImageUploadForm', () => {
   });
 
   it('enables Analyze and calls onFileUpload with the selected file when clicked', async () => {
-    const onFileUpload = jest.fn();
+    const onFileUpload = vi.fn();
     const user = userEvent.setup();
 
     render(
@@ -51,7 +51,7 @@ describe('ImageUploadForm', () => {
   it('shows the error message when provided', () => {
     render(
       <ImageUploadForm
-        onFileUpload={jest.fn()}
+        onFileUpload={vi.fn()}
         isLoading={false}
         uploadProgress={0}
         error="Invalid file type"
@@ -64,7 +64,7 @@ describe('ImageUploadForm', () => {
   it('disables the dropzone input while loading', () => {
     render(
       <ImageUploadForm
-        onFileUpload={jest.fn()}
+        onFileUpload={vi.fn()}
         isLoading
         uploadProgress={50}
         error={null}

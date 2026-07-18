@@ -46,7 +46,7 @@ export function buildCategoryStats(indicators) {
 }
 
 /**
- * Builds timeline data from indicators for line chart
+ * Builds timeline data from indicators for the observations line chart
  */
 export function buildTimelineData(indicators) {
   const timeline = [];
@@ -69,16 +69,11 @@ export function buildTimelineData(indicators) {
     }
   });
 
-  const sorted = timeline.sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
-  return [{
-    id: 'indicators',
-    color: 'hsl(210, 70%, 50%)',
-    data: sorted.map(item => ({ x: item.date, y: item.count })),
-  }];
+  return timeline.sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
 }
 
 /**
- * Transforms category stats into Nivo pie chart format
+ * Transforms category stats into pie chart format
  */
 export function transformCategoryDataForPie(categoryStats) {
   if (Object.keys(categoryStats).length === 0) {
