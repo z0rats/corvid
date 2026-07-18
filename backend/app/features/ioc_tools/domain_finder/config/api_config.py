@@ -9,7 +9,7 @@ URLSCAN_TIMEOUT = 30.0
 
 # Request configuration
 DEFAULT_HEADERS: dict[str, str] = {
-    "User-Agent": "OSINT-Toolkit-Domain-Lookup/1.0"
+    "User-Agent": "Corvid-Domain-Lookup/1.0"
 }
 
 # Response limits

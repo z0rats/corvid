@@ -81,3 +81,69 @@ class DomainLookupError(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp when the error occurred"
     )
+
+
+class WhoisLookupRequest(BaseModel):
+    """Request model for WHOIS/RDAP lookup operations"""
+
+    domain: str = Field(
+        ...,
+        description="Domain name to look up via RDAP (e.g., 'example.com')",
+        min_length=1,
+        max_length=255
+    )
+
+    @field_validator('domain')
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        """Validate domain format, rejecting search patterns which RDAP doesn't support"""
+        if not v or not v.strip():
+            raise ValueError('Domain cannot be empty')
+
+        domain = v.strip().lower()
+
+        if domain.startswith(('http://', 'https://')):
+            domain = domain.split('://', 1)[1]
+
+        if '/' in domain:
+            domain = domain.split('/', 1)[0]
+
+        if len(domain) > 255:
+            raise ValueError('Domain name too long')
+
+        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
+            raise ValueError('Domain contains invalid characters')
+
+        return domain
+
+
+class WhoisEntity(BaseModel):
+    """A single entity (registrar, registrant, admin, tech, ...) from an RDAP response"""
+
+    role: str = Field(..., description="Entity role, e.g. 'registrar', 'registrant', 'admin', 'tech'")
+    name: str | None = Field(default=None, description="Contact/organization full name")
+    organization: str | None = Field(default=None, description="Organization name")
+    email: str | None = Field(default=None, description="Contact email, if disclosed")
+
+
+class WhoisLookupResponse(BaseModel):
+    """Response model for WHOIS/RDAP lookup operations"""
+
+    domain: str = Field(..., description="The domain that was looked up")
+    rdap_server: str = Field(..., description="Authoritative RDAP server that answered the query")
+    registrar: str | None = Field(default=None, description="Registrar name")
+    registrar_iana_id: str | None = Field(default=None, description="Registrar IANA ID")
+    creation_date: datetime | None = Field(default=None, description="Domain registration date")
+    expiration_date: datetime | None = Field(default=None, description="Domain expiration date")
+    updated_date: datetime | None = Field(default=None, description="Last update date")
+    registrant_organization: str | None = Field(
+        default=None, description="Registrant organization, if not redacted by a privacy proxy"
+    )
+    statuses: list[str] = Field(default_factory=list, description="EPP domain status codes")
+    nameservers: list[str] = Field(default_factory=list, description="Authoritative nameservers")
+    entities: list[WhoisEntity] = Field(default_factory=list, description="All disclosed entities from the RDAP record")
+    raw: dict[str, Any] = Field(default_factory=dict, description="Full raw RDAP response for advanced inspection")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp when the lookup was performed"
+    )
