@@ -70,6 +70,14 @@
     "redditSearchTabs": {
       "newSearch": "New Search",
       "history": "History"
+    },
+
+    "dorkRunner": "Dork Runner",
+
+    "gitRecon": "Git Recon",
+    "gitReconTabs": {
+      "newSearch": "New Search",
+      "history": "History"
     }
   },
 
@@ -90,9 +98,22 @@
       "visual": "Visual",
       "darkMode": "Dark mode",
       "customFont": "Custom font",
-      "customFontHelper": "Change the application wide font for OSINT Toolkit",
+      "customFontHelper": "Change the application wide font for Corvid",
       "language": "Language",
       "languageHelper": "Change the language used across the application interface"
     }
+  },
+
+  "accessGate": {
+    "title": "Access Token Required",
+    "description": "This Corvid instance requires an access token to continue.",
+    "whereToFindTitle": "Where to find it",
+    "whereToFindStep1": "Printed once in the backend startup logs (docker compose logs backend).",
+    "whereToFindStep2": "Saved on the server at data/.access_token.",
+    "whereToFindStep3": "If you've already unlocked this app in another browser on this device, open Settings → About there to copy it.",
+    "lostTokenTitle": "Lost the token entirely?",
+    "lostTokenBody": "Delete data/.access_token on the server and restart the backend - a new token is generated and printed to the logs. This immediately invalidates the old token, signing out every browser that was using it, not just this one.",
+    "tokenLabel": "Access token",
+    "continueButton": "Continue"
   }
 }

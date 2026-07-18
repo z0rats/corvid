@@ -30,6 +30,10 @@
     "foundCount": "Найдено провайдеров: {{count}}"
   },
 
+  "chainActions": {
+    "sendToIocLookup": "Проверить в IOC Lookup"
+  },
+
   "history": {
     "empty": "Пока нет истории поиска",
     "notFound": "Поиск не найден",

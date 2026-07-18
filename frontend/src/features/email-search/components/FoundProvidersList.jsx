@@ -5,7 +5,9 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Stack from '@mui/material/Stack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ChainActionButton from '../../../core/components/ui/ChainActionButton';
 
 export default function FoundProvidersList({ providers }) {
   const { t } = useTranslation('emailSearch');
@@ -33,6 +35,19 @@ export default function FoundProvidersList({ providers }) {
               primary={provider.provider_name}
               secondary={(provider.emails || []).join(', ')}
             />
+            {(provider.emails || []).length > 0 && (
+              <Stack direction="row" spacing={0.5}>
+                {provider.emails.map((email) => (
+                  <ChainActionButton
+                    key={email}
+                    to="/ioc-tools/lookup"
+                    value={email}
+                    labelKey="chainActions.sendToIocLookup"
+                    ns="emailSearch"
+                  />
+                ))}
+              </Stack>
+            )}
           </ListItem>
         ))}
       </List>

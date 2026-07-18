@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { determineIocType } from '../../../shared/utils/iocDefinitions';
 import { lookupHistoryApi } from '../../services/api/lookupHistoryApi';
 import { createLogger } from '../../../../../../core/utils/logger';
+import { usePrefillFromQuery } from '../../../../../../core/hooks/usePrefillFromQuery';
 
 const logger = createLogger('SingleLookupHistory');
 
@@ -11,6 +12,7 @@ export function useSingleLookup() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [shouldShowTable, setShouldShowTable] = useState(false);
   const inputRef = useRef(null);
+  const { prefillValue, clearPrefill } = usePrefillFromQuery();
 
   const handleValidation = useCallback((iocInput) => {
     const trimmedIoc = iocInput.trim();
@@ -58,6 +60,16 @@ export function useSingleLookup() {
       logger.error('Failed to save search to history:', err);
     });
   }, []);
+
+  useEffect(() => {
+    if (!prefillValue) return;
+    if (inputRef.current) {
+      inputRef.current.value = prefillValue;
+    }
+    handleValidation(prefillValue);
+    clearPrefill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillValue]);
 
   return {
     searchValue,

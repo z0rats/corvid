@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -6,9 +6,13 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
+import TablePagination from '@mui/material/TablePagination';
 import Typography from '@mui/material/Typography';
 import IocCard from './IocCard';
 import WelcomeScreen from './WelcomeScreen';
+
+const ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
+const DEFAULT_ROWS_PER_PAGE = 10;
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -42,6 +46,23 @@ export default function BulkLookupResults({
   error,
 }) {
   const { t } = useTranslation('iocTools');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
+
+  // Switching tabs shows a different IOC list, so the previous page number
+  // no longer applies - reset back to the first page.
+  useEffect(() => {
+    setPage(0);
+  }, [activeTab]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   if (error) {
     return <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>;
@@ -83,17 +104,37 @@ export default function BulkLookupResults({
           ))}
         </Tabs>
       </Box>
-      {orderedIocTypes.map((typeKey, index) => (
-        <TabPanel value={activeTab} index={index} key={typeKey}>
-          {categorizedIocs[typeKey] && categorizedIocs[typeKey].length > 0 ? (
-            categorizedIocs[typeKey].map((ioc) => (
-              <IocCard key={ioc.id} ioc={ioc} />
-            ))
-          ) : (
-            <Typography>{t('bulkLookup.results.emptyTab', { type: typeKey.toUpperCase() })}</Typography>
-          )}
-        </TabPanel>
-      ))}
+      {orderedIocTypes.map((typeKey, index) => {
+        const iocs = categorizedIocs[typeKey] || [];
+        const pagedIocs = index === activeTab
+          ? iocs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          : [];
+
+        return (
+          <TabPanel value={activeTab} index={index} key={typeKey}>
+            {iocs.length > 0 ? (
+              <>
+                {pagedIocs.map((ioc) => (
+                  <IocCard key={ioc.id} ioc={ioc} />
+                ))}
+                {iocs.length > ROWS_PER_PAGE_OPTIONS[0] && (
+                  <TablePagination
+                    rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+                    component="div"
+                    count={iocs.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                  />
+                )}
+              </>
+            ) : (
+              <Typography>{t('bulkLookup.results.emptyTab', { type: typeKey.toUpperCase() })}</Typography>
+            )}
+          </TabPanel>
+        );
+      })}
     </Paper>
   );
 }

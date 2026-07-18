@@ -70,6 +70,14 @@
     "redditSearchTabs": {
       "newSearch": "Новый поиск",
       "history": "История"
+    },
+
+    "dorkRunner": "Дорк-раннер",
+
+    "gitRecon": "Git-разведка",
+    "gitReconTabs": {
+      "newSearch": "Новый поиск",
+      "history": "История"
     }
   },
 
@@ -90,9 +98,22 @@
       "visual": "Внешний вид",
       "darkMode": "Тёмный режим",
       "customFont": "Шрифт",
-      "customFontHelper": "Изменить шрифт интерфейса OSINT Toolkit",
+      "customFontHelper": "Изменить шрифт интерфейса Corvid",
       "language": "Язык",
       "languageHelper": "Изменить язык интерфейса приложения"
     }
+  },
+
+  "accessGate": {
+    "title": "Требуется токен доступа",
+    "description": "Для продолжения работы с этим экземпляром Corvid нужен токен доступа.",
+    "whereToFindTitle": "Где его найти",
+    "whereToFindStep1": "Выводится один раз в логах запуска backend (docker compose logs backend).",
+    "whereToFindStep2": "Сохранён на сервере в файле data/.access_token.",
+    "whereToFindStep3": "Если вы уже разблокировали приложение в другом браузере на этом устройстве, откройте там Настройки → О программе, чтобы скопировать его.",
+    "lostTokenTitle": "Токен полностью утерян?",
+    "lostTokenBody": "Удалите data/.access_token на сервере и перезапустите backend — будет сгенерирован новый токен и выведен в логи. Это немедленно аннулирует старый токен, разлогинив все браузеры, которые его использовали, а не только текущий.",
+    "tokenLabel": "Токен доступа",
+    "continueButton": "Продолжить"
   }
 }

@@ -30,6 +30,10 @@
     "foundCount": "{{count}} provider(s) found"
   },
 
+  "chainActions": {
+    "sendToIocLookup": "Check in IOC Lookup"
+  },
+
   "history": {
     "empty": "No past searches yet",
     "notFound": "Search run not found",

@@ -7,7 +7,9 @@ import Snackbar from '@mui/material/Snackbar';
 import ResultTable from './components/ui/ResultTable';
 import SearchBar from '../../../../core/components/ui/SearchBar';
 import WelcomeScreen from './components/ui/WelcomeScreen';
+import ChainActionButton from '../../../../core/components/ui/ChainActionButton';
 import { useSingleLookup } from './hooks/ui/useSingleLookup';
+import { IOC_TYPES } from '../shared/utils/iocDefinitions';
 
 export default function SingleLookup() {
   const { t } = useTranslation('iocTools');
@@ -55,11 +57,23 @@ export default function SingleLookup() {
       </Snackbar>
       <Box sx={{ mb: 2 }} />
       {shouldShowTable && searchValue && currentIocType ? (
-        <ResultTable
-          ioc={searchValue}
-          iocType={currentIocType}
-          onSearchComplete={handleSearchComplete}
-        />
+        <>
+          {currentIocType === IOC_TYPES.DOMAIN && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+              <ChainActionButton
+                to="/ioc-tools/domain-finder"
+                value={searchValue}
+                labelKey="singleLookup.chainActions.sendToDomainFinder"
+                ns="iocTools"
+              />
+            </Box>
+          )}
+          <ResultTable
+            ioc={searchValue}
+            iocType={currentIocType}
+            onSearchComplete={handleSearchComplete}
+          />
+        </>
       ) : (
         <WelcomeScreen />
       )}
