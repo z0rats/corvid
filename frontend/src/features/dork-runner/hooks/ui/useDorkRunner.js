@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useAtom } from 'jotai';
 import { dorkRunnerApi } from '../../services/api/dorkRunnerApi';
+import { dorkRunnerStateAtom } from '../../state/dorkRunnerAtoms';
 import { usePrefillFromQuery } from '../../../../core/hooks/usePrefillFromQuery';
 import { createLogger } from '../../../../core/utils/logger';
 
@@ -11,9 +13,7 @@ export function useDorkRunner() {
   const [engine, setEngine] = useState('duckduckgo');
   const [templates, setTemplates] = useState([]);
   const [selectedTemplateKeys, setSelectedTemplateKeys] = useState([]);
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [{ result, loading, error }, setScanState] = useAtom(dorkRunnerStateAtom);
   const { prefillValue, clearPrefill } = usePrefillFromQuery();
 
   useEffect(() => {
@@ -40,8 +40,7 @@ export function useDorkRunner() {
     const targetValue = (targetOverride ?? target).trim();
     if (!targetValue) return;
 
-    setLoading(true);
-    setError(null);
+    setScanState({ result: null, loading: true, error: null });
     try {
       const data = await dorkRunnerApi.runDorks({
         target: targetValue,
@@ -49,14 +48,15 @@ export function useDorkRunner() {
         engine,
         templateKeys: selectedTemplateKeys.length ? selectedTemplateKeys : undefined,
       });
-      setResult(data);
+      setScanState({ result: data, loading: false, error: null });
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Dork run failed');
-      setResult(null);
-    } finally {
-      setLoading(false);
+      setScanState({
+        result: null,
+        loading: false,
+        error: err.response?.data?.detail || err.message || 'Dork run failed',
+      });
     }
-  }, [target, targetType, engine, selectedTemplateKeys]);
+  }, [target, targetType, engine, selectedTemplateKeys, setScanState]);
 
   useEffect(() => {
     if (!prefillValue) return;
