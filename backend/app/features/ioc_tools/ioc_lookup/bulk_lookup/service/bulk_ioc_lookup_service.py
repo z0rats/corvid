@@ -143,9 +143,29 @@ async def process_bulk_lookups_with_rate_limiting(
 
     logger.info("Created %s rate-limited lookup tasks", len(tasks))
 
-    for ioc_value, service_name, task in tasks:
+    total_timeout = get_timeout_config()['total_timeout']
+    start_time = time.monotonic()
+
+    for index, (ioc_value, service_name, task) in enumerate(tasks):
+        remaining = total_timeout - (time.monotonic() - start_time)
+        if remaining <= 0:
+            logger.warning(
+                "Bulk lookup exceeded total timeout of %ss; cancelling %s remaining task(s)",
+                total_timeout, len(tasks) - index
+            )
+            for _, _, pending_task in tasks[index:]:
+                pending_task.cancel()
+            for pending_ioc, pending_service, _ in tasks[index:]:
+                yield {
+                    "ioc": pending_ioc,
+                    "service": pending_service,
+                    "status": LookupStatus.ERROR.value,
+                    "error": "Bulk lookup exceeded the total timeout"
+                }
+            break
+
         try:
-            result = await task
+            result = await asyncio.wait_for(task, timeout=remaining)
             status_value = result.get("status", LookupStatus.ERROR.value)
             if status_value == LookupStatus.SUCCESS.value:
                 yield {
@@ -161,6 +181,15 @@ async def process_bulk_lookups_with_rate_limiting(
                     "status": status_value,
                     "error": result.get("error", "Service error")
                 }
+        except asyncio.TimeoutError:
+            task.cancel()
+            logger.warning("Bulk lookup total timeout reached while awaiting %s/%s", ioc_value, service_name)
+            yield {
+                "ioc": ioc_value,
+                "service": service_name,
+                "status": LookupStatus.ERROR.value,
+                "error": "Bulk lookup exceeded the total timeout"
+            }
         except Exception as e:
             logger.error("Error awaiting task for %s/%s: %s", ioc_value, service_name, str(e))
             yield {
