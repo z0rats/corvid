@@ -1,4 +1,5 @@
 import api, { baseURL } from '../../../../core/services/baseApi';
+import { getAccessToken } from '../../../../core/utils/accessToken';
 
 export const usernameSearchApi = {
   async startScan(username, { source, tags, excludedTags, signal } = {}) {
@@ -7,6 +8,7 @@ export const usernameSearchApi = {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
+        'Authorization': `Bearer ${getAccessToken()}`,
       },
       body: JSON.stringify({
         username,

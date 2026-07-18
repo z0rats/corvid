@@ -1,4 +1,5 @@
 import api, { baseURL } from '../../../../../core/services/baseApi';
+import { getAccessToken } from '../../../../../core/utils/accessToken';
 
 /**
  * IOC Lookup API Service
@@ -21,7 +22,8 @@ export const iocLookupApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/event-stream'
+        'Accept': 'text/event-stream',
+        'Authorization': `Bearer ${getAccessToken()}`,
       },
       body: JSON.stringify({ iocs, services })
     });

@@ -1,4 +1,5 @@
 import api, { baseURL } from '../../../../core/services/baseApi';
+import { getAccessToken } from '../../../../core/utils/accessToken';
 
 export const emailSearchApi = {
   async startScan(username, { signal } = {}) {
@@ -7,6 +8,7 @@ export const emailSearchApi = {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
+        'Authorization': `Bearer ${getAccessToken()}`,
       },
       body: JSON.stringify({ username }),
       signal,
