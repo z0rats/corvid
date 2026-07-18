@@ -1,12 +1,20 @@
+import { createRequire } from 'node:module';
 import js from '@eslint/js';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 
+// `settings.react.version: 'detect'` calls eslint-plugin-react's own
+// auto-detection, which relies on the RuleContext#getFilename() method
+// ESLint 10 removed (react/display-name crashes on every file otherwise).
+// Reading the installed version ourselves sidesteps that broken codepath
+// until eslint-plugin-react ships an ESLint-10-compatible release.
+const { version: reactVersion } = createRequire(import.meta.url)('react/package.json');
+
 export default [
   { ignores: ['build/**', 'node_modules/**'] },
-  { settings: { react: { version: 'detect' } } },
+  { settings: { react: { version: reactVersion } } },
   js.configs.recommended,
   react.configs.flat.recommended,
   {
