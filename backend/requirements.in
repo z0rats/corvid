@@ -28,5 +28,4 @@ requests
 slowapi
 social-analyzer
 sqlalchemy
-tweepy
 uvicorn[standard]

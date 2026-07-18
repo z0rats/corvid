@@ -5,7 +5,7 @@ from typing import TypeVar
 from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.settings import ModelSettings
-from pydantic_ai.models.openai import OpenAIModel, OpenAIResponsesModel, OpenAIResponsesModelSettings
+from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel, OpenAIResponsesModelSettings
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.providers.anthropic import AnthropicProvider
@@ -53,7 +53,7 @@ def _create_model(provider: str, model_name: str, api_key: str):
         openai_provider = OpenAIProvider(api_key=api_key)
         if _is_reasoning_model(model_name):
             return OpenAIResponsesModel(model_name, provider=openai_provider)
-        return OpenAIModel(model_name, provider=openai_provider)
+        return OpenAIChatModel(model_name, provider=openai_provider)
     if provider == "anthropic":
         return AnthropicModel(model_name, provider=AnthropicProvider(api_key=api_key))
     if provider == "google":
