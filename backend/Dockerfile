@@ -11,7 +11,8 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache,sharing=locked \
     libxml2-dev \
     libxslt-dev \
     liblzma-dev \
-    zlib1g-dev
+    zlib1g-dev \
+    git
 
 RUN mkdir -p /backend/data
 

@@ -1,0 +1,84 @@
+{
+  "page": {
+    "title": "Git-разведка",
+    "description": "Сопоставление имён, email-адресов и учётных записей GitHub на основе истории git-репозиториев и API GitHub.",
+    "poweredBy": "Работает на gitcolombo"
+  },
+
+  "form": {
+    "modes": {
+      "search": "Поиск",
+      "url": "URL репозитория",
+      "nickname": "Пользователь/организация GitHub"
+    },
+    "modeDescriptions": {
+      "search": "Поиск только через API GitHub по имени пользователя: UID PGP-ключей и поиск по коммитам во всём GitHub. Без клонирования.",
+      "url": "Клонирование и анализ истории коммитов одного репозитория GitHub.",
+      "nickname": "Клонирование и анализ всех публичных репозиториев пользователя или организации GitHub (форки по умолчанию пропускаются)."
+    },
+    "targetLabels": {
+      "search": "Имя пользователя GitHub",
+      "url": "URL репозитория",
+      "nickname": "Пользователь или организация GitHub"
+    },
+    "targetPlaceholders": {
+      "search": "например, octocat",
+      "url": "https://github.com/owner/repo",
+      "nickname": "например, octocat"
+    },
+    "optionsButton": "Параметры",
+    "scanButton": "Сканировать",
+    "includeForksLabel": "Включать форки репозиториев",
+    "resolveGithubLoginsLabel": "Определять логины GitHub (доп. запросы на каждую личность)",
+    "ignoreNoreplyLabel": "Игнорировать служебные noreply-адреса"
+  },
+
+  "results": {
+    "empty": "По этой цели ничего не найдено.",
+    "identities": "Личности ({{count}})",
+    "correlation": "Сопоставление",
+    "sharedEmails": "{{count}} email-адресов",
+    "samePerson": "Один и тот же человек",
+    "pgpKeys": "UID PGP-ключей ({{count}})",
+    "commitSearch": "Совпадения в поиске по коммитам ({{count}})",
+    "alsoKnownAs": "также известен как",
+    "stats": {
+      "repos": "{{count}} репозиториев",
+      "commits": "{{count}} коммитов",
+      "persons": "{{count}} личностей"
+    },
+    "headers": {
+      "name": "Имя",
+      "email": "Email",
+      "asAuthor": "Как автор",
+      "asCommitter": "Как коммиттер",
+      "githubLogin": "GitHub",
+      "status": "Статус",
+      "keyId": "ID ключа",
+      "source": "Источник",
+      "role": "Роль",
+      "repo": "Репозиторий",
+      "date": "Дата"
+    }
+  },
+
+  "badges": {
+    "noreply": "noreply",
+    "verified": "подтверждён",
+    "unverified": "не подтверждён"
+  },
+
+  "history": {
+    "empty": "Пока нет прошлых поисков",
+    "notFound": "Поиск не найден",
+    "summary": "скан «{{mode}}», выполнен {{date}}",
+    "headers": {
+      "mode": "Режим",
+      "target": "Цель",
+      "persons": "Личности",
+      "repos": "Репозитории",
+      "searched": "Выполнен",
+      "actions": "Действия"
+    }
+  }
+}
