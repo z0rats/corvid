@@ -13,6 +13,8 @@ class UsernameSearchConfigSchema(BaseModel):
     auto_update_interval_hours: int = Field(..., description="Hours between site database refresh checks")
     db_last_updated_at: datetime.datetime | None = Field(default=None, description="When the site database was last checked/refreshed")
     db_site_count: int = Field(..., description="Number of sites in the currently loaded database")
+    latest_pypi_version: str | None = Field(default=None, description="Latest maigret version published on PyPI, if checked")
+    pypi_checked_at: datetime.datetime | None = Field(default=None, description="When PyPI was last checked for a newer maigret version")
 
     model_config = ConfigDict(from_attributes=True)
 

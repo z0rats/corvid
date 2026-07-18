@@ -48,6 +48,11 @@ export const usernameSearchApi = {
     return response.data;
   },
 
+  async checkMaigretUpdate() {
+    const response = await api.post('/api/username-search/maigret/check-update');
+    return response.data;
+  },
+
   async listRuns(skip = 0, limit = 100) {
     const response = await api.get('/api/username-search/runs', { params: { skip, limit } });
     return response.data;

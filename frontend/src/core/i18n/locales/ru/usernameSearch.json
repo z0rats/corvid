@@ -77,6 +77,8 @@
     "dbStatusBundled": "{{count}} сайтов (встроенная база, обновления ещё не проверялись)",
     "refreshDbNow": "Проверить обновление сейчас",
     "dbRefreshSuccess": "Обновление базы сайтов завершено",
+    "maigretVersionSection": "Версия пакета",
+    "maigretUpdateRequiresRebuild": "maigret устанавливается на этапе сборки образа — установка новой версии потребует пересборки backend-контейнера, эта проверка только показывает, что доступно",
     "saTitle": "Настройки Social Analyzer",
     "saDescription": "Настройте дополнительный источник поиска social-analyzer.",
     "saTimeoutSeconds": "Задержка между запросами (сек)",

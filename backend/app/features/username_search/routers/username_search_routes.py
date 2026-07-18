@@ -11,12 +11,19 @@ from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQu
 from app.core.exceptions import AppHTTPException
 from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
     get_social_analyzer_config,
-    record_pypi_check,
+    record_pypi_check as record_social_analyzer_pypi_check,
 )
-from app.core.settings.username_search.crud.username_search_settings_crud import get_username_search_config
-from app.features.username_search.config.maigret_config import get_available_tags, get_maigret_database
+from app.core.settings.username_search.crud.username_search_settings_crud import (
+    get_username_search_config,
+    record_pypi_check as record_maigret_pypi_check,
+)
+from app.features.username_search.config.maigret_config import (
+    fetch_latest_pypi_version as fetch_latest_maigret_pypi_version,
+    get_available_tags,
+    get_maigret_database,
+)
 from app.features.username_search.config.social_analyzer_config import (
-    fetch_latest_pypi_version,
+    fetch_latest_pypi_version as fetch_latest_social_analyzer_pypi_version,
     get_bundled_site_count,
     get_installed_version as get_social_analyzer_version,
 )
@@ -124,6 +131,9 @@ async def read_info(db: ReadSessionDep) -> list[UsernameSearchInfo]:
     """Get info about both search tools and their site databases"""
     maigret_config = await get_username_search_config(db)
     maigret_site_count = maigret_config.db_site_count or len(get_maigret_database().sites)
+    maigret_update_available = (
+        bool(maigret_config.latest_pypi_version) and maigret_config.latest_pypi_version != maigret.__version__
+    )
 
     sa_config = await get_social_analyzer_config(db)
     sa_update_available = (
@@ -136,6 +146,8 @@ async def read_info(db: ReadSessionDep) -> list[UsernameSearchInfo]:
             version=maigret.__version__,
             site_count=maigret_site_count,
             db_last_updated_at=maigret_config.db_last_updated_at,
+            latest_version=maigret_config.latest_pypi_version,
+            update_available=maigret_update_available if maigret_config.latest_pypi_version else None,
         ),
         UsernameSearchInfo(
             tool="social_analyzer",
@@ -174,8 +186,8 @@ async def refresh_db_endpoint(db: SessionDep) -> UsernameSearchInfo:
 )
 async def check_social_analyzer_update(db: SessionDep) -> UsernameSearchInfo:
     """Manually check PyPI for a newer social-analyzer release"""
-    latest_version = await fetch_latest_pypi_version()
-    config = await record_pypi_check(db, latest_version)
+    latest_version = await fetch_latest_social_analyzer_pypi_version()
+    config = await record_social_analyzer_pypi_check(db, latest_version)
     installed_version = get_social_analyzer_version()
     return UsernameSearchInfo(
         tool="social_analyzer",
@@ -183,6 +195,28 @@ async def check_social_analyzer_update(db: SessionDep) -> UsernameSearchInfo:
         site_count=get_bundled_site_count(),
         latest_version=config.latest_pypi_version,
         update_available=bool(config.latest_pypi_version) and config.latest_pypi_version != installed_version,
+    )
+
+
+@router.post(
+    "/maigret/check-update",
+    response_model=UsernameSearchInfo,
+    summary="Check PyPI for a maigret update",
+    description="Check PyPI for the latest published maigret version. Doesn't install anything - "
+    "a newer version still requires a container rebuild, since maigret is installed at image-build time.",
+)
+async def check_maigret_update(db: SessionDep) -> UsernameSearchInfo:
+    """Manually check PyPI for a newer maigret release"""
+    latest_version = await fetch_latest_maigret_pypi_version()
+    config = await record_maigret_pypi_check(db, latest_version)
+    site_count = config.db_site_count or len(get_maigret_database().sites)
+    return UsernameSearchInfo(
+        tool="maigret",
+        version=maigret.__version__,
+        site_count=site_count,
+        db_last_updated_at=config.db_last_updated_at,
+        latest_version=config.latest_pypi_version,
+        update_available=bool(config.latest_pypi_version) and config.latest_pypi_version != maigret.__version__,
     )
 
 
