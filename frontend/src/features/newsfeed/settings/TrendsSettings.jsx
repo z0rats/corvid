@@ -10,7 +10,7 @@ import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useTheme } from "@mui/material/styles";
-import AddIcon from "@mui/icons-material/Add";
+import AddIcon from "@mui/icons-material/AddOutlined";
 
 import { useTrendsBlacklist } from "../hooks/api/useTrendsBlacklistApi";
 import { useNotification } from "../../../core/hooks/ui/useNotification";

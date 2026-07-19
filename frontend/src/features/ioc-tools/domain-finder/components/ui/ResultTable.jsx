@@ -5,12 +5,12 @@ import ReactCountryFlag from "react-country-flag";
 import { useDomainSearch } from "../../hooks/api/useDomainSearch";
 import { domainUtils } from "../../utils/domainUtils";
 
-import CircleIcon from "@mui/icons-material/Circle";
+import CircleIcon from "@mui/icons-material/CircleOutlined";
 import Collapse from "@mui/material/Collapse";
 import Grow from "@mui/material/Grow";
 import IconButton from "@mui/material/IconButton";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
 import LinearProgress from "@mui/material/LinearProgress";
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';

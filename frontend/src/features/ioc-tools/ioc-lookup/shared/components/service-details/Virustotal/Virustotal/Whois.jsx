@@ -7,7 +7,7 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
 
-import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import QuestionMarkIcon from "@mui/icons-material/QuestionMarkOutlined";
 
 export default function Whois(props) {
   const { t } = useTranslation('iocTools');

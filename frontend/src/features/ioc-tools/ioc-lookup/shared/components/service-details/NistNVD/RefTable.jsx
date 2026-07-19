@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useTranslation } from 'react-i18next';
 
 import Grid from "@mui/material/Grid";
-import LinkIcon from "@mui/icons-material/Link";
-import SourceIcon from "@mui/icons-material/Source";
+import LinkIcon from "@mui/icons-material/LinkOutlined";
+import SourceIcon from "@mui/icons-material/SourceOutlined";
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';

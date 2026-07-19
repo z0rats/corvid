@@ -9,8 +9,8 @@ import List from "@mui/material/List";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import Add from "@mui/icons-material/Add";
-import ImageSearch from "@mui/icons-material/ImageSearch";
+import Add from "@mui/icons-material/AddOutlined";
+import ImageSearch from "@mui/icons-material/ImageSearchOutlined";
 
 import { useFeedManagement } from "../hooks/api/useFeedManagementApi";
 import { useIconManagement } from "../hooks/api/useIconManagement";

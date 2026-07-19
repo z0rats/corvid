@@ -1,86 +1,9 @@
-/* Font Faces */
-@font-face {
-  font-display: swap;
-  font-family: 'Nunito';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../static/fonts/Nunito/nunito-v25-latin-regular.eot');
-  src: url('../static/fonts/Nunito/nunito-v25-latin-regular.eot?#iefix') format('embedded-opentype'),
-       url('../static/fonts/Nunito/nunito-v25-latin-regular.woff2') format('woff2'),
-       url('../static/fonts/Nunito/nunito-v25-latin-regular.woff') format('woff'),
-       url('../static/fonts/Nunito/nunito-v25-latin-regular.ttf') format('truetype'),
-       url('../static/fonts/Nunito/nunito-v25-latin-regular.svg#Nunito') format('svg');
-}
-
-@font-face {
-  font-display: swap;
-  font-family: 'Poppins';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../static/fonts/Poppins/poppins-v20-latin-regular.eot');
-  src: url('../static/fonts/Poppins/poppins-v20-latin-regular.eot?#iefix') format('embedded-opentype'),
-       url('../static/fonts/Poppins/poppins-v20-latin-regular.woff2') format('woff2'),
-       url('../static/fonts/Poppins/poppins-v20-latin-regular.woff') format('woff'),
-       url('../static/fonts/Poppins/poppins-v20-latin-regular.ttf') format('truetype'),
-       url('../static/fonts/Poppins/poppins-v20-latin-regular.svg#Poppins') format('svg');
-}
-
-@font-face {
-  font-display: swap;
-  font-family: 'Roboto';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../static/fonts/Roboto/roboto-v30-latin-regular.eot');
-  src: url('../static/fonts/Roboto/roboto-v30-latin-regular.eot?#iefix') format('embedded-opentype'),
-       url('../static/fonts/Roboto/roboto-v30-latin-regular.woff2') format('woff2'),
-       url('../static/fonts/Roboto/roboto-v30-latin-regular.woff') format('woff'),
-       url('../static/fonts/Roboto/roboto-v30-latin-regular.ttf') format('truetype'),
-       url('../static/fonts/Roboto/roboto-v30-latin-regular.svg#Roboto') format('svg');
-}
-
-@font-face {
-  font-display: swap;
-  font-family: 'Aldrich';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../static/fonts/Aldrich/aldrich-v17-latin-regular.eot');
-  src: url('../static/fonts/Aldrich/aldrich-v17-latin-regular.eot?#iefix') format('embedded-opentype'),
-       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.woff2') format('woff2'),
-       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.woff') format('woff'),
-       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.ttf') format('truetype'),
-       url('../static/fonts/Aldrich/aldrich-v17-latin-regular.svg#Aldrich') format('svg');
-}
-
 /* Global Styles */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   font-size: 0.875rem;
-}
-
-body[data-font="Nunito"] {
-  font-family: 'Nunito', sans-serif;
-}
-
-body[data-font="Poppins"] {
-  font-family: 'Poppins', sans-serif;
-}
-
-body[data-font="Helvetica"] {
-  font-family: 'Helvetica', sans-serif;
-}
-
-body[data-font="Roboto"] {
-  font-family: 'Roboto', sans-serif;
-}
-
-body[data-font="Arial"] {
-  font-family: 'Arial', sans-serif;
-}
-
-body[data-font="Aldrich"] {
-  font-family: 'Aldrich', sans-serif;
 }
 
 code {

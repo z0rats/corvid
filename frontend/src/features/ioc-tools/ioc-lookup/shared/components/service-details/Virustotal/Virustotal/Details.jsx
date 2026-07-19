@@ -1,14 +1,14 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
 
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import BusinessIcon from "@mui/icons-material/Business";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHighOutlined";
+import BusinessIcon from "@mui/icons-material/BusinessOutlined";
 import ExtensionOutlinedIcon from "@mui/icons-material/ExtensionOutlined";
 import GppMaybeOutlinedIcon from "@mui/icons-material/GppMaybeOutlined";
-import InfoIcon from "@mui/icons-material/Info";
+import InfoIcon from "@mui/icons-material/InfoOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
-import LanIcon from "@mui/icons-material/Lan";
+import LanIcon from "@mui/icons-material/LanOutlined";
 import RouterOutlinedIcon from "@mui/icons-material/RouterOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 

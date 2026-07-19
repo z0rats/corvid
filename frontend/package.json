@@ -5,6 +5,8 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@fontsource/archivo": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@hello-pangea/dnd": "^18.0.1",
     "@mdxeditor/editor": "^4.0.4",
     "@mui/icons-material": "9.2.0",

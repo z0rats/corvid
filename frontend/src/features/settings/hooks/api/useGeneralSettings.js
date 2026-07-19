@@ -13,23 +13,6 @@ export function useGeneralSettings() {
   const [error, setError] = useState(null);
   const setGeneralSettings = useSetAtom(generalSettingsState);
 
-  const updateFont = useCallback(async (font) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await settingsApi.updateFont(font);
-      setGeneralSettings(prev => ({ ...prev, font }));
-      document.body.setAttribute('data-font', font);
-      return { success: true, message: NOTIFICATION_MESSAGES.FONT_UPDATED };
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || NOTIFICATION_MESSAGES.SAVE_ERROR;
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  }, [setGeneralSettings]);
-
   const updateDarkmode = useCallback(async (darkmode) => {
     setLoading(true);
     setError(null);
@@ -66,7 +49,6 @@ export function useGeneralSettings() {
   return {
     loading,
     error,
-    updateFont,
     updateDarkmode,
     updateLanguage,
   };

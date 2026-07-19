@@ -5,8 +5,8 @@ import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid";
-import StarHalfIcon from "@mui/icons-material/StarHalf";
-import StarIcon from "@mui/icons-material/Star";
+import StarHalfIcon from "@mui/icons-material/StarHalfOutlined";
+import StarIcon from "@mui/icons-material/StarOutlined";
 import Typography from '@mui/material/Typography';
 
 export default function PopularityRanks(props) {

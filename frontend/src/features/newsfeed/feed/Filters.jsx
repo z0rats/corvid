@@ -17,11 +17,11 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import TuneIcon from "@mui/icons-material/Tune";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import DownloadIcon from "@mui/icons-material/Download";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMoreOutlined";
+import TuneIcon from "@mui/icons-material/TuneOutlined";
+import RefreshIcon from "@mui/icons-material/RefreshOutlined";
+import DownloadIcon from "@mui/icons-material/DownloadOutlined";
+import RestartAltIcon from "@mui/icons-material/RestartAltOutlined";
 import Grid from '@mui/material/Grid';
 
 import { newsfeedApi } from "../services/api/newsfeedApi";

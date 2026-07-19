@@ -8,7 +8,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from '@mui/material/Typography';
 
-import DescriptionIcon from "@mui/icons-material/Description";
+import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 
 export default function Filenames(props) {
   const { t } = useTranslation('iocTools');

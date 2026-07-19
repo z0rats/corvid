@@ -6,7 +6,7 @@ import Chip from "@mui/material/Chip";
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
 
-import TagIcon from "@mui/icons-material/Tag";
+import TagIcon from "@mui/icons-material/TagOutlined";
 
 export default function Tags(props) {
   const { t } = useTranslation('iocTools');

@@ -19,8 +19,8 @@ import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
-import RefreshIcon from "@mui/icons-material/Refresh";
-import LaunchIcon from "@mui/icons-material/Launch";
+import RefreshIcon from "@mui/icons-material/RefreshOutlined";
+import LaunchIcon from "@mui/icons-material/LaunchOutlined";
 
 import { useHeadlines } from "../hooks/api/useHeadlinesApi";
 import { formatDate } from "../utils/formatters";

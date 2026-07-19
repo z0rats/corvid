@@ -1,18 +1,18 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
 
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonthOutlined";
 import Card from "@mui/material/Card";
-import DescriptionIcon from "@mui/icons-material/Description";
-import EventIcon from "@mui/icons-material/Event";
+import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
+import EventIcon from "@mui/icons-material/EventOutlined";
 import Grid from "@mui/material/Grid";
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import ModelTrainingIcon from "@mui/icons-material/ModelTraining";
+import ModelTrainingIcon from "@mui/icons-material/ModelTrainingOutlined";
 import ReactMarkdown from "react-markdown";
-import SourceIcon from "@mui/icons-material/Source";
+import SourceIcon from "@mui/icons-material/SourceOutlined";
 import Typography from "@mui/material/Typography";
 
 export default function Details(props) {

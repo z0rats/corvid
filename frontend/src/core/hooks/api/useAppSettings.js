@@ -50,7 +50,6 @@ export function useAppSettings() {
 
         setGeneralSettings(generalSettingsResponse);
         setAiSettings(aiSettingsResponse);
-        document.body.setAttribute('data-font', generalSettingsResponse.font);
 
         if (SUPPORTED_LANGUAGES.includes(generalSettingsResponse.language)) {
           i18n.changeLanguage(generalSettingsResponse.language);

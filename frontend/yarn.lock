@@ -1038,6 +1038,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/archivo@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@fontsource/archivo@npm:5.2.8"
+  checksum: 10c0/30acb9d5245b8a7bc7dbbb1659b53e4eebfa1493b412206bec4c20839aa109d741d6f6bdf5c3325cf32db010238ef8ee54ca682c1e7dd23c61f99a6a6ce481e0
+  languageName: node
+  linkType: hard
+
+"@fontsource/jetbrains-mono@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@fontsource/jetbrains-mono@npm:5.2.8"
+  checksum: 10c0/a51a1ad9cc847ccb3f5986d00b49fcd0eb2061200eb9caf215f968d658806e96e0ee305ab45df3d167f62223e45935cb7e89f984e7fb88fbe6928855a20e044e
+  languageName: node
+  linkType: hard
+
 "@hello-pangea/dnd@npm:^18.0.1":
   version: 18.0.1
   resolution: "@hello-pangea/dnd@npm:18.0.1"
@@ -3792,6 +3806,8 @@ __metadata:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.1"
     "@eslint/js": "npm:^10.0.1"
+    "@fontsource/archivo": "npm:^5.2.8"
+    "@fontsource/jetbrains-mono": "npm:^5.2.8"
     "@hello-pangea/dnd": "npm:^18.0.1"
     "@mdxeditor/editor": "npm:^4.0.4"
     "@mui/icons-material": "npm:9.2.0"

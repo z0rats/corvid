@@ -9,8 +9,8 @@ import Collapse from "@mui/material/Collapse";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ShieldIcon from "@mui/icons-material/Shield";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMoreOutlined";
+import ShieldIcon from "@mui/icons-material/ShieldOutlined";
 import { createLogger } from "../../../core/utils/logger";
 
 const logger = createLogger("MitreAttackSection");

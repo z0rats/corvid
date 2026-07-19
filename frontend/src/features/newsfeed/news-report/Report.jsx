@@ -14,9 +14,9 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
 import { timelineOppositeContentClasses } from '@mui/lab/TimelineOppositeContent';
-import SearchIcon from "@mui/icons-material/Search";
-import AnalyticsIcon from "@mui/icons-material/Analytics";
-import ListAltIcon from "@mui/icons-material/ListAlt";
+import SearchIcon from "@mui/icons-material/SearchOutlined";
+import AnalyticsIcon from "@mui/icons-material/AnalyticsOutlined";
+import ListAltIcon from "@mui/icons-material/ListAltOutlined";
 import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 

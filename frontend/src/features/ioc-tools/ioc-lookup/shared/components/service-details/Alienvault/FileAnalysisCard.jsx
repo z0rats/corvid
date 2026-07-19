@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import ScienceIcon from "@mui/icons-material/Science";
+import ScienceIcon from "@mui/icons-material/ScienceOutlined";
 import Typography from "@mui/material/Typography";
 
 export default function FileAnalysisCard({ analysis }) {

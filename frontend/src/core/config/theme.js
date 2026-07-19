@@ -3,95 +3,63 @@ import { alpha } from "@mui/material/styles";
 
 const colors = {
   primary: {
-    50: '#E8F4FD',
-    100: '#C6E2F9',
-    200: '#94CBF5',
-    300: '#62B4F1',
-    400: '#3B9DEE',
-    500: '#1486EB',
-    600: '#1275D4',
-    700: '#0F60B8',
-    800: '#0C4B9C',
-    900: '#082E74',
+    50: '#F0F9F7',
+    100: '#DAF1EA',
+    200: '#B5E3D6',
+    300: '#89D2BD',
+    400: '#5EC2A6',
+    500: '#42AE8F',
+    600: '#38947A',
+    700: '#2F7C66',
+    800: '#266452',
+    900: '#1B463A',
   },
 
   secondary: {
-    50: '#EDFDF7',
-    100: '#D1FAE5',
-    200: '#A7F3D0',
-    300: '#6EE7B7',
-    400: '#34D399',
-    500: '#10B981',
-    600: '#059669',
-    700: '#047857',
-    800: '#065F46',
-    900: '#064E3B',
-  },
-
-  accent: {
-    50: '#FAF5FF',
-    100: '#F3E8FF',
-    200: '#E9D5FF',
-    300: '#D8B4FE',
-    400: '#C084FC',
-    500: '#A855F7',
-    600: '#9333EA',
-    700: '#7C3AED',
-    800: '#6B21A8',
-    900: '#581C87',
+    50: '#FDF9F2',
+    100: '#F8EEDD',
+    200: '#F1DCB6',
+    300: '#E9C78B',
+    400: '#E1B363',
+    500: '#DAA13E',
+    600: '#C78C26',
+    700: '#A5741F',
+    800: '#815A18',
+    900: '#5E4212',
   },
 
   error: {
-    50: '#FEF2F2',
-    100: '#FEE2E2',
-    200: '#FECACA',
-    300: '#FCA5A5',
-    400: '#F87171',
-    500: '#EF4444',
-    600: '#DC2626',
-    700: '#B91C1C',
-    800: '#991B1B',
-    900: '#7F1D1D',
-  },
-
-  warning: {
-    50: '#FFFBEB',
-    100: '#FEF3C7',
-    200: '#FDE68A',
-    300: '#FCD34D',
-    400: '#FBBF24',
-    500: '#F59E0B',
-    600: '#D97706',
-    700: '#B45309',
-    800: '#92400E',
-    900: '#78350F',
+    50: '#FBF0EE',
+    100: '#F5D9D6',
+    300: '#E4948B',
+    400: '#DA6E62',
+    500: '#D35345',
+    600: '#C23C2E',
+    700: '#A53327',
   },
 
   success: {
-    50: '#F0FDF4',
-    100: '#DCFCE7',
-    200: '#BBF7D0',
-    300: '#86EFAC',
-    400: '#4ADE80',
-    500: '#22C55E',
-    600: '#16A34A',
-    700: '#15803D',
-    800: '#166534',
-    900: '#14532D',
+    50: '#EFF6FA',
+    100: '#D7E8F4',
+    300: '#81B5DA',
+    400: '#539ACD',
+    500: '#3683BA',
+    600: '#2E6F9E',
+    700: '#265D84',
   },
 
   neutral: {
     50: '#FAFAFA',
-    100: '#F5F5F5',
-    200: '#E5E5E5',
-    300: '#D4D4D4',
-    400: '#A3A3A3',
-    500: '#737373',
-    600: '#525252',
-    700: '#404040',
-    800: '#262626',
-    900: '#171717',
-    950: '#0A0A0A',
+    100: '#F1F3F3',
+    200: '#DFE2E1',
+    300: '#C4CAC9',
+    400: '#98A4A1',
+    500: '#6E7C79',
+    600: '#515C59',
+    700: '#3A413F',
+    800: '#242927',
+    900: '#161818',
+    950: '#0D0F0E',
   }
 };
 
@@ -104,9 +72,9 @@ const lightPalette = {
     contrastText: "#ffffff",
   },
   secondary: {
-    main: colors.secondary[500],
-    light: colors.secondary[300],
-    dark: colors.secondary[700],
+    main: colors.secondary[700],
+    light: colors.secondary[500],
+    dark: colors.secondary[900],
     contrastText: "#ffffff",
   },
   error: {
@@ -115,14 +83,14 @@ const lightPalette = {
     dark: colors.error[700],
   },
   warning: {
-    main: colors.warning[500],
-    light: colors.warning[300],
-    dark: colors.warning[700],
+    main: colors.secondary[700],
+    light: colors.secondary[500],
+    dark: colors.secondary[900],
   },
   info: {
-    main: colors.primary[400],
-    light: colors.primary[200],
-    dark: colors.primary[600],
+    main: colors.success[500],
+    light: colors.success[300],
+    dark: colors.success[700],
   },
   success: {
     main: colors.success[500],
@@ -133,15 +101,15 @@ const lightPalette = {
     default: colors.neutral[200],
     paper: colors.neutral[100],
     card: colors.neutral[50],
-    detailArea: '#ECECEC',
-    textfieldlarge: colors.neutral[300],
-    tablecell: '#f5f5f5',
+    detailArea: colors.neutral[300],
+    textfieldlarge: colors.neutral[200],
+    tablecell: colors.neutral[100],
     tableborder: colors.neutral[200],
     cvssCircle: colors.neutral[200],
   },
   chart: {
     low: colors.success[500],
-    medium: colors.warning[500],
+    medium: colors.secondary[500],
     high: colors.error[500],
     inactive: colors.neutral[300],
   },
@@ -180,14 +148,14 @@ const darkPalette = {
     dark: colors.error[600],
   },
   warning: {
-    main: colors.warning[400],
-    light: colors.warning[300],
-    dark: colors.warning[600],
+    main: colors.secondary[400],
+    light: colors.secondary[300],
+    dark: colors.secondary[600],
   },
   info: {
-    main: colors.primary[400],
-    light: colors.primary[300],
-    dark: colors.primary[500],
+    main: colors.success[400],
+    light: colors.success[300],
+    dark: colors.success[600],
   },
   success: {
     main: colors.success[400],
@@ -197,16 +165,16 @@ const darkPalette = {
   background: {
     default: colors.neutral[950],
     paper: colors.neutral[900],
-    card: '#1a1a2e',
+    card: colors.neutral[800],
     detailArea: colors.neutral[700],
     textfieldlarge: colors.neutral[800],
     tablecell: colors.neutral[900],
-    tableborder: 'rgba(255, 255, 255, 0.12)',
+    tableborder: 'rgba(250, 250, 250, 0.12)',
     cvssCircle: colors.neutral[800],
   },
   chart: {
     low: colors.success[400],
-    medium: colors.warning[400],
+    medium: colors.secondary[400],
     high: colors.error[400],
     inactive: colors.neutral[700],
   },
@@ -226,7 +194,7 @@ const darkPalette = {
 };
 
 const typography = {
-  fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+  fontFamily: '"Archivo", "Helvetica", "Arial", sans-serif',
   h1: {
     fontWeight: 700,
     fontSize: "2.5rem",
@@ -240,23 +208,23 @@ const typography = {
     letterSpacing: "-0.01em",
   },
   h3: {
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: "1.75rem",
     lineHeight: 1.4,
     letterSpacing: "-0.01em",
   },
   h4: {
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: "1.5rem",
     lineHeight: 1.4,
   },
   h5: {
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: "1.25rem",
     lineHeight: 1.5,
   },
   h6: {
-    fontWeight: 600,
+    fontWeight: 700,
     fontSize: "1.125rem",
     lineHeight: 1.5,
   },
@@ -272,7 +240,7 @@ const typography = {
   },
   button: {
     textTransform: "none",
-    fontWeight: 600,
+    fontWeight: 500,
     letterSpacing: "0.02em",
   },
   caption: {
@@ -305,47 +273,37 @@ const createFilledAlertStyle = (bgColor) => ({ theme }) => ({
   }),
 });
 
+const reducedMotion = {
+  "@media (prefers-reduced-motion: reduce)": {
+    transition: "none",
+  },
+};
+
 const components = {
   MuiButton: {
     styleOverrides: {
       root: {
         borderRadius: 8,
         textTransform: "none",
-        fontWeight: 600,
+        fontWeight: 500,
         padding: "10px 24px",
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-          transform: "none",
-        },
+        transition: "background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease",
+        ...reducedMotion,
       },
       containedPrimary: ({ theme }) => ({
-        background: theme.palette.mode === "dark"
-          ? `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`
-          : `linear-gradient(135deg, ${colors.primary[700]} 0%, ${colors.primary[800]} 100%)`,
-        boxShadow: theme.palette.mode === "dark"
-          ? `0 4px 14px 0 ${alpha(colors.primary[500], 0.4)}`
-          : `0 4px 14px 0 ${alpha(colors.primary[700], 0.25)}`,
+        backgroundColor: theme.palette.primary.main,
+        boxShadow: "none",
         "&:hover": {
-          background: theme.palette.mode === "dark"
-            ? `linear-gradient(135deg, ${colors.primary[400]} 0%, ${colors.primary[500]} 100%)`
-            : `linear-gradient(135deg, ${colors.primary[800]} 0%, ${colors.primary[900]} 100%)`,
-          boxShadow: theme.palette.mode === "dark"
-            ? `0 6px 20px 0 ${alpha(colors.primary[500], 0.5)}`
-            : `0 6px 20px 0 ${alpha(colors.primary[700], 0.35)}`,
+          backgroundColor: theme.palette.mode === "dark" ? colors.primary[300] : colors.primary[800],
+          boxShadow: "none",
         },
       }),
       containedSecondary: ({ theme }) => ({
-        background: `linear-gradient(135deg, ${colors.secondary[500]} 0%, ${colors.secondary[600]} 100%)`,
-        boxShadow: theme.palette.mode === "dark"
-          ? `0 4px 14px 0 ${alpha(colors.secondary[500], 0.4)}`
-          : `0 4px 14px 0 ${alpha(colors.secondary[500], 0.25)}`,
+        backgroundColor: theme.palette.secondary.main,
+        boxShadow: "none",
         "&:hover": {
-          background: theme.palette.mode === "dark"
-            ? `linear-gradient(135deg, ${colors.secondary[400]} 0%, ${colors.secondary[500]} 100%)`
-            : `linear-gradient(135deg, ${colors.secondary[600]} 0%, ${colors.secondary[700]} 100%)`,
-          boxShadow: theme.palette.mode === "dark"
-            ? `0 6px 20px 0 ${alpha(colors.secondary[500], 0.5)}`
-            : `0 6px 20px 0 ${alpha(colors.secondary[500], 0.35)}`,
+          backgroundColor: theme.palette.mode === "dark" ? colors.secondary[300] : colors.secondary[800],
+          boxShadow: "none",
         },
       }),
       outlined: ({ theme }) => ({
@@ -377,7 +335,6 @@ const components = {
           : `1px solid ${colors.neutral[200]}`,
         boxShadow: "none",
         backgroundColor: theme.palette.mode === "dark" ? colors.neutral[900] : undefined,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
       }),
     },
   },
@@ -387,7 +344,8 @@ const components = {
         "& .MuiOutlinedInput-root": {
           borderRadius: 8,
           backgroundColor: theme.palette.mode === "dark" ? colors.neutral[800] : colors.neutral[100],
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+          ...reducedMotion,
           "& fieldset": {
             borderColor: theme.palette.mode === "dark" ? colors.neutral[700] : colors.neutral[300],
             borderWidth: 2,
@@ -446,13 +404,10 @@ const components = {
   MuiAppBar: {
     styleOverrides: {
       root: ({ theme }) => ({
-        backgroundColor: theme.palette.mode === "dark"
-          ? "rgba(30, 30, 30, 0.3)"
-          : "rgba(20, 20, 20, 0.85)",
-        color: "#ffffff",
-        backdropFilter: "blur(5px)",
-        borderBottom: `1px solid rgba(255, 255, 255, 0.1)`,
-        boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.2), 0px 1px 2px rgba(0, 0, 0, 0.1)",
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        boxShadow: "none",
       }),
     },
   },
@@ -461,9 +416,7 @@ const components = {
       indicator: ({ theme }) => ({
         height: 3,
         borderRadius: 3,
-        background: theme.palette.mode === "dark"
-          ? `linear-gradient(90deg, ${colors.primary[400]} 0%, ${colors.secondary[400]} 100%)`
-          : `linear-gradient(90deg, ${colors.primary[500]} 0%, ${colors.secondary[500]} 100%)`,
+        backgroundColor: theme.palette.primary.main,
       }),
     },
   },
@@ -521,7 +474,8 @@ const components = {
     styleOverrides: {
       root: ({ theme }) => ({
         borderRadius: 10,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "background-color 0.15s ease, color 0.15s ease",
+        ...reducedMotion,
         ...(theme.palette.mode === "dark" && {
           color: colors.neutral[400],
         }),
@@ -529,7 +483,6 @@ const components = {
           backgroundColor: theme.palette.mode === "dark"
             ? alpha(colors.neutral[50], 0.08)
             : alpha(colors.neutral[500], 0.08),
-          transform: "scale(1.05)",
           ...(theme.palette.mode === "dark" && {
             color: colors.neutral[200],
           }),
@@ -644,8 +597,8 @@ const components = {
       },
       filledSuccess: createFilledAlertStyle(colors.success[600]),
       filledError: createFilledAlertStyle(colors.error[600]),
-      filledWarning: createFilledAlertStyle(colors.warning[600]),
-      filledInfo: createFilledAlertStyle(colors.primary[600]),
+      filledWarning: createFilledAlertStyle(colors.secondary[600]),
+      filledInfo: createFilledAlertStyle(colors.success[600]),
     },
   },
 };

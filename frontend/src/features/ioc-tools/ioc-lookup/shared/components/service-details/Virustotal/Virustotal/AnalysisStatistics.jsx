@@ -2,17 +2,17 @@ import React from "react";
 import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, ResponsiveContainer } from "recharts";
 
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import AccessTimeIcon from "@mui/icons-material/AccessTimeOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
-import DataUsageIcon from "@mui/icons-material/DataUsage";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import PeopleIcon from "@mui/icons-material/People";
+import DataUsageIcon from "@mui/icons-material/DataUsageOutlined";
+import HighlightOffIcon from "@mui/icons-material/HighlightOffOutlined";
+import PeopleIcon from "@mui/icons-material/PeopleOutlined";
 import PollOutlinedIcon from "@mui/icons-material/PollOutlined";
-import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import ReportProblemIcon from "@mui/icons-material/ReportProblemOutlined";
 import ThumbDownOutlinedIcon from "@mui/icons-material/ThumbDownOutlined";
 import ThumbUpOutlinedIcon from "@mui/icons-material/ThumbUpOutlined";
-import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import QuestionMarkIcon from "@mui/icons-material/QuestionMarkOutlined";
 
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";

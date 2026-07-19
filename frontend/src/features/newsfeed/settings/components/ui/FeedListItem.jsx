@@ -10,10 +10,10 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Tooltip from "@mui/material/Tooltip";
-import Delete from "@mui/icons-material/Delete";
+import Delete from "@mui/icons-material/DeleteOutlined";
 import DeleteOutline from "@mui/icons-material/DeleteOutlined";
-import Refresh from "@mui/icons-material/Refresh";
-import WarningAmber from "@mui/icons-material/WarningAmber";
+import Refresh from "@mui/icons-material/RefreshOutlined";
+import WarningAmber from "@mui/icons-material/WarningAmberOutlined";
 
 import { getFeedIconUrl } from "../../../utils/urlUtils";
 import { formatDate } from "../../../utils/formatters";

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from 'react-i18next';
-import ContentPasteSearchIcon from "@mui/icons-material/ContentPasteSearch";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
+import ContentPasteSearchIcon from "@mui/icons-material/ContentPasteSearchOutlined";
+import LockOpenIcon from "@mui/icons-material/LockOpenOutlined";
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';

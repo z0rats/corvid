@@ -15,7 +15,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import TerminalIcon from "@mui/icons-material/Terminal";
+import TerminalIcon from "@mui/icons-material/TerminalOutlined";
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 

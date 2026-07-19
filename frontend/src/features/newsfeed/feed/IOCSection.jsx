@@ -9,8 +9,8 @@ import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMoreOutlined";
+import ContentCopyIcon from "@mui/icons-material/ContentCopyOutlined";
 
 import { IOC_TYPES } from "../constants/newsfeedConstants";
 import { parseIOCs } from "../utils/iocParser";

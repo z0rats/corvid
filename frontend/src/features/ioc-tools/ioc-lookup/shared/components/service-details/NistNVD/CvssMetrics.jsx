@@ -1,9 +1,9 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
 
-import BarChartIcon from "@mui/icons-material/BarChart";
+import BarChartIcon from "@mui/icons-material/BarChartOutlined";
 import Card from "@mui/material/Card";
-import CategoryIcon from "@mui/icons-material/Category";
+import CategoryIcon from "@mui/icons-material/CategoryOutlined";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid";
@@ -12,8 +12,8 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import PolylineIcon from "@mui/icons-material/Polyline";
-import SourceIcon from "@mui/icons-material/Source";
+import PolylineIcon from "@mui/icons-material/PolylineOutlined";
+import SourceIcon from "@mui/icons-material/SourceOutlined";
 import Typography from "@mui/material/Typography";
 
 import Circle from "./Circle";

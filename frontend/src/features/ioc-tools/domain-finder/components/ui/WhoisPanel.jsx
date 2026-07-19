@@ -4,17 +4,17 @@ import { useWhoisLookup } from "../../hooks/api/useWhoisLookup";
 import { domainUtils } from "../../utils/domainUtils";
 
 import Alert from '@mui/material/Alert';
-import ApartmentIcon from "@mui/icons-material/Apartment";
-import BadgeIcon from "@mui/icons-material/Badge";
-import BusinessIcon from "@mui/icons-material/Business";
+import ApartmentIcon from "@mui/icons-material/ApartmentOutlined";
+import BadgeIcon from "@mui/icons-material/BadgeOutlined";
+import BusinessIcon from "@mui/icons-material/BusinessOutlined";
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
-import DnsIcon from "@mui/icons-material/Dns";
-import EventAvailableIcon from "@mui/icons-material/EventAvailable";
-import EventBusyIcon from "@mui/icons-material/EventBusy";
+import DnsIcon from "@mui/icons-material/DnsOutlined";
+import EventAvailableIcon from "@mui/icons-material/EventAvailableOutlined";
+import EventBusyIcon from "@mui/icons-material/EventBusyOutlined";
 import Grid from '@mui/material/Grid';
-import LabelIcon from "@mui/icons-material/Label";
+import LabelIcon from "@mui/icons-material/LabelOutlined";
 import LinearProgress from '@mui/material/LinearProgress';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -22,7 +22,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import UpdateIcon from "@mui/icons-material/Update";
+import UpdateIcon from "@mui/icons-material/UpdateOutlined";
 
 function Field({ icon, label, value, t }) {
   return (

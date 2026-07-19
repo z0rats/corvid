@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import { styled } from "@mui/system";
-import SearchIcon from "@mui/icons-material/Search";
+import SearchIcon from "@mui/icons-material/SearchOutlined";
 
 const CustomTextField = styled(TextField)({
   "& .MuiOutlinedInput-root": {

@@ -7,7 +7,7 @@ import Box from "@mui/material/Box";
 
 import CategoryIcon from "@mui/icons-material/CategoryOutlined";
 import FingerprintIcon from "@mui/icons-material/FingerprintOutlined";
-import InfoIcon from "@mui/icons-material/Info";
+import InfoIcon from "@mui/icons-material/InfoOutlined";
 import LanguageIcon from "@mui/icons-material/LanguageOutlined";
 import LocationOnIcon from "@mui/icons-material/LocationOnOutlined";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";

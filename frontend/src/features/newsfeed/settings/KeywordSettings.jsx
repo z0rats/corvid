@@ -11,7 +11,7 @@ import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useTheme } from "@mui/material/styles";
-import AddIcon from "@mui/icons-material/Add";
+import AddIcon from "@mui/icons-material/AddOutlined";
 
 import { useKeywordSettings } from "../hooks/api/useKeywordSettingsApi";
 import { useNotification } from "../../../core/hooks/ui/useNotification";

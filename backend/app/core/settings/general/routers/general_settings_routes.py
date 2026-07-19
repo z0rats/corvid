@@ -7,14 +7,12 @@ from app.core.settings.general.schemas.general_settings_schemas import (
     GeneralSettingsResponse,
     GeneralSettingsUpdate,
     DarkmodeUpdate,
-    FontUpdate,
     LanguageUpdate
 )
 from app.core.settings.general.service.general_settings_service import (
     get_general_settings,
     update_general_settings,
     update_darkmode_setting,
-    update_font_setting,
     update_language_setting
 )
 
@@ -25,7 +23,7 @@ router = APIRouter(prefix="/api/settings/general", tags=["General Settings"])
     "",
     response_model=GeneralSettingsResponse,
     summary="Get general settings",
-    description="Retrieve current general application settings including darkmode and font preferences"
+    description="Retrieve current general application settings including darkmode and language preferences"
 )
 async def get_general_settings_endpoint(db: SessionDep) -> GeneralSettingsResponse:
     return await get_general_settings(db)
@@ -55,19 +53,6 @@ async def update_darkmode_endpoint(
     db: SessionDep
 ) -> GeneralSettingsResponse:
     return await update_darkmode_setting(db, darkmode_update)
-
-
-@router.put(
-    "/font",
-    response_model=GeneralSettingsResponse,
-    summary="Update font setting",
-    description="Update only the font family preference setting"
-)
-async def update_font_endpoint(
-    font_update: FontUpdate,
-    db: SessionDep
-) -> GeneralSettingsResponse:
-    return await update_font_setting(db, font_update)
 
 
 @router.put(

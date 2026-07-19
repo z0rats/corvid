@@ -97,8 +97,6 @@
       "description": "Application wide settings can be configured here.",
       "visual": "Visual",
       "darkMode": "Dark mode",
-      "customFont": "Custom font",
-      "customFontHelper": "Change the application wide font for Corvid",
       "language": "Language",
       "languageHelper": "Change the language used across the application interface"
     }

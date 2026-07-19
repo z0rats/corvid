@@ -4,10 +4,10 @@ import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
-import CircleIcon from "@mui/icons-material/Circle";
+import CircleIcon from "@mui/icons-material/CircleOutlined";
 import Divider from "@mui/material/Divider";
 
-import PolicyIcon from "@mui/icons-material/Policy";
+import PolicyIcon from "@mui/icons-material/PolicyOutlined";
 import Typography from "@mui/material/Typography";
 
 const getTlpColor = (tlpString) => {

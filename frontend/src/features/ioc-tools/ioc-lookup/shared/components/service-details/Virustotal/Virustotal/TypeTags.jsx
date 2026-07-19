@@ -6,7 +6,7 @@ import Chip from "@mui/material/Chip";
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
 
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import LocalOfferIcon from "@mui/icons-material/LocalOfferOutlined";
 
 export default function TypeTags(props) {
   const { t } = useTranslation('iocTools');

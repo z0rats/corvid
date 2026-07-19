@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-import RuleIcon from "@mui/icons-material/Rule";
+import RuleIcon from "@mui/icons-material/RuleOutlined";
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';

@@ -2,11 +2,6 @@ import api from '../../../../core/services/baseApi';
 
 export const settingsApi = {
   // General settings API calls
-  async updateFont(font) {
-    const response = await api.put(`/api/settings/general/font?font=${font}`);
-    return response.data;
-  },
-
   async updateDarkmode(darkmode) {
     const response = await api.put(`/api/settings/general/darkmode?darkmode=${darkmode}`);
     return response.data;
