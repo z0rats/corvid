@@ -13,7 +13,7 @@ import globals from 'globals';
 const { version: reactVersion } = createRequire(import.meta.url)('react/package.json');
 
 export default [
-  { ignores: ['build/**', 'node_modules/**'] },
+  { ignores: ['build/**', 'node_modules/**', 'coverage/**'] },
   { settings: { react: { version: reactVersion } } },
   js.configs.recommended,
   react.configs.flat.recommended,

@@ -23,6 +23,7 @@ pydantic[email]
 pydantic-ai-slim[anthropic,google,openai]
 pydantic-settings
 pytest
+pytest-cov
 regex
 requests
 slowapi

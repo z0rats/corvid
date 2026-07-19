@@ -35,7 +35,15 @@ jobs:
         run: uv pip install --system -r requirements.txt --override lxml-override.txt
 
       - name: Run tests
-        run: pytest -v
+        run: pytest -v --cov=app --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
 
       - name: Audit dependencies for known CVEs (pip-audit)
         # Report-only for now: this dependency tree includes several OSINT
@@ -78,7 +86,15 @@ jobs:
         run: yarn build
 
       - name: Test
-        run: yarn test
+        run: yarn test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: frontend/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
 
       - name: Audit dependencies for known CVEs (yarn npm audit)
         continue-on-error: true

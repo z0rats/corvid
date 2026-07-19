@@ -1,5 +1,9 @@
 
 # Corvid
+
+[![CI](https://github.com/z0rats/corvid/actions/workflows/ci.yml/badge.svg)](https://github.com/z0rats/corvid/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/z0rats/corvid/branch/main/graph/badge.svg)](https://codecov.io/gh/z0rats/corvid)
+
 > **Warning**
 > Corvid is not production ready yet. This is an early prototype, that still needs some work to be done. 
 ## A fullstack web application built for security analysts

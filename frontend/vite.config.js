@@ -17,5 +17,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/setupTests.js'],
     css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+    },
   },
 });

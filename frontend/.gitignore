@@ -6,6 +6,7 @@ logs/
 **/*.back.*/
 build/
 .yarn/
+coverage/
 
 bower_components
 
