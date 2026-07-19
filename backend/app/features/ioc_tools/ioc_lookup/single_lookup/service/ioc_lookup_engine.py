@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import time
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
 
@@ -13,11 +15,83 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import 
     ServiceError, ServiceAuthError, ServiceRateLimitError, ServiceUnavailableError,
 )
 from app.features.ioc_tools.ioc_lookup.schemas.lookup_schemas import LookupResult, LookupStatus, ServiceInfo
+from app.features.ioc_tools.ioc_lookup.config.rate_limiting_config import (
+    get_service_rate_limit, get_retry_config,
+)
 
 logger = logging.getLogger(__name__)
 
 _registry_lock: asyncio.Lock | None = None
 _registry_initialized = False
+
+# Per-service request pacing, shared by every caller (single lookup, bulk lookup) since this
+# is module-level state keyed by service name rather than per-request.
+_rate_limiters: dict[str, dict[str, Any]] = defaultdict(lambda: {'last_request': 0.0, 'request_count': 0})
+
+
+async def apply_rate_limit(service_name: str) -> None:
+    """Sleep as needed so calls to a given service stay within its configured requests/sec."""
+    rate_limit = get_service_rate_limit(service_name)
+    min_interval = 1.0 / rate_limit
+
+    limiter = _rate_limiters[service_name]
+    time_since_last = time.time() - limiter['last_request']
+
+    if time_since_last < min_interval:
+        sleep_time = min_interval - time_since_last
+        logger.debug("Rate limiting %s: sleeping for %ss", service_name, sleep_time)
+        await asyncio.sleep(sleep_time)
+
+    limiter['last_request'] = time.time()
+    limiter['request_count'] += 1
+
+
+async def _sleep_before_retry(delay: float) -> None:
+    await asyncio.sleep(delay)
+
+
+async def _call_service_with_retry(
+    service_config: dict[str, Any], func_args: dict[str, Any], service_name: str,
+) -> Any:
+    """Call a service's lookup function, retrying on rate-limit responses with exponential
+    backoff instead of surfacing RATE_LIMITED to the caller on the first 429."""
+    retry_config = get_retry_config()
+    max_retries = retry_config['max_retries']
+    delay = retry_config['base_delay']
+
+    attempt = 0
+    while True:
+        await apply_rate_limit(service_name)
+        try:
+            return await service_config['func'](**func_args)
+        except ServiceRateLimitError:
+            if attempt >= max_retries:
+                raise
+            logger.warning(
+                "Rate limited by %s, retrying in %.1fs (attempt %s/%s)",
+                service_name, delay, attempt + 1, max_retries,
+            )
+            await _sleep_before_retry(delay)
+            delay = min(delay * retry_config['backoff_factor'], retry_config['max_delay'])
+            attempt += 1
+
+
+def get_rate_limiter_stats() -> dict[str, dict[str, Any]]:
+    """Get statistics about rate limiter usage"""
+    return {
+        name: {
+            'request_count': limiter['request_count'],
+            'last_request': limiter['last_request'],
+            'rate_limit': get_service_rate_limit(name),
+        }
+        for name, limiter in _rate_limiters.items()
+    }
+
+
+def reset_rate_limiters() -> None:
+    """Reset all rate limiters (useful for testing)"""
+    _rate_limiters.clear()
+    logger.info("Rate limiters reset")
 
 
 def _get_registry_lock() -> asyncio.Lock:
@@ -141,7 +215,7 @@ async def lookup_ioc(service_name: str, ioc: str, ioc_type: str, db: AsyncSessio
 
     logger.debug("Calling %s lookup function with args: %s", service_name, list(func_args.keys()))
     try:
-        raw_result = await service_config['func'](**func_args)
+        raw_result = await _call_service_with_retry(service_config, func_args, service_name)
     except ServiceRateLimitError as e:
         logger.warning("Rate limit for %s: %s", service_name, e.message)
         return _make_error_result(ioc, service_name, LookupStatus.RATE_LIMITED, e.message)

@@ -17,6 +17,11 @@ export const iocLookupApi = {
     return response.data;
   },
 
+  async fetchNewsfeedMentions(ioc, { signal } = {}) {
+    const response = await api.get('/api/ioc/newsfeed-mentions', { params: { ioc }, signal });
+    return response.data;
+  },
+
   async bulkLookup(iocs, services) {
     const response = await fetch(`${baseURL}/api/ioc-lookup/bulk`, {
       method: 'POST',

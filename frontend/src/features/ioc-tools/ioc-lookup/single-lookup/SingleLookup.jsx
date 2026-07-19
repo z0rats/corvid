@@ -5,10 +5,12 @@ import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
 import Snackbar from '@mui/material/Snackbar';
 import ResultTable from './components/ui/ResultTable';
+import NewsfeedMentionAlert from './components/ui/NewsfeedMentionAlert';
 import SearchBar from '../../../../core/components/ui/SearchBar';
 import WelcomeScreen from './components/ui/WelcomeScreen';
 import ChainActionButton from '../../../../core/components/ui/ChainActionButton';
 import { useSingleLookup } from './hooks/ui/useSingleLookup';
+import { useNewsfeedMentions } from './hooks/api/useNewsfeedMentions';
 import { IOC_TYPES } from '../shared/utils/iocDefinitions';
 
 export default function SingleLookup() {
@@ -24,6 +26,7 @@ export default function SingleLookup() {
     handleCloseError,
     handleSearchComplete,
   } = useSingleLookup();
+  const newsfeedMentions = useNewsfeedMentions(shouldShowTable ? searchValue : null);
 
   return (
     <>
@@ -68,6 +71,7 @@ export default function SingleLookup() {
               />
             </Box>
           )}
+          <NewsfeedMentionAlert mentions={newsfeedMentions} />
           <ResultTable
             ioc={searchValue}
             iocType={currentIocType}

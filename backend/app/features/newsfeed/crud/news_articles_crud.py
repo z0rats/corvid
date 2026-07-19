@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import Select, delete, func, or_, and_, select
+from sqlalchemy import Select, String, cast, delete, func, or_, and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -142,6 +142,33 @@ async def get_recent_news_articles(db: AsyncSession, time_filter: str = "7d") ->
         RecentArticleSchema(id=row.id, title=row.title, feedname=row.feedname, date=row.date)
         for row in result
     ]
+
+
+def _escape_like(value: str) -> str:
+    """Escape SQL LIKE wildcards so a raw IOC value can be matched literally."""
+    return value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+
+
+async def get_articles_mentioning_ioc(db: AsyncSession, ioc: str, limit: int = 5) -> list[NewsArticle]:
+    """Find recent articles whose extracted IOCs (NewsArticle.iocs) include the given value.
+
+    Matches against the JSON-serialized `iocs` dict as a quoted substring, case-insensitively,
+    regardless of IOC type/category — avoids depending on newsfeed's and ioc_lookup's separate
+    IOC-type vocabularies staying in sync, and is portable across SQLite/Postgres.
+    """
+    normalized = ioc.strip().lower()
+    if not normalized:
+        return []
+
+    pattern = f'%"{_escape_like(normalized)}"%'
+    result = await db.execute(
+        select(NewsArticle)
+        .where(NewsArticle.iocs.is_not(None))
+        .where(func.lower(cast(NewsArticle.iocs, String)).like(pattern, escape='\\'))
+        .order_by(NewsArticle.date.desc())
+        .limit(limit)
+    )
+    return list(result.scalars().all())
 
 
 def _parse_date(value: str | datetime | None) -> datetime | None:

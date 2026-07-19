@@ -2,10 +2,9 @@ import asyncio
 import logging
 from typing import Any, AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
-from collections import defaultdict
 import time
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.ioc_lookup_engine import (
-    lookup_ioc, get_all_service_configs
+    lookup_ioc, get_all_service_configs,
 )
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
 from app.features.ioc_tools.ioc_lookup.schemas.lookup_schemas import LookupStatus
@@ -16,27 +15,6 @@ from app.features.ioc_tools.ioc_lookup.config.rate_limiting_config import (
 )
 
 logger = logging.getLogger(__name__)
-
-_rate_limiters = defaultdict(lambda: {'last_request': 0.0, 'request_count': 0})
-
-
-async def apply_rate_limit(service_name: str) -> None:
-    """Apply rate limiting for a specific service"""
-    rate_limit = get_service_rate_limit(service_name)
-    min_interval = 1.0 / rate_limit
-
-    limiter = _rate_limiters[service_name]
-    current_time = time.time()
-
-    time_since_last = current_time - limiter['last_request']
-
-    if time_since_last < min_interval:
-        sleep_time = min_interval - time_since_last
-        logger.debug("Rate limiting %s: sleeping for %ss", service_name, sleep_time)
-        await asyncio.sleep(sleep_time)
-
-    limiter['last_request'] = time.time()
-    limiter['request_count'] += 1
 
 
 async def run_single_lookup_with_rate_limit(
@@ -63,8 +41,7 @@ async def run_single_lookup_with_rate_limit(
                 logger.debug("Service %s doesn't support IOC type %s", service_name, ioc_type)
                 return {"status": LookupStatus.ERROR.value, "error": f"Service '{service_name}' doesn't support {ioc_type}"}
 
-            await apply_rate_limit(service_name)
-
+            # lookup_ioc() applies per-service pacing/backoff itself (shared with single lookup).
             result = await lookup_ioc(service_name, ioc, ioc_type, db)
 
             logger.debug("Completed lookup for %s: %s", service_name, ioc)
@@ -200,22 +177,3 @@ async def process_bulk_lookups_with_rate_limiting(
             }
 
     logger.info("Completed rate-limited bulk lookup processing")
-
-
-def get_rate_limiter_stats() -> dict[str, dict[str, Any]]:
-    """Get statistics about rate limiter usage"""
-    stats = {}
-    for service_name, limiter in _rate_limiters.items():
-        stats[service_name] = {
-            'request_count': limiter['request_count'],
-            'last_request': limiter['last_request'],
-            'rate_limit': get_service_rate_limit(service_name)
-        }
-    return stats
-
-
-def reset_rate_limiters() -> None:
-    """Reset all rate limiters (useful for testing)"""
-    global _rate_limiters
-    _rate_limiters.clear()
-    logger.info("Rate limiters reset")

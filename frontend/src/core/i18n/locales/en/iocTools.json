@@ -86,6 +86,11 @@
         "result": "Result"
       }
     },
+    "newsfeedMentions": {
+      "title": "Also seen in the newsfeed",
+      "message_one": "This indicator was mentioned in {{count}} recent newsfeed article:",
+      "message_other": "This indicator was mentioned in {{count}} recent newsfeed articles:"
+    },
     "history": {
       "empty": "No past lookups yet.",
       "notFound": "Search not found.",
@@ -196,6 +201,13 @@
         "expirationDate": "Expires",
         "updatedDate": "Last updated"
       }
+    },
+    "ctSubdomains": {
+      "title": "Certificate Transparency subdomains",
+      "errorPrefix": "Certificate Transparency lookup failed:",
+      "noSubdomains": "No subdomains found in Certificate Transparency logs.",
+      "scanSubdomain": "Scan this subdomain",
+      "certificateCount": "{{count}} certificate(s) found on crt.sh"
     },
     "welcomeScreen": {
       "title": "Domain Finder",

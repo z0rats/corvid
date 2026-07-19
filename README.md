@@ -123,6 +123,14 @@ for a live one):
 
 Losing `data/` entirely means starting over from a blank instance; there is no other durable state.
 
+**Permissions travel with the backup.** `.encryption_key` and `.access_token` are written 0600
+on the host, but that only protects them *in place*. A backup method that doesn't preserve file
+modes/ownership (a permissive `tar` extraction, copying into a world-readable cloud-sync folder,
+`chmod -R` during restore) — or that lands the backup somewhere with broader access than the
+source host — defeats the encryption-at-rest story: the key ends up sitting right next to the
+ciphertext it decrypts. Preserve permissions in transit (`tar --preserve-permissions`, `rsync -a`)
+and restrict access to the backup destination at least as tightly as `data/` itself.
+
 ### Disk usage
 
 `data/` has no total-size guard, so keep an eye on the host mount over time. Rough steady-state
