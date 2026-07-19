@@ -42,7 +42,5 @@ Ideas for expanding investigative capability itself, rather than hardening what 
 
 ## Resilience / Fault tolerance
 
-Done: subprocess resilience, per-feed fetch health, and disk-space warnings (see `CLAUDE.md` for the current shape of each). Remaining ideas:
-
-- **[S] Disk-space threshold configurability.** `LOW_DISK_SPACE_THRESHOLD_BYTES` (`core/dependencies.py`) is a hardcoded 1 GiB. Fine for now, but if a deployment legitimately runs closer to the edge (small VPS), consider making it an env-configurable `AppSettings` field instead of a constant.
+Done: subprocess resilience, per-feed fetch health, disk-space warnings, and disk-space threshold configurability (see `CLAUDE.md` for the current shape of each). No remaining ideas here currently.
 
