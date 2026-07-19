@@ -117,6 +117,68 @@ class WhoisLookupRequest(BaseModel):
         return domain
 
 
+class CtSubdomainsRequest(BaseModel):
+    """Request model for Certificate Transparency subdomain enumeration"""
+
+    domain: str = Field(
+        ...,
+        description="Domain name to enumerate subdomains for via crt.sh (e.g., 'example.com')",
+        min_length=1,
+        max_length=255
+    )
+
+    @field_validator('domain')
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        """Validate domain format, rejecting search patterns which crt.sh already applies itself"""
+        if not v or not v.strip():
+            raise ValueError('Domain cannot be empty')
+
+        domain = v.strip().lower()
+
+        if domain.startswith(('http://', 'https://')):
+            domain = domain.split('://', 1)[1]
+
+        if '/' in domain:
+            domain = domain.split('/', 1)[0]
+
+        if len(domain) > 255:
+            raise ValueError('Domain name too long')
+
+        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
+            raise ValueError('Domain contains invalid characters')
+
+        return domain
+
+
+class CtCertificate(BaseModel):
+    """A single Certificate Transparency log entry from crt.sh"""
+
+    id: int | None = Field(default=None, description="crt.sh certificate/log entry ID")
+    issuer_name: str | None = Field(default=None, description="Issuing CA name")
+    common_name: str | None = Field(default=None, description="Certificate common name")
+    name_value: str | None = Field(default=None, description="Newline-separated SAN entries as returned by crt.sh")
+    not_before: datetime | None = Field(default=None, description="Certificate validity start date")
+    not_after: datetime | None = Field(default=None, description="Certificate validity end date")
+
+
+class CtSubdomainsResponse(BaseModel):
+    """Response model for Certificate Transparency subdomain enumeration"""
+
+    domain: str = Field(..., description="The domain that was looked up")
+    subdomains: list[str] = Field(
+        default_factory=list, description="Deduplicated, sorted subdomains found in CT logs"
+    )
+    certificates: list[CtCertificate] = Field(
+        default_factory=list, description="Certificate log entries backing the subdomain list"
+    )
+    total_certificates: int = Field(..., description="Total number of certificate log entries found", ge=0)
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp when the lookup was performed"
+    )
+
+
 class WhoisEntity(BaseModel):
     """A single entity (registrar, registrant, admin, tech, ...) from an RDAP response"""
 

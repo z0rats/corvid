@@ -36,6 +36,7 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # Fixed third-party API hosts; only path/query values (IOC, username) are
     # user-supplied, never the host itself
     "features/ioc_tools/domain_finder/service/urlscan_api_service.py",
+    "features/ioc_tools/domain_finder/service/crtsh_api_service.py",
     "features/ioc_tools/ioc_lookup/single_lookup/service/client_base.py",
     "features/reddit_search/service/reddit_search_service.py",
     # Dork runner: fixed search-engine hosts (DuckDuckGo/Google/Bing); only the

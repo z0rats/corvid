@@ -102,6 +102,21 @@ class IOCTypesResponse(BaseModel):
     types: dict[str, str] = Field(..., description="Supported IOC types")
 
 
+class NewsfeedMention(BaseModel):
+    """A newsfeed article whose extracted IOCs include the looked-up IOC"""
+    article_id: int = Field(..., description="ID of the matching news article")
+    title: str = Field(..., description="Article title")
+    link: str = Field(..., description="Article URL")
+    feedname: str = Field(..., description="Name of the feed the article came from")
+    date: datetime = Field(..., description="Article publish date")
+
+
+class NewsfeedMentionsResponse(BaseModel):
+    """Newsfeed articles that mention a given IOC, most recent first"""
+    ioc: str = Field(..., description="The IOC that was checked")
+    mentions: list[NewsfeedMention] = Field(default_factory=list, description="Matching articles")
+
+
 class LookupErrorResponse(BaseModel):
     """Error response for lookup operations"""
     error: str | int = Field(..., description="Error code or message")

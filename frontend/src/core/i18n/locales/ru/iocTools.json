@@ -86,6 +86,11 @@
         "result": "Результат"
       }
     },
+    "newsfeedMentions": {
+      "title": "Также встречается в новостной ленте",
+      "message_one": "Этот индикатор упоминался в {{count}} недавней статье новостной ленты:",
+      "message_other": "Этот индикатор упоминался в {{count}} недавних статьях новостной ленты:"
+    },
     "history": {
       "empty": "История поисков пуста.",
       "notFound": "Поиск не найден.",
@@ -196,6 +201,13 @@
         "expirationDate": "Истекает",
         "updatedDate": "Последнее обновление"
       }
+    },
+    "ctSubdomains": {
+      "title": "Поддомены из журналов Certificate Transparency",
+      "errorPrefix": "Ошибка запроса Certificate Transparency:",
+      "noSubdomains": "В журналах Certificate Transparency поддомены не найдены.",
+      "scanSubdomain": "Проверить этот поддомен",
+      "certificateCount": "Найдено сертификатов: {{count}} (crt.sh)"
     },
     "welcomeScreen": {
       "title": "Domain Finder",

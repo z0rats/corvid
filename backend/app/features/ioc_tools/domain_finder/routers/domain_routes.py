@@ -7,11 +7,14 @@ from fastapi import APIRouter, Request, status
 
 from app.core.config.rate_limit_config import limiter
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
+    CtSubdomainsRequest,
+    CtSubdomainsResponse,
     DomainLookupRequest,
     DomainLookupResponse,
     WhoisLookupRequest,
     WhoisLookupResponse,
 )
+from app.features.ioc_tools.domain_finder.service.ct_subdomains_service import perform_ct_subdomains_lookup
 from app.features.ioc_tools.domain_finder.service.domain_lookup_service import perform_domain_lookup
 from app.features.ioc_tools.domain_finder.service.whois_lookup_service import perform_whois_lookup
 
@@ -85,6 +88,42 @@ async def whois_lookup_get(request: Request, domain: str) -> WhoisLookupResponse
     return result
 
 
+@router.post(
+    "/ct-subdomains",
+    response_model=CtSubdomainsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Enumerate subdomains via Certificate Transparency logs",
+    description="Query crt.sh's Certificate Transparency log mirror to enumerate subdomains and cert issuance history for a domain"
+)
+@limiter.limit("30/minute")
+async def ct_subdomains_lookup_post(request: Request, ct_request: CtSubdomainsRequest) -> CtSubdomainsResponse:
+    """Perform a Certificate Transparency subdomain lookup via POST request"""
+    logger.info("POST CT subdomains lookup request - Domain: %s", ct_request.domain)
+    result = await perform_ct_subdomains_lookup(ct_request)
+    logger.info(
+        "POST CT subdomains lookup completed - Domain: %s, Subdomains: %s",
+        ct_request.domain, len(result.subdomains)
+    )
+    return result
+
+
+@router.get(
+    "/ct-subdomains/{domain}",
+    response_model=CtSubdomainsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Enumerate subdomains via Certificate Transparency logs via URL parameter",
+    description="Query crt.sh using domain from URL path for simple GET requests"
+)
+@limiter.limit("30/minute")
+async def ct_subdomains_lookup_get(request: Request, domain: str) -> CtSubdomainsResponse:
+    """Perform a Certificate Transparency subdomain lookup using domain from URL path via GET request"""
+    logger.info("GET CT subdomains lookup request - Domain: %s", domain)
+    ct_request = CtSubdomainsRequest(domain=domain)
+    result = await perform_ct_subdomains_lookup(ct_request)
+    logger.info("GET CT subdomains lookup completed - Domain: %s, Subdomains: %s", domain, len(result.subdomains))
+    return result
+
+
 @router.get(
     "/health",
     response_model=dict[str, Any],
@@ -101,6 +140,8 @@ async def check_domain_service_health() -> dict[str, Any]:
             "/api/domain/lookup",
             "/api/domain/lookup/{domain}",
             "/api/domain/whois",
-            "/api/domain/whois/{domain}"
+            "/api/domain/whois/{domain}",
+            "/api/domain/ct-subdomains",
+            "/api/domain/ct-subdomains/{domain}"
         ]
     }

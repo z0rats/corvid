@@ -32,10 +32,18 @@ def _service_config(func=None, requires_key=True, ioc_types=("ipv4",)):
     return config
 
 
+# Captured before the autouse fixture below stubs it out, so tests that exercise pacing
+# directly can restore the real implementation.
+_real_apply_rate_limit = engine.apply_rate_limit
+
+
 @pytest.fixture(autouse=True)
 def _skip_registry_init(monkeypatch):
     """lookup_ioc() always calls this first; the real registry isn't needed for these tests."""
     monkeypatch.setattr(engine, "_ensure_registry_initialized", _async_return(None))
+    # Skip real pacing/backoff delays; status-mapping tests don't care about timing.
+    monkeypatch.setattr(engine, "apply_rate_limit", _async_return(None))
+    monkeypatch.setattr(engine, "_sleep_before_retry", _async_return(None))
 
 
 class TestLookupIocNeverRaisesForExpectedConditions:
@@ -102,6 +110,121 @@ class TestLookupIocNeverRaisesForExpectedConditions:
         assert result.data == {"foo": "bar"}
 
 
+class TestApplyRateLimitPacesPerService:
+    """apply_rate_limit() must sleep just long enough to keep a service within its configured
+    requests/sec, and not sleep at all once enough time has already passed."""
+
+    def test_sleeps_for_remaining_interval_when_called_too_soon(self, monkeypatch):
+        monkeypatch.setattr(engine, "apply_rate_limit", _real_apply_rate_limit)
+        engine.reset_rate_limiters()
+        engine._rate_limiters["svc"]["last_request"] = 100.0
+        monkeypatch.setattr(engine, "get_service_rate_limit", lambda name: 2.0)  # 0.5s interval
+        monkeypatch.setattr(engine.time, "time", lambda: 100.1)
+
+        sleeps = []
+
+        async def fake_sleep(seconds):
+            sleeps.append(seconds)
+
+        monkeypatch.setattr(engine.asyncio, "sleep", fake_sleep)
+
+        _run(engine.apply_rate_limit("svc"))
+
+        assert sleeps == [pytest.approx(0.4)]
+        assert engine._rate_limiters["svc"]["last_request"] == pytest.approx(100.1)
+        assert engine._rate_limiters["svc"]["request_count"] == 1
+
+    def test_no_sleep_once_interval_has_elapsed(self, monkeypatch):
+        monkeypatch.setattr(engine, "apply_rate_limit", _real_apply_rate_limit)
+        engine.reset_rate_limiters()
+        engine._rate_limiters["svc"]["last_request"] = 100.0
+        monkeypatch.setattr(engine, "get_service_rate_limit", lambda name: 2.0)  # 0.5s interval
+        monkeypatch.setattr(engine.time, "time", lambda: 101.0)
+
+        sleeps = []
+
+        async def fake_sleep(seconds):
+            sleeps.append(seconds)
+
+        monkeypatch.setattr(engine.asyncio, "sleep", fake_sleep)
+
+        _run(engine.apply_rate_limit("svc"))
+
+        assert sleeps == []
+
+
+class TestCallServiceWithRetryBacksOffOnRateLimit:
+    """_call_service_with_retry() must retry ServiceRateLimitError with exponential backoff
+    (using RETRY_CONFIG), but must not retry other error types."""
+
+    @staticmethod
+    def _retry_config(max_retries=3, base_delay=1.0, backoff_factor=2.0, max_delay=30.0):
+        return {
+            "max_retries": max_retries,
+            "base_delay": base_delay,
+            "backoff_factor": backoff_factor,
+            "max_delay": max_delay,
+        }
+
+    def test_retries_then_succeeds_with_growing_backoff(self, monkeypatch):
+        monkeypatch.setattr(engine, "get_retry_config", lambda: self._retry_config())
+        pacing_calls = []
+        sleeps = []
+
+        async def fake_apply(service_name):
+            pacing_calls.append(service_name)
+
+        async def fake_sleep(seconds):
+            sleeps.append(seconds)
+
+        monkeypatch.setattr(engine, "apply_rate_limit", fake_apply)
+        monkeypatch.setattr(engine, "_sleep_before_retry", fake_sleep)
+
+        attempts = {"n": 0}
+
+        async def flaky_func(**kwargs):
+            attempts["n"] += 1
+            if attempts["n"] < 3:
+                raise ServiceRateLimitError("svc", "rate limited")
+            return {"ok": True}
+
+        result = _run(engine._call_service_with_retry({"func": flaky_func}, {}, "svc"))
+
+        assert result == {"ok": True}
+        assert attempts["n"] == 3
+        assert sleeps == [1.0, 2.0]
+        assert pacing_calls == ["svc", "svc", "svc"]
+
+    def test_raises_rate_limit_error_once_retries_are_exhausted(self, monkeypatch):
+        monkeypatch.setattr(engine, "get_retry_config", lambda: self._retry_config(max_retries=2))
+        monkeypatch.setattr(engine, "apply_rate_limit", _async_return(None))
+        monkeypatch.setattr(engine, "_sleep_before_retry", _async_return(None))
+
+        attempts = {"n": 0}
+
+        async def always_rate_limited(**kwargs):
+            attempts["n"] += 1
+            raise ServiceRateLimitError("svc", "rate limited")
+
+        with pytest.raises(ServiceRateLimitError):
+            _run(engine._call_service_with_retry({"func": always_rate_limited}, {}, "svc"))
+
+        assert attempts["n"] == 3  # initial attempt + 2 retries
+
+    def test_non_rate_limit_errors_are_not_retried(self, monkeypatch):
+        monkeypatch.setattr(engine, "apply_rate_limit", _async_return(None))
+        attempts = {"n": 0}
+
+        async def failing(**kwargs):
+            attempts["n"] += 1
+            raise ServiceAuthError("svc", "bad key")
+
+        with pytest.raises(ServiceAuthError):
+            _run(engine._call_service_with_retry({"func": failing}, {}, "svc"))
+
+        assert attempts["n"] == 1
+
+
 class TestRunSingleLookupWithRateLimitStatusIsUniform:
     """The bulk-lookup wrapper must always surface a LookupStatus value under "status",
     for both the pre-checks it does itself and whatever lookup_ioc() returns/raises."""
@@ -140,7 +263,6 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
     )
     def test_engine_status_is_propagated_verbatim(self, monkeypatch, semaphore, lookup_status):
         monkeypatch.setattr(bulk_service, "get_service", lambda name: {"supported_ioc_types": ["ipv4"]})
-        monkeypatch.setattr(bulk_service, "apply_rate_limit", _async_return(None))
 
         async def fake_lookup_ioc(*args, **kwargs):
             return LookupResult(ioc="1.2.3.4", service="svc", status=lookup_status, error="boom")
@@ -156,7 +278,6 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
 
     def test_unexpected_exception_is_error_status_not_raw_traceback(self, monkeypatch, semaphore):
         monkeypatch.setattr(bulk_service, "get_service", lambda name: {"supported_ioc_types": ["ipv4"]})
-        monkeypatch.setattr(bulk_service, "apply_rate_limit", _async_return(None))
 
         async def boom(*args, **kwargs):
             raise RuntimeError("kaboom")
@@ -172,7 +293,6 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
 
     def test_success_is_success_status(self, monkeypatch, semaphore):
         monkeypatch.setattr(bulk_service, "get_service", lambda name: {"supported_ioc_types": ["ipv4"]})
-        monkeypatch.setattr(bulk_service, "apply_rate_limit", _async_return(None))
 
         async def fake_lookup_ioc(*args, **kwargs):
             return LookupResult(ioc="1.2.3.4", service="svc", status=LookupStatus.SUCCESS, data={"x": 1})

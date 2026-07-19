@@ -16,7 +16,10 @@ from app.features.ioc_tools.ioc_lookup.schemas.lookup_schemas import (
     ServicesResponse,
     ServiceDefinitionsResponse,
     IOCTypesResponse,
+    NewsfeedMentionsResponse,
+    NewsfeedMention,
 )
+from app.features.newsfeed.crud.news_articles_crud import get_articles_mentioning_ioc
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ioc", tags=["IOC Lookup"])
@@ -70,6 +73,34 @@ async def unified_lookup(
         )
 
     return result
+
+
+@router.get(
+    "/newsfeed-mentions",
+    response_model=NewsfeedMentionsResponse,
+    summary="Check newsfeed for mentions of an IOC",
+    description="Cross-reference an IOC against IOCs already extracted from recent newsfeed articles",
+)
+@limiter.limit("30/minute")
+async def get_newsfeed_mentions(
+    request: Request,
+    db: ReadSessionDep,
+    ioc: str = Query(..., description="The IOC value to check", min_length=1, max_length=2000),
+) -> NewsfeedMentionsResponse:
+    articles = await get_articles_mentioning_ioc(db, ioc)
+    return NewsfeedMentionsResponse(
+        ioc=ioc,
+        mentions=[
+            NewsfeedMention(
+                article_id=article.id,
+                title=article.title,
+                link=article.link,
+                feedname=article.feedname,
+                date=article.date,
+            )
+            for article in articles
+        ],
+    )
 
 
 @router.get(
