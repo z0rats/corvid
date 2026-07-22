@@ -1,0 +1,16 @@
+[
+  { "value": "d41d8cd98f00b204e9800998ecf8427e", "expectedType": "MD5" },
+  { "value": "da39a3ee5e6b4b0d3255bfef95601890afd80709", "expectedType": "SHA1" },
+  { "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "expectedType": "SHA256" },
+  { "value": "0x5aAeb6053f3e94c9b9a09f33669435E7ef1BeAed", "expectedType": "EVMAddress" },
+  { "value": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "expectedType": "BitcoinAddress" },
+  { "value": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", "expectedType": "BitcoinAddress" },
+  { "value": "8.8.8.8", "expectedType": "IPv4" },
+  { "value": "2001:4860:4860::8888", "expectedType": "IPv6" },
+  { "value": "CVE-2021-44228", "expectedType": "CVE" },
+  { "value": "http://evil.com/a?b=1", "expectedType": "URL" },
+  { "value": "evil.com", "expectedType": "Domain" },
+  { "value": "analyst@example.com", "expectedType": "Email" },
+  { "value": "not an ioc at all", "expectedType": "unknown" },
+  { "value": "", "expectedType": "unknown" }
+]

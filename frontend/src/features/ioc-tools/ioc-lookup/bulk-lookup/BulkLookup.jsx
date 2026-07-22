@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import { useServiceDefinitions } from '../shared/hooks/useServiceDefinitions';
 import { useBulkLookupProcessor } from './hooks/useBulkLookupProcessor';
 import { useBulkLookupSettings } from './hooks/api/useBulkLookupSettings';
+import { usePrefillFromQuery } from '../../../../core/hooks/usePrefillFromQuery';
 import BulkLookupForm from './components/ui/BulkLookupForm';
 import BulkLookupResults from './components/ui/BulkLookupResults';
 import BulkLookupSettings from './components/ui/BulkLookupSettings';
@@ -16,6 +17,16 @@ export default function BulkLookup() {
   const [iocsInput, setIocsInput] = useState('');
   const [activeTab, setActiveTab] = useState(0);
   const [formError, setFormError] = useState('');
+  const { prefillValue, clearPrefill } = usePrefillFromQuery();
+
+  useEffect(() => {
+    // Command palette's ⌘⇧B ("add focused value to Bulk Lookup") and any other cross-feature
+    // hand-off land here as a plain value appended to the existing input, not a replace.
+    if (!prefillValue) return;
+    setIocsInput((prev) => (prev.trim() ? `${prev}\n${prefillValue}` : prefillValue));
+    clearPrefill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillValue]);
 
   const { serviceDefinitions, loading: serviceDefsLoading } = useServiceDefinitions();
 

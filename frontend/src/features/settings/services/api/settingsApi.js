@@ -12,6 +12,15 @@ export const settingsApi = {
     return response.data;
   },
 
+  async updateCommandPaletteSettings({ autoOpenOnSingleMatch, startScreen, alwaysTiles }) {
+    const response = await api.put('/api/settings/general/command-palette', {
+      auto_open_on_single_match: autoOpenOnSingleMatch,
+      start_screen: startScreen,
+      always_tiles: alwaysTiles,
+    });
+    return response.data;
+  },
+
   // API Keys API calls
   async getServicesConfig() {
     const response = await api.get('/api/services/config');

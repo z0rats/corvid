@@ -30,6 +30,8 @@ import enDorkRunner from './locales/en/dorkRunner.json';
 import ruDorkRunner from './locales/ru/dorkRunner.json';
 import enGitRecon from './locales/en/gitRecon.json';
 import ruGitRecon from './locales/ru/gitRecon.json';
+import enCommandPalette from './locales/en/commandPalette.json';
+import ruCommandPalette from './locales/ru/commandPalette.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -49,6 +51,7 @@ export const NAMESPACES = [
   'redditSearch',
   'dorkRunner',
   'gitRecon',
+  'commandPalette',
 ];
 
 i18n
@@ -71,6 +74,7 @@ i18n
         redditSearch: enRedditSearch,
         dorkRunner: enDorkRunner,
         gitRecon: enGitRecon,
+        commandPalette: enCommandPalette,
       },
       ru: {
         common: ruCommon,
@@ -87,6 +91,7 @@ i18n
         redditSearch: ruRedditSearch,
         dorkRunner: ruDorkRunner,
         gitRecon: ruGitRecon,
+        commandPalette: ruCommandPalette,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,

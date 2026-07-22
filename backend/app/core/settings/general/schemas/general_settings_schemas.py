@@ -5,7 +5,9 @@ General settings Pydantic schemas for request/response validation
 from pydantic import BaseModel, ConfigDict, Field
 from app.core.settings.general.config.default_settings import (
     LANGUAGE_MIN_LENGTH,
-    LANGUAGE_MAX_LENGTH
+    LANGUAGE_MAX_LENGTH,
+    START_SCREEN_MIN_LENGTH,
+    START_SCREEN_MAX_LENGTH
 )
 
 
@@ -14,6 +16,11 @@ class GeneralSettingsResponse(BaseModel):
     id: int = Field(..., description="Settings record ID")
     darkmode: bool = Field(..., description="Dark mode preference")
     language: str = Field(..., description="UI language preference")
+    auto_open_on_single_match: bool = Field(
+        ..., description="Auto-open the command palette's top result on a single exact match"
+    )
+    start_screen: str = Field(..., description="What the app index route renders: 'search' or 'newsfeed'")
+    always_tiles: bool = Field(..., description="Force the command palette's touch tile grid on pointer devices")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -41,4 +48,20 @@ class LanguageUpdate(BaseModel):
         min_length=LANGUAGE_MIN_LENGTH,
         max_length=LANGUAGE_MAX_LENGTH,
         description="UI language preference"
+    )
+
+
+class CommandPaletteSettingsUpdate(BaseModel):
+    """Schema for updating the command palette's own settings group"""
+    auto_open_on_single_match: bool | None = Field(
+        None, description="Auto-open the command palette's top result on a single exact match"
+    )
+    start_screen: str | None = Field(
+        None,
+        min_length=START_SCREEN_MIN_LENGTH,
+        max_length=START_SCREEN_MAX_LENGTH,
+        description="What the app index route renders: 'search' or 'newsfeed'"
+    )
+    always_tiles: bool | None = Field(
+        None, description="Force the command palette's touch tile grid on pointer devices"
     )

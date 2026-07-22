@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import ImageTools from './ImageTools';
 import { imageAnalyzerApi } from './services/api/imageAnalyzerApi';
 
@@ -19,16 +20,24 @@ function makeFile() {
   return new File(['fake image content'], 'photo.jpg', { type: 'image/jpeg' });
 }
 
+function renderImageTools(initialEntries) {
+  return render(
+    <MemoryRouter initialEntries={initialEntries}>
+      <ImageTools />
+    </MemoryRouter>,
+  );
+}
+
 describe('ImageTools', () => {
   it('shows the welcome screen before any image is analyzed', () => {
-    render(<ImageTools />);
+    renderImageTools();
 
     expect(screen.getByText(/lets you inspect an image file/i)).toBeInTheDocument();
   });
 
   it('shows reverse-search links as soon as a URL is typed, with no file uploaded', async () => {
     const user = userEvent.setup();
-    render(<ImageTools />);
+    renderImageTools();
 
     expect(screen.getByText(/no image url provided/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'TinEye' })).toHaveAttribute(
@@ -67,7 +76,7 @@ describe('ImageTools', () => {
     });
 
     const user = userEvent.setup();
-    render(<ImageTools />);
+    renderImageTools();
 
     const input = document.querySelector('input[type="file"]');
     await user.upload(input, makeFile());
@@ -90,7 +99,7 @@ describe('ImageTools', () => {
     });
 
     const user = userEvent.setup();
-    render(<ImageTools />);
+    renderImageTools();
 
     const input = document.querySelector('input[type="file"]');
     await user.upload(input, makeFile());
@@ -98,5 +107,22 @@ describe('ImageTools', () => {
 
     await waitFor(() => expect(screen.getByText('Image analysis failed')).toBeInTheDocument());
     expect(screen.getByText(/lets you inspect an image file/i)).toBeInTheDocument();
+  });
+
+  it('auto-analyzes a file handed off via router state (command palette image paste)', async () => {
+    imageAnalyzerApi.analyzeImage.mockResolvedValue({
+      file_info: {
+        filename: 'handoff.jpg', format: 'JPEG', mime_type: 'image/jpeg',
+        width: 10, height: 10, mode: 'RGB', dpi_x: 72, dpi_y: 72, file_size: 100,
+      },
+      hashes: { md5: 'a'.repeat(32), sha1: 'b'.repeat(40), sha256: 'c'.repeat(64) },
+      exif: {}, gps: null, has_thumbnail: false, thumbnail_base64: null,
+    });
+
+    const handoffFile = makeFile();
+    renderImageTools([{ pathname: '/image-tools', state: { file: handoffFile } }]);
+
+    await waitFor(() => expect(imageAnalyzerApi.analyzeImage).toHaveBeenCalledTimes(1));
+    expect(imageAnalyzerApi.analyzeImage).toHaveBeenCalledWith(handoffFile);
   });
 });

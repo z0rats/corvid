@@ -7,13 +7,15 @@ from app.core.settings.general.schemas.general_settings_schemas import (
     GeneralSettingsResponse,
     GeneralSettingsUpdate,
     DarkmodeUpdate,
-    LanguageUpdate
+    LanguageUpdate,
+    CommandPaletteSettingsUpdate
 )
 from app.core.settings.general.service.general_settings_service import (
     get_general_settings,
     update_general_settings,
     update_darkmode_setting,
-    update_language_setting
+    update_language_setting,
+    update_command_palette_settings
 )
 
 router = APIRouter(prefix="/api/settings/general", tags=["General Settings"])
@@ -66,3 +68,16 @@ async def update_language_endpoint(
     db: SessionDep
 ) -> GeneralSettingsResponse:
     return await update_language_setting(db, language_update)
+
+
+@router.put(
+    "/command-palette",
+    response_model=GeneralSettingsResponse,
+    summary="Update command palette settings",
+    description="Update the command palette's own settings group (auto-open, start screen, always-tiles)"
+)
+async def update_command_palette_endpoint(
+    command_palette_update: CommandPaletteSettingsUpdate,
+    db: SessionDep
+) -> GeneralSettingsResponse:
+    return await update_command_palette_settings(db, command_palette_update)

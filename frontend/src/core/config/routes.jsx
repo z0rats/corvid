@@ -1,10 +1,13 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAtomValue } from 'jotai';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Layout from '../components/layout/Layout';
 import NotFound from "../components/ui/NotFound";
 import ErrorBoundary from '../components/ErrorBoundary';
+import StartScreen from '../components/ui/StartScreen';
+import { generalSettingsState } from '../state/atoms';
 
 const CvssCalculator = lazy(() => import("../../features/cvss-calculator/CvssCalculator"));
 const EmailAnalyzer = lazy(() => import("../../features/email-analyzer/EmailAnalyzer"));
@@ -26,12 +29,19 @@ const LoadingFallback = () => (
   </Box>
 );
 
+/** `startScreen` setting picks what `/` renders: the search home, or today's newsfeed default. */
+const IndexRoute = () => {
+  const generalSettings = useAtomValue(generalSettingsState);
+  const startScreen = generalSettings?.start_screen ?? 'search';
+  return startScreen === 'newsfeed' ? <Navigate to="/newsfeed" replace /> : <StartScreen />;
+};
+
 export const AppRoutes = () => {
   return (
     <ErrorBoundary>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/newsfeed" replace />} />
+          <Route index element={<IndexRoute />} />
           <Route path="newsfeed/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><Newsfeed /></Suspense></ErrorBoundary>} />
           <Route path="settings/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><Settings /></Suspense></ErrorBoundary>} />
           <Route path="ai-templates/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><AiTemplates /></Suspense></ErrorBoundary>} />

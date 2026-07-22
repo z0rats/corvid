@@ -10,6 +10,7 @@ export const NOTIFICATION_MESSAGES = {
   API_KEY_DEACTIVATED: 'service deactivated successfully.',
   DARKMODE_UPDATED: 'Dark mode updated successfully.',
   LANGUAGE_UPDATED: 'Language updated successfully.',
+  COMMAND_PALETTE_UPDATED: 'Command palette settings updated successfully.',
   MODULE_ENABLED: 'Module enabled successfully.',
   MODULE_DISABLED: 'Module disabled successfully.',
   LOAD_ERROR: 'Failed to load configuration.',
