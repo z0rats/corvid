@@ -9,12 +9,15 @@ from app.core.config.rate_limit_config import limiter
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     CtSubdomainsRequest,
     CtSubdomainsResponse,
+    DnsLookupRequest,
+    DnsLookupResponse,
     DomainLookupRequest,
     DomainLookupResponse,
     WhoisLookupRequest,
     WhoisLookupResponse,
 )
 from app.features.ioc_tools.domain_finder.service.ct_subdomains_service import perform_ct_subdomains_lookup
+from app.features.ioc_tools.domain_finder.service.dns_lookup_service import perform_dns_lookup
 from app.features.ioc_tools.domain_finder.service.domain_lookup_service import perform_domain_lookup
 from app.features.ioc_tools.domain_finder.service.whois_lookup_service import perform_whois_lookup
 
@@ -124,6 +127,39 @@ async def ct_subdomains_lookup_get(request: Request, domain: str) -> CtSubdomain
     return result
 
 
+@router.post(
+    "/dns",
+    response_model=DnsLookupResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Perform DNS record lookup",
+    description="Resolve A/AAAA/MX/TXT/NS/CNAME records for a domain, plus reverse DNS (PTR) for any resolved IPs"
+)
+@limiter.limit("30/minute")
+async def dns_lookup_post(request: Request, dns_request: DnsLookupRequest) -> DnsLookupResponse:
+    """Perform a DNS record lookup via POST request"""
+    logger.info("POST DNS lookup request - Domain: %s", dns_request.domain)
+    result = await perform_dns_lookup(dns_request)
+    logger.info("POST DNS lookup completed - Domain: %s", dns_request.domain)
+    return result
+
+
+@router.get(
+    "/dns/{domain}",
+    response_model=DnsLookupResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Perform DNS record lookup via URL parameter",
+    description="Resolve DNS records for a domain from URL path via GET request"
+)
+@limiter.limit("30/minute")
+async def dns_lookup_get(request: Request, domain: str) -> DnsLookupResponse:
+    """Perform a DNS record lookup using domain from URL path via GET request"""
+    logger.info("GET DNS lookup request - Domain: %s", domain)
+    dns_request = DnsLookupRequest(domain=domain)
+    result = await perform_dns_lookup(dns_request)
+    logger.info("GET DNS lookup completed - Domain: %s", domain)
+    return result
+
+
 @router.get(
     "/health",
     response_model=dict[str, Any],
@@ -142,6 +178,8 @@ async def check_domain_service_health() -> dict[str, Any]:
             "/api/domain/whois",
             "/api/domain/whois/{domain}",
             "/api/domain/ct-subdomains",
-            "/api/domain/ct-subdomains/{domain}"
+            "/api/domain/ct-subdomains/{domain}",
+            "/api/domain/dns",
+            "/api/domain/dns/{domain}"
         ]
     }

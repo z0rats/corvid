@@ -5,6 +5,7 @@ apscheduler
 asyncpg
 beautifulsoup4
 cvss
+dnspython
 exifread
 fastapi[all]
 feedparser

@@ -179,6 +179,65 @@ class CtSubdomainsResponse(BaseModel):
     )
 
 
+class DnsLookupRequest(BaseModel):
+    """Request model for DNS record lookup operations"""
+
+    domain: str = Field(
+        ...,
+        description="Domain name to look up DNS records for (e.g., 'example.com')",
+        min_length=1,
+        max_length=255
+    )
+
+    @field_validator('domain')
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        """Validate domain format, rejecting search patterns which DNS resolution doesn't support"""
+        if not v or not v.strip():
+            raise ValueError('Domain cannot be empty')
+
+        domain = v.strip().lower()
+
+        if domain.startswith(('http://', 'https://')):
+            domain = domain.split('://', 1)[1]
+
+        if '/' in domain:
+            domain = domain.split('/', 1)[0]
+
+        if len(domain) > 255:
+            raise ValueError('Domain name too long')
+
+        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
+            raise ValueError('Domain contains invalid characters')
+
+        return domain
+
+
+class DnsRecordSet(BaseModel):
+    """DNS records grouped by record type for a single lookup"""
+
+    A: list[str] = Field(default_factory=list, description="IPv4 addresses")
+    AAAA: list[str] = Field(default_factory=list, description="IPv6 addresses")
+    MX: list[str] = Field(default_factory=list, description="Mail exchange records, preference-ordered")
+    TXT: list[str] = Field(default_factory=list, description="Text records")
+    NS: list[str] = Field(default_factory=list, description="Authoritative nameservers")
+    CNAME: list[str] = Field(default_factory=list, description="Canonical name records")
+
+
+class DnsLookupResponse(BaseModel):
+    """Response model for DNS record lookup operations"""
+
+    domain: str = Field(..., description="The domain that was looked up")
+    records: DnsRecordSet = Field(..., description="DNS records grouped by type")
+    reverse_dns: dict[str, list[str]] = Field(
+        default_factory=dict, description="PTR hostnames for each resolved A/AAAA IP address"
+    )
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp when the lookup was performed"
+    )
+
+
 class WhoisEntity(BaseModel):
     """A single entity (registrar, registrant, admin, tech, ...) from an RDAP response"""
 

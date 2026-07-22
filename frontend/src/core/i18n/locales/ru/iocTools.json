@@ -202,6 +202,12 @@
         "updatedDate": "Последнее обновление"
       }
     },
+    "dnsRecords": {
+      "title": "DNS-записи",
+      "errorPrefix": "Ошибка DNS-запроса:",
+      "noRecords": "DNS-записи для этого домена не найдены.",
+      "reverseDnsTitle": "Обратный DNS"
+    },
     "ctSubdomains": {
       "title": "Поддомены из журналов Certificate Transparency",
       "errorPrefix": "Ошибка запроса Certificate Transparency:",

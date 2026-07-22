@@ -10,6 +10,7 @@ import WelcomeScreen from './components/ui/WelcomeScreen';
 import ResultTable from './components/ui/ResultTable';
 import WhoisPanel from './components/ui/WhoisPanel';
 import CtSubdomainsPanel from './components/ui/CtSubdomainsPanel';
+import DnsRecordsPanel from './components/ui/DnsRecordsPanel';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 
 export default function DomainMonitoring() {
@@ -61,6 +62,7 @@ export default function DomainMonitoring() {
         {showResults ? (
           <>
             <WhoisPanel key={`whois_${searchDomain}`} domain={searchDomain} />
+            <DnsRecordsPanel key={`dns_${searchDomain}`} domain={searchDomain} />
             <CtSubdomainsPanel key={`ct_${searchDomain}`} domain={searchDomain} onScanSubdomain={handleSearch} />
             <ResultTable key={searchDomain} domain={searchDomain} />
           </>
