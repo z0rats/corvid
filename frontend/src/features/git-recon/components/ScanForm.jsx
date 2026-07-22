@@ -15,10 +15,12 @@ import TuneIcon from '@mui/icons-material/Tune';
 
 const MODES = ['search', 'url', 'nickname'];
 
-export default function ScanForm({ onScan, disabled }) {
+export default function ScanForm({ onScan, disabled, initialTarget, initialMode }) {
   const { t } = useTranslation('gitRecon');
-  const [mode, setMode] = useState('search');
-  const [target, setTarget] = useState('');
+  // `initialTarget`/`initialMode` come from usePrefillFromQuery via NewSearch, which yields
+  // `null` (not `undefined`) when absent — a default parameter wouldn't catch that.
+  const [mode, setMode] = useState(initialMode || 'search');
+  const [target, setTarget] = useState(initialTarget || '');
   const [includeForks, setIncludeForks] = useState(false);
   const [resolveGithubLogins, setResolveGithubLogins] = useState(true);
   const [ignoreNoreply, setIgnoreNoreply] = useState(true);

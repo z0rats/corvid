@@ -1,0 +1,80 @@
+{
+  "searchPlaceholder": "Search tools, paste an IOC, or type > for actions…",
+  "startScreen": {
+    "brand": "Corvid · Home",
+    "focusHint": "focus — / or ⌘K",
+    "pasteHint": "or paste an image from the clipboard (⌘V/Ctrl+V) — opens Image Tools",
+    "recentHint": "recent: {{items}} — keep typing to search further"
+  },
+  "leftPanel": {
+    "pinned": "Pinned",
+    "recent": "Recent",
+    "unpin": "Unpin",
+    "unpinAria": "Unpin {{label}}"
+  },
+  "results": {
+    "empty": "No matches"
+  },
+  "banners": {
+    "detectedType": "Detected {{type}} — {{value}}",
+    "pivot": "{{value}} → {{tool}}",
+    "fallback": "No tool named \"{{value}}\" — pick where to search it",
+    "instant": "{{op}} {{value}} — press Enter to copy",
+    "unknownAction": "Unknown action: {{raw}}"
+  },
+  "recording": {
+    "banner": "Recording — {{count}} step(s) so far. >record:stop to finish.",
+    "stop": "Stop",
+    "namePlaceholder": "Name this playbook…",
+    "cancel": "Cancel"
+  },
+  "actionPanel": {
+    "open": "Open",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "copy": "Copy",
+    "copyDefanged": "Copy defanged",
+    "addToBulk": "Add to Bulk Lookup"
+  },
+  "playbooks": {
+    "title": "Saved playbooks",
+    "empty": "No saved playbooks yet. Start one with >record.",
+    "rename": "Rename",
+    "confirmRename": "Confirm rename",
+    "runNow": "Run now",
+    "delete": "Delete",
+    "runValuePlaceholder": "Starting value…",
+    "back": "Back to search"
+  },
+  "footer": {
+    "hint": "↑↓ navigate · Enter open · Esc close",
+    "shortcuts": "Shortcuts (?)"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "openPalette": "Open the palette",
+    "navigate": "Move selection",
+    "openRun": "Open / run the selected result",
+    "jumpToResult": "Jump straight to the Nth result",
+    "complete": "Complete the top suggestion or operator",
+    "pasteImage": "Paste an image into Image Tools",
+    "actionPanel": "Open the focused row's action panel",
+    "copy": "Copy the focused result's value",
+    "copyDefanged": "Copy the focused result's value, defanged",
+    "addToBulk": "Add the focused value to Bulk Lookup",
+    "pin": "Pin/unpin the focused tool",
+    "queryHistory": "Cycle typed-query history",
+    "clearOrClose": "Clear the query, or close if empty",
+    "shortcuts": "This shortcut sheet",
+    "settings": "Open Settings"
+  },
+  "notices": {
+    "copied": "Copied: {{value}}",
+    "copyFailed": "Couldn't copy — value is pre-selected, press Ctrl+C",
+    "instantAnswerFailed": "Couldn't process that value",
+    "recordingStarted": "Recording started — every pivot is added",
+    "playbookSaved": "Saved playbook \"{{name}}\"",
+    "playbookNotFound": "Playbook \"{{name}}\" not found",
+    "unknownAction": "Unknown action"
+  }
+}

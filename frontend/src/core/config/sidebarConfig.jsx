@@ -28,79 +28,142 @@ import MarkEmailReadIcon from "@mui/icons-material/MarkEmailReadOutlined";
 import RedditIcon from "@mui/icons-material/Reddit";
 import TroubleshootIcon from "@mui/icons-material/TroubleshootOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import KeyboardCommandKeyIcon from "@mui/icons-material/KeyboardCommandKeyOutlined";
+import { IOC_TYPES } from "../utils/iocTypeDetection";
 
+// aliases/tags/accepts/acceptsRouting power the command palette's registry
+// (core/config/commandRegistry.js), derived from this array so the tool catalog can't drift
+// from the palette's own search index — see docs/command-palette-plan.md's governance table.
 const MAIN_MENU_ITEMS_CONFIG = [
   {
     i18nKey: "nav.newsfeed",
     icon: <NewspaperIcon />,
     path: "/newsfeed",
     moduleId: "newsfeed",
+    aliases: ["newsfeed", "news", "rss", "feed"],
+    tags: ["recon"],
+    accepts: [],
   },
   {
     i18nKey: "nav.iocTools",
     icon: <SearchIcon />,
     path: "/ioc-tools",
     moduleId: "ioc_tools",
+    aliases: ["ioc", "lookup", "ioc lookup", "whois", "domain finder", "bulk lookup", "defang", "ct subdomains"],
+    tags: ["ioc", "recon"],
+    accepts: [
+      IOC_TYPES.IPV4, IOC_TYPES.IPV6, IOC_TYPES.DOMAIN, IOC_TYPES.URL, IOC_TYPES.EMAIL,
+      IOC_TYPES.MD5, IOC_TYPES.SHA1, IOC_TYPES.SHA256, IOC_TYPES.CVE,
+      IOC_TYPES.EVM_ADDRESS, IOC_TYPES.BITCOIN_ADDRESS,
+    ],
+    // `path` stays the bare "/ioc-tools" root (needed so the left panel's active-tab
+    // highlighting matches every ioc-tools sub-route via startsWith) — but a prefilled value
+    // must route straight to a real leaf route. IocTools.jsx's own index route is a *relative*
+    // `<Navigate to="lookup" replace />`, which drops the query string on redirect, silently
+    // losing the value; every accepted type needs an explicit entry here to avoid that.
+    acceptsRouting: {
+      [IOC_TYPES.MD5]: "/ioc-tools/bulk",
+      [IOC_TYPES.SHA1]: "/ioc-tools/bulk",
+      [IOC_TYPES.SHA256]: "/ioc-tools/bulk",
+      [IOC_TYPES.IPV4]: "/ioc-tools/lookup",
+      [IOC_TYPES.IPV6]: "/ioc-tools/lookup",
+      [IOC_TYPES.DOMAIN]: "/ioc-tools/lookup",
+      [IOC_TYPES.URL]: "/ioc-tools/lookup",
+      [IOC_TYPES.EMAIL]: "/ioc-tools/lookup",
+      [IOC_TYPES.CVE]: "/ioc-tools/lookup",
+      [IOC_TYPES.EVM_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.BITCOIN_ADDRESS]: "/ioc-tools/lookup",
+    },
   },
   {
     i18nKey: "nav.emailAnalyzer",
     icon: <MailIcon />,
     path: "/email-analyzer",
     moduleId: "email_analyzer",
+    aliases: ["email analyzer", "eml", "email header", "phishing email"],
+    tags: ["email"],
+    accepts: [],
   },
   {
     i18nKey: "nav.imageTools",
     icon: <ImageIcon />,
     path: "/image-tools",
     moduleId: "image_tools",
+    aliases: ["image tools", "exif", "reverse image search", "metadata"],
+    tags: ["image"],
+    accepts: [],
   },
   {
     i18nKey: "nav.aiTemplates",
     icon: <PsychologyIcon />,
     path: "/ai-templates",
     moduleId: "llm_templates",
+    aliases: ["ai templates", "llm templates", "prompt templates", "ai"],
+    tags: ["ai"],
+    accepts: [],
   },
   {
     i18nKey: "nav.cvssCalculator",
     icon: <CalculateIcon />,
     path: "/cvss-calculator",
     moduleId: "cvss_calculator",
+    aliases: ["cvss", "cvss calculator", "scoring"],
+    tags: ["scoring"],
+    accepts: [],
   },
   {
     i18nKey: "nav.detectionRules",
     icon: <RuleIcon />,
     path: "/rules",
     moduleId: "rule_creator",
+    aliases: ["rules", "sigma", "yara", "snort", "detection rules"],
+    tags: ["detection"],
+    accepts: [],
   },
   {
     i18nKey: "nav.usernameSearch",
     icon: <PersonSearchIcon />,
     path: "/username-search",
     moduleId: "username_search",
+    aliases: ["username search", "maigret", "social analyzer", "sherlock"],
+    tags: ["identity", "recon"],
+    accepts: [],
   },
   {
     i18nKey: "nav.emailSearch",
     icon: <MarkEmailReadIcon />,
     path: "/email-search",
     moduleId: "email_search",
+    aliases: ["email search", "mailcat", "find email provider"],
+    tags: ["email", "identity"],
+    accepts: [],
   },
   {
     i18nKey: "nav.redditSearch",
     icon: <RedditIcon />,
     path: "/reddit-search",
     moduleId: "reddit_search",
+    aliases: ["reddit", "reddit search", "rosint"],
+    tags: ["identity", "recon"],
+    accepts: [],
   },
   {
     i18nKey: "nav.dorkRunner",
     icon: <TroubleshootIcon />,
     path: "/dork-runner",
     moduleId: "dork_runner",
+    aliases: ["dork runner", "google dork", "dork", "osint dork"],
+    tags: ["recon"],
+    accepts: [IOC_TYPES.DOMAIN, IOC_TYPES.EMAIL],
   },
   {
     i18nKey: "nav.gitRecon",
     icon: <GitHubIcon />,
     path: "/git-recon",
     moduleId: "git_recon",
+    aliases: ["git recon", "github recon", "gitcolombo", "commit history"],
+    tags: ["recon", "identity"],
+    accepts: [],
   },
 ];
 
@@ -209,6 +272,7 @@ const SETTINGS_TABS_CONFIG = [
   { i18nKey: "nav.settingsTabs.apiKeys", path: "/settings/apikeys", icon: <KeyIcon /> },
   { i18nKey: "nav.settingsTabs.aiSettings", path: "/settings/ai-settings", icon: <PsychologyAltIcon /> },
   { i18nKey: "nav.settingsTabs.modules", path: "/settings/modules", icon: <ViewModuleIcon /> },
+  { i18nKey: "nav.settingsTabs.commandPalette", path: "/settings/command-palette", icon: <KeyboardCommandKeyIcon /> },
   { i18nKey: "nav.settingsTabs.about", path: "/settings/about", icon: <InfoIcon /> },
 ];
 

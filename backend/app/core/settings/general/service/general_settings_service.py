@@ -9,17 +9,20 @@ from app.core.settings.general.schemas.general_settings_schemas import (
     GeneralSettingsResponse,
     GeneralSettingsUpdate,
     DarkmodeUpdate,
-    LanguageUpdate
+    LanguageUpdate,
+    CommandPaletteSettingsUpdate
 )
 from app.core.settings.general.crud.general_settings_crud import (
     get_first_general_settings,
     create_general_settings,
     update_general_settings_all,
     update_general_settings_darkmode,
-    update_general_settings_language
+    update_general_settings_language,
+    update_general_settings_command_palette
 )
 from app.core.settings.general.utils.validation_utils import (
-    validate_language_code
+    validate_language_code,
+    validate_start_screen
 )
 from app.core.settings.general.config.default_settings import (
     get_default_darkmode,
@@ -118,4 +121,43 @@ async def update_language_setting(
     await db.refresh(settings)
 
     logger.info("Updated language setting to: %s", normalized_language)
+    return GeneralSettingsResponse.model_validate(settings)
+
+
+async def update_command_palette_settings(
+    db: AsyncSession,
+    command_palette_update: CommandPaletteSettingsUpdate
+) -> GeneralSettingsResponse:
+    """Update the command palette settings group"""
+    normalized_start_screen = None
+    if command_palette_update.start_screen is not None:
+        if not validate_start_screen(command_palette_update.start_screen):
+            raise ApplicationError("Unsupported start screen value", status_code=400)
+        normalized_start_screen = command_palette_update.start_screen.strip().lower()
+
+    settings = await get_first_general_settings(db)
+
+    if not settings:
+        settings = await create_general_settings(
+            db,
+            auto_open_on_single_match=command_palette_update.auto_open_on_single_match,
+            start_screen=normalized_start_screen,
+            always_tiles=command_palette_update.always_tiles
+        )
+    else:
+        settings = await update_general_settings_command_palette(
+            db,
+            settings,
+            auto_open_on_single_match=command_palette_update.auto_open_on_single_match,
+            start_screen=normalized_start_screen,
+            always_tiles=command_palette_update.always_tiles
+        )
+
+    await db.flush()
+    await db.refresh(settings)
+
+    logger.info(
+        "Updated command palette settings: auto_open_on_single_match=%s, start_screen=%s, always_tiles=%s",
+        settings.auto_open_on_single_match, settings.start_screen, settings.always_tiles
+    )
     return GeneralSettingsResponse.model_validate(settings)

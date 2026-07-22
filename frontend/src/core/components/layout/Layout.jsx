@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { hasLlmKeyAtom, enabledModulesMapAtom, themeModeAtom, generalSettingsState } from '../../state/atoms';
@@ -12,18 +12,20 @@ import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
-import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
+import Chip from '@mui/material/Chip';
+import Typography from '@mui/material/Typography';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import SearchIcon from '@mui/icons-material/SearchOutlined';
+import HomeIcon from '@mui/icons-material/HomeOutlined';
 import SidebarTabs from '../ui/SidebarTabs';
-import TopNavMenu from './TopNavMenu';
+import LeftPanel from './LeftPanel';
+import CommandPalette from '../ui/CommandPalette/CommandPalette';
+import { OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useCommandPalette';
 import {
   getMainMenuItems,
   getAiTemplatesTabs,
@@ -37,19 +39,23 @@ import {
   getRedditSearchTabs,
   getGitReconTabs,
 } from '../../config/sidebarConfig';
-import ot_logo_dark from '../../static/images/ot_logo_dark.png';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 
 const defaultDrawerWidth = 240;
 const minDrawerWidth = 180;
 const maxDrawerWidth = 480;
 const miniDrawerWidth = 60;
+const defaultLeftPanelWidth = 220;
+const minLeftPanelWidth = 160;
+const maxLeftPanelWidth = 360;
+const leftPanelMiniWidth = 56;
 
 /**
  * Main layout component that provides the application structure
  */
 function Layout() {
   const { t } = useTranslation();
+  const { t: tPalette } = useTranslation('commandPalette');
   const hasLlmKey = useAtomValue(hasLlmKeyAtom);
   const enabledModules = useAtomValue(enabledModulesMapAtom);
   const themeMode = useAtomValue(themeModeAtom);
@@ -62,30 +68,49 @@ function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(defaultDrawerWidth);
-  const isResizing = useRef(false);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(defaultLeftPanelWidth);
+  // Tracks which panel ('leftPanel' | 'sidebar') is being dragged, not just whether — a ref since
+  // it drives a synchronous mousemove listener, not a render.
+  const resizingPanel = useRef(null);
+  const resizeStartX = useRef(0);
+  const resizeStartWidth = useRef(0);
   const location = useLocation();
   const theme = useTheme();
 
   const handleDrawerToggle = () => setMobileOpen(prev => !prev);
   const handleSidebarToggle = () => setSidebarOpen(prev => !prev);
+  const handleLeftPanelToggle = () => setLeftPanelOpen(prev => !prev);
+  const handleOpenPalette = () => window.dispatchEvent(new Event(OPEN_COMMAND_PALETTE_EVENT));
 
-  const handleResizeStart = useCallback((e) => {
+  // Drag delta from the pointer's start position, not the pointer's absolute X — the drawer this
+  // handle sits on isn't flush against the viewport's left edge (the sidebar drawer starts after
+  // the left panel's width), so using e.clientX directly as the new width previously ignored that
+  // offset and made the panel jump to (roughly) the cursor's raw X on the very first move.
+  const startResize = (panel) => (e) => {
     e.preventDefault();
-    isResizing.current = true;
+    resizingPanel.current = panel;
+    resizeStartX.current = e.clientX;
+    resizeStartWidth.current = panel === 'leftPanel' ? leftPanelWidth : sidebarWidth;
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, []);
+  };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      if (!isResizing.current) return;
-      const newWidth = Math.min(maxDrawerWidth, Math.max(minDrawerWidth, e.clientX));
-      setSidebarWidth(newWidth);
+      const panel = resizingPanel.current;
+      if (!panel) return;
+      const newWidth = resizeStartWidth.current + (e.clientX - resizeStartX.current);
+      if (panel === 'leftPanel') {
+        setLeftPanelWidth(Math.min(maxLeftPanelWidth, Math.max(minLeftPanelWidth, newWidth)));
+      } else {
+        setSidebarWidth(Math.min(maxDrawerWidth, Math.max(minDrawerWidth, newWidth)));
+      }
     };
 
     const handleMouseUp = () => {
-      if (!isResizing.current) return;
-      isResizing.current = false;
+      if (!resizingPanel.current) return;
+      resizingPanel.current = null;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
@@ -121,7 +146,39 @@ function Layout() {
     return enabledModules[item.moduleId] ?? true;
   }), [hasLlmKey, enabledModules, menuItems]);
 
+  const filteredModuleIds = useMemo(
+    () => new Set(filteredMenuItems.map(item => item.moduleId)),
+    [filteredMenuItems],
+  );
+
   const showSidebar = Boolean(currentTabs);
+
+  const leftPanelFooterContent = (
+    <Box
+      sx={{
+        px: leftPanelOpen ? 2 : 0,
+        py: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: leftPanelOpen ? 'flex-end' : 'center',
+        minHeight: 56,
+      }}
+    >
+      <IconButton onClick={handleLeftPanelToggle} aria-label={t('layout.toggleSidebar')}>
+        {leftPanelOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+      </IconButton>
+    </Box>
+  );
+
+  const leftPanelDrawerContent = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+        <LeftPanel sidebarOpen={leftPanelOpen} filteredModuleIds={filteredModuleIds} />
+      </Box>
+      <Divider />
+      {leftPanelFooterContent}
+    </Box>
+  );
 
   const sidebarFooterContent = (
     <Box
@@ -152,40 +209,12 @@ function Layout() {
 
   const mobileDrawerContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-        <Box sx={{ p: 1 }}>
-          <List disablePadding>
-            {filteredMenuItems.map((item) => (
-              <ListItemButton
-                key={item.path}
-                component={Link}
-                to={item.path}
-                onClick={handleDrawerToggle}
-                selected={location.pathname.startsWith(item.path)}
-                sx={{
-                  borderRadius: 1,
-                  mb: 0.5,
-                  bgcolor: location.pathname.startsWith(item.path)
-                    ? 'primary.main'
-                    : 'transparent',
-                  color: location.pathname.startsWith(item.path)
-                    ? 'primary.contrastText'
-                    : 'text.primary',
-                  '&:hover': {
-                    bgcolor: location.pathname.startsWith(item.path)
-                      ? 'primary.dark'
-                      : 'action.hover',
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 0, mr: 2 }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.name} />
-              </ListItemButton>
-            ))}
-          </List>
-        </Box>
+      <Box sx={{ flexGrow: 1, overflowY: 'auto' }} onClick={(e) => {
+        // Close the mobile drawer after navigating via a LeftPanel/SidebarTabs link tap.
+        if (e.target.closest('a')) handleDrawerToggle();
+      }}
+      >
+        <LeftPanel sidebarOpen filteredModuleIds={filteredModuleIds} />
         {currentTabs && (
           <>
             <Divider sx={{ mx: 1 }} />
@@ -210,12 +239,56 @@ function Layout() {
             <MenuIcon />
           </IconButton>
 
-          <Box component="img" src={ot_logo_dark} alt="Logo" sx={{ height: 36, mr: 2 }} />
+          <Tooltip title={t('layout.home')}>
+            <IconButton
+              color="inherit"
+              component={Link}
+              to="/"
+              aria-label={t('layout.home')}
+              sx={{ mr: 1 }}
+            >
+              <HomeIcon />
+            </IconButton>
+          </Tooltip>
 
-          <TopNavMenu
-            items={filteredMenuItems}
-            isActive={(path) => location.pathname.startsWith(path)}
-          />
+          <Box
+            onClick={handleOpenPalette}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenPalette(); }}
+            aria-label={tPalette('searchPlaceholder')}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flexGrow: 1,
+              mx: 2,
+              maxWidth: 480,
+              px: 2,
+              py: 0.75,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette.common.white, 0.15),
+              color: 'inherit',
+              cursor: 'pointer',
+              '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.25) },
+            }}
+          >
+            <SearchIcon fontSize="small" />
+            <Typography variant="body2" noWrap sx={{ opacity: 0.85, flexGrow: 1 }}>
+              {tPalette('searchPlaceholder')}
+            </Typography>
+            <Chip
+              label="/"
+              size="small"
+              variant="outlined"
+              sx={{
+                display: { xs: 'none', sm: 'flex' },
+                color: 'inherit',
+                borderColor: alpha(theme.palette.common.white, 0.4),
+                fontFamily: 'monospace',
+              }}
+            />
+          </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', flexShrink: 0, pl: 2 }}>
             <Tooltip title={currentLanguage === 'en' ? 'Русский' : 'English'}>
@@ -247,6 +320,69 @@ function Layout() {
         </Toolbar>
       </AppBar>
 
+      <Drawer
+        variant="permanent"
+        open={leftPanelOpen}
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+          width: leftPanelOpen ? leftPanelWidth : leftPanelMiniWidth,
+          transition: resizingPanel.current === 'leftPanel'
+            ? 'none'
+            : theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            top: '56px',
+            left: 0,
+            height: 'calc(100vh - 56px)',
+            width: leftPanelOpen ? leftPanelWidth : leftPanelMiniWidth,
+            overflowX: 'hidden',
+            transition: resizingPanel.current === 'leftPanel'
+              ? 'none'
+              : theme.transitions.create('width', {
+                  easing: theme.transitions.easing.sharp,
+                  duration: leftPanelOpen
+                    ? theme.transitions.duration.enteringScreen
+                    : theme.transitions.duration.leavingScreen,
+                }),
+          },
+        }}
+      >
+        {leftPanelDrawerContent}
+        {leftPanelOpen && (
+          <Box
+            onMouseDown={startResize('leftPanel')}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: 6,
+              cursor: 'col-resize',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              '&::after': {
+                content: '""',
+                width: 2,
+                height: 32,
+                borderRadius: 1,
+                bgcolor: 'divider',
+                transition: 'background-color 0.2s, height 0.2s',
+              },
+              '&:hover::after': {
+                bgcolor: 'primary.main',
+                height: 48,
+              },
+            }}
+          />
+        )}
+      </Drawer>
+
       {showSidebar && (
         <Drawer
           variant="permanent"
@@ -256,7 +392,7 @@ function Layout() {
             flexShrink: 0,
             whiteSpace: 'nowrap',
             width: sidebarOpen ? sidebarWidth : miniDrawerWidth,
-            transition: isResizing.current
+            transition: resizingPanel.current === 'sidebar'
               ? 'none'
               : theme.transitions.create('width', {
                   easing: theme.transitions.easing.sharp,
@@ -265,10 +401,11 @@ function Layout() {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               top: '56px',
+              left: leftPanelOpen ? leftPanelWidth : leftPanelMiniWidth,
               height: 'calc(100vh - 56px)',
               width: sidebarOpen ? sidebarWidth : miniDrawerWidth,
               overflowX: 'hidden',
-              transition: isResizing.current
+              transition: resizingPanel.current === 'sidebar'
                 ? 'none'
                 : theme.transitions.create('width', {
                     easing: theme.transitions.easing.sharp,
@@ -282,7 +419,7 @@ function Layout() {
           {drawerContent}
           {sidebarOpen && (
             <Box
-              onMouseDown={handleResizeStart}
+              onMouseDown={startResize('sidebar')}
               sx={{
                 position: 'absolute',
                 top: 0,
@@ -340,6 +477,8 @@ function Layout() {
         <Toolbar />
         <Outlet />
       </Box>
+
+      <CommandPalette />
     </Box>
   );
 }

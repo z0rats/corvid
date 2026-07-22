@@ -10,9 +10,11 @@ import Link from '@mui/material/Link';
 import SearchIcon from '@mui/icons-material/Search';
 import TuneIcon from '@mui/icons-material/Tune';
 
-export default function SearchForm({ onSearch, disabled }) {
+export default function SearchForm({ onSearch, disabled, initialUsername }) {
   const { t } = useTranslation('redditSearch');
-  const [username, setUsername] = useState('');
+  // `initialUsername` comes from usePrefillFromQuery, which yields `null` (not `undefined`) when
+  // absent — a default parameter wouldn't catch that, so this normalizes it explicitly.
+  const [username, setUsername] = useState(initialUsername || '');
   const [subreddit, setSubreddit] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');

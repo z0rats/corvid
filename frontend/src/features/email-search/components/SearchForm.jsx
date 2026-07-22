@@ -5,9 +5,11 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import SearchIcon from '@mui/icons-material/Search';
 
-export default function SearchForm({ onSearch, disabled }) {
+export default function SearchForm({ onSearch, disabled, initialUsername }) {
   const { t } = useTranslation('emailSearch');
-  const [username, setUsername] = useState('');
+  // `initialUsername` comes from usePrefillFromQuery, which yields `null` (not `undefined`) when
+  // absent — a default parameter wouldn't catch that, so this normalizes it explicitly.
+  const [username, setUsername] = useState(initialUsername || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();

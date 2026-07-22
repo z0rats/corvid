@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.settings.general.models.general_settings_models import GeneralSettings
 from app.core.settings.general.config.default_settings import (
     get_default_darkmode,
-    get_default_language
+    get_default_language,
+    get_default_auto_open_on_single_match,
+    get_default_start_screen,
+    get_default_always_tiles
 )
 
 
@@ -26,12 +29,21 @@ async def get_first_general_settings(db: AsyncSession) -> GeneralSettings | None
 async def create_general_settings(
     db: AsyncSession,
     darkmode: bool | None = None,
-    language: str | None = None
+    language: str | None = None,
+    auto_open_on_single_match: bool | None = None,
+    start_screen: str | None = None,
+    always_tiles: bool | None = None
 ) -> GeneralSettings:
     """Create new general settings record"""
     settings = GeneralSettings(
         darkmode=darkmode if darkmode is not None else get_default_darkmode(),
-        language=language if language is not None else get_default_language()
+        language=language if language is not None else get_default_language(),
+        auto_open_on_single_match=(
+            auto_open_on_single_match if auto_open_on_single_match is not None
+            else get_default_auto_open_on_single_match()
+        ),
+        start_screen=start_screen if start_screen is not None else get_default_start_screen(),
+        always_tiles=always_tiles if always_tiles is not None else get_default_always_tiles()
     )
     db.add(settings)
     await db.flush()
@@ -71,6 +83,24 @@ async def update_general_settings_all(
         settings.darkmode = darkmode
     if language is not None:
         settings.language = language
+    await db.flush()
+    return settings
+
+
+async def update_general_settings_command_palette(
+    db: AsyncSession,
+    settings: GeneralSettings,
+    auto_open_on_single_match: bool | None = None,
+    start_screen: str | None = None,
+    always_tiles: bool | None = None
+) -> GeneralSettings:
+    """Update command palette settings fields for existing record"""
+    if auto_open_on_single_match is not None:
+        settings.auto_open_on_single_match = auto_open_on_single_match
+    if start_screen is not None:
+        settings.start_screen = start_screen
+    if always_tiles is not None:
+        settings.always_tiles = always_tiles
     await db.flush()
     return settings
 

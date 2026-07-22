@@ -13,9 +13,11 @@ import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('UsernameSearchForm');
 
-export default function SearchForm({ onSearch, disabled }) {
+export default function SearchForm({ onSearch, disabled, initialUsername }) {
   const { t } = useTranslation('usernameSearch');
-  const [username, setUsername] = useState('');
+  // `initialUsername` comes from usePrefillFromQuery, which yields `null` (not `undefined`) when
+  // absent — a default parameter wouldn't catch that, so this normalizes it explicitly.
+  const [username, setUsername] = useState(initialUsername || '');
   const [source, setSource] = useState('maigret');
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);

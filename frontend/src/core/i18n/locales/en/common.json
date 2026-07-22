@@ -38,6 +38,7 @@
       "apiKeys": "API Keys",
       "aiSettings": "AI Settings",
       "modules": "Modules",
+      "commandPalette": "Command Palette",
       "about": "About"
     },
 
@@ -87,6 +88,7 @@
     "switchToLightMode": "Switch to light mode",
     "switchToDarkMode": "Switch to dark mode",
     "toggleDarkMode": "Toggle dark mode",
+    "home": "Home",
     "settings": "Settings",
     "more": "More"
   },
@@ -99,6 +101,23 @@
       "darkMode": "Dark mode",
       "language": "Language",
       "languageHelper": "Change the language used across the application interface"
+    },
+    "commandPalette": {
+      "title": "Command Palette",
+      "description": "Configure how the search-first command palette (/ or ⌘K) behaves.",
+      "autoOpen": "Auto-open on single match",
+      "autoOpenHelper": "Open the top result automatically when exactly one tool matches what you've typed.",
+      "startScreen": "Start screen",
+      "startScreenHelper": "What \"/\" renders with nothing typed yet.",
+      "startScreenOptions": {
+        "search": "Search",
+        "newsfeed": "Newsfeed"
+      },
+      "alwaysTiles": "Always use tiles",
+      "alwaysTilesHelper": "Force the touch tile grid even when a keyboard is present.",
+      "recents": "Recents",
+      "recentsHelper": "Tools opened and pivoted values, one feed, last 8 — not configurable.",
+      "playbooksTitle": "Playbooks"
     }
   },
 

@@ -77,6 +77,27 @@ The Reddit Search module finds a Reddit user's full post and comment history, in
 The Git Recon module correlates names, emails, and GitHub logins from git commit history using [gitcolombo](https://github.com/Soxoj/gitcolombo). Search mode queries GitHub's API only (PGP-key UIDs + public commit search) for a username, no cloning required. Repo/user modes clone one repository or every public repository of a GitHub user/org and cross-reference author vs. committer identities to surface aliases and shared-identity clusters. A GitHub personal access token (configured under Settings > API Keys) is optional but recommended to avoid unauthenticated GitHub rate limits.
 
 
+## Keyboard-first navigation
+
+Corvid is built around a single search bar instead of hunting through menus. Press `/` or
+`⌘K`/`Ctrl+K` from anywhere to open it, then:
+
+- Type a tool's name — `reddit`, `git recon`, `whois` — to jump straight to it.
+- Paste a raw value — an IP, domain, e-mail, hash, CVE ID, or crypto address — and Corvid
+  suggests which tools can look it up.
+- Add a tool name after a value (`john_doe reddit`) to open that tool with the value already
+  filled in.
+- Filter with `#tag` (`#recon`, `#ioc`) or `type:kind` (`type:email`).
+- Prefix `>` for quick actions (`>settings`, `>theme`).
+- `defang <value>` / `fang <value>` copies a de-fanged/re-fanged IOC straight to your
+  clipboard — nothing to open.
+- Paste an image (`⌘V`/`Ctrl+V`) to jump into Image Tools with it already loaded.
+
+No keyboard handy? The panel on the left lists every tool, grouped the same way the search
+tags do — click through instead of typing.
+
+Press `?` any time for the full shortcut list.
+
 
 ## Deploy with docker
 1. Download the repository and extract the files

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -14,6 +15,8 @@ import ReverseSearchLinks from './components/ui/ReverseSearchLinks';
 export default function ImageTools() {
   const { t } = useTranslation('imageTools');
   const [imageUrl, setImageUrl] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     result,
     previewUrl,
@@ -26,6 +29,18 @@ export default function ImageTools() {
   const handleFileUpload = (file) => {
     analyzeImage(file);
   };
+
+  useEffect(() => {
+    // Hand-off from the command palette's ⌘V paste (core/hooks/useCommandPalette.js) — a File
+    // can't travel through the ?q= prefill query param crossFeatureNav.js uses for strings, so
+    // it's passed via router state instead.
+    const handoffFile = location.state?.file;
+    if (handoffFile) {
+      analyzeImage(handoffFile);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const handlePaste = (event) => {

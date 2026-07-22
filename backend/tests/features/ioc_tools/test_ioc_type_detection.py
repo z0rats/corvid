@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import (
@@ -6,21 +9,12 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import (
     normalize_address,
 )
 
+# Shared with the frontend's port of this classifier (core/utils/iocTypeDetection.js) via
+# testdata/ioc-type-detection-cases.json at the repo root, so the two can't silently diverge.
+FIXTURE_PATH = Path(__file__).resolve().parents[4] / "testdata" / "ioc-type-detection-cases.json"
 HAPPY_PATH_CASES = [
-    ("d41d8cd98f00b204e9800998ecf8427e", IOC_TYPES["MD5"]),
-    ("da39a3ee5e6b4b0d3255bfef95601890afd80709", IOC_TYPES["SHA1"]),
-    ("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", IOC_TYPES["SHA256"]),
-    ("0x5aAeb6053f3e94c9b9a09f33669435E7ef1BeAed", IOC_TYPES["EVM_ADDRESS"]),
-    ("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", IOC_TYPES["BITCOIN_ADDRESS"]),
-    ("bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", IOC_TYPES["BITCOIN_ADDRESS"]),
-    ("8.8.8.8", IOC_TYPES["IPV4"]),
-    ("2001:4860:4860::8888", IOC_TYPES["IPV6"]),
-    ("CVE-2021-44228", IOC_TYPES["CVE"]),
-    ("http://evil.com/a?b=1", IOC_TYPES["URL"]),
-    ("evil.com", IOC_TYPES["DOMAIN"]),
-    ("analyst@example.com", IOC_TYPES["EMAIL"]),
-    ("not an ioc at all", IOC_TYPES["UNKNOWN"]),
-    ("", IOC_TYPES["UNKNOWN"]),
+    (case["value"], case["expectedType"])
+    for case in json.loads(FIXTURE_PATH.read_text())
 ]
 
 
