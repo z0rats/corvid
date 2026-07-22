@@ -3,6 +3,7 @@
 
 [![CI](https://github.com/z0rats/corvid/actions/workflows/ci.yml/badge.svg)](https://github.com/z0rats/corvid/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/z0rats/corvid/branch/main/graph/badge.svg)](https://codecov.io/gh/z0rats/corvid)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/z0rats/corvid/badge)](https://securityscorecards.dev/viewer/?uri=github.com/z0rats/corvid)
 
 > **Warning**
 > Corvid is not production ready yet. This is an early prototype, that still needs some work to be done. 
@@ -161,6 +162,27 @@ history in a local database. Some practices worth following, especially for sens
 - **Don't cross-contaminate identities.** Some features (e.g. Image Tools' reverse-search
   deep-links) open external services directly in your browser — use a separate, logged-out
   browser profile for sensitive lookups so they don't tie back to your personal accounts.
+
+## Disclaimer
+
+Corvid is a tool, not a policy — how you point it is on you. It's built for legitimate use
+cases: internal security teams triaging IOCs, threat intel analysts enriching indicators,
+researchers investigating abuse, and similar authorized work. It is not built for stalking,
+harassment, unauthorized surveillance, or investigating people without a lawful basis for
+doing so.
+
+Several modules (Reddit Search, Git Recon, Image Tools' reverse-search, email/username
+lookups) pull together data that's technically public but can still identify or locate a
+real person when combined. Before running them against an individual rather than an IOC or
+organization, make sure you have a legitimate basis to do so and that it complies with the
+laws of your jurisdiction and the target's (data protection/privacy law, computer-misuse
+law, and your organization's own policies, at minimum). Some integrated services carry
+their own terms of use and rate limits that are yours to respect — Corvid doesn't police
+that for you.
+
+None of this constitutes legal advice, and the author takes no responsibility for how the
+tool ends up being used. When in doubt, check with your legal/compliance function before
+running an investigation, not after.
 
 ## License
 
