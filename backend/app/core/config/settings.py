@@ -54,7 +54,7 @@ class APISettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="API_", env_file=".env", env_file_encoding="utf-8")
 
     title: str = Field(default="Corvid", description="API title")
-    version: str = Field(default="1.0.0", description="Application version")
+    version: str = Field(default="2.0.0", description="Application version")
     description: str = Field(
         default="## Corvid interactive API documentation",
         description="API description"
