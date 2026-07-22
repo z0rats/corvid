@@ -60,7 +60,10 @@
   "resolutions": {
     "@mui/system": "9.1.2",
     "@mui/utils": "9.1.1",
-    "@mui/core-downloads-tracker": "9.1.2"
+    "@mui/core-downloads-tracker": "9.1.2",
+    "tar": "^7.5.19",
+    "js-yaml": "^4.3.0",
+    "brace-expansion@npm:^1.1.7": "^1.1.16"
   },
   "packageManager": "yarn@4.15.0"
 }

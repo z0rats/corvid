@@ -42,6 +42,7 @@ def create_database_engine() -> AsyncEngine:
             connect_args={"check_same_thread": False, "timeout": 30},
             echo=echo,
             poolclass=StaticPool,
+            hide_parameters=True,
         )
 
         @event.listens_for(engine.sync_engine, "connect")
@@ -60,6 +61,7 @@ def create_database_engine() -> AsyncEngine:
             max_overflow=settings.database.max_overflow,
             pool_pre_ping=True,
             pool_recycle=settings.database.pool_recycle,
+            hide_parameters=True,
         )
 
     logger.info("Async database engine created successfully")

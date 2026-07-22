@@ -1,4 +1,4 @@
-FROM python:3.14-slim AS builder
+FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6 AS builder
 WORKDIR /backend
 
 RUN pip install --no-cache-dir uv
@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
     uv pip install --upgrade -r /backend/requirements.txt --override /backend/lxml-override.txt
 
 
-FROM python:3.14-slim
+FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
 WORKDIR /backend
 
 RUN mkdir -p /backend/data
