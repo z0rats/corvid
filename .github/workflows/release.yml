@@ -215,3 +215,23 @@ jobs:
 
       - name: Inspect image
         run: docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/corvid-frontend:${{ steps.meta.outputs.version }}
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [merge-backend, merge-frontend]
+    permissions:
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "${{ github.ref_name }}" >/dev/null 2>&1 && exit 0
+          gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --generate-notes
