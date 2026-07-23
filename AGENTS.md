@@ -10,6 +10,10 @@ Self-hostable, single-user OSINT/security-analyst web app. FastAPI backend + Rea
 - If this file is pushing 20KB+, that's a signal to condense before adding more — collapse verbose bullets, drop detail that's redundant with the code itself, and prefer pointing at a file/symbol over re-explaining what it does.
 - Also periodically update `README.md` with important user-facing changes — especially anything affecting deployment (new required setup step, changed env vars, new `.env`/`docker-compose.yaml` behavior) — since that's what operators actually read when installing/upgrading.
 
+## Git
+
+Never run `git commit` (or `git push`) yourself, regardless of how the rest of the task is scoped or how routine the change looks. Stage or leave changes uncommitted and let the user review and commit. This holds even if a broader instruction ("go ahead and update the repo", "ship this") could be read as covering it.
+
 ## Stack
 
 - **Backend**: Python 3.14, FastAPI, SQLAlchemy 2.0 (async, `aiosqlite`/`asyncpg`), Alembic migrations, APScheduler for background jobs, `pydantic-ai-slim[anthropic,google,openai]` for LLM features (the bare `pydantic-ai` metapackage is deliberately not installed — it hard-depends on every provider SDK), `slowapi` for rate limiting, pytest for tests.

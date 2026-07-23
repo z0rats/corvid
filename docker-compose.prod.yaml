@@ -1,0 +1,45 @@
+name: corvid
+
+# Used by the one-line installer (install.sh) and manual GHCR-based deploys.
+# Pulls pre-built images instead of building from source - see
+# docker-compose.yaml for the build-from-source version used by contributors.
+services:
+  backend:
+    networks:
+      - corvid-network
+    image: ghcr.io/z0rats/corvid-backend:latest
+    container_name: backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./data:/backend/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/healthcheck', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    networks:
+        - corvid-network
+    image: ghcr.io/z0rats/corvid-frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "4000:80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  corvid-network:
+    driver: bridge
