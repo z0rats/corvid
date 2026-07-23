@@ -7,7 +7,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend
     restart: unless-stopped
     env_file:
       - path: .env
@@ -27,13 +26,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: frontend
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "4000:80"
+      - "${FRONTEND_PORT:-4000}:80"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
       interval: 30s

@@ -45,6 +45,8 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # Quota dashboard: fixed provider hosts (VirusTotal/Shodan/Hunter.io); only
     # the API key is user-supplied, in query/header, never the host
     "core/settings/api_keys/service/quota_clients.py",
+    # About-page update check: fixed api.github.com host, no user input at all
+    "core/release_check.py",
 }
 
 # Implementation module itself, and its own tests

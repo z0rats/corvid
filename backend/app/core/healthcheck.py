@@ -7,9 +7,11 @@ from app.core.dependencies import DatabaseHealthDep, DiskSpaceHealthDep, Setting
 from app.core.healthcheck_schemas import (
     DetailedHealthResponse,
     HealthResponse,
+    LatestReleaseResponse,
     LivenessResponse,
     ReadinessResponse,
 )
+from app.core.release_check import get_latest_release_version
 
 router = APIRouter(prefix="/api/healthcheck", tags=["System"])
 
@@ -141,3 +143,18 @@ async def readiness_probe(database_health: DatabaseHealthDep, response: Response
 async def liveness_probe() -> LivenessResponse:
     """Return 200 if service is alive, regardless of dependencies"""
     return LivenessResponse(alive=True, timestamp=time.time())
+
+
+@router.get(
+    "/latest-release",
+    response_model=LatestReleaseResponse,
+    summary="Latest GitHub release",
+    description=(
+        "Best-effort lookup of the latest published GitHub release, cached in memory. "
+        "Returns null if it can't be determined (offline deployment, GitHub unreachable "
+        "or rate-limited)."
+    ),
+)
+async def latest_release() -> LatestReleaseResponse:
+    """Return the latest published GitHub release version, or null if unknown"""
+    return LatestReleaseResponse(latest_version=await get_latest_release_version())

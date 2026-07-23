@@ -57,5 +57,12 @@ done
 echo
 log "Corvid is starting up in $INSTALL_DIR"
 log "Open http://localhost:4000 in your browser"
-log "Access token (first run): docker compose -f $INSTALL_DIR/docker-compose.yaml logs backend | grep -i token"
+
+TOKEN_FILE="$INSTALL_DIR/data/.access_token"
+if [ -r "$TOKEN_FILE" ]; then
+  log "Access token: $(cat "$TOKEN_FILE")"
+else
+  log "Access token: not generated (custom API_ACCESS_TOKEN in .env, or backend still starting - check 'docker compose logs backend' or cat $TOKEN_FILE once it's up)"
+fi
+
 log "To update later: cd $INSTALL_DIR && ./update.sh"

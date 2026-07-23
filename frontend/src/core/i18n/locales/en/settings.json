@@ -79,6 +79,8 @@
   },
   "about": {
     "title": "About - Corvid",
+    "updateAvailable": "Update available: v{{version}}",
+    "updateAvailableTooltip": "A newer version (v{{version}}) is available on GitHub. Click to view the release.",
     "body": "Corvid is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday investigative tasks. Optimized for single-user operation, Corvid runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, Corvid integrates generative AI capabilities, providing additional support for analysis and decision-making. Beyond its practical applications, the project also serves as a personal playground for experimenting with new technologies and automation possibilities, potentially laying the foundation for a future commercial cloud platform.",
     "nameNote": "The name Corvid may still change in the future.",
     "accessToken": {

@@ -30,3 +30,10 @@ class LivenessResponse(BaseModel):
     """Liveness probe response"""
     alive: bool = Field(..., description="Whether the service process is alive")
     timestamp: float = Field(..., description="Current server timestamp")
+
+
+class LatestReleaseResponse(BaseModel):
+    """Latest GitHub release lookup response"""
+    latest_version: str | None = Field(
+        None, description="Latest published GitHub release version, or null if it couldn't be determined"
+    )

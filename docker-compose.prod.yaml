@@ -1,14 +1,18 @@
-name: corvid
+name: corvid-prod
 
 # Used by the one-line installer (install.sh) and manual GHCR-based deploys.
 # Pulls pre-built images instead of building from source - see
 # docker-compose.yaml for the build-from-source version used by contributors.
+#
+# Named as a separate Compose project (corvid-prod vs corvid) and without
+# container_name overrides, so this can run alongside a local docker-compose.yaml
+# dev stack on the same host without container/network name clashes. If both
+# run at once, set FRONTEND_PORT for one of them to avoid a port clash on 4000.
 services:
   backend:
     networks:
       - corvid-network
     image: ghcr.io/z0rats/corvid-backend:latest
-    container_name: backend
     restart: unless-stopped
     env_file:
       - path: .env
@@ -26,13 +30,12 @@ services:
     networks:
         - corvid-network
     image: ghcr.io/z0rats/corvid-frontend:latest
-    container_name: frontend
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "4000:80"
+      - "${FRONTEND_PORT:-4000}:80"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
       interval: 30s
