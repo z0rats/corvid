@@ -5,33 +5,39 @@
 [![codecov](https://codecov.io/gh/z0rats/corvid/branch/main/graph/badge.svg)](https://codecov.io/gh/z0rats/corvid)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/z0rats/corvid/badge)](https://securityscorecards.dev/viewer/?uri=github.com/z0rats/corvid)
 
-> **Warning**
-> Corvid is not production ready yet. This is an early prototype, that still needs some work to be done. 
-## A fullstack web application built for security analysts
+## One search bar for everything you look up today
 
-Corvid is a self-hostable, on-demand analysis platform designed for security specialists. It consolidates various security tools into a single, easy-to-use environment, streamlining everyday tasks. Optimized for single-user operation, Corvid runs locally in a Docker container and is not intended for long-term data storage or management. Instead, it focuses on accelerating daily workflows, such as news aggregation and analysis, IOC and email investigations, and the creation of threat detection rules. To further enhance efficiency, Corvid integrates generative AI capabilities, providing additional support for analysis and decision-making. 
+If your daily routine is a wall of browser tabs — VirusTotal in one, Shodan in another, three more for a username or a phishing domain — Corvid replaces that wall with a single keyboard-first search bar. Paste an IP, domain, hash, email, or username and it's routed to the right tools automatically; type a tool name to jump straight to it.
 
+Corvid is self-hostable and built for single-user operation: it runs in one Docker container on your own infrastructure, so investigation data and API keys never pass through a third-party SaaS. It's a workbench, not a data warehouse — no long-term case management, just fast, on-demand IOC lookups, email/image forensics, phishing-domain discovery, identity correlation (Reddit, GitHub, usernames), and detection-rule authoring, with generative AI wired in to speed up analysis and write-ups along the way.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/z0rats/corvid/main/install.sh | bash
+```
+
+Pulls pre-built images and starts the app at http://localhost:4000 — no auto-update, see
+[Deploy with docker](#deploy-with-docker) for details and the build-from-source alternative.
+
+## Contents
+
+- [Integrated services](#integrated-services)
+- [Features](#features)
+- [Keyboard-first navigation](#keyboard-first-navigation)
+- [Deploy with docker](#deploy-with-docker)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ## Integrated services
-| IPs            | Domains       | URLs                 | Emails           | Hashes     | CVEs     | Crypto Addresses |
-|----------------|---------------|----------------------|------------------|------------|----------|------------------|
-| AbuseIPDB      | Alienvault    | Alienvault           | Emailrep.io      | Alienvault | GitHub   | OFAC SDN (self-hosted) |
-| Alienvault     | Checkphish.ai | Checkphish.ai        | GitHub           | GitHub     | NIST NVD | ScamSniffer (self-hosted) |
-| Checkphish.ai  | GitHub        | GitHub               | Hunter.io        | Maltiverse |          |          |
-| CrowdSec       | Maltiverse    | Google Safe Browsing | Have I Been Pwnd | Pulsedive  |          |          |
-| GitHub         | Pulsedive     | Maltiverse           | Reddit           | Reddit     |          |          |
-| IPQualityScore | Shodan        | Pulsedive            | Twitter          | ThreatFox  |          |          |
-| Maltiverse     | ThreatFox     | Shodan               |                  | Twitter    |          |          |
-| Pulsedive      | Reddit        | ThreatFox            |                  | Virustotal |          |          |
-| Shodan         | Twitter       | Reddit               |                  |            |          |          |
-| Reddit         | URLScan       | Twitter              |                  |            |          |          |
-| ThreatFox      | Virustotal    | URLScan              |                  |            |          |          |
-| Twitter        |               | Virustotal            |                  |            |          |          |
-| Virustotal     |               |                      |                  |            |          |          |
 
-> Crypto address checks (EVM and Bitcoin) run against a self-hosted blacklist built from the
-> OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset — no API key or
-> third-party calls required, refreshed daily in the background.
+IOC lookups auto-route to the right services based on the type you paste in:
+
+- **IPs** — AbuseIPDB, AlienVault, CheckPhish.ai, CrowdSec, GitHub, IPQualityScore, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, VirusTotal
+- **Domains** — AlienVault, CheckPhish.ai, GitHub, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
+- **URLs** — AlienVault, CheckPhish.ai, GitHub, Google Safe Browsing, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
+- **Emails** — Emailrep.io, GitHub, Have I Been Pwned, Hunter.io, Reddit, Twitter/X
+- **Hashes** — AlienVault, GitHub, Maltiverse, Pulsedive, Reddit, ThreatFox, Twitter/X, VirusTotal
+- **CVEs** — GitHub, NIST NVD
+- **Crypto addresses** (EVM & Bitcoin) — screened against a self-hosted blacklist built from the OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset, refreshed daily in the background; no API key or third-party calls required
 
 ## Features
 ### Newsfeed
@@ -100,6 +106,31 @@ Press `?` any time for the full shortcut list.
 
 
 ## Deploy with docker
+
+### System requirements
+
+- Docker Engine 24+ with the Docker Compose v2 plugin (the `docker compose` command, not the legacy standalone `docker-compose` binary)
+- Linux, macOS, or Windows (via Docker Desktop/WSL2)
+- At least ~1 GB free disk for the app itself; more if you enable `email_search`'s optional headless checkers, which lazily download a Chromium binary (~150-300 MB) on first use — see [Disk usage](#disk-usage) below
+- Outbound HTTPS access for the third-party services you configure (VirusTotal, Shodan, etc.) — no inbound ports need to be exposed
+- No GPU or special hardware needed. CPU/RAM haven't been formally benchmarked, but as a single-user tool with no background crawling by default, it's light — a small VM (1-2 vCPU, 2 GB RAM) is comfortable for typical use
+
+### Install
+
+**Option A — one-line install (pre-built images).** Pulls ready-made images from GHCR instead of
+building from source. Installs into `~/corvid` by default (override with `CORVID_DIR`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/z0rats/corvid/main/install.sh | bash
+```
+
+Once it's running, open http://localhost:4000. There's no auto-update — new versions aren't
+pulled without your say-so. To update later, run `./update.sh` from the install directory (it
+pulls the latest images and recreates the containers).
+
+**Option B — build from source.** Gives you a local build instead of pulling from a registry, and
+lets you review the Dockerfiles before anything runs:
+
 1. Download the repository and extract the files
 2. Navigate to the directory where the `docker-compose.yaml` file is located
 3. Start the application:
@@ -131,6 +162,9 @@ defaults, so this is optional). `.env` is read automatically by `docker compose 
 
 ### Backup
 
+<details>
+<summary>Show details</summary>
+
 Everything Corvid needs to keep running lives under the host-mounted `data/` directory — back it
 up as a whole (stop the container first for a consistent SQLite snapshot, or use `sqlite3 .backup`
 for a live one):
@@ -153,7 +187,12 @@ source host — defeats the encryption-at-rest story: the key ends up sitting ri
 ciphertext it decrypts. Preserve permissions in transit (`tar --preserve-permissions`, `rsync -a`)
 and restrict access to the backup destination at least as tightly as `data/` itself.
 
+</details>
+
 ### Disk usage
+
+<details>
+<summary>Show details</summary>
 
 `data/` has no total-size guard, so keep an eye on the host mount over time. Rough steady-state
 contributors: the SQLite database and rotated logs stay small (tens of MB); maigret's site
@@ -165,7 +204,12 @@ The backend logs a warning at startup (and the `disk` field in
 drops below 1 GB, but nothing actively stops writes past that point — treat it as an early signal,
 not a hard limit.
 
+</details>
+
 ### Operational security notes
+
+<details>
+<summary>Show details</summary>
 
 This tool talks to third-party services (VirusTotal, Shodan, target mail servers via
 `email_search`'s SMTP checks, etc.) using your own infrastructure's IP, and stores investigation
@@ -183,6 +227,8 @@ history in a local database. Some practices worth following, especially for sens
 - **Don't cross-contaminate identities.** Some features (e.g. Image Tools' reverse-search
   deep-links) open external services directly in your browser — use a separate, logged-out
   browser profile for sensitive lookups so they don't tie back to your personal accounts.
+
+</details>
 
 ## Disclaimer
 
