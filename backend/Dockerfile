@@ -50,15 +50,17 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime,sharing=locked
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY ./ /backend/
-
 # Non-root app user. `-m` gives it a real home dir, needed at runtime for
 # maigret's site-database auto-update cache (~/.maigret) and, if headless
 # email-search checks are enabled, pyppeteer's Chromium download
 # (~/.local/share/pyppeteer) - both write under $HOME, not /backend/data.
 RUN groupadd -g 1000 appuser && \
-    useradd -m -u 1000 -g appuser -s /usr/sbin/nologin appuser && \
-    chown -R appuser:appuser /backend
+    useradd -m -u 1000 -g appuser -s /usr/sbin/nologin appuser
+
+# --chown here (instead of a separate `RUN chown -R`) avoids overlayfs
+# copy-up duplicating the whole tree into another layer just to change
+# ownership metadata.
+COPY --chown=appuser:appuser ./ /backend/
 
 EXPOSE 8000
 ENTRYPOINT ["python3", "/backend/docker-entrypoint.py"]

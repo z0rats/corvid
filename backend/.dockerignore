@@ -9,3 +9,8 @@ pip-log.txt
 .mypy_cache
 .pytest_cache
 .gitignore
+.venv
+.venv-test
+venv
+env
+data
