@@ -44,6 +44,15 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system -r requirements.txt --override lxml-override.txt
 
+      - name: Check docs/database-schema.md is in sync with the models
+        run: |
+          python scripts/generate_db_docs.py
+          if [ -n "$(git status --porcelain -- ../docs/database-schema.md)" ]; then
+            echo "::error::docs/database-schema.md is stale or not committed - run 'python backend/scripts/generate_db_docs.py' from the repo root and commit the result."
+            git diff -- ../docs/database-schema.md
+            exit 1
+          fi
+
       - name: Run tests
         run: pytest -v --cov=app --cov-report=xml
 
