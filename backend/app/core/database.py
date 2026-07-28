@@ -48,10 +48,17 @@ def create_database_engine() -> AsyncEngine:
         @event.listens_for(engine.sync_engine, "connect")
         def _set_sqlite_pragma(dbapi_connection, connection_record) -> None:
             """Enable WAL so readers (e.g. SSE progress polling) aren't blocked by
-            the scheduler or an in-progress scan holding a write lock."""
+            the scheduler or an in-progress scan holding a write lock.
+
+            Also enable foreign key enforcement: SQLite ignores `ondelete="CASCADE"`
+            entirely unless this is set on every connection, and the ORM models rely
+            on it (`passive_deletes=True`) to cascade-delete search results. This is a
+            per-connection PRAGMA, not persisted in the DB file, so it must run here
+            rather than in a migration."""
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA journal_mode=WAL")
             cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
     else:
         engine = create_async_engine(
