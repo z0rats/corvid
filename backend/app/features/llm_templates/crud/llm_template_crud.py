@@ -21,17 +21,9 @@ async def get_templates_with_pagination(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 100,
-    user_id: str | None = None
 ) -> list[AITemplate]:
-    """Retrieve multiple AI templates with pagination and user filtering."""
-    stmt = select(AITemplate)
-
-    if user_id:
-        stmt = stmt.where(
-            (AITemplate.user_id == user_id) | (AITemplate.is_public == True)
-        )
-
-    stmt = stmt.order_by(AITemplate.order_number.asc()).offset(skip).limit(limit)
+    """Retrieve multiple AI templates with pagination."""
+    stmt = select(AITemplate).order_by(AITemplate.order_number.asc()).offset(skip).limit(limit)
     result = await db.execute(stmt)
     templates = list(result.scalars().all())
 
@@ -42,7 +34,6 @@ async def get_templates_with_pagination(
 async def create_new_template(
     db: AsyncSession,
     template: AITemplateCreate,
-    user_id: str | None = None
 ) -> AITemplate:
     """Create a new AI template."""
     logger.info("Creating new template: %s", template.title)
@@ -51,10 +42,7 @@ async def create_new_template(
     if not template_data.get("category_id"):
         template_data["category_id"] = DEFAULT_CATEGORY_ID
 
-    db_template = AITemplate(
-        **template_data,
-        user_id=user_id
-    )
+    db_template = AITemplate(**template_data)
 
     db.add(db_template)
     await db.flush()
