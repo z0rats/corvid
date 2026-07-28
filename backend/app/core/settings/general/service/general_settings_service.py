@@ -26,21 +26,26 @@ from app.core.settings.general.utils.validation_utils import (
 )
 from app.core.settings.general.config.default_settings import (
     get_default_darkmode,
-    get_default_language
+    get_default_language,
+    get_default_auto_open_on_single_match,
+    get_default_start_screen,
+    get_default_always_tiles
 )
+from app.core.settings.general.models.general_settings_models import GeneralSettings
+from app.core.settings.singleton import get_or_create_singleton
 
 logger = logging.getLogger(__name__)
 
 
 async def get_general_settings(db: AsyncSession) -> GeneralSettingsResponse:
     """Retrieve current general settings, creating defaults if none exist"""
-    settings = await get_first_general_settings(db)
-
-    if not settings:
-        logger.info("No general settings found, creating default settings")
-        settings = await create_general_settings(db)
-        await db.flush()
-        await db.refresh(settings)
+    settings = await get_or_create_singleton(db, GeneralSettings, {
+        "darkmode": get_default_darkmode(),
+        "language": get_default_language(),
+        "auto_open_on_single_match": get_default_auto_open_on_single_match(),
+        "start_screen": get_default_start_screen(),
+        "always_tiles": get_default_always_tiles(),
+    })
 
     return GeneralSettingsResponse.model_validate(settings)
 

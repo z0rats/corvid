@@ -1,22 +1,15 @@
 import datetime
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.email_search.models.email_search_settings_models import EmailSearchConfig
 from app.core.settings.email_search.schemas.email_search_settings_schemas import EmailSearchConfigUpdateSchema
+from app.core.settings.singleton import get_or_create_singleton
 
 
 async def get_email_search_config(db: AsyncSession) -> EmailSearchConfig:
     """Retrieve email search configuration, creating defaults if not exists"""
-    result = await db.execute(select(EmailSearchConfig))
-    config = result.scalar_one_or_none()
-    if not config:
-        config = EmailSearchConfig()
-        db.add(config)
-        await db.flush()
-        await db.refresh(config)
-    return config
+    return await get_or_create_singleton(db, EmailSearchConfig)
 
 
 async def update_email_search_config(
