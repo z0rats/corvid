@@ -1,5 +1,7 @@
 import asyncio
+import importlib
 from logging.config import fileConfig
+from pathlib import Path
 
 from sqlalchemy import pool
 from alembic import context
@@ -7,16 +9,32 @@ from alembic import context
 from app.core.database import engine, Base
 from app.core.config.settings import settings
 
-from app.core.alerts.models.alerts_models import Alert 
-from app.core.settings.api_keys.models.api_keys_settings_models import Apikey 
-from app.core.settings.general.models.general_settings_models import GeneralSettings 
-from app.core.settings.modules.models.modules_settings_models import ModuleSettings 
-from app.core.settings.keywords.models.keywords_settings_models import Keyword 
-from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings 
-from app.features.newsfeed.models.newsfeed_models import NewsfeedSettings, NewsArticle, NewsfeedConfig, TrendsBlacklistEntry 
-from app.features.llm_templates.models.llm_template_models import AITemplate 
-from app.features.llm_templates.models.template_category_models import TemplateCategory
-from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models import BlacklistedAddress
+
+def _import_all_models() -> None:
+    """Import every model module under `app/**/models/` so `Base.metadata` (and
+    therefore `alembic revision --autogenerate`) sees all of them.
+
+    This used to be a hand-maintained list of imports that only covered 10 of
+    the 27 model classes - `--autogenerate` couldn't see the other 17 and would
+    either miss real schema changes for them or propose dropping their tables
+    outright, thinking they shouldn't exist. Walking the filesystem instead of
+    listing classes means a new feature's models are picked up automatically,
+    with no separate list to remember to update. See
+    docs/database-schema-audit.md section 6, phase 1 (finding #2).
+    """
+    backend_dir = Path(__file__).resolve().parent.parent
+    app_dir = backend_dir / "app"
+    for models_dir in sorted(app_dir.rglob("models")):
+        if not models_dir.is_dir():
+            continue
+        for py_file in sorted(models_dir.glob("*.py")):
+            if py_file.stem == "__init__":
+                continue
+            module_name = ".".join(py_file.relative_to(backend_dir).with_suffix("").parts)
+            importlib.import_module(module_name)
+
+
+_import_all_models()
 
 config = context.config
 
