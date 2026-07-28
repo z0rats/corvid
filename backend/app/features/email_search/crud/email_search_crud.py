@@ -1,9 +1,10 @@
 import datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.scans.reconciliation import mark_stale_running_as_failed
 from app.features.email_search.models.email_search_models import MailSearch, MailSearchResult
 
 
@@ -88,25 +89,15 @@ async def fail_search_run(db: AsyncSession, search_id: int, error_message: str) 
 
 
 async def interrupt_running_search_runs(db: AsyncSession) -> int:
-    """Mark any run still 'running' as failed.
-
-    The scan task driving it is an in-memory asyncio task (see
-    `run_scan`/`start_scan`), so it doesn't survive a process restart -
-    without this, a run interrupted by a container stop/crash would stay
-    'running' forever and the frontend would have no way to tell it apart
-    from one that's actually still in progress.
-    """
-    result = await db.execute(
-        update(MailSearch)
-        .where(MailSearch.status == "running")
-        .values(
-            status="failed",
-            error_message="Interrupted by server restart",
-            completed_at=datetime.datetime.now(datetime.timezone.utc),
-        )
+    """Mark any run still 'running' as failed - see `mark_stale_running_as_failed`'s
+    docstring for why this is needed (an in-memory asyncio task doesn't survive
+    a process restart)."""
+    return await mark_stale_running_as_failed(
+        db, MailSearch,
+        error_column="error_message",
+        error_message="Interrupted by server restart",
+        completed_at_column="completed_at",
     )
-    await db.flush()
-    return result.rowcount
 
 
 async def list_search_runs(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[MailSearch]:

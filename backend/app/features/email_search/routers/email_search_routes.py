@@ -1,13 +1,12 @@
 import asyncio
-import json
 import logging
 
 from fastapi import APIRouter, Request, status
-from fastapi.responses import StreamingResponse
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
+from app.core.scans.sse import sse_response
 from app.core.settings.email_search.crud.email_search_settings_crud import (
     get_email_search_config,
     record_pypi_check,
@@ -59,22 +58,7 @@ async def start_scan(request: Request, scan_request: ScanRequest):
     queue: asyncio.Queue = asyncio.Queue()
     asyncio.create_task(run_scan(scan_request.username, queue))
 
-    async def event_stream():
-        while True:
-            event = await queue.get()
-            if event is None:
-                break
-            yield f"data: {json.dumps(event)}\n\n"
-
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return sse_response(queue)
 
 
 @router.post(

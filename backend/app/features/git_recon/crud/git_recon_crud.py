@@ -1,6 +1,7 @@
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.scans.reconciliation import mark_stale_running_as_failed
 from app.features.git_recon.models.git_recon_models import GitReconSearch
 
 
@@ -49,21 +50,15 @@ async def fail_search(db: AsyncSession, search_id: int, *, error: str) -> GitRec
 
 
 async def interrupt_running_searches(db: AsyncSession) -> int:
-    """Mark any search still 'running' as failed.
-
-    The scan task driving it is an in-memory asyncio task (see run_scan_task()/
-    the SSE route handler), so it doesn't survive a process restart - without
-    this, a scan interrupted by a container stop/crash would stay 'running'
-    forever with no way for the frontend to tell it apart from one still in
-    progress.
-    """
-    result = await db.execute(
-        update(GitReconSearch)
-        .where(GitReconSearch.status == "running")
-        .values(status="failed", error="Interrupted by server restart")
+    """Mark any search still 'running' as failed - see `mark_stale_running_as_failed`'s
+    docstring for why this is needed (an in-memory asyncio task doesn't survive
+    a process restart)."""
+    return await mark_stale_running_as_failed(
+        db, GitReconSearch,
+        error_column="error",
+        error_message="Interrupted by server restart",
+        completed_at_column=None,
     )
-    await db.flush()
-    return result.rowcount
 
 
 async def get_search(db: AsyncSession, search_id: int) -> GitReconSearch | None:

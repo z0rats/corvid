@@ -1,14 +1,13 @@
 import asyncio
-import json
 import logging
 
 from fastapi import APIRouter, Request, status
-from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
+from app.core.scans.sse import sse_response
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
 from app.features.git_recon.crud.git_recon_crud import delete_search, get_search, list_searches
 from app.features.git_recon.schemas.git_recon_schemas import ScanRequest, SearchDetail, SearchSummary
@@ -52,22 +51,7 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest):
         queue=queue,
     ))
 
-    async def event_stream():
-        while True:
-            event = await queue.get()
-            if event is None:
-                break
-            yield f"data: {json.dumps(event)}\n\n"
-
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return sse_response(queue)
 
 
 @router.get(
