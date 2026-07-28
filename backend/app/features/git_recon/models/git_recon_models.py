@@ -11,13 +11,17 @@ class GitReconSearch(Base):
     """A single git/GitHub identity-correlation search (gitcolombo)"""
     __tablename__ = "git_recon_searches"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    mode: Mapped[str] = mapped_column(String(20))
-    target: Mapped[str] = mapped_column(String(300), index=True)
-    status: Mapped[str] = mapped_column(String(20), default="completed")
-    error: Mapped[str | None] = mapped_column(Text)
-    repos_scanned: Mapped[int] = mapped_column(Integer, default=0)
-    repos_failed: Mapped[int] = mapped_column(Integer, default=0)
-    persons_found: Mapped[int] = mapped_column(Integer, default=0)
-    searched_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    result: Mapped[dict | None] = mapped_column(JSON)
+    id: Mapped[int] = mapped_column(primary_key=True, comment="Surrogate primary key")
+    mode: Mapped[str] = mapped_column(String(20), comment="gitcolombo scan mode (e.g. 'user', 'org', 'repo')")
+    target: Mapped[str] = mapped_column(String(300), index=True, comment="GitHub user/org/repo that was scanned")
+    status: Mapped[str] = mapped_column(String(20), default="completed", comment="completed or failed")
+    error: Mapped[str | None] = mapped_column(Text, comment="Error detail if status is failed")
+    repos_scanned: Mapped[int] = mapped_column(Integer, default=0, comment="Repositories successfully scanned")
+    repos_failed: Mapped[int] = mapped_column(Integer, default=0, comment="Repositories that failed to scan")
+    persons_found: Mapped[int] = mapped_column(Integer, default=0, comment="Distinct identities correlated")
+    searched_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), comment="When the search ran"
+    )
+    result: Mapped[dict | None] = mapped_column(
+        JSON, comment="Full gitcolombo result blob - no normalized result table, see database-schema-audit.md #12"
+    )

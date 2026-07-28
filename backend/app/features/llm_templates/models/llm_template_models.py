@@ -6,15 +6,16 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
+from app.core.models.mixins import TimestampMixin
 
 
-class AITemplate(Base):
+class AITemplate(Base, TimestampMixin):
     """AI Template model for storing LLM prompt templates."""
 
     __tablename__ = "ai_templates"
 
     id: Mapped[str] = mapped_column(
-        String, primary_key=True,
+        String(36), primary_key=True,
         default=lambda: str(uuid.uuid4()),
         comment="Unique identifier for the template"
     )
@@ -71,7 +72,7 @@ class AITemplate(Base):
         comment="Default LLM model to use for template execution (null = use configured default)"
     )
     category_id: Mapped[str | None] = mapped_column(
-        String, ForeignKey("template_categories.id"), nullable=True,
+        String(36), ForeignKey("template_categories.id", ondelete="SET NULL"), nullable=True,
         comment="Category this template belongs to"
     )
 
