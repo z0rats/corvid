@@ -3,7 +3,7 @@
   "startScreen": {
     "brand": "Corvid · Home",
     "focusHint": "focus — / or ⌘K",
-    "pasteHint": "or paste an image from the clipboard (⌘V/Ctrl+V) — opens Image Tools",
+    "pasteHint": "or paste an image (⌘V/Ctrl+V), or drag & drop a file — images open Image Tools, other files are hashed and checked (VirusTotal, etc.)",
     "recentHint": "recent: {{items}} — keep typing to search further"
   },
   "leftPanel": {

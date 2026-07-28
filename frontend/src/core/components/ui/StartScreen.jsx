@@ -20,6 +20,7 @@ import { parseQuery, VALUE_KINDS } from '../../utils/commandParser';
 import { detectIocType } from '../../utils/iocTypeDetection';
 import { buildPrefillUrl } from '../../utils/crossFeatureNav';
 import { copyToClipboard } from '../../utils/clipboard';
+import { sha256Hex } from '../../utils/fileHash';
 import { addRecent, addQueryToHistory, getPinnedToolIds, getRecents } from '../../utils/commandPaletteStorage';
 import { getSelectableResults, OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useCommandPalette';
 import { useThemeManager } from '../../hooks/ui/useThemeManager';
@@ -63,6 +64,7 @@ export default function StartScreen() {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [notice, setNotice] = useState(null); // { message, severity }
+  const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -99,6 +101,44 @@ export default function StartScreen() {
     navigate(value ? buildPrefillUrl(path, value) : path);
     addRecent({ type: 'tool', toolId: entry.id, value: value || undefined });
     if (query.trim()) addQueryToHistory(query);
+  };
+
+  // Drag-and-drop counterpart to useCommandPalette.js's global ⌘V/Ctrl+V image paste — an image
+  // gets the same Image Tools hand-off, any other file is hashed client-side (no file ever
+  // leaves the browser for this) and pivoted through the same SHA-256 IOC route a pasted/typed
+  // hash already takes, which lands on /ioc-tools/bulk and queries VirusTotal among other
+  // hash-capable services (see serviceConfig.js).
+  const handleFileDrop = async (file) => {
+    if (file.type.startsWith('image/')) {
+      navigate('/image-tools', { state: { file } });
+      return;
+    }
+    try {
+      const hash = await sha256Hex(file);
+      const iocEntry = registry.find((entry) => entry.moduleId === 'ioc_tools');
+      if (iocEntry) openEntry(iocEntry, hash);
+    } catch {
+      setNotice({ message: t('notices.instantAnswerFailed'), severity: 'error' });
+    }
+  };
+
+  const handleDragOver = (event) => {
+    if (!event.dataTransfer.types.includes('Files')) return;
+    event.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (event) => {
+    if (!event.dataTransfer.types.includes('Files')) return;
+    event.preventDefault();
+    setIsDragOver(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) handleFileDrop(file);
   };
 
   const fillExample = (exampleQuery) => {
@@ -242,8 +282,15 @@ export default function StartScreen() {
           borderRadius: 2,
           p: { xs: 2, sm: 3 },
           bgcolor: 'background.paper',
+          outline: isDragOver ? `2px dashed ${theme.palette.primary.main}` : 'none',
+          outlineOffset: -4,
+          transition: 'outline-color 0.15s ease',
         }}
         onKeyDown={handleKeyDown}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography
