@@ -1,0 +1,7 @@
+# Squash migration history instead of accumulating it
+
+Corvid has tagged releases (`v0.1.0` through `v2.0.4`), but no installed base whose database needs to survive an upgrade by replaying the exact sequence of historical migrations — only the end state matters right now. Alembic's own history previously reflected the gap this creates: the oldest migration assumed the base schema already existed (it predates Alembic, which was bolted on after `Base.metadata.create_all()` had already been creating tables), so `alembic upgrade head` against a truly empty database failed by design, and `docker-entrypoint.py` had to special-case a fresh volume with `stamp head` instead.
+
+Rather than carry that special case indefinitely, the full migration history (23 files) was squashed into a single revision that creates the current schema from scratch, generated via `alembic revision --autogenerate` against an empty database. `alembic upgrade head` now works unconditionally, `docker-entrypoint.py` no longer needs to detect an empty database, and `docs/database-schema-audit.md` keeps the incremental story for anyone who wants the reasoning behind individual past decisions.
+
+**This isn't a repeatable practice.** The moment there's an install whose data would be lost by discarding migration history, squashing stops being free — it becomes a breaking change for whoever's running that database. This ADR records a one-time cleanup made possible by there being nothing yet at stake, not a pattern to reach for again once that's no longer true.

@@ -1,0 +1,5 @@
+# `git_recon` stores results as a JSON blob, not a normalized table
+
+Every other search feature (`maigret`, `mail`, `reddit`, `single_lookup`) persists results as one row per independent finding in a `*_results` child table, because that's genuinely what the data is: a flat list of "found on site X" / "found via provider Y" facts, queried and displayed as a list. `git_recon`'s gitcolombo output isn't that shape — it's a correlated graph of identities (`GitPerson`), each with its own aliases, cross-repo mentions, GPG keys, and commit hits, and the shape itself varies by scan mode (`search`/`url`/`nickname`).
+
+`git_recon_searches.result` stores that whole structure as one `JSON` column instead. Normalizing it would mean several new tables plus join logic to reassemble a graph that's always read and rendered as a single unit — there's no scenario (unlike the other features) where the app needs to query "find all persons found across every git-recon scan." The cost of normalization is real; the benefit it would buy isn't used anywhere.
