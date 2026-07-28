@@ -1,14 +1,13 @@
 import asyncio
-import json
 import logging
 
 import maigret
 from fastapi import APIRouter, Request, Response, status
-from fastapi.responses import StreamingResponse
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
+from app.core.scans.sse import sse_response
 from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
     get_social_analyzer_config,
     record_pypi_check as record_social_analyzer_pypi_check,
@@ -77,22 +76,7 @@ async def start_scan(request: Request, scan_request: ScanRequest):
             excluded_tags=scan_request.excluded_tags,
         ))
 
-    async def event_stream():
-        while True:
-            event = await queue.get()
-            if event is None:
-                break
-            yield f"data: {json.dumps(event)}\n\n"
-
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return sse_response(queue)
 
 
 @router.post(
