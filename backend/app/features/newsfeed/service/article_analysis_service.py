@@ -105,11 +105,7 @@ def build_cti_profile_text(cti_settings) -> str:
     if not cti_settings or not cti_settings.settings_data:
         return DEFAULT_CTI_PROFILE
 
-    try:
-        settings_dict = json.loads(cti_settings.settings_data)
-    except json.JSONDecodeError:
-        logger.warning("Failed to parse CTI settings JSON, using default profile")
-        return DEFAULT_CTI_PROFILE
+    settings_dict = cti_settings.settings_data
 
     try:
         markdown_lines = _dict_to_markdown_lines(settings_dict)

@@ -1,31 +1,18 @@
-import datetime
-import json
 from typing import Any
 
-from sqlalchemy import Text, DateTime
+from sqlalchemy import JSON
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.sql import func
 
 from app.core.database import Base
+from app.core.models.mixins import TimestampMixin
 
 
-class CTIProfileSettings(Base):
+class CTIProfileSettings(Base, TimestampMixin):
     """Database model for CTI profile settings"""
 
     __tablename__ = 'cti_profile_settings'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    settings_data: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-    def get_settings_dict(self) -> dict[str, Any]:
-        """Parse and return settings as dictionary"""
-        try:
-            return json.loads(self.settings_data)
-        except (json.JSONDecodeError, TypeError):
-            return {}
-
-    def set_settings_dict(self, settings: dict[str, Any]) -> None:
-        """Set settings from dictionary"""
-        self.settings_data = json.dumps(settings)
+    id: Mapped[int] = mapped_column(primary_key=True, comment="Singleton row id, always 1")
+    settings_data: Mapped[dict[str, Any]] = mapped_column(
+        JSON, comment="Free-form CTI profile config (sectors, regions, keywords, etc.)"
+    )

@@ -37,8 +37,7 @@ async def get_cti_settings_by_id(db: AsyncSession, settings_id: int) -> CTIProfi
 async def create_cti_settings(db: AsyncSession, settings_data: dict[str, Any]) -> CTIProfileSettings:
     """Create new CTI profile settings"""
     try:
-        cti_settings = CTIProfileSettings()
-        cti_settings.set_settings_dict(settings_data)
+        cti_settings = CTIProfileSettings(settings_data=settings_data)
 
         db.add(cti_settings)
         await db.flush()
@@ -56,11 +55,10 @@ async def update_cti_settings(db: AsyncSession, settings_data: dict[str, Any]) -
         cti_settings = await get_cti_settings(db)
 
         if cti_settings:
-            cti_settings.set_settings_dict(settings_data)
+            cti_settings.settings_data = settings_data
             logger.info("Updated existing CTI settings with ID: %s", cti_settings.id)
         else:
-            cti_settings = CTIProfileSettings()
-            cti_settings.set_settings_dict(settings_data)
+            cti_settings = CTIProfileSettings(settings_data=settings_data)
             db.add(cti_settings)
             logger.info("Created new CTI settings")
 

@@ -8,7 +8,6 @@ from app.core.settings.ai_settings.schemas.ai_settings_schemas import (
 )
 from app.core.settings.ai_settings.crud.ai_settings_crud import (
     get_ai_settings,
-    create_ai_settings,
     update_ai_settings,
 )
 
@@ -25,12 +24,6 @@ MODULE_FIELDS = {
 async def get_or_create_ai_settings(db: AsyncSession) -> AISettingsResponse:
     """Retrieve current AI settings, creating defaults if none exist"""
     settings = await get_ai_settings(db)
-
-    if not settings:
-        logger.info("No AI settings found, creating defaults")
-        settings = await create_ai_settings(db)
-        await db.refresh(settings)
-
     return AISettingsResponse.model_validate(settings)
 
 
@@ -40,9 +33,6 @@ async def update_ai_settings_values(
 ) -> AISettingsResponse:
     """Update AI settings with provided values"""
     settings = await get_ai_settings(db)
-
-    if not settings:
-        settings = await create_ai_settings(db)
 
     fields: dict[str, str | None] = {}
     if settings_update.default_model is not None:

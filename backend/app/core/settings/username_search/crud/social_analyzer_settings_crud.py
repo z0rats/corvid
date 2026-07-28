@@ -1,22 +1,15 @@
 import datetime
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.username_search.models.social_analyzer_settings_models import SocialAnalyzerConfig
 from app.core.settings.username_search.schemas.social_analyzer_settings_schemas import SocialAnalyzerConfigUpdateSchema
+from app.core.settings.singleton import get_or_create_singleton
 
 
 async def get_social_analyzer_config(db: AsyncSession) -> SocialAnalyzerConfig:
     """Retrieve social-analyzer configuration, creating defaults if not exists"""
-    result = await db.execute(select(SocialAnalyzerConfig))
-    config = result.scalar_one_or_none()
-    if not config:
-        config = SocialAnalyzerConfig()
-        db.add(config)
-        await db.flush()
-        await db.refresh(config)
-    return config
+    return await get_or_create_singleton(db, SocialAnalyzerConfig)
 
 
 async def update_social_analyzer_config(

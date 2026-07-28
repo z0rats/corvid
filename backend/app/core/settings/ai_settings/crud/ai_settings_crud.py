@@ -1,23 +1,13 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.ai_settings.models.ai_settings_models import AISettings
 from app.core.settings.ai_settings.config.default_settings import DEFAULT_MODEL
+from app.core.settings.singleton import get_or_create_singleton
 
 
-async def get_ai_settings(db: AsyncSession) -> AISettings | None:
-    """Retrieve the AI settings record"""
-    stmt = select(AISettings).limit(1)
-    result = await db.execute(stmt)
-    return result.scalar_one_or_none()
-
-
-async def create_ai_settings(db: AsyncSession) -> AISettings:
-    """Create default AI settings record"""
-    settings = AISettings(default_model=DEFAULT_MODEL)
-    db.add(settings)
-    await db.flush()
-    return settings
+async def get_ai_settings(db: AsyncSession) -> AISettings:
+    """Retrieve the AI settings record, creating defaults if not exists"""
+    return await get_or_create_singleton(db, AISettings, {"default_model": DEFAULT_MODEL})
 
 
 async def update_ai_settings(

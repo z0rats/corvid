@@ -7,16 +7,16 @@ Handles business logic for CTI (Cyber Threat Intelligence) profile settings mana
 from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.settings.cti_profile.crud.cti_profile_crud import (
-    get_cti_settings,
-    create_cti_settings,
     update_cti_settings
 )
+from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings
 from app.core.settings.cti_profile.schemas.cti_profile_schemas import CTISettingsResponse, CTISettingsUpdate
 from app.core.settings.cti_profile.config.default_settings import (
     get_default_cti_profile_settings,
     get_severity_levels,
     get_supported_ioc_types
 )
+from app.core.settings.singleton import get_or_create_singleton
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,18 +24,13 @@ logger = logging.getLogger(__name__)
 
 async def get_cti_profile_settings(db: AsyncSession) -> CTISettingsResponse:
     """Retrieve CTI profile settings with default initialization if not found"""
-    settings = await get_cti_settings(db)
-
-    if not settings:
-        logger.info("No CTI settings found, creating default settings")
-        default_settings = get_default_cti_profile_settings()
-        settings = await create_cti_settings(db, default_settings)
-        await db.flush()
-        await db.refresh(settings)
+    settings = await get_or_create_singleton(
+        db, CTIProfileSettings, {"settings_data": get_default_cti_profile_settings()}
+    )
 
     return CTISettingsResponse(
         id=settings.id,
-        settings=settings.get_settings_dict()
+        settings=settings.settings_data
     )
 
 
@@ -54,7 +49,7 @@ async def update_cti_profile_settings(
 
     return CTISettingsResponse(
         id=settings.id,
-        settings=settings.get_settings_dict()
+        settings=settings.settings_data
     )
 
 
