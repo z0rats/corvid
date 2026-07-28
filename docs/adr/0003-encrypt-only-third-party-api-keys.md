@@ -1,0 +1,5 @@
+# Encrypt only `apikeys.key`, not the rest of the schema
+
+`Apikey.key` is the one encrypted-at-rest column in the entire schema (Fernet via `EncryptedString`, see `secrets_crypto.py`). Everything else potentially sensitive — search history, IOCs, reddit/email/username content — stays plaintext.
+
+The distinction is what the data grants access to, not how sensitive it looks. `apikeys.key` is a credential to a third-party service (VirusTotal, Shodan, ...); if `data/corvid.db` ever leaks, that key gives whoever has it access to someone else's account/quota. The rest of the schema is the OSINT investigation data itself — the tool's actual output, which its own user needs to search and filter (SQL `LIKE`/indexes) without decrypting every row on the fly. For a self-hosted, single-operator tool, the threat model is "the DB file leaks to a third party," not "hide data from the operator who already has full access to their own database" — so only the column that grants access *elsewhere* is encrypted.
