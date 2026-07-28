@@ -1,63 +1,35 @@
-import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
-import IconButton from '@mui/material/IconButton';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
+import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import ResultsView from './ResultsView';
 import { gitReconApi } from '../services/api/gitReconApi';
-import { createLogger } from '../../../core/utils/logger';
 
-const logger = createLogger('GitReconHistoryDetail');
 const STATUS_COLORS = { running: 'info', completed: 'success', failed: 'error' };
 
 export default function HistoryDetail() {
   const { t } = useTranslation('gitRecon');
   const { id } = useParams();
   const navigate = useNavigate();
-  const [search, setSearch] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadSearch = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await gitReconApi.getHistory(id);
-      setSearch(data);
-    } catch (err) {
-      logger.error('Failed to load search:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => { loadSearch(); }, [loadSearch]);
+  const { data: search, loading } = useHistoryDetail(gitReconApi.getHistory, id);
 
   if (loading) return <LinearProgress />;
   if (!search) return <Typography color="text.secondary">{t('history.notFound')}</Typography>;
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <IconButton onClick={() => navigate('/git-recon/history')}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5">{search.target}</Typography>
-        <Chip size="small" label={t(`history.status.${search.status}`)} color={STATUS_COLORS[search.status] || 'default'} />
-      </Box>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t('history.summary', { mode: t(`form.modes.${search.mode}`), date: new Date(search.searched_at).toLocaleString() })}
-      </Typography>
-
-      {search.status === 'failed' && search.error && (
-        <Typography variant="body2" color="error" sx={{ mb: 2 }}>
-          {search.error}
-        </Typography>
-      )}
+      <HistoryDetailHeader
+        onBack={() => navigate('/git-recon/history')}
+        title={search.target}
+        chips={<Chip size="small" label={t(`history.status.${search.status}`)} color={STATUS_COLORS[search.status] || 'default'} />}
+        summary={t('history.summary', { mode: t(`form.modes.${search.mode}`), date: new Date(search.searched_at).toLocaleString() })}
+        error={search.status === 'failed' ? search.error : null}
+      />
 
       <ResultsView result={search.result} />
     </Box>
