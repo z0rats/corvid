@@ -1,6 +1,7 @@
 """General settings database operations"""
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.settings.general.models.general_settings_models import GeneralSettings
 from app.core.settings.general.config.default_settings import (
@@ -34,8 +35,16 @@ async def create_general_settings(
     start_screen: str | None = None,
     always_tiles: bool | None = None
 ) -> GeneralSettings:
-    """Create new general settings record"""
+    """Create the singleton general settings record (fixed id=1).
+
+    Callers only reach this after `get_first_general_settings` found no row, but that
+    check isn't atomic with the insert - a concurrent first request can win the race.
+    Forcing id=1 turns that into a primary-key collision instead of a duplicate row:
+    the loser's insert is rolled back via a savepoint (isolated from anything else
+    pending in the caller's session) and it just returns the winner's row instead.
+    """
     settings = GeneralSettings(
+        id=1,
         darkmode=darkmode if darkmode is not None else get_default_darkmode(),
         language=language if language is not None else get_default_language(),
         auto_open_on_single_match=(
@@ -45,8 +54,12 @@ async def create_general_settings(
         start_screen=start_screen if start_screen is not None else get_default_start_screen(),
         always_tiles=always_tiles if always_tiles is not None else get_default_always_tiles()
     )
-    db.add(settings)
-    await db.flush()
+    try:
+        async with db.begin_nested():
+            db.add(settings)
+            await db.flush()
+    except IntegrityError:
+        return await get_first_general_settings(db)
     return settings
 
 

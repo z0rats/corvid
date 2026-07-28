@@ -165,6 +165,27 @@ async def check_emailrep(ioc: str, apikey: str) -> dict[str, Any]:
     return await handle_response("EmailRep.io", response)
 
 
+async def check_ffraud(ioc: str) -> dict[str, Any]:
+    """Perform IP fraud-intelligence lookup using FFraud's free, keyless public API"""
+    logger.debug("Checking IP %s with FFraud", ioc)
+
+    client = get_client()
+    response = await client.get(url=f'https://api.ffraud.com/public/ip/{ioc}')
+    return await handle_response("FFraud", response)
+
+
+async def check_ffraud_email(ioc: str) -> dict[str, Any]:
+    """Check email for disposable/role/blacklisted status using FFraud's free, keyless public API"""
+    logger.debug("Checking email %s with FFraud", ioc)
+
+    client = get_client()
+    response = await client.post(
+        url='https://api.ffraud.com/public/email/check',
+        json={'email': ioc}
+    )
+    return await handle_response("FFraud", response)
+
+
 async def search_github(ioc: str, access_token: str) -> dict[str, Any]:
     """Search for IOC mentions in GitHub code repositories"""
     _require_apikey("GitHub", access_token)

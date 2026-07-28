@@ -12,26 +12,18 @@ class DatabaseSettings(BaseSettings):
     echo: bool = Field(default=False, description="Enable SQLAlchemy query logging")
     pool_size: int = Field(
         default=10,
-        description=(
-            "Database connection pool size. Only applies to non-SQLite URLs (e.g. "
-            "postgresql+asyncpg://) - the default SQLite backend uses a single "
-            "StaticPool connection and ignores this setting entirely."
-        ),
+        description="Database connection pool size, for both SQLite and non-SQLite URLs.",
     )
     max_overflow: int = Field(
         default=20,
-        description=(
-            "Maximum database connection overflow. Only applies to non-SQLite URLs "
-            "(e.g. postgresql+asyncpg://) - ignored for the default SQLite backend, "
-            "same as pool_size."
-        ),
+        description="Maximum database connection overflow, for both SQLite and non-SQLite URLs.",
     )
     pool_recycle: int = Field(
         default=3600,
         description=(
-            "Connection pool recycle time in seconds. Only applies to non-SQLite "
-            "URLs (e.g. postgresql+asyncpg://) - ignored for the default SQLite "
-            "backend, same as pool_size."
+            "Connection pool recycle time in seconds. Only applies to non-SQLite URLs "
+            "(e.g. postgresql+asyncpg://) - ignored for the SQLite backend, whose local "
+            "connections don't go stale the way a networked DB's can."
         ),
     )
 
