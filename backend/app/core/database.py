@@ -5,7 +5,6 @@ from collections.abc import AsyncGenerator
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.pool import StaticPool
 
 from app.core.config.settings import settings
 
@@ -37,11 +36,20 @@ def create_database_engine() -> AsyncEngine:
         logger.warning("DB_ECHO is enabled — SQL queries will be logged. Disable in production.")
 
     if "sqlite" in db_url:
+        # No poolclass override: each checkout gets its own real connection (the
+        # default AsyncAdaptedQueuePool), sized like the Postgres branch below.
+        # StaticPool (one shared connection for every concurrent request) was used
+        # here previously - it's meant for sqlite:///:memory: test databases, and on
+        # the real file DB it let one request's commit/rollback tear down another
+        # concurrent request's still-pending flush, surfacing as spurious
+        # `Could not refresh instance` errors under concurrent first-access to a
+        # singleton settings row (see core/settings/singleton.py).
         engine = create_async_engine(
             db_url,
             connect_args={"check_same_thread": False, "timeout": 30},
             echo=echo,
-            poolclass=StaticPool,
+            pool_size=settings.database.pool_size,
+            max_overflow=settings.database.max_overflow,
             hide_parameters=True,
         )
 

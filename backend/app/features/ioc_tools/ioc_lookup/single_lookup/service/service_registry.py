@@ -76,6 +76,18 @@ def register_services(ioc_lookup_service_module) -> None:
             'api_key_name': 'emailrepio',
             'supported_ioc_types': [IOC_TYPES['EMAIL']],
         },
+        'ffraud': {
+            'func': ioc_lookup_service_module.check_ffraud,
+            'name': 'FFraud',
+            'api_key_name': None,
+            'supported_ioc_types': [IOC_TYPES['IPV4'], IOC_TYPES['IPV6']],
+        },
+        'ffraudemail': {
+            'func': ioc_lookup_service_module.check_ffraud_email,
+            'name': 'FFraud',
+            'api_key_name': None,
+            'supported_ioc_types': [IOC_TYPES['EMAIL']],
+        },
         'github': {
             'func': ioc_lookup_service_module.search_github,
             'name': 'GitHub',

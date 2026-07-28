@@ -65,7 +65,7 @@ Cross-feature "send to X" actions (e.g. `email_search`'s found email → `ioc_lo
 
 ## Integrated external services
 
-IOC/threat-intel lookups across IPs, domains, URLs, emails, hashes, CVEs via: AbuseIPDB, AlienVault OTX, CheckPhish, CrowdSec, GitHub, Google Safe Browsing, HIBP, Hunter.io, IPQualityScore, Maltiverse, NIST NVD, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan.io, VirusTotal. API keys configured per-service in app settings (`core/settings/api_keys/`), not via `.env` for these.
+IOC/threat-intel lookups across IPs, domains, URLs, emails, hashes, CVEs via: AbuseIPDB, AlienVault OTX, CheckPhish, CrowdSec, FFraud, GitHub, Google Safe Browsing, HIBP, Hunter.io, IPQualityScore, Maltiverse, NIST NVD, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan.io, VirusTotal. API keys configured per-service in app settings (`core/settings/api_keys/`), not via `.env` for these. FFraud (IP + email fraud scoring) is fully keyless, like URLScan.io.
 
 ## Conventions worth knowing
 

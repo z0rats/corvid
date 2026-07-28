@@ -507,6 +507,26 @@
         "spoofable": "- Weak SPF or DMARC not enforced."
       }
     },
+    "ffraud": {
+      "errorFetching": "Error fetching FFraud details: {{error}}",
+      "unavailable": "FFraud details are unavailable or the data is incomplete.",
+      "fraudScoreAndIndicators": "Fraud Score & Indicators",
+      "emailChecks": "Email Checks",
+      "fraudRisk": "fraud risk",
+      "proxy": "Proxy",
+      "vpn": "VPN",
+      "tor": "Tor",
+      "relay": "Relay",
+      "hosting": "Hosting/Datacenter",
+      "mobile": "Mobile",
+      "recentAbuse": "Recent Abuse",
+      "disposable": "Disposable",
+      "validFormat": "Valid Format",
+      "roleAddress": "Role Address",
+      "safeDomain": "Safe Domain",
+      "communityBlacklisted": "Community Blacklisted",
+      "blacklistReports": "Yes ({{count}} report(s))"
+    },
     "hunterio": {
       "errorFetching": "Error fetching Hunter.io details: {{error}}",
       "unavailable": "Hunter.io details are unavailable or the data is incomplete.",

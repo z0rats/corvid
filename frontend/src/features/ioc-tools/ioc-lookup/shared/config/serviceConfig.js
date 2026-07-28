@@ -5,6 +5,8 @@ import CheckphishDetails from '../components/service-details/Checkphish/Checkphi
 import CrowdSecDetailsComponent from '../components/service-details/CrowdSec/CrowdSecDetails';
 import CrowdStrikeDetailsComponent from '../components/service-details/CrowdStrike/CrowdStrike';
 import EmailrepioDetails from '../components/service-details/EmailrepIO/EmailrepioDetails';
+import FfraudIpDetails from '../components/service-details/FFraud/FfraudIpDetails';
+import FfraudEmailDetails from '../components/service-details/FFraud/FfraudEmailDetails';
 import GithubDetails from '../components/service-details/GitHub/GithubDetails';
 import HaveibeenpwndDetails from '../components/service-details/HIBP/HaveibeenpwndDetails';
 import HunterioDetails from '../components/service-details/HunterIO/HunterioDetails';
@@ -155,6 +157,33 @@ export const SERVICE_DEFINITIONS = {
       if (responseData.suspicious) tlp = 'RED';
       else if (responseData.reputation === 'low') tlp = 'AMBER';
       return { summary: `Reputation: ${responseData.reputation || 'N/A'}${responseData.suspicious ? ' (Suspicious)' : ''}`, tlp, keyMetric: responseData.reputation };
+    })),
+  },
+  ffraud: {
+    name: 'FFraud',
+    icon: 'default_icon',
+    detailComponent: FfraudIpDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['IPv4', 'IPv6'],
+    lookupEndpoint: createSingleEndpoint('ffraud'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      const score = responseData.fraud_score ?? 0;
+      const tlp = scoreTlpMapper(score, { red: 75, amber: 40 });
+      return { summary: `Fraud Score: ${score} (${responseData.risk || 'unknown'})`, tlp, keyMetric: score };
+    })),
+  },
+  ffraudemail: {
+    name: 'FFraud',
+    icon: 'default_icon',
+    detailComponent: FfraudEmailDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['Email'],
+    lookupEndpoint: createSingleEndpoint('ffraudemail'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (responseData.is_disposable) return { summary: 'Disposable email domain', tlp: 'RED' };
+      if (responseData.community_blacklisted) return { summary: 'Community-blacklisted sender', tlp: 'RED' };
+      if (!responseData.valid_format) return { summary: 'Invalid email format', tlp: 'AMBER' };
+      return { summary: responseData.safe_domain ? 'Safe domain' : 'No issues detected', tlp: 'GREEN' };
     })),
   },
   github: {

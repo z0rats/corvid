@@ -507,6 +507,26 @@
         "spoofable": "— Слабый SPF или DMARC не применяется."
       }
     },
+    "ffraud": {
+      "errorFetching": "Ошибка получения данных FFraud: {{error}}",
+      "unavailable": "Данные FFraud недоступны или неполны.",
+      "fraudScoreAndIndicators": "Оценка риска и индикаторы",
+      "emailChecks": "Проверки email",
+      "fraudRisk": "оценка риска",
+      "proxy": "Прокси",
+      "vpn": "VPN",
+      "tor": "Tor",
+      "relay": "Relay",
+      "hosting": "Хостинг/датацентр",
+      "mobile": "Мобильный",
+      "recentAbuse": "Недавние нарушения",
+      "disposable": "Одноразовый",
+      "validFormat": "Корректный формат",
+      "roleAddress": "Ролевой адрес",
+      "safeDomain": "Безопасный домен",
+      "communityBlacklisted": "В чёрном списке сообщества",
+      "blacklistReports": "Да ({{count}} сообщений)"
+    },
     "hunterio": {
       "errorFetching": "Ошибка получения данных Hunter.io: {{error}}",
       "unavailable": "Данные Hunter.io недоступны или неполны.",
