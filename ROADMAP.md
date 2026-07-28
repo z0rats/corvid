@@ -2,7 +2,7 @@
 
 Ideas for hardening the project across four angles: performance, UI/UX, security, and resilience (fault tolerance) —
 plus a backlog of new OSINT capabilities: tool/site integrations, cross-feature data aggregation, and routine automation.
-This is a backlog, not a commitment — pick items opportunistically. Grounded in the current architecture described in `CLAUDE.md`; re-check file/line references before acting since the code will keep moving.
+This is a backlog, not a commitment — pick items opportunistically. Grounded in the current architecture described in `AGENTS.md`; re-check file/line references before acting since the code will keep moving.
 
 Effort tags: **S** = small/quick win, **M** = medium, **L** = larger effort/design work.
 
@@ -29,4 +29,12 @@ Ideas for expanding investigative capability itself, rather than hardening what 
 
 ## UI/UX
 
+- **[S] Demo GIF/screenshot of the command palette at the top of `README.md`.** The keyboard-first
+  search bar (`/`/⌘K) is the single most differentiating UX feature but currently has no visual in
+  the README — screenshots only exist for 3 of the 8 feature modules, further down the page. Needs
+  a capture from a running instance (record opening the palette, pasting an IOC, and pivoting to a
+  tool) — can't be produced without actually running the app.
+
 ## Resilience / Fault tolerance
+
+- **[S] Auto-backup `data/corvid.db` before running migrations.** `docker-entrypoint.py` runs `alembic upgrade head` unattended on every container start for an existing (non-empty) database — a failed migration currently just aborts startup, but a *partially applied* one on SQLite (no transactional DDL, `migrations/env.py`'s `do_run_migrations` doesn't wrap the whole batch) could leave the schema stuck half-migrated with no way back except restoring a manual copy. A copy of the `.db`/`.db-wal`/`.db-shm` files to e.g. `data/backups/` right before `alembic upgrade head` (keep last N, prune the rest) would make that recoverable instead of a support request. Came up while writing `docs/database-schema-audit.md`'s remediation plan.
