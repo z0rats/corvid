@@ -1,20 +1,18 @@
-import datetime
-
-from sqlalchemy import String, DateTime
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, validates
-from sqlalchemy.sql import func
 
 from app.core.database import Base
+from app.core.models.mixins import TimestampMixin
 
 
-class Keyword(Base):
+class Keyword(Base, TimestampMixin):
     """Keyword model for storing user-defined keywords"""
     __tablename__ = 'keywords'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    keyword: Mapped[str] = mapped_column(String(100), unique=True, index=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(primary_key=True, comment="Surrogate primary key")
+    keyword: Mapped[str] = mapped_column(
+        String(100), unique=True, index=True, comment="Watched keyword, lowercased/stripped by validate_keyword"
+    )
 
     @validates('keyword')
     def validate_keyword(self, key: str, keyword: str) -> str:

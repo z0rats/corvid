@@ -1,12 +1,9 @@
-import datetime
-
-from sqlalchemy import String, Boolean, DateTime, Text
+from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column, validates
 from sqlalchemy.types import TypeDecorator
 
-from sqlalchemy.sql import func
-
 from app.core.database import Base
+from app.core.models.mixins import TimestampMixin
 from app.core.security.secrets_crypto import encrypt_value, decrypt_value
 
 
@@ -27,7 +24,7 @@ class EncryptedString(TypeDecorator):
         return decrypt_value(value)
 
 
-class Apikey(Base):
+class Apikey(Base, TimestampMixin):
     """API key model for storing external service credentials."""
 
     __tablename__ = "apikeys"
@@ -47,14 +44,6 @@ class Apikey(Base):
     bulk_ioc_lookup: Mapped[bool] = mapped_column(
         default=False,
         comment="Whether bulk lookup is enabled"
-    )
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(),
-        comment="Timestamp when the key was created"
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(),
-        comment="Timestamp when the key was last updated"
     )
 
     @validates('name')
