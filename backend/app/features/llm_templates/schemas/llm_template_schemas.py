@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 from typing import Any
@@ -182,6 +183,8 @@ class AITemplate(BaseModel):
     temperature: float | None = 1.0
     model: str | None = None
     category_id: str | None = None
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -278,6 +281,8 @@ class TemplateCategoryResponse(BaseModel):
     name: str
     order_number: int
     is_system: bool
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
 

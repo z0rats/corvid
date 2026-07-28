@@ -48,17 +48,16 @@ async def create_template(template: AITemplateCreate, db: SessionDep) -> AITempl
     response_model=list[AITemplate],
     response_model_exclude_none=True,
     summary="List templates",
-    description="Retrieve all accessible AI templates with pagination support",
+    description="Retrieve all AI templates with pagination support",
 )
 async def get_templates(
     db: ReadSessionDep,
     skip: int = Query(default=0, ge=0, description="Number of templates to skip"),
     limit: int = Query(default=100, ge=1, le=500, description="Maximum number of templates to return"),
-    user_id: str | None = None,
 ) -> list[AITemplate]:
-    """Get all accessible templates with pagination"""
+    """Get all templates with pagination"""
     logger.debug("Retrieving templates: skip=%d, limit=%d", skip, limit)
-    templates = await get_templates_with_pagination(db, skip, limit, user_id)
+    templates = await get_templates_with_pagination(db, skip, limit)
     logger.info("Retrieved %d templates", len(templates))
     return templates
 

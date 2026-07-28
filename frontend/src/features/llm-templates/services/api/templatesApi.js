@@ -18,10 +18,8 @@ export const templatesApi = {
     return response.data;
   },
 
-  async getTemplates({ skip = 0, limit = 100, user_id = null } = {}) {
-    const params = { skip, limit };
-    if (user_id) params.user_id = user_id;
-    const response = await api.get('/api/ai-templates', { params });
+  async getTemplates({ skip = 0, limit = 100 } = {}) {
+    const response = await api.get('/api/ai-templates', { params: { skip, limit } });
     return response.data;
   },
 
