@@ -32,6 +32,11 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
 FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
 WORKDIR /backend
 
+# Stamped from the release tag by CI (see .github/workflows/release.yml); falls
+# back to this default for local builds and non-tagged CI images.
+ARG VERSION=0.0.0-dev
+ENV API_VERSION=${VERSION}
+
 RUN mkdir -p /backend/data
 
 # Runtime-only shared libs for source-compiled lxml (see builder stage), plus
