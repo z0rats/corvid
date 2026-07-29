@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter
 
 from app.core.dependencies import ReadSessionDep, SessionDep
-from app.core.scheduler import update_maigret_db_scheduler_configuration
+from app.features.username_search.service.db_refresh_scheduler_service import configure_maigret_db_scheduler
 from app.core.settings.username_search.crud.username_search_settings_crud import (
     get_username_search_config as crud_get_config,
     update_username_search_config as crud_update_config,
@@ -45,6 +45,6 @@ async def update_username_search_config(
     """Update username search configuration"""
     updated_config = await crud_update_config(db, config_data)
     if config_data.auto_update_db_enabled is not None or config_data.auto_update_interval_hours is not None:
-        await update_maigret_db_scheduler_configuration()
+        configure_maigret_db_scheduler(updated_config.auto_update_db_enabled, updated_config.auto_update_interval_hours)
     logger.info("Updated username search configuration.")
     return UsernameSearchConfigSchema.model_validate(updated_config)

@@ -23,11 +23,12 @@ from app.core.config.validation import ensure_required_directories, log_validati
 from app.core.database import Base, engine, managed_session, dispose_database_engine
 from app.core.dependencies import get_disk_space_health
 from app.core.exceptions import register_exception_handlers
-from app.core.scheduler import initialize_scheduler, stop_scheduler
+from app.core.scheduler import stop_scheduler
 from app.core.security.access_control import get_access_token, verify_access_token
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import close_client
 from app.utils.startup_service import initialize_application_defaults
 from app.utils.router_registry import register_all_routers
+from app.utils.scheduler_registry import initialize_all_schedulers
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,7 @@ async def handle_application_startup() -> None:
         await _run_application_defaults()
         asyncio.create_task(_fetch_favicons_in_background())
         asyncio.create_task(_populate_blacklist_if_empty_in_background())
-        await initialize_scheduler()
+        await initialize_all_schedulers()
         logger.info("Application startup completed successfully")
     except Exception as e:
         logger.error("Startup failed: %s", e)

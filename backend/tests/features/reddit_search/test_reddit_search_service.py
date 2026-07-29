@@ -1,7 +1,11 @@
+import asyncio
+
+from app.features.reddit_search.service import reddit_search_service
 from app.features.reddit_search.service.reddit_search_service import (
     _build_urls,
     _get_status,
     _merge_and_sort,
+    fetch_both,
     normalize_username,
     to_result_row,
 )
@@ -292,3 +296,74 @@ def test_to_result_row_defaults_missing_optional_fields():
     assert row["score"] == 0
     assert row["created_utc"] == 0
     assert row["over_18"] is False
+
+
+# --- fetch_both --------------------------------------------------------
+
+
+def _patch_safe_fetch(monkeypatch, *, arctic_result, pullpush_result):
+    async def fake_safe_fetch(client, url):
+        if "arctic-shift" in url:
+            return arctic_result
+        return pullpush_result
+
+    monkeypatch.setattr(reddit_search_service, "_safe_fetch", fake_safe_fetch)
+
+
+def _run_fetch_both():
+    return asyncio.run(fetch_both("spez", "posts"))
+
+
+def test_fetch_both_reports_both_sources_when_both_return_data(monkeypatch):
+    _patch_safe_fetch(
+        monkeypatch,
+        arctic_result=[{"id": "a1", "created_utc": 100}],
+        pullpush_result=[{"id": "p1", "created_utc": 200}],
+    )
+
+    items, sources, arctic_down = _run_fetch_both()
+
+    assert {item["id"] for item in items} == {"a1", "p1"}
+    assert sources == ["Arctic Shift", "PullPush"]
+    assert arctic_down is False
+
+
+def test_fetch_both_reports_source_that_answered_empty_not_just_nonempty(monkeypatch):
+    # Regression: a source that responds successfully with zero results must
+    # still count as having "answered" — sources tracks which archives
+    # responded, not which ones returned non-empty data.
+    _patch_safe_fetch(
+        monkeypatch,
+        arctic_result=[],
+        pullpush_result=[{"id": "p1", "created_utc": 200}],
+    )
+
+    items, sources, arctic_down = _run_fetch_both()
+
+    assert [item["id"] for item in items] == ["p1"]
+    assert sources == ["Arctic Shift", "PullPush"]
+    assert arctic_down is False
+
+
+def test_fetch_both_omits_arctic_from_sources_when_it_fails(monkeypatch):
+    _patch_safe_fetch(
+        monkeypatch,
+        arctic_result=None,
+        pullpush_result=[{"id": "p1", "created_utc": 200}],
+    )
+
+    items, sources, arctic_down = _run_fetch_both()
+
+    assert [item["id"] for item in items] == ["p1"]
+    assert sources == ["PullPush"]
+    assert arctic_down is True
+
+
+def test_fetch_both_reports_no_sources_when_both_fail(monkeypatch):
+    _patch_safe_fetch(monkeypatch, arctic_result=None, pullpush_result=None)
+
+    items, sources, arctic_down = _run_fetch_both()
+
+    assert items == []
+    assert sources == []
+    assert arctic_down is True

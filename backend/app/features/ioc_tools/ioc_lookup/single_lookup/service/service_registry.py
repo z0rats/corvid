@@ -92,6 +92,7 @@ def register_services(ioc_lookup_service_module) -> None:
             'func': ioc_lookup_service_module.search_github,
             'name': 'GitHub',
             'api_key_name': 'github_pat',
+            'api_key_params': {'access_token': 'github_pat'},
             'supported_ioc_types': [
                 IOC_TYPES['IPV4'], IOC_TYPES['IPV6'], IOC_TYPES['DOMAIN'], IOC_TYPES['URL'],
                 IOC_TYPES['EMAIL'], IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256'],
@@ -138,7 +139,7 @@ def register_services(ioc_lookup_service_module) -> None:
         'malwarebazaar': {
             'func': ioc_lookup_service_module.check_malwarebazaar,
             'name': 'MalwareBazaar',
-            'api_key_name': 'malwarebazaar',
+            'api_key_name': None,
             'supported_ioc_types': [IOC_TYPES['MD5'], IOC_TYPES['SHA1'], IOC_TYPES['SHA256']],
         },
         'mandiant': {
@@ -227,7 +228,7 @@ def register_services(ioc_lookup_service_module) -> None:
         'urlhaus': {
             'func': ioc_lookup_service_module.check_urlhaus,
             'name': 'URLhaus',
-            'api_key_name': 'urlhaus',
+            'api_key_name': None,
             'supported_ioc_types': [IOC_TYPES['URL'], IOC_TYPES['DOMAIN'], IOC_TYPES['IPV4']],
         },
         'urlscanio': {

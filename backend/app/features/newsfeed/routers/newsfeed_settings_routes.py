@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.core.exceptions import AppHTTPException
 
 from app.core.dependencies import ReadSessionDep, SessionDep
-from app.core.scheduler import update_scheduler_configuration
+from app.features.newsfeed.service.newsfeed_scheduler_service import configure_news_scheduler
 from app.features.newsfeed.crud.newsfeed_settings_crud import (
     get_all_newsfeed_settings,
     update_newsfeed_setting,
@@ -129,6 +129,6 @@ async def get_newsfeed_config(db: ReadSessionDep) -> NewsfeedConfigSchema:
 async def update_newsfeed_config(config_data: NewsfeedConfigUpdateSchema, db: SessionDep) -> NewsfeedConfigSchema:
     """Update newsfeed configuration and restart scheduler with new settings"""
     updated_config = await crud_update_config(db, config_data)
-    await update_scheduler_configuration()
+    configure_news_scheduler(updated_config.background_fetch_enabled, updated_config.fetch_interval_minutes)
     logger.info("Updated newsfeed configuration and triggered scheduler update.")
     return NewsfeedConfigSchema.model_validate(updated_config)
