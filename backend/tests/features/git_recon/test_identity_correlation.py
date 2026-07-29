@@ -12,6 +12,7 @@ from app.features.git_recon.service.git_recon_service import (
     _analyst_to_result,
     _person_to_dict,
     _record_mention,
+    build_mentions,
 )
 
 # --- _record_mention --------------------------------------------------------
@@ -71,6 +72,53 @@ def test_record_mention_tracks_separate_persons_independently():
     assert mentions["alice"]["https://github.com/o/repo"]["as_committer"] == 0
     assert mentions["bob"]["https://github.com/o/repo"]["as_committer"] == 1
     assert mentions["bob"]["https://github.com/o/repo"]["as_author"] == 0
+
+
+# --- build_mentions ------------------------------------------------------
+
+
+def _make_commit(hash, author, committer, author_name="", author_email="", committer_name="", committer_email=""):
+    return gitcolombo.Commit(
+        hash=hash, author=author, committer=committer,
+        author_name=author_name, author_email=author_email,
+        committer_name=committer_name, committer_email=committer_email,
+    )
+
+
+def test_build_mentions_attributes_commits_to_their_own_repo():
+    commits_by_repo = {
+        "https://github.com/o/repo1": [_make_commit("sha1", "alice", "alice")],
+        "https://github.com/o/repo2": [_make_commit("sha2", "alice", "alice")],
+    }
+
+    mentions = build_mentions(commits_by_repo)
+
+    assert set(mentions["alice"].keys()) == {
+        "https://github.com/o/repo1",
+        "https://github.com/o/repo2",
+    }
+    assert mentions["alice"]["https://github.com/o/repo1"]["repo_url"] == "https://github.com/o/repo1"
+    assert mentions["alice"]["https://github.com/o/repo2"]["repo_url"] == "https://github.com/o/repo2"
+
+
+def test_build_mentions_counts_author_and_committer_across_multiple_commits():
+    commits_by_repo = {
+        "https://github.com/o/repo": [
+            _make_commit("sha1", "alice", "bob"),
+            _make_commit("sha2", "alice", "alice"),
+        ],
+    }
+
+    mentions = build_mentions(commits_by_repo)
+
+    entry = mentions["alice"]["https://github.com/o/repo"]
+    assert entry["as_author"] == 2
+    assert entry["as_committer"] == 1
+    assert mentions["bob"]["https://github.com/o/repo"]["as_committer"] == 1
+
+
+def test_build_mentions_handles_empty_commits_by_repo():
+    assert build_mentions({}) == {}
 
 
 # --- _person_to_dict ---------------------------------------------------

@@ -25,7 +25,7 @@ import HomeIcon from '@mui/icons-material/HomeOutlined';
 import SidebarTabs from '../ui/SidebarTabs';
 import LeftPanel from './LeftPanel';
 import CommandPalette from '../ui/CommandPalette/CommandPalette';
-import { OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useCommandPalette';
+import { OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useGlobalPaletteShortcuts';
 import {
   getMainMenuItems,
   getAiTemplatesTabs,

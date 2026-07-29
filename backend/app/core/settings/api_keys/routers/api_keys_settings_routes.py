@@ -75,7 +75,7 @@ async def get_all_apikeys_bulk_lookup(db: ReadSessionDep) -> dict[str, bool]:
     from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_all_services
     result = await get_all_apikeys_bulk_lookup_status(db)
     for service_name, config in get_all_services().items():
-        if not config.get('api_key_name') and not config.get('api_key_names'):
+        if not config.required_key_names:
             result.setdefault(service_name, True)
     return result
 
@@ -158,7 +158,7 @@ async def update_apikey_bulk_lookup(name: ApiKeyName, data: UpdateBulkLookupStat
         return result
     from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
     service_config = get_service(name)
-    if service_config and not service_config.get('api_key_name') and not service_config.get('api_key_names'):
+    if service_config and not service_config.required_key_names:
         return await upsert_apikey_bulk_lookup_status(db, name, data.bulk_ioc_lookup)
     raise AppHTTPException(
         status_code=status.HTTP_404_NOT_FOUND,

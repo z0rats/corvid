@@ -201,6 +201,17 @@ function rankIdentityFallback(value, registry) {
  * Parses raw palette input into a discriminated result. `ctx` carries the data the pure parser
  * needs but shouldn't own itself: { registry, playbooks, isRecording }.
  */
+/** Everything the currently parsed query can offer as a keyboard-selectable row. */
+export function getSelectableResults(parsed) {
+  if (parsed.kind === 'which-key') {
+    return parsed.suggestions.map((s) => ({ type: 'suggestion', value: s }));
+  }
+  if (['text', 'tag', 'type', 'value', 'pivot', 'fallback'].includes(parsed.kind)) {
+    return parsed.matches.map((entry) => ({ type: 'entry', entry }));
+  }
+  return [];
+}
+
 export function parseQuery(rawInput, ctx = {}) {
   const context = { registry: [], playbooks: [], isRecording: false, ...ctx };
   const input = (rawInput ?? '').trim();

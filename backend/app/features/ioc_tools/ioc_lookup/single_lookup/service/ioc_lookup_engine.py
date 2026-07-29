@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey, get_apikeys
 from .service_registry import get_service, get_all_services, register_services
+from .provider_spec import ProviderSpec, build_call_args
 from app.features.ioc_tools.ioc_lookup.single_lookup.service import external_api_clients as service_functions
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import (
     ServiceError, ServiceAuthError, ServiceRateLimitError, ServiceUnavailableError,
@@ -51,7 +52,7 @@ async def _sleep_before_retry(delay: float) -> None:
 
 
 async def _call_service_with_retry(
-    service_config: dict[str, Any], func_args: dict[str, Any], service_name: str,
+    service_config: ProviderSpec, func_args: dict[str, Any], service_name: str,
 ) -> Any:
     """Call a service's lookup function, retrying on rate-limit responses with exponential
     backoff instead of surfacing RATE_LIMITED to the caller on the first 429."""
@@ -63,7 +64,7 @@ async def _call_service_with_retry(
     while True:
         await apply_rate_limit(service_name)
         try:
-            return await service_config['func'](**func_args)
+            return await service_config.func(**func_args)
         except ServiceRateLimitError:
             if attempt >= max_retries:
                 raise
@@ -117,21 +118,9 @@ async def _ensure_registry_initialized() -> None:
         logger.info("Registered %s services", len(get_all_services()))
 
 
-def _get_required_key_names(config: dict[str, Any]) -> list[str]:
-    """Extract required API key names from a service config."""
-    if config.get('api_key_name'):
-        return [config['api_key_name']]
-    return config.get('api_key_names', [])
-
-
-def _requires_api_key(config: dict[str, Any]) -> bool:
-    """Return True if the service needs at least one API key."""
-    return bool(_get_required_key_names(config))
-
-
-async def _get_api_keys(service_config: dict[str, Any], db: AsyncSession) -> dict[str, str] | None:
+async def _get_api_keys(service_config: ProviderSpec, db: AsyncSession) -> dict[str, str] | None:
     """Retrieve required API keys for a service."""
-    key_names = _get_required_key_names(service_config)
+    key_names = service_config.required_key_names
     if not key_names:
         return {}
 
@@ -144,34 +133,6 @@ async def _get_api_keys(service_config: dict[str, Any], db: AsyncSession) -> dic
             return None
         keys[key_name] = key_data.key
     return keys
-
-
-def _prepare_function_args(
-    service_config: dict[str, Any],
-    ioc: str,
-    ioc_type: str,
-    api_keys: dict[str, str],
-    extra_args: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    """Build the argument dict for the service lookup function."""
-    args: dict[str, Any] = {'ioc': ioc.strip()}
-
-    if service_config.get('requires_type'):
-        type_param = service_config.get('ioc_type_param', 'type')
-        type_map = service_config.get('type_map', {})
-        args[type_param] = type_map.get(ioc_type, ioc_type.lower())
-
-    if _requires_api_key(service_config):
-        if 'api_key_params' in service_config:
-            for param, key_name in service_config['api_key_params'].items():
-                args[param] = api_keys.get(key_name)
-        elif service_config.get('api_key_name') and api_keys:
-            args['apikey'] = next(iter(api_keys.values()))
-
-    if extra_args:
-        args.update(extra_args)
-
-    return args
 
 
 def _make_error_result(ioc: str, service_name: str, lookup_status: LookupStatus, message: str) -> LookupResult:
@@ -195,7 +156,7 @@ async def lookup_ioc(service_name: str, ioc: str, ioc_type: str, db: AsyncSessio
         logger.warning("Service not found: %s", service_name)
         return None
 
-    if ioc_type not in service_config.get('supported_ioc_types', []):
+    if ioc_type not in service_config.supported_ioc_types:
         logger.warning("Unsupported IOC type %s for service %s", ioc_type, service_name)
         return _make_error_result(
             ioc, service_name, LookupStatus.ERROR,
@@ -203,15 +164,15 @@ async def lookup_ioc(service_name: str, ioc: str, ioc_type: str, db: AsyncSessio
         )
 
     api_keys = await _get_api_keys(service_config, db)
-    if api_keys is None and _requires_api_key(service_config):
+    if api_keys is None and service_config.required_key_names:
         logger.error("Missing API keys for service: %s", service_name)
         return _make_error_result(
             ioc, service_name, LookupStatus.UNAUTHORIZED,
             f"Required API key(s) for '{service_name}' are missing or inactive.",
         )
 
-    extra_args = {'db': db} if service_config.get('requires_db') else None
-    func_args = _prepare_function_args(service_config, ioc, ioc_type, api_keys or {}, extra_args)
+    extra_args = {'db': db} if service_config.requires_db else None
+    func_args = build_call_args(service_config, ioc, ioc_type, api_keys or {}, extra_args)
 
     logger.debug("Calling %s lookup function with args: %s", service_name, list(func_args.keys()))
     try:
@@ -255,7 +216,7 @@ async def get_all_service_configs(db: AsyncSession) -> list[ServiceInfo]:
 
     services_with_status = []
     for service_key, config in get_all_services().items():
-        required_keys = _get_required_key_names(config)
+        required_keys = config.required_key_names
 
         if not required_keys:
             is_configured = True
@@ -267,8 +228,8 @@ async def get_all_service_configs(db: AsyncSession) -> list[ServiceInfo]:
 
         services_with_status.append(ServiceInfo(
             key=service_key,
-            name=config.get('name', service_key),
-            supported_ioc_types=config.get('supported_ioc_types', []),
+            name=config.name,
+            supported_ioc_types=config.supported_ioc_types,
             is_configured=is_configured,
             is_bulk_enabled=is_bulk_enabled,
         ))
@@ -286,13 +247,13 @@ async def build_service_definitions(db: AsyncSession) -> dict[str, dict[str, Any
 
     return {
         service_name: {
-            'name': config['name'],
-            'requiredKeys': _get_required_key_names(config),
-            'supportedIocTypes': config.get('supported_ioc_types', []),
+            'name': config.name,
+            'requiredKeys': config.required_key_names,
+            'supportedIocTypes': config.supported_ioc_types,
             'isAvailable': all(
                 key in api_key_map and api_key_map[key].strip()
-                for key in _get_required_key_names(config)
-            ) if _get_required_key_names(config) else True,
+                for key in config.required_key_names
+            ) if config.required_key_names else True,
             'icon': f"{service_name}_logo_small",
         }
         for service_name, config in get_all_services().items()

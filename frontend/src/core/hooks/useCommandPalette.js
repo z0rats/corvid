@@ -1,12 +1,14 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { generalSettingsState } from '../state/atoms';
 import { useThemeManager } from './ui/useThemeManager';
 import api from '../services/baseApi';
+import { useGlobalPaletteShortcuts } from './useGlobalPaletteShortcuts';
+import { usePlaybooks } from './usePlaybooks';
 import { buildCommandRegistry, resolveEntryPath } from '../config/commandRegistry';
-import { parseQuery, VALUE_KINDS } from '../utils/commandParser';
+import { parseQuery, VALUE_KINDS, getSelectableResults } from '../utils/commandParser';
 import { detectIocType } from '../utils/iocTypeDetection';
 import { copyToClipboard } from '../utils/clipboard';
 import { buildPrefillUrl } from '../utils/crossFeatureNav';
@@ -14,36 +16,11 @@ import {
   getPinnedToolIds, togglePinnedToolId,
   getRecents, addRecent,
   getQueryHistory, addQueryToHistory,
-  getPlaybooks, savePlaybook, renamePlaybook, deletePlaybook,
 } from '../utils/commandPaletteStorage';
-
-// Dispatched by Layout.jsx's AppBar search-trigger button — the palette's open state is owned
-// entirely inside this hook (only instantiated in CommandPalette.jsx), so opening it from
-// elsewhere in the tree goes through a DOM event rather than lifting state up.
-export const OPEN_COMMAND_PALETTE_EVENT = 'corvid:open-command-palette';
-
-const EDITABLE_TAG_NAMES = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
-
-function isEditableTarget(el) {
-  if (!el) return false;
-  if (EDITABLE_TAG_NAMES.has(el.tagName)) return true;
-  return Boolean(el.isContentEditable);
-}
 
 async function defangOrFang(value, op) {
   const response = await api.post('/api/defang/', { text: value, operation: op });
   return response.data?.results?.[0]?.processed ?? value;
-}
-
-/** Everything the currently parsed query can offer as a keyboard-selectable row. */
-export function getSelectableResults(parsed) {
-  if (parsed.kind === 'which-key') {
-    return parsed.suggestions.map((s) => ({ type: 'suggestion', value: s }));
-  }
-  if (['text', 'tag', 'type', 'value', 'pivot', 'fallback'].includes(parsed.kind)) {
-    return parsed.matches.map((entry) => ({ type: 'entry', entry }));
-  }
-  return [];
 }
 
 export function useCommandPalette() {
@@ -52,7 +29,6 @@ export function useCommandPalette() {
   // 'commandPalette' — buildCommandRegistry needs this one, not the palette's own copy above.
   const { t: tCommon } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const { toggleColorMode } = useThemeManager();
   const generalSettings = useAtomValue(generalSettingsState);
 
@@ -64,26 +40,12 @@ export function useCommandPalette() {
   const [view, setView] = useState('search'); // 'search' | 'playbook-manage'
   const [notice, setNotice] = useState(null); // { message, severity }
 
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingSteps, setRecordingSteps] = useState([]);
-  const [pendingRecordStopName, setPendingRecordStopName] = useState(false);
-
   const [breadcrumbs, setBreadcrumbs] = useState([]);
   const [pinnedIds, setPinnedIds] = useState(getPinnedToolIds);
   const [recents, setRecents] = useState(getRecents);
-  const [playbooks, setPlaybooks] = useState(getPlaybooks);
   const historyPointer = useRef(-1);
 
   const registry = useMemo(() => buildCommandRegistry(tCommon), [tCommon]);
-
-  const parsed = useMemo(
-    () => parseQuery(query, { registry, playbooks, isRecording }),
-    [query, registry, playbooks, isRecording],
-  );
-
-  const results = useMemo(() => getSelectableResults(parsed), [parsed]);
-
-  const refreshPlaybooks = useCallback(() => setPlaybooks(getPlaybooks()), []);
 
   const showNotice = useCallback((message, severity = 'success') => {
     setNotice({ message, severity });
@@ -111,11 +73,12 @@ export function useCommandPalette() {
     resetTransientState();
   }, [resetTransientState]);
 
-  const recordStep = useCallback((toolId) => {
-    setRecordingSteps((prev) => (prev.includes(toolId) ? prev : [...prev, toolId]));
-  }, []);
+  useGlobalPaletteShortcuts(isOpen, open, close, () => setShowShortcutSheet(true));
 
-  const openEntry = useCallback((entry, value) => {
+  // The non-recording-aware open path — everything but feeding an active recording session.
+  // Handed to usePlaybooks as onOpenEntry (see its docstring); everywhere else uses the
+  // recording-aware `openEntry` below.
+  const openEntryRaw = useCallback((entry, value) => {
     const iocType = value ? detectIocType(value) : undefined;
     const path = resolveEntryPath(entry, iocType);
     navigate(value ? buildPrefillUrl(path, value) : path);
@@ -123,10 +86,31 @@ export function useCommandPalette() {
     setRecents(addRecent({ type: 'tool', toolId: entry.id, value: value || undefined }));
     if (query.trim()) addQueryToHistory(query);
     setBreadcrumbs((prev) => [...prev, { label: entry.label, toolId: entry.id, value }]);
-    if (isRecording) recordStep(entry.id);
 
     close();
-  }, [navigate, query, isRecording, recordStep, close]);
+  }, [navigate, query, close]);
+
+  const playbookApi = usePlaybooks(registry, {
+    onOpenEntry: openEntryRaw,
+    setBreadcrumbs,
+    showNotice,
+  });
+
+  const openEntry = useCallback((entry, value) => {
+    openEntryRaw(entry, value);
+    if (playbookApi.isRecording) playbookApi.recordStep(entry.id);
+    // Deps list the specific fields used, not `playbookApi` itself — usePlaybooks returns a new
+    // object every render, so depending on the whole object would recreate this (and everything
+    // downstream of it) on every render regardless of whether recording state actually changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openEntryRaw, playbookApi.isRecording, playbookApi.recordStep]);
+
+  const parsed = useMemo(
+    () => parseQuery(query, { registry, playbooks: playbookApi.playbooks, isRecording: playbookApi.isRecording }),
+    [query, registry, playbookApi.playbooks, playbookApi.isRecording],
+  );
+
+  const results = useMemo(() => getSelectableResults(parsed), [parsed]);
 
   const runInstantAnswer = useCallback(async (op, value) => {
     try {
@@ -140,52 +124,6 @@ export function useCommandPalette() {
     close();
   }, [query, showNotice, t, close]);
 
-  const finishRecording = useCallback((name) => {
-    if (!name || recordingSteps.length === 0) {
-      setIsRecording(false);
-      setRecordingSteps([]);
-      setPendingRecordStopName(false);
-      return;
-    }
-    savePlaybook(name, recordingSteps);
-    refreshPlaybooks();
-    setIsRecording(false);
-    setRecordingSteps([]);
-    setPendingRecordStopName(false);
-    showNotice(t('notices.playbookSaved', { name }));
-  }, [recordingSteps, refreshPlaybooks, showNotice, t]);
-
-  const runPlaybook = useCallback((playbookName, value) => {
-    const playbook = playbooks.find((p) => p.name === playbookName);
-    if (!playbook || playbook.steps.length === 0) {
-      showNotice(t('notices.playbookNotFound', { name: playbookName }), 'error');
-      return;
-    }
-    const [firstId, ...restIds] = playbook.steps;
-    const firstEntry = registry.find((e) => e.id === firstId);
-    if (!firstEntry) {
-      showNotice(t('notices.playbookNotFound', { name: playbookName }), 'error');
-      return;
-    }
-    // Only the tool IDs are recorded (see docs/command-palette-plan.md's Playbooks section) —
-    // there's no generic way to capture each step's *result* value across unrelated features,
-    // so replay opens step one prefilled and seeds the rest as a breadcrumb trail to continue
-    // pivoting through by hand, exactly like a live chain.
-    setBreadcrumbs((prev) => [
-      ...prev,
-      { label: firstEntry.label, toolId: firstEntry.id, value },
-      ...restIds.map((id) => {
-        const entry = registry.find((e) => e.id === id);
-        return { label: entry?.label ?? id, toolId: id, pending: true };
-      }),
-    ]);
-    const iocType = value ? detectIocType(value) : undefined;
-    const path = resolveEntryPath(firstEntry, iocType);
-    navigate(value ? buildPrefillUrl(path, value) : path);
-    setRecents(addRecent({ type: 'tool', toolId: firstEntry.id, value: value || undefined }));
-    close();
-  }, [playbooks, registry, navigate, close, showNotice, t]);
-
   const runAction = useCallback((parsedAction) => {
     switch (parsedAction.action) {
       case 'settings':
@@ -197,29 +135,34 @@ export function useCommandPalette() {
         close();
         break;
       case 'record-start':
-        setIsRecording(true);
-        setRecordingSteps([]);
+        playbookApi.startRecording();
         setQuery('');
         showNotice(t('notices.recordingStarted'));
         break;
       case 'record-stop':
         if (parsedAction.name) {
-          finishRecording(parsedAction.name);
+          playbookApi.finishRecording(parsedAction.name);
           close();
         } else {
-          setPendingRecordStopName(true);
+          playbookApi.requestRecordStopName();
         }
         break;
       case 'playbook-manage':
         setView('playbook-manage');
         break;
       case 'playbook-run':
-        runPlaybook(parsedAction.playbookName, parsedAction.value);
+        playbookApi.runPlaybook(parsedAction.playbookName, parsedAction.value);
         break;
       default:
         showNotice(t('notices.unknownAction'), 'info');
     }
-  }, [navigate, close, toggleColorMode, finishRecording, runPlaybook, showNotice, t]);
+    // See openEntry above re: depending on individual playbookApi fields instead of the object.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    navigate, close, toggleColorMode, showNotice, t,
+    playbookApi.startRecording, playbookApi.finishRecording,
+    playbookApi.requestRecordStopName, playbookApi.runPlaybook,
+  ]);
 
   const runSelected = useCallback((explicitIndex) => {
     const index = explicitIndex ?? selectedIndex;
@@ -291,69 +234,6 @@ export function useCommandPalette() {
   const toggleActionPanel = useCallback((index) => {
     setActionPanelIndex((prev) => (prev === index ? null : index));
   }, []);
-
-  // Global `/`, Cmd/Ctrl+K, Cmd/Ctrl+, and `?` listener — guarded against hijacking focused
-  // text inputs. Cmd/Ctrl+, works regardless of open state, like every other app's preferences
-  // shortcut; the rest only fire while closed to avoid fighting the palette's own key handling.
-  useEffect(() => {
-    const handler = (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === ',') {
-        event.preventDefault();
-        navigate('/settings');
-        if (isOpen) close();
-        return;
-      }
-      if (isOpen) return;
-      const target = event.target;
-      if (event.key === '/' && !isEditableTarget(target)) {
-        event.preventDefault();
-        open();
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        open();
-        return;
-      }
-      if (event.key === '?' && !isEditableTarget(target)) {
-        event.preventDefault();
-        setShowShortcutSheet(true);
-      }
-    };
-    // StartScreen dispatches this with a `detail.query` payload when it hands off a
-    // modal-only grammar kind (record/playbook) it deliberately doesn't implement itself —
-    // Layout.jsx's own trigger dispatches a plain Event, so `detail` is undefined there.
-    const handleOpenEvent = (event) => { if (!isOpen) open(event?.detail?.query ?? ''); };
-
-    window.addEventListener('keydown', handler);
-    window.addEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenEvent);
-    return () => {
-      window.removeEventListener('keydown', handler);
-      window.removeEventListener(OPEN_COMMAND_PALETTE_EVENT, handleOpenEvent);
-    };
-  }, [isOpen, open, close, navigate]);
-
-  // Global ⌘V/Ctrl+V — a pasted image jumps to Image Tools with it preloaded, from anywhere in
-  // the app (see docs/command-palette-plan.md's Keyboard shortcuts table). Image Tools' own
-  // `/image-tools` page has its own local paste handler already, so this one steps aside there
-  // to avoid double-handling the same clipboard event.
-  useEffect(() => {
-    const handlePaste = (event) => {
-      if (location.pathname.startsWith('/image-tools')) return;
-      const items = event.clipboardData?.items;
-      if (!items) return;
-      const imageItem = Array.from(items).find((item) => item.type.startsWith('image/'));
-      if (!imageItem) return;
-      const file = imageItem.getAsFile();
-      if (!file) return;
-
-      event.preventDefault();
-      if (isOpen) close();
-      navigate('/image-tools', { state: { file } });
-    };
-    window.addEventListener('paste', handlePaste);
-    return () => window.removeEventListener('paste', handlePaste);
-  }, [location.pathname, isOpen, close, navigate]);
 
   // Palette-local keyboard grammar, active only while open.
   const handlePaletteKeyDown = useCallback((event) => {
@@ -441,8 +321,10 @@ export function useCommandPalette() {
   return {
     // state
     isOpen, query, selectedIndex, parsed, results, view, notice,
-    isRecording, recordingSteps, pendingRecordStopName,
-    breadcrumbs, pinnedIds, recents, playbooks, registry,
+    isRecording: playbookApi.isRecording,
+    recordingSteps: playbookApi.recordingSteps,
+    pendingRecordStopName: playbookApi.pendingRecordStopName,
+    breadcrumbs, pinnedIds, recents, playbooks: playbookApi.playbooks, registry,
     actionPanelIndex, showShortcutSheet,
     autoOpenOnSingleMatch: generalSettings?.auto_open_on_single_match ?? true,
     alwaysTiles: generalSettings?.always_tiles ?? false,
@@ -450,13 +332,14 @@ export function useCommandPalette() {
     open, close, setQuery: handleQueryChange, setSelectedIndex,
     handlePaletteKeyDown, runSelected, openEntry, runInstantAnswer, runAction,
     togglePin, dismissNotice: () => setNotice(null),
-    finishRecording, cancelRecordStopPrompt: () => setPendingRecordStopName(false),
+    finishRecording: playbookApi.finishRecording,
+    cancelRecordStopPrompt: playbookApi.cancelRecordStopPrompt,
     setView, closeShortcutSheet: () => setShowShortcutSheet(false),
     openShortcutSheet: () => setShowShortcutSheet(true),
     toggleActionPanel, closeActionPanel: () => setActionPanelIndex(null),
     copyFocusedValue, addFocusedValueToBulk,
-    renamePlaybook: (oldName, newName) => { renamePlaybook(oldName, newName); refreshPlaybooks(); },
-    deletePlaybook: (name) => { deletePlaybook(name); refreshPlaybooks(); },
-    runPlaybookNow: (name, value) => runPlaybook(name, value),
+    renamePlaybook: playbookApi.renamePlaybook,
+    deletePlaybook: playbookApi.deletePlaybook,
+    runPlaybookNow: playbookApi.runPlaybook,
   };
 }

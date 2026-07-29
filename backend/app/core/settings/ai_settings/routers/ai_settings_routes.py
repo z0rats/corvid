@@ -1,5 +1,3 @@
-from fastapi import APIRouter
-
 from app.core.dependencies import SessionDep
 from app.core.settings.ai_settings.schemas.ai_settings_schemas import (
     AISettingsResponse,
@@ -11,32 +9,17 @@ from app.core.settings.ai_settings.service.ai_settings_service import (
     get_or_create_ai_settings,
     update_ai_settings_values,
 )
+from app.core.settings.settings_router_factory import build_singleton_settings_router
 from app.utils.llm_service import get_available_models
 
-router = APIRouter(prefix="/api/settings/ai", tags=["AI Settings"])
-
-
-@router.get(
-    "",
-    response_model=AISettingsResponse,
-    summary="Get AI settings",
-    description="Retrieve current AI / LLM default model settings",
+router = build_singleton_settings_router(
+    prefix="/api/settings/ai",
+    tags=["AI Settings"],
+    response_schema=AISettingsResponse,
+    update_schema=AISettingsUpdate,
+    get_service=get_or_create_ai_settings,
+    update_service=update_ai_settings_values,
 )
-async def get_ai_settings_endpoint(db: SessionDep) -> AISettingsResponse:
-    return await get_or_create_ai_settings(db)
-
-
-@router.put(
-    "",
-    response_model=AISettingsResponse,
-    summary="Update AI settings",
-    description="Update AI / LLM default model settings",
-)
-async def update_ai_settings_endpoint(
-    settings_update: AISettingsUpdate,
-    db: SessionDep,
-) -> AISettingsResponse:
-    return await update_ai_settings_values(db, settings_update)
 
 
 @router.get(

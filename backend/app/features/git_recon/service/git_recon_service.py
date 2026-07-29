@@ -194,6 +194,17 @@ def _run_search_mode_sync(username: str, token: str | None, ignore_noreply: bool
     }
 
 
+def build_mentions(commits_by_repo: dict[str, list["gitcolombo.Commit"]]) -> dict[str, dict[str, dict]]:
+    """Pure: turn a per-repo commit mapping into the same person -> repo -> counts
+    structure _record_mention has always built, without needing a real GitAnalyst."""
+    mentions: dict[str, dict[str, dict]] = defaultdict(dict)
+    for url, commits in commits_by_repo.items():
+        for commit in commits:
+            _record_mention(mentions, commit.author, url, commit.hash, role="as_author")
+            _record_mention(mentions, commit.committer, url, commit.hash, role="as_committer")
+    return mentions
+
+
 def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_logins: bool) -> dict:
     notes: list[str] = []
     cloned = gitcolombo.clone_many(sources, repos_dir, workers=CLONE_WORKERS)
@@ -206,15 +217,15 @@ def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_l
     # attached to each Commit either - the only place that association exists
     # is here, at the per-url append() call site, so we slice out each repo's
     # own commits right after appending them to build that mapping ourselves.
-    mentions: dict[str, dict[str, dict]] = defaultdict(dict)
+    commits_by_repo: dict[str, list["gitcolombo.Commit"]] = {}
     for url, path in cloned.items():
         if not path:
             continue
         start = len(analyst.commits)
         analyst.append(url, cloned_path=path)
-        for commit in analyst.commits[start:]:
-            _record_mention(mentions, commit.author, url, commit.hash, role="as_author")
-            _record_mention(mentions, commit.committer, url, commit.hash, role="as_committer")
+        commits_by_repo[url] = analyst.commits[start:]
+
+    mentions = build_mentions(commits_by_repo)
 
     failed = sum(1 for o in repo_outcomes if not o["cloned"])
     if failed:
