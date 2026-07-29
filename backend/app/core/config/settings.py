@@ -1,7 +1,30 @@
+import subprocess
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _dev_version() -> str:
+    """Best-effort version when API_VERSION isn't set in the environment - local
+    dev running outside the release Docker image, which always stamps
+    API_VERSION from the git tag at build time (see backend/Dockerfile's
+    `ARG VERSION` / `ENV API_VERSION`). Never runs inside that image: the env
+    var is always present there, even for an untagged build (falls back to
+    "0.0.0-dev" itself)."""
+    try:
+        result = subprocess.run(
+            # --match restricts this to version-shaped tags (v1.2.3) - the repo has at
+            # least one stray non-version tag ("push") that --tags alone would happily
+            # match instead, since git describe just picks the nearest reachable tag.
+            ["git", "describe", "--tags", "--dirty", "--always", "--match", "v[0-9]*"],
+            cwd=Path(__file__).resolve().parent,
+            capture_output=True, text=True, timeout=2, check=True,
+        )
+        return result.stdout.strip().removeprefix("v")
+    except (OSError, subprocess.SubprocessError):
+        return "0.0.0-dev"
 
 
 class DatabaseSettings(BaseSettings):
@@ -46,7 +69,7 @@ class APISettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="API_", env_file=".env", env_file_encoding="utf-8")
 
     title: str = Field(default="Corvid", description="API title")
-    version: str = Field(default="2.0.0", description="Application version")
+    version: str = Field(default_factory=_dev_version, description="Application version")
     description: str = Field(
         default="## Corvid interactive API documentation",
         description="API description"
