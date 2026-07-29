@@ -1,22 +1,19 @@
-import datetime
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.scans.crud import ScanColumns, create_running, mark_cancelled, mark_completed, mark_failed
 from app.core.scans.reconciliation import mark_stale_running_as_failed
 from app.features.username_search.models.username_search_models import MaigretSearch, MaigretSiteResult
+
+_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
 
 
 async def create_search_run(
     db: AsyncSession, username: str, tags: list[str] | None = None, source: str = "maigret"
 ) -> MaigretSearch:
     """Create a new search run in the 'running' state"""
-    search = MaigretSearch(username=username, status="running", tags=tags, source=source)
-    db.add(search)
-    await db.flush()
-    await db.refresh(search)
-    return search
+    return await create_running(db, MaigretSearch, username=username, tags=tags, source=source)
 
 
 async def complete_search_run(
@@ -26,14 +23,14 @@ async def complete_search_run(
     found_sites: list[dict],
 ) -> MaigretSearch | None:
     """Mark a search run as completed, storing its found-site results"""
-    search = await get_search_run(db, search_id)
+    search = await mark_completed(
+        db, MaigretSearch, search_id,
+        columns=_COLUMNS,
+        total_sites_checked=total_sites_checked,
+        found_count=len(found_sites),
+    )
     if not search:
         return None
-
-    search.status = "completed"
-    search.total_sites_checked = total_sites_checked
-    search.found_count = len(found_sites)
-    search.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     for site in found_sites:
         db.add(MaigretSiteResult(
@@ -56,14 +53,14 @@ async def cancel_search_run(
 ) -> MaigretSearch | None:
     """Mark a search run as cancelled, storing whatever found-site results
     were captured before cancellation."""
-    search = await get_search_run(db, search_id)
+    search = await mark_cancelled(
+        db, MaigretSearch, search_id,
+        columns=_COLUMNS,
+        total_sites_checked=total_sites_checked,
+        found_count=len(found_sites),
+    )
     if not search:
         return None
-
-    search.status = "cancelled"
-    search.total_sites_checked = total_sites_checked
-    search.found_count = len(found_sites)
-    search.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     for site in found_sites:
         db.add(MaigretSiteResult(
@@ -80,16 +77,7 @@ async def cancel_search_run(
 
 async def fail_search_run(db: AsyncSession, search_id: int, error_message: str) -> MaigretSearch | None:
     """Mark a search run as failed"""
-    search = await get_search_run(db, search_id)
-    if not search:
-        return None
-
-    search.status = "failed"
-    search.error_message = error_message[:1000]
-    search.completed_at = datetime.datetime.now(datetime.timezone.utc)
-
-    await db.flush()
-    return search
+    return await mark_failed(db, MaigretSearch, search_id, columns=_COLUMNS, error_message=error_message)
 
 
 async def interrupt_running_search_runs(db: AsyncSession) -> int:
@@ -98,9 +86,9 @@ async def interrupt_running_search_runs(db: AsyncSession) -> int:
     a process restart)."""
     return await mark_stale_running_as_failed(
         db, MaigretSearch,
-        error_column="error_message",
+        error_column=_COLUMNS.error_column,
         error_message="Interrupted by server restart",
-        completed_at_column="completed_at",
+        completed_at_column=_COLUMNS.completed_at_column,
     )
 
 

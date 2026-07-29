@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import re
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -248,6 +249,15 @@ async def _run_concurrent_analysis(
     return await asyncio.gather(analysis_task, mitre_task, return_exceptions=True)
 
 
+@dataclass
+class MitreOutcome:
+    """Distinguishes "call failed" from "call succeeded with no MITRE data" so a
+    failed refresh never silently blanks a previously cached mitre_attack value."""
+
+    succeeded: bool
+    data: dict | None
+
+
 async def _run_mitre_only(
     models: dict,
     model_id: str,
@@ -255,7 +265,7 @@ async def _run_mitre_only(
     cti_profile_text: str,
     temperature: float,
     max_tokens: int,
-) -> dict | None:
+) -> MitreOutcome:
     """Run only the MITRE enrichment when general analysis is already cached"""
     try:
         result = await enrich_article_with_mitre(
@@ -263,20 +273,20 @@ async def _run_mitre_only(
             newsfeed_item=newsfeed_item, cti_profile_text=cti_profile_text,
             temperature=temperature, max_tokens=max(max_tokens, 3000),
         )
-        return result.model_dump() if result.has_mitre_data else None
+        return MitreOutcome(succeeded=True, data=result.model_dump() if result.has_mitre_data else None)
     except Exception as e:
         logger.error("MITRE enrichment failed: %s", e)
-        return None
+        return MitreOutcome(succeeded=False, data=None)
 
 
-def _resolve_mitre_result(mitre_result) -> dict | None:
-    """Extract MITRE enrichment dict from the gather result, handling errors"""
+def _resolve_mitre_result(mitre_result) -> MitreOutcome:
+    """Extract MITRE enrichment outcome from the gather result, handling errors"""
     if isinstance(mitre_result, Exception):
         logger.error("MITRE enrichment failed: %s", mitre_result)
-        return None
+        return MitreOutcome(succeeded=False, data=None)
     if not mitre_result.has_mitre_data:
-        return None
-    return mitre_result.model_dump()
+        return MitreOutcome(succeeded=True, data=None)
+    return MitreOutcome(succeeded=True, data=mitre_result.model_dump())
 
 
 async def analyze_article_with_llm(
@@ -324,7 +334,7 @@ async def analyze_article_with_llm(
     models = await build_model_registry(db)
 
     formatted_result = None
-    mitre_data = None
+    mitre_outcome: MitreOutcome | None = None
 
     if run_analysis and run_mitre:
         system_prompt, user_prompt = build_analysis_prompts(newsfeed_item, cti_profile_text)
@@ -336,7 +346,7 @@ async def analyze_article_with_llm(
             raise analysis_result
         analysis_json = _parse_llm_json_response(analysis_result)
         formatted_result = _build_formatted_result(analysis_json)
-        mitre_data = _resolve_mitre_result(mitre_result)
+        mitre_outcome = _resolve_mitre_result(mitre_result)
     elif run_analysis:
         system_prompt, user_prompt = build_analysis_prompts(newsfeed_item, cti_profile_text)
         analysis_text = await execute_prompt(
@@ -347,15 +357,15 @@ async def analyze_article_with_llm(
         analysis_json = _parse_llm_json_response(analysis_text)
         formatted_result = _build_formatted_result(analysis_json)
     elif run_mitre:
-        mitre_data = await _run_mitre_only(
+        mitre_outcome = await _run_mitre_only(
             models, model_id, newsfeed_item, cti_profile_text, temperature, max_tokens,
         )
 
     update_kwargs = {}
     if formatted_result is not None:
         update_kwargs["analysis_result"] = json.dumps(formatted_result)
-    if run_mitre:
-        update_kwargs["mitre_attack"] = json.dumps(mitre_data) if mitre_data else None
+    if mitre_outcome is not None and mitre_outcome.succeeded:
+        update_kwargs["mitre_attack"] = json.dumps(mitre_outcome.data) if mitre_outcome.data else None
 
     if update_kwargs:
         await update_news_article(db=db, article_id=article_id, **update_kwargs)
@@ -363,7 +373,11 @@ async def analyze_article_with_llm(
     response = {
         "message": "Analysis completed",
         "analysis_result": formatted_result or (json.loads(news_article_record.analysis_result) if has_cached_analysis else None),
-        "mitre_attack": mitre_data or _parse_stored_mitre_data(news_article_record.mitre_attack),
+        "mitre_attack": (
+            mitre_outcome.data
+            if mitre_outcome is not None and mitre_outcome.succeeded
+            else _parse_stored_mitre_data(news_article_record.mitre_attack)
+        ),
     }
     if use_cti_settings and cti_settings:
         response["cti_settings_used"] = True

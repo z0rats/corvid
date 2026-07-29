@@ -148,9 +148,9 @@ async def fetch_both(
         )
 
     sources: list[str] = []
-    if arctic_items:
+    if arctic_items is not None:
         sources.append("Arctic Shift")
-    if pullpush_items:
+    if pullpush_items is not None:
         sources.append("PullPush")
     arctic_down = arctic_items is None
 

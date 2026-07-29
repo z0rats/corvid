@@ -1,20 +1,17 @@
-import datetime
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.scans.crud import ScanColumns, create_running, mark_cancelled, mark_completed, mark_failed
 from app.core.scans.reconciliation import mark_stale_running_as_failed
 from app.features.email_search.models.email_search_models import MailSearch, MailSearchResult
+
+_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
 
 
 async def create_search_run(db: AsyncSession, username: str) -> MailSearch:
     """Create a new search run in the 'running' state"""
-    search = MailSearch(username=username, status="running")
-    db.add(search)
-    await db.flush()
-    await db.refresh(search)
-    return search
+    return await create_running(db, MailSearch, username=username)
 
 
 async def complete_search_run(
@@ -24,14 +21,14 @@ async def complete_search_run(
     found_providers: list[dict],
 ) -> MailSearch | None:
     """Mark a search run as completed, storing its found-provider results"""
-    search = await get_search_run(db, search_id)
+    search = await mark_completed(
+        db, MailSearch, search_id,
+        columns=_COLUMNS,
+        total_providers_checked=total_providers_checked,
+        found_count=len(found_providers),
+    )
     if not search:
         return None
-
-    search.status = "completed"
-    search.total_providers_checked = total_providers_checked
-    search.found_count = len(found_providers)
-    search.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     for provider in found_providers:
         db.add(MailSearchResult(
@@ -53,14 +50,14 @@ async def cancel_search_run(
 ) -> MailSearch | None:
     """Mark a search run as cancelled, storing whatever found-provider results
     were captured before cancellation."""
-    search = await get_search_run(db, search_id)
+    search = await mark_cancelled(
+        db, MailSearch, search_id,
+        columns=_COLUMNS,
+        total_providers_checked=total_providers_checked,
+        found_count=len(found_providers),
+    )
     if not search:
         return None
-
-    search.status = "cancelled"
-    search.total_providers_checked = total_providers_checked
-    search.found_count = len(found_providers)
-    search.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     for provider in found_providers:
         db.add(MailSearchResult(
@@ -76,16 +73,7 @@ async def cancel_search_run(
 
 async def fail_search_run(db: AsyncSession, search_id: int, error_message: str) -> MailSearch | None:
     """Mark a search run as failed"""
-    search = await get_search_run(db, search_id)
-    if not search:
-        return None
-
-    search.status = "failed"
-    search.error_message = error_message[:1000]
-    search.completed_at = datetime.datetime.now(datetime.timezone.utc)
-
-    await db.flush()
-    return search
+    return await mark_failed(db, MailSearch, search_id, columns=_COLUMNS, error_message=error_message)
 
 
 async def interrupt_running_search_runs(db: AsyncSession) -> int:
@@ -94,9 +82,9 @@ async def interrupt_running_search_runs(db: AsyncSession) -> int:
     a process restart)."""
     return await mark_stale_running_as_failed(
         db, MailSearch,
-        error_column="error_message",
+        error_column=_COLUMNS.error_column,
         error_message="Interrupted by server restart",
-        completed_at_column="completed_at",
+        completed_at_column=_COLUMNS.completed_at_column,
     )
 
 
