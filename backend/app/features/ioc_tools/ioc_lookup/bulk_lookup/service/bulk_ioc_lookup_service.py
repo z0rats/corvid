@@ -37,7 +37,7 @@ async def run_single_lookup_with_rate_limit(
                 logger.warning("Service not configured: %s", service_name)
                 return {"status": LookupStatus.ERROR.value, "error": f"Service '{service_name}' not configured"}
 
-            if ioc_type not in service_config.get('supported_ioc_types', []):
+            if ioc_type not in service_config.supported_ioc_types:
                 logger.debug("Service %s doesn't support IOC type %s", service_name, ioc_type)
                 return {"status": LookupStatus.ERROR.value, "error": f"Service '{service_name}' doesn't support {ioc_type}"}
 
@@ -108,7 +108,7 @@ async def process_bulk_lookups_with_rate_limiting(
 
         for service_name in services_to_query:
             service_config = get_service(service_name)
-            if not service_config or ioc_type not in service_config.get('supported_ioc_types', []):
+            if not service_config or ioc_type not in service_config.supported_ioc_types:
                 logger.debug("Skipping %s for %s - doesn't support %s", service_name, ioc_value, ioc_type)
                 continue
 

@@ -8,6 +8,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service import ioc_lookup_e
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import (
     ServiceAuthError, ServiceError, ServiceRateLimitError, ServiceUnavailableError,
 )
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.provider_spec import ApiKeySpec, ProviderSpec
 from app.features.ioc_tools.ioc_lookup.bulk_lookup.service import bulk_ioc_lookup_service as bulk_service
 
 
@@ -22,14 +23,12 @@ def _async_return(value):
 
 
 def _service_config(func=None, requires_key=True, ioc_types=("ipv4",)):
-    config = {
-        "name": "TestService",
-        "supported_ioc_types": list(ioc_types),
-        "func": func,
-    }
-    if requires_key:
-        config["api_key_name"] = "TEST_API_KEY"
-    return config
+    return ProviderSpec(
+        func=func,
+        name="TestService",
+        supported_ioc_types=list(ioc_types),
+        api_key=ApiKeySpec(setting_name="TEST_API_KEY") if requires_key else None,
+    )
 
 
 # Captured before the autouse fixture below stubs it out, so tests that exercise pacing
@@ -188,7 +187,7 @@ class TestCallServiceWithRetryBacksOffOnRateLimit:
                 raise ServiceRateLimitError("svc", "rate limited")
             return {"ok": True}
 
-        result = _run(engine._call_service_with_retry({"func": flaky_func}, {}, "svc"))
+        result = _run(engine._call_service_with_retry(_service_config(func=flaky_func), {}, "svc"))
 
         assert result == {"ok": True}
         assert attempts["n"] == 3
@@ -207,7 +206,7 @@ class TestCallServiceWithRetryBacksOffOnRateLimit:
             raise ServiceRateLimitError("svc", "rate limited")
 
         with pytest.raises(ServiceRateLimitError):
-            _run(engine._call_service_with_retry({"func": always_rate_limited}, {}, "svc"))
+            _run(engine._call_service_with_retry(_service_config(func=always_rate_limited), {}, "svc"))
 
         assert attempts["n"] == 3  # initial attempt + 2 retries
 
@@ -220,7 +219,7 @@ class TestCallServiceWithRetryBacksOffOnRateLimit:
             raise ServiceAuthError("svc", "bad key")
 
         with pytest.raises(ServiceAuthError):
-            _run(engine._call_service_with_retry({"func": failing}, {}, "svc"))
+            _run(engine._call_service_with_retry(_service_config(func=failing), {}, "svc"))
 
         assert attempts["n"] == 1
 
@@ -244,7 +243,7 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
         assert "error" in result
 
     def test_unsupported_ioc_type_is_error_status(self, monkeypatch, semaphore):
-        monkeypatch.setattr(bulk_service, "get_service", lambda name: {"supported_ioc_types": ["domain"]})
+        monkeypatch.setattr(bulk_service, "get_service", lambda name: _service_config(ioc_types=("domain",)))
 
         result = _run(bulk_service.run_single_lookup_with_rate_limit(
             "svc", "1.2.3.4", "ipv4", db=None, semaphore=semaphore,
@@ -262,7 +261,7 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
         ],
     )
     def test_engine_status_is_propagated_verbatim(self, monkeypatch, semaphore, lookup_status):
-        monkeypatch.setattr(bulk_service, "get_service", lambda name: {"supported_ioc_types": ["ipv4"]})
+        monkeypatch.setattr(bulk_service, "get_service", lambda name: _service_config())
 
         async def fake_lookup_ioc(*args, **kwargs):
             return LookupResult(ioc="1.2.3.4", service="svc", status=lookup_status, error="boom")
@@ -277,7 +276,7 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
         assert result["error"] == "boom"
 
     def test_unexpected_exception_is_error_status_not_raw_traceback(self, monkeypatch, semaphore):
-        monkeypatch.setattr(bulk_service, "get_service", lambda name: {"supported_ioc_types": ["ipv4"]})
+        monkeypatch.setattr(bulk_service, "get_service", lambda name: _service_config())
 
         async def boom(*args, **kwargs):
             raise RuntimeError("kaboom")
@@ -292,7 +291,7 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
         assert result["error"] == "kaboom"
 
     def test_success_is_success_status(self, monkeypatch, semaphore):
-        monkeypatch.setattr(bulk_service, "get_service", lambda name: {"supported_ioc_types": ["ipv4"]})
+        monkeypatch.setattr(bulk_service, "get_service", lambda name: _service_config())
 
         async def fake_lookup_ioc(*args, **kwargs):
             return LookupResult(ioc="1.2.3.4", service="svc", status=LookupStatus.SUCCESS, data={"x": 1})

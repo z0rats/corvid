@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.core.exceptions import AppHTTPException
 
 from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.settings.settings_router_factory import build_singleton_settings_router
 from app.features.newsfeed.service.newsfeed_scheduler_service import configure_news_scheduler
 from app.features.newsfeed.crud.newsfeed_settings_crud import (
     get_all_newsfeed_settings,
@@ -107,28 +108,16 @@ async def update_retention_days(update: RetentionDaysUpdate, db: SessionDep) -> 
     return RetentionDaysResponse(message="Retention days updated successfully", retention_days=update.retention_days)
 
 
-@router.get(
-    "/newsfeed/config",
-    response_model=NewsfeedConfigSchema,
-    response_model_exclude_none=True,
-    summary="Get newsfeed config",
-    description="Get newsfeed configuration including background fetch settings",
+config_router = build_singleton_settings_router(
+    prefix="/newsfeed/config",
+    tags=["Newsfeed Settings"],
+    response_schema=NewsfeedConfigSchema,
+    update_schema=NewsfeedConfigUpdateSchema,
+    get_service=crud_get_config,
+    update_service=crud_update_config,
+    on_after_update=lambda _payload, updated: configure_news_scheduler(
+        updated.background_fetch_enabled, updated.fetch_interval_minutes,
+    ),
+    exclude_none=True,
 )
-async def get_newsfeed_config(db: ReadSessionDep) -> NewsfeedConfigSchema:
-    """Get current newsfeed configuration"""
-    return NewsfeedConfigSchema.model_validate(await crud_get_config(db))
-
-
-@router.put(
-    "/newsfeed/config",
-    response_model=NewsfeedConfigSchema,
-    response_model_exclude_none=True,
-    summary="Update newsfeed config",
-    description="Update newsfeed configuration and reconfigure the background fetch scheduler",
-)
-async def update_newsfeed_config(config_data: NewsfeedConfigUpdateSchema, db: SessionDep) -> NewsfeedConfigSchema:
-    """Update newsfeed configuration and restart scheduler with new settings"""
-    updated_config = await crud_update_config(db, config_data)
-    configure_news_scheduler(updated_config.background_fetch_enabled, updated_config.fetch_interval_minutes)
-    logger.info("Updated newsfeed configuration and triggered scheduler update.")
-    return NewsfeedConfigSchema.model_validate(updated_config)
+router.include_router(config_router)

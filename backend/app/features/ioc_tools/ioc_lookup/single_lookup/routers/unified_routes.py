@@ -53,7 +53,7 @@ async def unified_lookup(
     if service_config is None:
         raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Service '{service}' not found.", error_code="IOC_SERVICE_NOT_FOUND")
 
-    if detected_ioc_type not in service_config.get('supported_ioc_types', []):
+    if detected_ioc_type not in service_config.supported_ioc_types:
         raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Service '{service}' does not support IOC type '{detected_ioc_type}'.",

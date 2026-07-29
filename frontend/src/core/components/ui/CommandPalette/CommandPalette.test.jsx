@@ -29,7 +29,10 @@ function getSearchInput() {
   return screen.getByPlaceholderText(/search tools/i);
 }
 
-describe('CommandPalette — "/" guard', () => {
+// The full shortcut matrix (the "/" guard, Cmd/Ctrl+K, Cmd/Ctrl+,, "?", and ⌘V-paste) is unit-
+// tested directly against useGlobalPaletteShortcuts.test.js. These are smoke tests proving the
+// composed whole is wired correctly — one per shortcut, not the full matrix.
+describe('CommandPalette — shortcut wiring smoke test', () => {
   it('opens on "/" when no input is focused', () => {
     renderPalette();
 
@@ -40,18 +43,7 @@ describe('CommandPalette — "/" guard', () => {
     expect(screen.getByPlaceholderText(/search tools/i)).toBeInTheDocument();
   });
 
-  it('does not open on "/" while a text input elsewhere is focused', async () => {
-    const user = userEvent.setup();
-    renderPalette(<input data-testid="other-input" aria-label="other input" />);
-
-    const otherInput = screen.getByTestId('other-input');
-    otherInput.focus();
-    await user.keyboard('/');
-
-    expect(screen.queryByPlaceholderText(/search tools/i)).not.toBeInTheDocument();
-  });
-
-  it('opens on Cmd/Ctrl+K regardless of focus', () => {
+  it('opens on Cmd/Ctrl+K', () => {
     renderPalette();
 
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
@@ -59,16 +51,11 @@ describe('CommandPalette — "/" guard', () => {
     expect(screen.getByPlaceholderText(/search tools/i)).toBeInTheDocument();
   });
 
-  it('Cmd/Ctrl+, opens Settings directly, closed or open', () => {
+  it('Cmd/Ctrl+, navigates to Settings', () => {
     renderPalette();
 
     fireEvent.keyDown(window, { key: ',', metaKey: true });
-    expect(mockNavigate).toHaveBeenCalledWith('/settings');
-    expect(screen.queryByPlaceholderText(/search tools/i)).not.toBeInTheDocument();
 
-    mockNavigate.mockClear();
-    fireEvent.keyDown(window, { key: '/' });
-    fireEvent.keyDown(window, { key: ',', metaKey: true });
     expect(mockNavigate).toHaveBeenCalledWith('/settings');
   });
 });
