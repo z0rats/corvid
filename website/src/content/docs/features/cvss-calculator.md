@@ -3,5 +3,7 @@ title: CVSS Calculator
 description: Score vulnerabilities with CVSS 3.1 or 4.0.
 ---
 
-Calculate a vulnerability's CVSS 3.1 or 4.0 score, and export the calculation as Markdown or
-JSON for inclusion in a report.
+Calculate a vulnerability's score using either the **CVSS 3.1** or **CVSS 4.0** metric set — pick
+the version your reporting standard requires. Export the calculation as Markdown or JSON (see
+[Reports & Exports](/corvid/architecture/reports/)) to drop straight into a vulnerability report
+or ticket.

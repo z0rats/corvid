@@ -42,73 +42,76 @@ IOC lookups auto-route to the right services based on the type you paste in:
 - **Crypto addresses** (EVM & Bitcoin) — screened against a self-hosted blacklist built from the OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset, refreshed daily in the background; no API key or third-party calls required
 
 ## Features
+
+Full write-up of every module (settings, gotchas, endpoints) lives on the
+[docs site](https://z0rats.github.io/corvid/) — this is the short version.
+
 ### Newsfeed
-The Newsfeed module keeps you up to date about the latest cybersecurity news by aggregating articles from trusted sources such as Wired, The Hacker News, Security Magazine, Threatpost, TechCrunch Security, and Dark Reading. Stay up-to-date with industry trends and potential threats without having to visit multiple websites or subscribe to numerous newsletters. The module extracts IOCs automatically from the news articles and lets you analyze news in no time using AI.
+Aggregates cybersecurity news from trusted sources, extracts IOCs automatically, and analyzes
+articles with AI. → [Docs](https://z0rats.github.io/corvid/features/newsfeed/)
 <img width="1679" height="1084" alt="newsfeed" src="https://github.com/user-attachments/assets/0c23cc14-4a1a-4c34-9fb8-5064a0f23889" />
 
 
 ### IOC Tools
-The IOC Tools module helps you analyze different types of indicators of compromise (IOCs) such as IP addresses, hashes, email addresses, domains, URLs, and crypto addresses (EVM and Bitcoin). It leverages services like VirusTotal, AlienVault, AbuseIPDB, and social media platforms like Reddit and Twitter to gather information about the IOCs. Crypto addresses are screened against a self-hosted reputation blacklist built from the OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset, refreshed daily — no API key or third-party calls needed for this check. The module automatically detects the type of IOC being analyzed and utilizes the appropriate services to provide relevant information, enabling you to identify potential threats and take necessary actions to protect your organization. Analysis can be done individual per IOC or in bulk. Also fanging and defanging is possible for sharing IOCs safely.
+Analyze IPs, domains, URLs, hashes, emails, and crypto addresses against VirusTotal, AlienVault,
+AbuseIPDB, Shodan, and more, single or in bulk, plus Domain Finder, WHOIS/RDAP, and Certificate
+Transparency panels. → [Docs](https://z0rats.github.io/corvid/features/ioc-tools/)
 <img width="1679" height="1102" alt="ioc_lookup" src="https://github.com/user-attachments/assets/40b1e656-ba6c-4f36-b8dd-beee0dca3fdd" />
 
 
 ### Email Analyzer
-The Email Analyzer module allows you to analyze .eml files for potential threats. Simply drag and drop an .eml file into the module, and it will parse the file, perform basic security checks, extract indicators of compromise (IOCs), and analyze messages with the help of AI. Analyze the IOCs using various open-source intelligence (OSINT) services, and enhance your organization's email security.
-
+Parse `.eml` files, run header/security checks, extract IOCs, and get an AI-assisted read on
+suspicious messages. → [Docs](https://z0rats.github.io/corvid/features/email-analyzer/)
 
 ### Image Tools
-The Image Tools module lets you inspect an image file for OSINT purposes. Upload a picture to see every piece of metadata it carries — EXIF camera/device info, capture timestamp, GPS location with a map link, embedded thumbnail, file properties, and MD5/SHA1/SHA256 hashes. You can also kick off a reverse image search without any API keys: provide the image's URL to get deep links straight into Google Lens, Yandex, Bing, and TinEye, or use the same buttons to open each engine for a manual upload.
-
-
-### Domain Finder
-The Domain Finder module helps you to protect your organization from phishing attacks by searching for recently registered domains that match specific patterns. By utilizing the URLScan.io API, you can view screenshots of websites associated with domains without visiting them directly. Additionally, you can check each domain and its resolved IP against multiple threat intelligence services, further enhancing your organization's security.
-
+Inspect EXIF/GPS/hash metadata, reverse-image search with no API keys, and an optional AI photo
+geolocation hypothesis. → [Docs](https://z0rats.github.io/corvid/features/image-tools/)
 
 ### AI Templates
-The AI Templates module provides powerful AI-based solutions for log data analysis, email text analysis, and source code explanation. It lets you create templates for AI tasks and supports you in the prompt engineering process.
+Reusable AI prompt templates for log analysis, email analysis, and source-code explanation. →
+[Docs](https://z0rats.github.io/corvid/features/llm-templates/)
 <img width="1679" height="1102" alt="ai_templates" src="https://github.com/user-attachments/assets/42c52c8c-7d2d-4b70-b25c-666d6993832c" />
 
-
 ### CVSS Calculator
-The CVSS Calculator module allows you to calculate the CVSS 3.1 score of a vulnerability and export the calculation as a markdown or JSON file.
-
+Score a vulnerability with CVSS 3.1 or 4.0 and export it. →
+[Docs](https://z0rats.github.io/corvid/features/cvss-calculator/)
 
 ### Detection Rules
-The Detection Rules module is a GUI for creating Sigma, Yara and Snort/Suricate rules.
-
+A GUI for creating Sigma, Yara, and Snort/Suricata rules. →
+[Docs](https://z0rats.github.io/corvid/features/rule-creator/)
 
 ### Reddit Search
-The Reddit Search module finds a Reddit user's full post and comment history, including content removed by moderators or deleted by its author, by querying the public Arctic Shift and PullPush archive APIs in parallel — no API key required. Filter by subreddit, date range, or NSFW status, and page through results by post or comment. Each search is saved to history so you can revisit it later.
+A Reddit user's full post/comment history, including removed/deleted content, no API key
+required. → [Docs](https://z0rats.github.io/corvid/features/reddit-search/)
 
+### Username & Email Search
+Find accounts and mail providers registered to a username, across hundreds of sites. →
+[Username Search docs](https://z0rats.github.io/corvid/features/username-search/) /
+[Email Search docs](https://z0rats.github.io/corvid/features/email-search/)
 
 ### Git Recon
-The Git Recon module correlates names, emails, and GitHub logins from git commit history using [gitcolombo](https://github.com/Soxoj/gitcolombo). Search mode queries GitHub's API only (PGP-key UIDs + public commit search) for a username, no cloning required. Repo/user modes clone one repository or every public repository of a GitHub user/org and cross-reference author vs. committer identities to surface aliases and shared-identity clusters. A GitHub personal access token (configured under Settings > API Keys) is optional but recommended to avoid unauthenticated GitHub rate limits.
+Correlate names, emails, and GitHub logins from commit history via
+[gitcolombo](https://github.com/Soxoj/gitcolombo). →
+[Docs](https://z0rats.github.io/corvid/features/git-recon/)
 
+### Dork Runner
+Run parameterized search-engine dorks against a domain, username, or email. →
+[Docs](https://z0rats.github.io/corvid/features/dork-runner/)
 
 ### Browser Extension
-A minimal Chrome extension ("Corvid Quick Send") lets you select text on any page and send it straight to IOC Tools lookup, with no build step — load it unpacked from the [`extension/`](extension/) folder. See [extension/README.md](extension/README.md) for setup.
+A minimal Chrome extension ("Corvid Quick Send") lets you select text on any page and send it
+straight to IOC Tools lookup, with no build step — load it unpacked from the
+[`extension/`](extension/) folder. →
+[Docs](https://z0rats.github.io/corvid/features/browser-extension/)
 
 
 ## Keyboard-first navigation
 
-Corvid is built around a single search bar instead of hunting through menus. Press `/` or
-`⌘K`/`Ctrl+K` from anywhere to open it, then:
-
-- Type a tool's name — `reddit`, `git recon`, `whois` — to jump straight to it.
-- Paste a raw value — an IP, domain, e-mail, hash, CVE ID, or crypto address — and Corvid
-  suggests which tools can look it up.
-- Add a tool name after a value (`john_doe reddit`) to open that tool with the value already
-  filled in.
-- Filter with `#tag` (`#recon`, `#ioc`) or `type:kind` (`type:email`).
-- Prefix `>` for quick actions (`>settings`, `>theme`).
-- `defang <value>` / `fang <value>` copies a de-fanged/re-fanged IOC straight to your
-  clipboard — nothing to open.
-- Paste an image (`⌘V`/`Ctrl+V`) to jump into Image Tools with it already loaded.
-
-No keyboard handy? The panel on the left lists every tool, grouped the same way the search
-tags do — click through instead of typing.
-
-Press `?` any time for the full shortcut list.
+Corvid is built around a single search bar instead of hunting through menus — press `/` or
+`⌘K`/`Ctrl+K` from anywhere to open it. Paste a raw IOC value to get routed to the right tool,
+type a tool's name to jump to it, or combine both (`john_doe reddit`) to open a tool pre-filled.
+See the [Command Palette docs](https://z0rats.github.io/corvid/usage/command-palette/) for the
+full grammar (tags, filters, quick actions, defang/fang, playbooks).
 
 
 ## Deploy with docker
@@ -117,7 +120,7 @@ Press `?` any time for the full shortcut list.
 
 - Docker Engine 24+ with the Docker Compose v2 plugin (the `docker compose` command, not the legacy standalone `docker-compose` binary)
 - Linux, macOS, or Windows (via Docker Desktop/WSL2)
-- At least ~1 GB free disk for the app itself; more if you enable `email_search`'s optional headless checkers, which lazily download a Chromium binary (~150-300 MB) on first use — see [Disk usage](#disk-usage) below
+- At least ~1 GB free disk for the app itself; more if you enable `email_search`'s optional headless checkers, which lazily download a Chromium binary (~150-300 MB) on first use — see [Disk usage](https://z0rats.github.io/corvid/getting-started/backup-and-operations/#disk-usage)
 - Outbound HTTPS access for the third-party services you configure (VirusTotal, Shodan, etc.) — no inbound ports need to be exposed
 - No GPU or special hardware needed. CPU/RAM haven't been formally benchmarked, but as a single-user tool with no background crawling by default, it's light — a small VM (1-2 vCPU, 2 GB RAM) is comfortable for typical use
 
@@ -164,77 +167,17 @@ before starting the container.
 ### Configuration
 
 Copy [`.env.example`](.env.example) to `.env` to override any setting (all of them have working
-defaults, so this is optional). `.env` is read automatically by `docker compose up`.
+defaults, so this is optional). `.env` is read automatically by `docker compose up`. Per-service
+API keys and app-level preferences are configured from within the app itself instead — see
+[Settings Reference](https://z0rats.github.io/corvid/getting-started/settings-reference/).
 
-### Backup
+### Backup, disk usage & operational security
 
-<details>
-<summary>Show details</summary>
-
-Everything Corvid needs to keep running lives under the host-mounted `data/` directory — back it
-up as a whole (stop the container first for a consistent SQLite snapshot, or use `sqlite3 .backup`
-for a live one):
-
-- `data/corvid.db` — the SQLite database: investigation history, settings, and encrypted API keys.
-- `data/.encryption_key` — decrypts the API keys stored in the database. Losing this file makes
-  stored keys unrecoverable even though the database itself is intact; re-entering the keys is the
-  only fix.
-- `data/.access_token` — the bearer token protecting the app. Losing it isn't a data-loss risk — a
-  new one is generated on next startup and you just re-enter it in the browser.
-- `data/logs/` — optional, rotated application logs.
-
-Losing `data/` entirely means starting over from a blank instance; there is no other durable state.
-
-**Permissions travel with the backup.** `.encryption_key` and `.access_token` are written 0600
-on the host, but that only protects them *in place*. A backup method that doesn't preserve file
-modes/ownership (a permissive `tar` extraction, copying into a world-readable cloud-sync folder,
-`chmod -R` during restore) — or that lands the backup somewhere with broader access than the
-source host — defeats the encryption-at-rest story: the key ends up sitting right next to the
-ciphertext it decrypts. Preserve permissions in transit (`tar --preserve-permissions`, `rsync -a`)
-and restrict access to the backup destination at least as tightly as `data/` itself.
-
-</details>
-
-### Disk usage
-
-<details>
-<summary>Show details</summary>
-
-`data/` has no total-size guard, so keep an eye on the host mount over time. Rough steady-state
-contributors: the SQLite database and rotated logs stay small (tens of MB); maigret's site
-database and its own image-hash cache add tens of MB; `email_search`'s headless checkers
-(if enabled) lazily download a Chromium binary the first time they run (~150-300 MB, plus its own
-runtime footprint); exported reports accumulate if you generate a lot of them and never clean up.
-The backend logs a warning at startup (and the `disk` field in
-`GET /api/healthcheck/detailed` reports `"status": "low"`) once free space on the `data/` mount
-drops below 1 GB, but nothing actively stops writes past that point — treat it as an early signal,
-not a hard limit.
-
-</details>
-
-### Operational security notes
-
-<details>
-<summary>Show details</summary>
-
-This tool talks to third-party services (VirusTotal, Shodan, target mail servers via
-`email_search`'s SMTP checks, etc.) using your own infrastructure's IP, and stores investigation
-history in a local database. Some practices worth following, especially for sensitive engagements:
-
-- **Isolate the instance.** Run it on a dedicated VM/VPS or an isolated host, not your daily-driver
-  machine — a target under investigation can potentially see inbound lookups against them.
-- **Route sensitive lookups through Tor/a proxy.** `email_search` supports `use_tor`/`proxy_url`,
-  and `username_search`'s maigret source has its own proxy setting, for when a target could
-  plausibly monitor who's probing them.
-- **Never enable `SECURITY_ALLOW_PRIVATE_NETWORK_TARGETS` outside dev/testing** — it's a direct
-  SSRF opt-out.
-- **Segment and rotate API keys** per engagement where the provider supports multiple keys, so a
-  compromised key from one case doesn't expose others.
-- **Don't cross-contaminate identities.** Some features (e.g. Image Tools' reverse-search
-  deep-links) open external services directly in your browser — use a separate, logged-out
-  browser profile for sensitive lookups so they don't tie back to your personal accounts.
-
-</details>
+Covered in depth on the docs site:
+[Backup & Operational Security](https://z0rats.github.io/corvid/getting-started/backup-and-operations/)
+— what's under `data/` and how to back it up safely, disk-usage expectations, and practices worth
+following for sensitive engagements (isolating the instance, routing through Tor/a proxy, key
+rotation, and more).
 
 ## Disclaimer
 

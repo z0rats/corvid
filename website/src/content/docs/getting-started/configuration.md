@@ -16,20 +16,10 @@ see `backend/app/core/config/settings.py`.
 
 Per-service API keys (VirusTotal, Shodan, Hunter.io, etc.) are configured from the app itself
 under **Settings → API Keys**, not via `.env`. Keys are encrypted at rest before being stored in
-the database.
+the database. See [Settings Reference](/corvid/getting-started/settings-reference/) for every
+other settings tab.
 
 ## Backup
 
-Everything Corvid needs to keep running lives under the host-mounted `data/` directory:
-
-- `data/corvid.db` — SQLite database: investigation history, settings, and encrypted API keys.
-- `data/.encryption_key` — decrypts the API keys stored in the database. Losing this file makes
-  stored keys unrecoverable even though the database itself is intact.
-- `data/.access_token` — the bearer token protecting the app. Losing it isn't a data-loss risk —
-  a new one is generated on next startup.
-- `data/logs/` — optional, rotated application logs.
-
-Back up `data/` as a whole (stop the container first for a consistent SQLite snapshot, or use
-`sqlite3 .backup` for a live one), preserving file permissions in transit
-(`tar --preserve-permissions`, `rsync -a`) — a backup method that doesn't preserve modes/ownership
-defeats the encryption-at-rest story for `.encryption_key` and `.access_token`.
+See [Backup & Operational Security](/corvid/getting-started/backup-and-operations/) for what
+lives under `data/`, how to back it up safely, and disk-usage expectations.

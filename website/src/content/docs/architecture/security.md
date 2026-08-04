@@ -30,6 +30,21 @@ SSRF guard that resolves and validates the hostname before the request is made, 
 private/loopback/link-local/reserved IPs, and re-validates every redirect hop. This covers
 favicon downloads, newsfeed fetching, LLM-template web content, and domain WHOIS/RDAP redirects.
 
+## Rate limiting and request limits
+
+The API rate-limits by client IP (120 requests/minute, 5000/hour by default). In production
+(`ENVIRONMENT=production`), the real client IP is read from `X-Forwarded-For` when behind a
+trusted reverse proxy; in development that header is ignored, since there's no trusted proxy in
+front of the app and any client could spoof it to bypass the limit. Request bodies over 50 MB are
+rejected before reaching route handlers.
+
+## Security headers
+
+Set in two independent places, since the backend's middleware never sees the frontend's own
+response: the backend covers `/api/*`, `/docs`, `/redoc`, and `/openapi.json`; nginx sets the
+same base headers plus a strict Content-Security-Policy for the actual HTML/JS the browser
+renders. HSTS is production-only, since it must never be sent over plain HTTP — the app's default.
+
 ## Dependency and code scanning
 
 CI runs `pip-audit`/`yarn npm audit` and Trivy for dependency and image CVEs, plus CodeQL (SAST)

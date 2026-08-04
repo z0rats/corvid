@@ -21,6 +21,16 @@ export default defineConfig({
 						{ label: 'Introduction', slug: 'getting-started/introduction' },
 						{ label: 'Installation', slug: 'getting-started/installation' },
 						{ label: 'Configuration', slug: 'getting-started/configuration' },
+						{ label: 'Settings Reference', slug: 'getting-started/settings-reference' },
+						{ label: 'Backup & Operational Security', slug: 'getting-started/backup-and-operations' },
+						{ label: 'Local Development', slug: 'getting-started/local-development' },
+						{ label: 'Troubleshooting', slug: 'getting-started/troubleshooting' },
+					],
+				},
+				{
+					label: 'Usage',
+					items: [
+						{ label: 'Command Palette', slug: 'usage/command-palette' },
 					],
 				},
 				{
@@ -29,6 +39,8 @@ export default defineConfig({
 						{ label: 'Backend', slug: 'architecture/backend' },
 						{ label: 'Frontend', slug: 'architecture/frontend' },
 						{ label: 'Security', slug: 'architecture/security' },
+						{ label: 'AI / LLM Providers', slug: 'architecture/ai-providers' },
+						{ label: 'Reports & Exports', slug: 'architecture/reports' },
 					],
 				},
 				{

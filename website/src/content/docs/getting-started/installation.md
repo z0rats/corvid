@@ -53,3 +53,20 @@ you'll be asked to paste that token once — it's then remembered in the browser
 
 To set your own fixed token instead of the auto-generated one, set `API_ACCESS_TOKEN` in `.env`
 before starting the container.
+
+## Production considerations
+
+`docker-compose.prod.yaml` (used by the one-line installer, and by `./update.sh` for updates) is
+a separate Compose project from the source build's `docker-compose.yaml` — pulling pre-built
+`ghcr.io/z0rats/corvid-backend`/`corvid-frontend` images instead of building. It's a distinct
+Compose project name (`corvid-prod` vs `corvid`) with no `container_name` overrides, so it can run
+alongside a source dev stack on the same host without name clashes — set `FRONTEND_PORT` for one
+of them if running both, to avoid a port clash on 4000.
+
+Set `ENVIRONMENT=production` in `.env` to enable HSTS on the security headers (it's withheld by
+default since it must never be sent over plain HTTP). The app itself only serves plain HTTP —
+TLS termination via a reverse proxy is the operator's responsibility for any production exposure
+beyond `localhost`.
+
+See [Backup & Operational Security](/corvid/getting-started/backup-and-operations/) for
+production-relevant guidance on isolating the instance and handling sensitive engagements.

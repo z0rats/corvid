@@ -19,11 +19,16 @@ feature directory typically has its own `components/`, `hooks/`, `services/`, `c
 
 ## Command palette
 
-Corvid is built around a single search bar (`/` or `⌘K`/`Ctrl+K`) instead of menu-hunting: paste a
-raw IOC value and it's routed to the right tool, type a tool name to jump to it, or combine both
-(`john_doe reddit`) to open a tool pre-filled. See the README's
-[Keyboard-first navigation](https://github.com/z0rats/corvid#keyboard-first-navigation) section
-for the full grammar.
+Corvid is built around a single search bar (`/` or `⌘K`/`Ctrl+K`) instead of menu-hunting — see
+[Command Palette](/corvid/usage/command-palette/) for the full grammar.
+
+## Cross-feature navigation
+
+"Send to X" actions (e.g. an email found in Email Search → IOC Tools, a domain result in IOC
+Lookup → Domain Finder) pass the value through a query parameter, and the target feature reads
+and clears it on mount. The same mechanism backs the command palette's `value tool` pivot
+(`john_doe reddit`) for every "identity" lookup: Reddit Search, Username Search, Email Search,
+and Git Recon's nickname mode.
 
 ## i18n
 
