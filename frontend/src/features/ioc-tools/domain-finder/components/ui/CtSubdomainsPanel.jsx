@@ -48,7 +48,7 @@ export default function CtSubdomainsPanel({ domain, onScanSubdomain }) {
             {t('domainFinder.ctSubdomains.noSubdomains')}
           </Typography>
         ) : (
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
+          <Stack direction="row" spacing={1} sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             <DnsIcon fontSize="small" color="action" />
             {data.subdomains.map((subdomain) => (
               <Chip

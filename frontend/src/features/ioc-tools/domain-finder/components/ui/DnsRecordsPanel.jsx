@@ -55,7 +55,7 @@ export default function DnsRecordsPanel({ domain }) {
         ) : (
           <Stack spacing={1}>
             {recordTypesWithData.map((type) => (
-              <Stack key={type} direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
+              <Stack key={type} direction="row" spacing={1} sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Chip label={type} size="small" color="primary" variant="filled" sx={{ minWidth: 64 }} />
                 {data.records[type].map((value) => (
                   <Chip key={`${type}_${value}`} label={value} size="small" variant="outlined" />
@@ -72,7 +72,7 @@ export default function DnsRecordsPanel({ domain }) {
             </Typography>
             <Stack spacing={1}>
               {reverseEntries.map(([ip, hosts]) => (
-                <Stack key={ip} direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
+                <Stack key={ip} direction="row" spacing={1} sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                   <DnsIcon fontSize="small" color="action" />
                   <Chip label={ip} size="small" variant="filled" />
                   {hosts.map((host) => (

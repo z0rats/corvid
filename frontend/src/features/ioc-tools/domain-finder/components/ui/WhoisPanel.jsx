@@ -118,7 +118,7 @@ export default function WhoisPanel({ domain }) {
         </Grid>
 
         {data.statuses?.length > 0 && (
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 1, gap: 1 }}>
+          <Stack direction="row" spacing={1} sx={{ mt: 1, gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             <LabelIcon fontSize="small" color="action" />
             {data.statuses.map((status) => (
               <Chip key={status} label={status} size="small" variant="outlined" />
@@ -127,7 +127,7 @@ export default function WhoisPanel({ domain }) {
         )}
 
         {data.nameservers?.length > 0 && (
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 1, gap: 1 }}>
+          <Stack direction="row" spacing={1} sx={{ mt: 1, gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             <DnsIcon fontSize="small" color="action" />
             {data.nameservers.map((ns) => (
               <Chip key={ns} label={ns} size="small" variant="outlined" />
