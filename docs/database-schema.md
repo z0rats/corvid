@@ -193,6 +193,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `newsfeed_report_model` | string(80) | yes | — | — | LLM model override for newsfeed report generation; null = use default_model |
 | `email_analyzer_model` | string(80) | yes | — | — | LLM model override for email search analysis; null = use default_model |
 | `llm_templates_model` | string(80) | yes | — | — | LLM model override for AI template execution; null = use default_model |
+| `image_geolocation_model` | string(80) | yes | — | — | LLM model override for AI photo geolocation; null = use default_model |
 | `created_at` | datetime | no | server: now() | — | When this row was created |
 | `updated_at` | datetime | no | server: now() | — | When this row was last updated |
 

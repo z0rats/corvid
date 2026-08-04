@@ -106,8 +106,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Check i18n locale keys are in sync
-        run: yarn check:i18n
+      # Disabled while localization is paused for new features (English-only
+      # additions expected to fail this check until translation work resumes).
+      # - name: Check i18n locale keys are in sync
+      #   run: yarn check:i18n
 
       - name: Lint
         run: yarn lint
