@@ -28,3 +28,7 @@ A set of tools for working with indicators of compromise:
 - **Certificate Transparency subdomain enumeration** — via crt.sh's public JSON log mirror,
   deduping SAN entries across all matching certificates; each discovered subdomain is one click
   away from re-running the Domain Finder typosquat search against it. No API key needed.
+- **DNSDumpster** — DNS records enriched with ASN, geolocation, reverse DNS, and HTTP(S) banner
+  fingerprints per resolved host, via DNSDumpster's official API. Needs its own free-tier API
+  key (`dnsdumpster.com`), configured under Settings → API Keys; free tier caps results at 50
+  records per domain, no domain-map image or pagination (those are Plus-tier only).

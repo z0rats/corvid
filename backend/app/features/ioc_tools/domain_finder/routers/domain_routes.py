@@ -6,9 +6,12 @@ from typing import Any
 from fastapi import APIRouter, Request, status
 
 from app.core.config.rate_limit_config import limiter
+from app.core.dependencies import ReadSessionDep
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     CtSubdomainsRequest,
     CtSubdomainsResponse,
+    DnsDumpsterRequest,
+    DnsDumpsterResponse,
     DnsLookupRequest,
     DnsLookupResponse,
     DomainLookupRequest,
@@ -18,6 +21,7 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
 )
 from app.features.ioc_tools.domain_finder.service.ct_subdomains_service import perform_ct_subdomains_lookup
 from app.features.ioc_tools.domain_finder.service.dns_lookup_service import perform_dns_lookup
+from app.features.ioc_tools.domain_finder.service.dnsdumpster_service import perform_dnsdumpster_lookup
 from app.features.ioc_tools.domain_finder.service.domain_lookup_service import perform_domain_lookup
 from app.features.ioc_tools.domain_finder.service.whois_lookup_service import perform_whois_lookup
 
@@ -160,6 +164,41 @@ async def dns_lookup_get(request: Request, domain: str) -> DnsLookupResponse:
     return result
 
 
+@router.post(
+    "/dnsdumpster",
+    response_model=DnsDumpsterResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Perform a DNSDumpster domain lookup",
+    description="Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a domain via the DNSDumpster API. Requires a DNSDumpster API key configured under Settings > API Keys."
+)
+@limiter.limit("30/minute")
+async def dnsdumpster_lookup_post(
+    request: Request, dnsdumpster_request: DnsDumpsterRequest, db: ReadSessionDep
+) -> DnsDumpsterResponse:
+    """Perform a DNSDumpster domain lookup via POST request"""
+    logger.info("POST DNSDumpster lookup request - Domain: %s", dnsdumpster_request.domain)
+    result = await perform_dnsdumpster_lookup(dnsdumpster_request, db)
+    logger.info("POST DNSDumpster lookup completed - Domain: %s", dnsdumpster_request.domain)
+    return result
+
+
+@router.get(
+    "/dnsdumpster/{domain}",
+    response_model=DnsDumpsterResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Perform a DNSDumpster domain lookup via URL parameter",
+    description="Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a domain via URL path"
+)
+@limiter.limit("30/minute")
+async def dnsdumpster_lookup_get(request: Request, domain: str, db: ReadSessionDep) -> DnsDumpsterResponse:
+    """Perform a DNSDumpster domain lookup using domain from URL path via GET request"""
+    logger.info("GET DNSDumpster lookup request - Domain: %s", domain)
+    dnsdumpster_request = DnsDumpsterRequest(domain=domain)
+    result = await perform_dnsdumpster_lookup(dnsdumpster_request, db)
+    logger.info("GET DNSDumpster lookup completed - Domain: %s", domain)
+    return result
+
+
 @router.get(
     "/health",
     response_model=dict[str, Any],
@@ -180,6 +219,8 @@ async def check_domain_service_health() -> dict[str, Any]:
             "/api/domain/ct-subdomains",
             "/api/domain/ct-subdomains/{domain}",
             "/api/domain/dns",
-            "/api/domain/dns/{domain}"
+            "/api/domain/dns/{domain}",
+            "/api/domain/dnsdumpster",
+            "/api/domain/dnsdumpster/{domain}"
         ]
     }

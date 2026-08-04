@@ -238,6 +238,86 @@ class DnsLookupResponse(BaseModel):
     )
 
 
+class DnsDumpsterRequest(BaseModel):
+    """Request model for DNSDumpster domain lookup operations"""
+
+    domain: str = Field(
+        ...,
+        description="Domain name to look up via DNSDumpster (e.g., 'example.com')",
+        min_length=1,
+        max_length=255
+    )
+
+    @field_validator('domain')
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        """Validate domain format, rejecting search patterns which DNSDumpster doesn't support"""
+        if not v or not v.strip():
+            raise ValueError('Domain cannot be empty')
+
+        domain = v.strip().lower()
+
+        if domain.startswith(('http://', 'https://')):
+            domain = domain.split('://', 1)[1]
+
+        if '/' in domain:
+            domain = domain.split('/', 1)[0]
+
+        if len(domain) > 255:
+            raise ValueError('Domain name too long')
+
+        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
+            raise ValueError('Domain contains invalid characters')
+
+        return domain
+
+
+class DnsDumpsterBanner(BaseModel):
+    """HTTP or HTTPS banner fingerprint for a single IP, as reported by DNSDumpster"""
+
+    server: str | None = Field(default=None, description="Server header value")
+    title: str | None = Field(default=None, description="Page title, if fetched")
+    cn: str | None = Field(default=None, description="TLS certificate common name (HTTPS only)")
+    apps: list[str] = Field(default_factory=list, description="Detected application/technology fingerprints")
+
+
+class DnsDumpsterIp(BaseModel):
+    """A single resolved IP with ASN, geo, PTR, and banner detail from DNSDumpster"""
+
+    ip: str | None = Field(default=None, description="Resolved IP address")
+    asn: str | None = Field(default=None, description="Autonomous System Number")
+    asn_name: str | None = Field(default=None, description="ASN organization/ISP name")
+    asn_range: str | None = Field(default=None, description="ASN's advertised IP range")
+    country: str | None = Field(default=None, description="Country name")
+    country_code: str | None = Field(default=None, description="ISO country code, for flag rendering")
+    ptr: str | None = Field(default=None, description="Reverse DNS (PTR) hostname")
+    banner_http: DnsDumpsterBanner | None = Field(default=None, description="HTTP banner fingerprint")
+    banner_https: DnsDumpsterBanner | None = Field(default=None, description="HTTPS banner fingerprint")
+
+
+class DnsDumpsterHost(BaseModel):
+    """A single hostname with its resolved IPs, from a DNSDumpster record group (A/NS/MX/CNAME)"""
+
+    host: str | None = Field(default=None, description="Hostname")
+    ips: list[DnsDumpsterIp] = Field(default_factory=list, description="Resolved IPs for this host")
+
+
+class DnsDumpsterResponse(BaseModel):
+    """Response model for DNSDumpster domain lookup operations"""
+
+    domain: str = Field(..., description="The domain that was looked up")
+    a: list[DnsDumpsterHost] = Field(default_factory=list, description="Host (A) records")
+    ns: list[DnsDumpsterHost] = Field(default_factory=list, description="Nameserver records")
+    mx: list[DnsDumpsterHost] = Field(default_factory=list, description="Mail exchange records")
+    cname: list[DnsDumpsterHost] = Field(default_factory=list, description="CNAME records")
+    txt: list[str] = Field(default_factory=list, description="Text records")
+    total_a_records: int = Field(default=0, description="Total number of A records reported by DNSDumpster")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp when the lookup was performed"
+    )
+
+
 class WhoisEntity(BaseModel):
     """A single entity (registrar, registrant, admin, tech, ...) from an RDAP response"""
 

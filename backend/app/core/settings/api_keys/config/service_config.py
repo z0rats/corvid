@@ -299,6 +299,17 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.THREAT_INTELLIGENCE,
         icon="urlhaus_logo_small"
     ),
+    "dnsdumpster": ServiceDefinition(
+        name="DNSDumpster",
+        key="dnsdumpster",
+        description="Domain research tool mapping DNS records, hosting providers, and network infrastructure.",
+        documentation_url="https://dnsdumpster.com/developer/",
+        supported_ioc_types=["Domain"],
+        required_keys=["dnsdumpster"],
+        tier=ServiceTier.FREEMIUM,
+        category=ServiceCategory.NETWORK_INFRASTRUCTURE,
+        icon="dnsdumpster_logo_small"
+    ),
     "urlscanio": ServiceDefinition(
         name="URLScan.io",
         key="urlscanio",

@@ -208,6 +208,25 @@
       "noRecords": "No DNS records found for this domain.",
       "reverseDnsTitle": "Reverse DNS"
     },
+    "dnsDumpster": {
+      "title": "DNSDumpster",
+      "errorPrefix": "DNSDumpster lookup failed:",
+      "noRecords": "No records returned by DNSDumpster for this domain.",
+      "notConfigured": "Add a free DNSDumpster API key in Settings to enable this panel.",
+      "addKeyAction": "Add API key",
+      "ptr": "PTR",
+      "toggleBanner": "Show HTTP/HTTPS banner details",
+      "httpBanner": "HTTP banner",
+      "httpsBanner": "HTTPS banner",
+      "freeTierCaption": "{{count}} A record(s) reported (free tier is capped at 50).",
+      "groups": {
+        "a": "Host Records (A) ({{count}})",
+        "ns": "Nameservers ({{count}})",
+        "mx": "Mail Servers (MX) ({{count}})",
+        "cname": "CNAME Records ({{count}})",
+        "txt": "TXT Records ({{count}})"
+      }
+    },
     "ctSubdomains": {
       "title": "Certificate Transparency subdomains",
       "errorPrefix": "Certificate Transparency lookup failed:",

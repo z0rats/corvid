@@ -37,6 +37,7 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # user-supplied, never the host itself
     "features/ioc_tools/domain_finder/service/urlscan_api_service.py",
     "features/ioc_tools/domain_finder/service/crtsh_api_service.py",
+    "features/ioc_tools/domain_finder/service/dnsdumpster_api_service.py",
     "features/ioc_tools/ioc_lookup/single_lookup/service/client_base.py",
     "features/reddit_search/service/reddit_search_service.py",
     "features/username_search/service/threat_actor_usernames_service.py",
