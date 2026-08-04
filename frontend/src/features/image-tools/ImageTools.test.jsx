@@ -1,12 +1,9 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import ImageTools from './ImageTools';
 import { imageAnalyzerApi } from './services/api/imageAnalyzerApi';
-import { imageAnomalyApi } from './services/api/imageAnomalyApi';
-import { imageStructureApi } from './services/api/imageStructureApi';
-import { imageVisualAnalysisApi } from './services/api/imageVisualAnalysisApi';
 
 vi.mock('./services/api/imageAnalyzerApi');
 // Every chapter mounts at once now (scroll-spy, not a tab switcher), so the

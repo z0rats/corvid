@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 import { useAtomValue } from 'jotai';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';

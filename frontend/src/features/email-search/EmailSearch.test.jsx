@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import EmailSearch from './EmailSearch';
 import { useEmailSearchScan } from './hooks/useEmailSearchScan';
 import { emailSearchApi } from './services/api/emailSearchApi';

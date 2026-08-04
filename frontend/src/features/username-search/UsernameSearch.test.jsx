@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import UsernameSearch from './UsernameSearch';
 import { useUsernameSearchScan } from './hooks/useUsernameSearchScan';
 import { usernameSearchApi } from './services/api/usernameSearchApi';

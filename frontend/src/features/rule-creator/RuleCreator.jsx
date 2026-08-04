@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router";
 import Sigma from './sigma/Sigma';
 import Yara from './yara/Yara';
 import Snort from './snort/Snort';

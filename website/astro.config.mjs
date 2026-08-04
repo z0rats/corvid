@@ -46,6 +46,7 @@ export default defineConfig({
 						{ label: 'LLM Templates', slug: 'features/llm-templates' },
 						{ label: 'CVSS Calculator', slug: 'features/cvss-calculator' },
 						{ label: 'Rule Creator', slug: 'features/rule-creator' },
+						{ label: 'Browser Extension', slug: 'features/browser-extension' },
 					],
 				},
 			],

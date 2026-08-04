@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { PREFILL_QUERY_PARAM } from '../utils/crossFeatureNav';
 
 /**

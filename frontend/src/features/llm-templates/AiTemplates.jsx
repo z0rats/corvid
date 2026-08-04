@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 
 import TemplatesView from './components/ui/TemplatesView';
 import CreateTemplateForm from './components/forms/CreateTemplateForm';

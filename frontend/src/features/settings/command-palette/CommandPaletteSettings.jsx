@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import FormControl from '@mui/material/FormControl';

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 
 // Dispatched by Layout.jsx's AppBar search-trigger button — the palette's open state is owned
 // entirely inside useCommandPalette (only instantiated in CommandPalette.jsx), so opening it from

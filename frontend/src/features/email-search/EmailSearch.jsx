@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router';
 import NewSearch from './components/NewSearch';
 import HistoryList from './components/HistoryList';
 import HistoryDetail from './components/HistoryDetail';

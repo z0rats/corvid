@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 import SingleLookup from './single-lookup/SingleLookup';
 import BulkLookup from './bulk-lookup/BulkLookup';
 

@@ -28,7 +28,7 @@ async def reverse_geocode(latitude: float, longitude: float) -> str | None:
     try:
         data = await _fetch_nominatim(latitude, longitude)
     except (httpx.TimeoutException, httpx.RequestError, httpx.HTTPStatusError, ValueError) as e:
-        logger.warning("Reverse geocoding failed for %s,%s: %s", latitude, longitude, e)
+        logger.warning("Reverse geocoding failed: %s", e)
         return None
 
     address = data.get("display_name")

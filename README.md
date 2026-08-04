@@ -85,6 +85,10 @@ The Reddit Search module finds a Reddit user's full post and comment history, in
 The Git Recon module correlates names, emails, and GitHub logins from git commit history using [gitcolombo](https://github.com/Soxoj/gitcolombo). Search mode queries GitHub's API only (PGP-key UIDs + public commit search) for a username, no cloning required. Repo/user modes clone one repository or every public repository of a GitHub user/org and cross-reference author vs. committer identities to surface aliases and shared-identity clusters. A GitHub personal access token (configured under Settings > API Keys) is optional but recommended to avoid unauthenticated GitHub rate limits.
 
 
+### Browser Extension
+A minimal Chrome extension ("Corvid Quick Send") lets you select text on any page and send it straight to IOC Tools lookup, with no build step — load it unpacked from the [`extension/`](extension/) folder. See [extension/README.md](extension/README.md) for setup.
+
+
 ## Keyboard-first navigation
 
 Corvid is built around a single search bar instead of hunting through menus. Press `/` or

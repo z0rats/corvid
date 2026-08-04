@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router';
 import SingleLookup from './ioc-lookup/single-lookup/SingleLookup';
 import HistoryList from './ioc-lookup/single-lookup/components/history/HistoryList';
 import HistoryDetail from './ioc-lookup/single-lookup/components/history/HistoryDetail';

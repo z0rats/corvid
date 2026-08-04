@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { hasLlmKeyAtom, enabledModulesMapAtom, themeModeAtom, generalSettingsState } from '../../state/atoms';
 import { useThemeManager } from '../../hooks/ui/useThemeManager';
 import { useGeneralSettings } from '../../../features/settings/hooks/api/useGeneralSettings';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Drawer from '@mui/material/Drawer';

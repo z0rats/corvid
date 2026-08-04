@@ -6,7 +6,7 @@ aiodns==4.0.4
     # via maigret
 aiohappyeyeballs==2.7.1
     # via aiohttp
-aiohttp==3.14.1
+aiohttp==3.14.3
     # via
     #   -r requirements.in
     #   aiohttp-socks
@@ -116,7 +116,7 @@ colour==0.1.5
     # via mitreattack-python
 coverage==7.15.2
     # via pytest-cov
-cryptography==49.0.0
+cryptography==50.0.0
     # via
     #   google-auth
     #   pyhanko
@@ -609,16 +609,11 @@ typer==0.27.0
     #   mitreattack-python
 typing-extensions==4.16.0
     # via
-    #   aiohttp
-    #   aiosignal
     #   alembic
     #   anthropic
-    #   anyio
     #   beautifulsoup4
     #   fastapi
     #   google-genai
-    #   httpx2
-    #   ipython
     #   limits
     #   maigret
     #   mitreattack-python
@@ -632,7 +627,6 @@ typing-extensions==4.16.0
     #   rich-toolkit
     #   selenium
     #   sqlalchemy
-    #   starlette
     #   typing-inspection
 typing-inspection==0.4.2
     # via

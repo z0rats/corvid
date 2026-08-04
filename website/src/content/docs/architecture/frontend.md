@@ -5,7 +5,7 @@ description: Frontend stack and layout.
 
 ## Stack
 
-- **React 19**, **MUI 9**, **Jotai** for state, **react-router-dom 7**
+- **React 19**, **MUI 9**, **Jotai** for state, **react-router 8**
 - **Vite** for build/dev server, **Vitest** for tests (jsdom)
 - **ESLint 9** flat config, **Yarn 4** (berry)
 

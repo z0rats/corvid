@@ -2,7 +2,7 @@ import React from 'react';
 import { getDefaultStore } from 'jotai';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import CommandPaletteSettings from './CommandPaletteSettings';
 import { settingsApi } from '../services/api/settingsApi';
 import { savePlaybook, getPlaybook } from '../../../core/utils/commandPaletteStorage';

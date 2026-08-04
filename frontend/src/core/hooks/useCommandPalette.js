@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { generalSettingsState } from '../state/atoms';
 import { useThemeManager } from './ui/useThemeManager';
 import api from '../services/baseApi';

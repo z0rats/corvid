@@ -18,7 +18,7 @@ Never run `git commit` (or `git push`) yourself, create new tags or releases, re
 ## Stack
 
 - **Backend**: Python 3.14, FastAPI, SQLAlchemy 2.0 (async, `aiosqlite`/`asyncpg`), Alembic migrations, APScheduler for background jobs, `pydantic-ai-slim[anthropic,google,openai]` for LLM features (the bare `pydantic-ai` metapackage is deliberately not installed — it hard-depends on every provider SDK; `app/utils/llm_service.py`'s model registry also auto-discovers models pulled into a local Ollama server via its OpenAI-compatible `/v1/models` endpoint - `LLM_OLLAMA_BASE_URL`, no API key needed, silently skipped if unreachable), `slowapi` for rate limiting, pytest for tests.
-- **Frontend**: React 19, MUI 9, Jotai (state), react-router-dom 7, Vite (build/dev server) + Vitest (tests, jsdom), ESLint 9 flat config (`frontend/eslint.config.mjs`), Yarn 4 (berry, `packageManager: yarn@4.15.0`).
+- **Frontend**: React 19, MUI 9, Jotai (state), react-router 8 (declarative mode only - `BrowserRouter`/`Route`/hooks imported from `react-router`, not the removed `react-router-dom` package), Vite (build/dev server) + Vitest (tests, jsdom), ESLint 9 flat config (`frontend/eslint.config.mjs`), Yarn 4 (berry, `packageManager: yarn@4.15.0`).
 - **DB**: SQLite by default at `data/corvid.db` (see `backend/app/core/config/settings.py` — `DatabaseSettings`, env prefix `DB_`). Logs at `data/logs/`.
 - **Deploy**: `docker-compose.yaml` — `backend` (no exposed port, mounts `./data`) + `frontend` (nginx, port 4000). `make up` / `make rebuild` / `make up-backend` / `make up-frontend` (see `Makefile`). Backend runs as non-root `appuser` (UID/GID 1000): `backend/docker-entrypoint.py` starts as root just long enough to `chown` the host-owned bind-mounted `./data`, then drops to `appuser` via `setuid`/`setgid`, runs migrations (see below), and `execvp`s into the real `uvicorn` command. `appuser`'s home directory (build-time, not bind-mounted) is where maigret's site-database (`~/.maigret`) and pyppeteer's lazily-downloaded Chromium (`~/.local/share/pyppeteer`, only if `email_search`'s headless checks are enabled) end up.
 
@@ -75,6 +75,14 @@ of any workspace). Content lives under `website/src/content/docs/` as Markdown/M
 under `features/`. Deploys to GitHub Pages (`https://z0rats.github.io/corvid/`) via
 `.github/workflows/docs.yml` on every push to `main` touching `website/**` — requires Pages
 enabled once in repo Settings → Pages → Source: GitHub Actions (not yet done as of this writing).
+
+## Browser extension
+
+`extension/` is a minimal MV3 Chrome extension ("Quick Send") — selects text on the current page
+and opens it in the app's IOC lookup; no build step, load unpacked. Separate from `frontend/`, not
+part of any build/test pipeline. See `extension/README.md` for setup; `ROADMAP.md`'s "Chrome
+extension as a thin client" entry has the fuller planned scope (context menu, popup, token auth)
+this MVP is a slice of.
 
 ## Integrated external services
 
