@@ -62,10 +62,14 @@ class NewsArticle(Base):
         DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc),
         comment="When this article was ingested by Corvid",
     )
-    matches: Mapped[list[str] | None] = mapped_column(JSON, comment="Keyword-matching hits found in this article")
-    iocs: Mapped[dict[str, list[str]] | None] = mapped_column(JSON, comment="IOCs extracted from the article, by type")
+    matches: Mapped[list[str] | None] = mapped_column(
+        JSON(none_as_null=True), comment="Keyword-matching hits found in this article"
+    )
+    iocs: Mapped[dict[str, list[str]] | None] = mapped_column(
+        JSON(none_as_null=True), comment="IOCs extracted from the article, by type"
+    )
     relevant_iocs: Mapped[list[str] | None] = mapped_column(
-        JSON, comment="Subset of iocs judged relevant to the configured CTI profile"
+        JSON(none_as_null=True), comment="Subset of iocs judged relevant to the configured CTI profile"
     )
     analysis_result: Mapped[str | None] = mapped_column(Text, comment="LLM-generated analysis of the article")
     mitre_attack: Mapped[str | None] = mapped_column(Text, comment="LLM-extracted MITRE ATT&CK technique mapping")
