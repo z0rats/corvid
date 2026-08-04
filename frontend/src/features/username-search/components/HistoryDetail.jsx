@@ -12,6 +12,7 @@ import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundSitesList from './FoundSitesList';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
+import { sourceLabelKey } from '../utils/sourceLabels';
 
 const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 const EXPORT_FORMATS = ['csv', 'txt', 'json', 'html', 'pdf', 'xmind'];
@@ -32,7 +33,7 @@ export default function HistoryDetail() {
         title={run.username}
         chips={(
           <>
-            <Chip size="small" variant="outlined" label={t(`form.source${run.source === 'social_analyzer' ? 'SocialAnalyzer' : 'Maigret'}`)} />
+            <Chip size="small" variant="outlined" label={t(sourceLabelKey(run.source))} />
             <Chip size="small" label={t(`history.status.${run.status}`)} color={STATUS_COLORS[run.status] || 'default'} />
           </>
         )}

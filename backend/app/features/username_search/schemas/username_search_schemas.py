@@ -8,7 +8,9 @@ class ScanRequest(BaseModel):
     """Request to start a new username search"""
 
     username: str = Field(..., description="Username to search for", min_length=1, max_length=100)
-    source: Literal["maigret", "social_analyzer"] = Field(default="maigret", description="Which search tool to use")
+    source: Literal["maigret", "social_analyzer", "threat_actor_usernames"] = Field(
+        default="maigret", description="Which search tool to use"
+    )
     tags: list[str] | None = Field(default=None, description="Only scan sites with at least one of these tags (maigret only)")
     excluded_tags: list[str] | None = Field(default=None, description="Skip sites with any of these tags (maigret only)")
 
@@ -37,7 +39,7 @@ class SearchRunSummary(BaseModel):
 
     id: int = Field(..., description="Search run ID")
     username: str = Field(..., description="Username that was searched")
-    source: str = Field(..., description="Which search tool produced this run: maigret or social_analyzer")
+    source: str = Field(..., description="Which search tool produced this run: maigret, social_analyzer, or threat_actor_usernames")
     status: str = Field(..., description="running, completed, cancelled, or failed")
     total_sites_checked: int = Field(..., description="Number of sites checked")
     found_count: int = Field(..., description="Number of sites where the username was found")

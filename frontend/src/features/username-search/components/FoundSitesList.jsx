@@ -33,9 +33,13 @@ export default function FoundSitesList({ sites }) {
             <ListItemText
               primary={site.extra?.title || site.site_name}
               secondary={
-                <Link href={site.url_user} target="_blank" rel="noopener noreferrer">
-                  {site.url_user}
-                </Link>
+                site.url_user ? (
+                  <Link href={site.url_user} target="_blank" rel="noopener noreferrer">
+                    {site.url_user}
+                  </Link>
+                ) : site.extra?.username ? (
+                  t('results.matchedAs', { username: site.extra.username })
+                ) : null
               }
             />
             {site.extra?.rate && (

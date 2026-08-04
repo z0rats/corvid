@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Corvid Quick Send — Settings</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        padding: 16px;
+        width: 320px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        font-size: 13px;
+      }
+      button {
+        margin-top: 10px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      #status {
+        margin-left: 8px;
+        font-size: 12px;
+        color: #2e7d32;
+      }
+    </style>
+  </head>
+  <body>
+    <label for="baseUrl">Corvid base URL</label>
+    <input id="baseUrl" type="text" placeholder="http://localhost:4000" />
+    <button id="save">Save</button>
+    <span id="status"></span>
+    <script src="options.js"></script>
+  </body>
+</html>

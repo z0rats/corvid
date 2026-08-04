@@ -117,6 +117,22 @@ class SchedulerSettings(BaseSettings):
     blacklist_refresh_interval_hours: int = Field(default=24, description="Address blacklist refresh interval in hours")
 
 
+class LLMSettings(BaseSettings):
+    """Local LLM provider configuration settings"""
+    model_config = SettingsConfigDict(env_prefix="LLM_", env_file=".env", env_file_encoding="utf-8")
+
+    ollama_base_url: str = Field(
+        default="http://localhost:11434/v1",
+        description=(
+            "Base URL of a local Ollama server's OpenAI-compatible API. Models pulled there "
+            "are auto-discovered and offered alongside the cloud providers, with no API key "
+            "needed. Running the backend itself via Docker Compose on macOS/Windows (Docker "
+            "Desktop)? Point this at http://host.docker.internal:11434/v1 instead - "
+            "'localhost' inside the container is the container, not your host machine."
+        ),
+    )
+
+
 class AppSettings(BaseSettings):
     """Main application settings"""
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
@@ -138,6 +154,7 @@ class AppSettings(BaseSettings):
     api: APISettings = Field(default_factory=APISettings)
     scheduler: SchedulerSettings = Field(default_factory=SchedulerSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
+    llm: LLMSettings = Field(default_factory=LLMSettings)
 
 
 @lru_cache

@@ -496,6 +496,7 @@ const components = {
         width: 42,
         height: 26,
         padding: 0,
+        marginRight: 8,
         "& .MuiSwitch-switchBase": {
           padding: 1,
           "&.Mui-checked": {

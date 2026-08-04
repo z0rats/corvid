@@ -39,6 +39,7 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "features/ioc_tools/domain_finder/service/crtsh_api_service.py",
     "features/ioc_tools/ioc_lookup/single_lookup/service/client_base.py",
     "features/reddit_search/service/reddit_search_service.py",
+    "features/username_search/service/threat_actor_usernames_service.py",
     # Dork runner: fixed search-engine hosts (DuckDuckGo/Google/Bing); only the
     # dork query string is user-supplied, never the host
     "features/dork_runner/service/engines/base.py",
@@ -47,6 +48,12 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "core/settings/api_keys/service/quota_clients.py",
     # About-page update check: fixed api.github.com host, no user input at all
     "core/release_check.py",
+    # Reverse geocoding: fixed nominatim.openstreetmap.org host; only already-parsed
+    # lat/lon floats (not raw user/EXIF input) are query params
+    "features/image_tools/service/reverse_geocode_service.py",
+    # Local Ollama model auto-discovery: host comes from settings.llm.ollama_base_url
+    # (an operator-configured env var, LLM_OLLAMA_BASE_URL), never a request-time value
+    "utils/llm_service.py",
 }
 
 # Implementation module itself, and its own tests

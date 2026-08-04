@@ -16,6 +16,7 @@
     "searchButton": "Search",
     "sourceMaigret": "Maigret",
     "sourceSocialAnalyzer": "Social Analyzer",
+    "sourceThreatActorUsernames": "Threat Actor Usernames",
     "tagsLabel": "Site tags",
     "tagsPlaceholder": "All sites",
     "tagsHelp": "Only scan sites with at least one of the selected tags (leave empty to scan all)"
@@ -33,7 +34,8 @@
 
   "results": {
     "empty": "No profiles found",
-    "foundCount": "{{count}} profile(s) found"
+    "foundCount": "{{count}} profile(s) found",
+    "matchedAs": "matched as \"{{username}}\""
   },
 
   "history": {

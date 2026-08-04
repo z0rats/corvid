@@ -66,7 +66,40 @@ function HashRow({ label, value }) {
   );
 }
 
-export default function FileMetadata({ fileInfo, hashes }) {
+function PerceptualHashMatrix({ bits }) {
+  return (
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(8, 8px)', gap: '2px', mt: 0.75 }}>
+      {bits.map((bit, index) => (
+        <Box
+          key={index}
+          sx={{ width: 8, height: 8, bgcolor: bit ? 'primary.main' : 'action.disabledBackground' }}
+        />
+      ))}
+    </Box>
+  );
+}
+
+function PerceptualHashRow({ phash }) {
+  const { t } = useTranslation('imageTools');
+  if (!phash) return null;
+
+  return (
+    <Box sx={{ py: 0.75 }}>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 50, flexShrink: 0 }}>
+          {t('fileMetadata.phash')}
+        </Typography>
+        <Typography variant="body2" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', flex: 1 }}>
+          {phash.hex}
+        </Typography>
+        <CopyButton value={phash.hex} />
+      </Box>
+      <PerceptualHashMatrix bits={phash.bits} />
+    </Box>
+  );
+}
+
+export default function FileMetadata({ fileInfo, hashes, phash }) {
   const { t } = useTranslation('imageTools');
 
   return (
@@ -92,6 +125,7 @@ export default function FileMetadata({ fileInfo, hashes }) {
         {HASH_FIELDS.map((hashType) => (
           <HashRow key={hashType} label={hashType.toUpperCase()} value={hashes?.[hashType]} />
         ))}
+        <PerceptualHashRow phash={phash} />
       </Box>
     </Box>
   );

@@ -38,6 +38,21 @@ class TestHashes:
         assert result.hashes.sha256 == hashlib.sha256(plain_jpeg_bytes).hexdigest()
 
 
+class TestPerceptualHash:
+    def test_included_in_response(self, plain_jpeg_bytes):
+        result = analyze_image_content('photo.jpg', plain_jpeg_bytes)
+
+        assert result.phash is not None
+        assert len(result.phash.hex) == 16
+        assert len(result.phash.bits) == 64
+
+    def test_identical_pixels_produce_identical_phash(self, plain_jpeg_bytes):
+        first = analyze_image_content('a.jpg', plain_jpeg_bytes)
+        second = analyze_image_content('b.jpg', plain_jpeg_bytes)
+
+        assert first.phash.hex == second.phash.hex
+
+
 class TestExifExtraction:
     def test_no_exif_returns_empty_dict(self, plain_jpeg_bytes):
         result = analyze_image_content('photo.jpg', plain_jpeg_bytes)

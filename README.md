@@ -5,6 +5,8 @@
 [![codecov](https://codecov.io/gh/z0rats/corvid/branch/main/graph/badge.svg)](https://codecov.io/gh/z0rats/corvid)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/z0rats/corvid/badge)](https://securityscorecards.dev/viewer/?uri=github.com/z0rats/corvid)
 
+📖 [Documentation](https://z0rats.github.io/corvid/)
+
 ## One search bar for everything you look up today
 
 If your daily routine is a wall of browser tabs — VirusTotal in one, Shodan in another, three more for a username or a phishing domain — Corvid replaces that wall with a single keyboard-first search bar. Paste an IP, domain, hash, email, or username and it's routed to the right tools automatically; type a tool name to jump straight to it.

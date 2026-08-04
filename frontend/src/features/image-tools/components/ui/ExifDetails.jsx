@@ -7,22 +7,27 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { imageUtils } from '../../utils/imageUtils';
+import EmbeddedThumbnail from './EmbeddedThumbnail';
 
-export default function ExifDetails({ exif }) {
+export default function ExifDetails({ exif, hasThumbnail, thumbnailBase64 }) {
   const { t } = useTranslation('imageTools');
   const groups = imageUtils.groupExifTags(exif);
   const categories = Object.keys(groups);
 
   if (categories.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        {t('exif.empty')}
-      </Typography>
+      <Box>
+        <EmbeddedThumbnail hasThumbnail={hasThumbnail} thumbnailBase64={thumbnailBase64} />
+        <Typography variant="body2" color="text.secondary">
+          {t('exif.empty')}
+        </Typography>
+      </Box>
     );
   }
 
   return (
     <Box>
+      <EmbeddedThumbnail hasThumbnail={hasThumbnail} thumbnailBase64={thumbnailBase64} />
       {categories.map((category) => (
         <Accordion key={category} disableGutters sx={{ '&:before': { display: 'none' } }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>

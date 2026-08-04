@@ -30,3 +30,7 @@ class AISettings(Base, TimestampMixin):
         String(80), nullable=True, default=None,
         comment="LLM model override for AI template execution; null = use default_model",
     )
+    image_geolocation_model: Mapped[str | None] = mapped_column(
+        String(80), nullable=True, default=None,
+        comment="LLM model override for AI photo geolocation; null = use default_model",
+    )

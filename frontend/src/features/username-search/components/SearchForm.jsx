@@ -49,6 +49,7 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
       >
         <ToggleButton value="maigret">{t('form.sourceMaigret')}</ToggleButton>
         <ToggleButton value="social_analyzer">{t('form.sourceSocialAnalyzer')}</ToggleButton>
+        <ToggleButton value="threat_actor_usernames">{t('form.sourceThreatActorUsernames')}</ToggleButton>
       </ToggleButtonGroup>
       <Box sx={{ display: 'flex', gap: 2 }}>
         <TextField

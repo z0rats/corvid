@@ -13,17 +13,32 @@
     "analyzeButton": "Analyze"
   },
   "exif": {
-    "empty": "No EXIF data found in this image."
+    "empty": "No EXIF data found in this image.",
+    "thumbnailTitle": "Embedded thumbnail",
+    "thumbnailHint": "A second, smaller copy of the image stored inside the EXIF data.",
+    "thumbnailAlt": "Embedded EXIF thumbnail"
   },
   "gps": {
     "empty": "No GPS data found in this image.",
     "viewOnMap": "View on map",
-    "altitude": "(alt. {{value}} m)"
+    "altitude": "(alt. {{value}} m)",
+    "embeddedMapTitle": "Map showing the photo's GPS position",
+    "embeddedMapHint": "Loads a map tile from OpenStreetMap using the coordinates above."
   },
   "analysisResult": {
     "generalInfo": "General information",
     "gpsLocation": "GPS location",
     "exifMetadata": "EXIF metadata"
+  },
+  "geolocation": {
+    "title": "AI Location Hypothesis",
+    "analyzeButton": "Guess location with AI",
+    "loading": "Analyzing visual clues…",
+    "modelUsed": "Model: {{model}}",
+    "candidates": "Candidate locations",
+    "clues": "Visual clues",
+    "caveats": "Caveats",
+    "noKeyHint": "Configure an LLM API key in Settings to enable AI location analysis."
   },
   "fileMetadata": {
     "fileProperties": "File properties",
@@ -36,12 +51,89 @@
     "fileSize": "File size",
     "copied": "Copied!",
     "copy": "Copy",
-    "copyHashAriaLabel": "Copy hash"
+    "copyHashAriaLabel": "Copy hash",
+    "phash": "pHash"
+  },
+  "chapters": {
+    "general": "General",
+    "anomalies": "Anomalies",
+    "exif": "EXIF & Tags",
+    "gps": "GPS Location",
+    "structure": "Structure & Quality",
+    "geolocation": "AI Geolocation",
+    "removeMetadata": "Remove Metadata"
+  },
+  "anomalies": {
+    "noneDetected": "No anomalies detected",
+    "checksRun_one": "{{count}} forensic check run",
+    "checksRun_other": "{{count}} forensic checks run",
+    "checks": {
+      "timestamp_consistency": "Timestamp mismatch",
+      "gps_timestamp_mismatch": "GPS time mismatch",
+      "editing_software": "Editing software",
+      "thumbnail_mismatch": "Thumbnail mismatch",
+      "trailing_data": "Trailing data",
+      "marker_order": "Marker order",
+      "quantization_tables": "Quantization tables"
+    }
+  },
+  "structureAnalyzer": {
+    "jpegOnly": "Structure analysis is only available for JPEG files.",
+    "baseline": "Baseline",
+    "progressive": "Progressive",
+    "qualityEstimate": "Quality ~{{value}}%",
+    "compressionRatio": "Compression {{value}}:1",
+    "bitsPerPixel": "{{value}} bits/px",
+    "quantizationTables": "Quantization tables",
+    "tableId": "Table #{{id}}",
+    "huffmanTables": "Huffman tables",
+    "totalCodes": "{{count}} codes",
+    "markerMap": "Marker map ({{count}})",
+    "offset": "offset {{value}}",
+    "length": "{{value}} bytes"
+  },
+  "removeMetadata": {
+    "description": "Download a copy of this image with its metadata removed. JPEGs are cleaned losslessly — pixel data is never re-compressed.",
+    "modeAll": "Remove all metadata (EXIF, XMP, IPTC, comments)",
+    "modeLocationOnly": "Remove location only (keep camera/timestamp info)",
+    "downloadButton": "Download cleaned file",
+    "success": "Cleaned file downloaded."
+  },
+  "pixelAnalysis": {
+    "title": "Pixel Analysis",
+    "red": "Red",
+    "green": "Green",
+    "blue": "Blue",
+    "luminance": "Luminance (Y)",
+    "cb": "Chroma (Cb)",
+    "cr": "Chroma (Cr)",
+    "vectorscope": "CbCr vectorscope"
+  },
+  "compare": {
+    "title": "Compare two images",
+    "chooseFirst": "Choose first image",
+    "chooseSecond": "Choose second image",
+    "compareButton": "Compare",
+    "field": "Field",
+    "matchCount_one": "{{count}} field matches",
+    "matchCount_other": "{{count}} fields match",
+    "differCount_one": "{{count}} field differs",
+    "differCount_other": "{{count}} fields differ",
+    "onlyLeftCount_one": "{{count}} field only in first",
+    "onlyLeftCount_other": "{{count}} fields only in first",
+    "onlyRightCount_one": "{{count}} field only in second",
+    "onlyRightCount_other": "{{count}} fields only in second",
+    "pixelsMatch": "Pixels likely match (hash distance {{value}})",
+    "pixelsDiffer": "Pixels likely differ (hash distance {{value}})"
   },
   "welcome": {
     "title": "Image Tools",
     "intro1": "Image Tools lets you inspect an image file for OSINT purposes. Upload a picture to see every piece of metadata it carries — camera/device info, capture timestamp, GPS location, and the software used to create or edit it.",
     "intro2": "You can also kick off a reverse image search without any API keys: provide the image's URL (if it has one) to get deep links straight into Google Lens, Yandex, Bing, and TinEye, or use the same buttons to open each engine for a manual upload.",
+    "sampleButton": "Try it with a sample photo",
+    "sampleLoading": "Analyzing the sample photo…",
+    "sampleCaption": "Nikon D80 · Golden Gate Bridge, San Francisco · CC0, via Wikimedia Commons",
+    "sampleHint": "See a full audit — anomalies, EXIF, structure — without uploading anything of your own.",
     "keyFeatures": "Key Features",
     "exifGps": { "title": "EXIF & GPS", "description": "Full EXIF tag breakdown plus a map link when GPS data is present" },
     "fileProps": { "title": "File Properties & Hashes", "description": "Format, dimensions, color mode, DPI, and MD5/SHA1/SHA256 hashes" },

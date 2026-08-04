@@ -13,6 +13,11 @@ services:
         required: false
     volumes:
       - ./data:/backend/data
+    extra_hosts:
+      # Docker Desktop (macOS/Windows) already resolves this automatically - this
+      # entry is what makes it resolve on Linux too, so LLM_OLLAMA_BASE_URL=http://
+      # host.docker.internal:11434/v1 works cross-platform for a host-run Ollama.
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/healthcheck', timeout=3)"]
       interval: 30s

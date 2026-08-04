@@ -1,6 +1,6 @@
 /**
  * Cascading clipboard write that also works on plain-HTTP deployments (Corvid's default —
- * HSTS is production-only, see AGENTS.md), where navigator.clipboard is unavailable because
+ * HSTS is production-only, see CLAUDE.md), where navigator.clipboard is unavailable because
  * it requires a secure context. Falls back to the deprecated but still-functional
  * document.execCommand('copy') path, and reports failure so the caller can show the value
  * pre-selected for a manual Ctrl+C instead of silently doing nothing.

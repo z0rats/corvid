@@ -6,8 +6,9 @@ from io import BytesIO
 import exifread
 from PIL import Image, UnidentifiedImageError
 
-from ..schemas.image_schemas import GpsInfo, ImageAnalysisResponse, ImageFileInfo
+from ..schemas.image_schemas import GpsInfo, ImageAnalysisResponse, ImageFileInfo, PerceptualHash
 from ..utils.hash_utils import calculate_image_hashes
+from ..utils.phash_utils import compute_phash, phash_to_bits, phash_to_hex
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,18 @@ def _extract_thumbnail(tags: dict) -> str | None:
     return f"data:image/jpeg;base64,{encoded}"
 
 
+def _compute_perceptual_hash(data: bytes) -> PerceptualHash | None:
+    """Compute the pHash from pixel content; returns None if the pixels can't be decoded."""
+    try:
+        image = Image.open(BytesIO(data))
+        image.load()
+        phash = compute_phash(image)
+    except Exception as e:
+        logger.warning("Error computing perceptual hash: %s", e)
+        return None
+    return PerceptualHash(hex=phash_to_hex(phash), bits=phash_to_bits(phash))
+
+
 def analyze_image_content(filename: str, data: bytes) -> ImageAnalysisResponse:
     """Analyze image data and return comprehensive metadata.
 
@@ -113,6 +126,7 @@ def analyze_image_content(filename: str, data: bytes) -> ImageAnalysisResponse:
         raise ValueError("File is not a recognized image format") from e
 
     hashes = calculate_image_hashes(data)
+    phash = _compute_perceptual_hash(data)
     raw_tags = _extract_exif_tags(data)
 
     exif = {
@@ -131,6 +145,7 @@ def analyze_image_content(filename: str, data: bytes) -> ImageAnalysisResponse:
     return ImageAnalysisResponse(
         file_info=file_info,
         hashes=hashes,
+        phash=phash,
         exif=exif,
         gps=gps,
         has_thumbnail=thumbnail_base64 is not None,

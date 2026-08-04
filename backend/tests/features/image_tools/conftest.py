@@ -5,8 +5,9 @@ from PIL import Image
 from PIL.TiffImagePlugin import IFDRational
 
 
-def _jpeg_bytes(exif=None) -> bytes:
-    image = Image.new('RGB', (100, 80), color='red')
+def _jpeg_bytes(image: Image.Image | None = None, exif=None) -> bytes:
+    if image is None:
+        image = Image.new('RGB', (100, 80), color='red')
     buf = io.BytesIO()
     if exif is not None:
         image.save(buf, format='JPEG', exif=exif)
@@ -27,7 +28,7 @@ def jpeg_with_software_tag() -> bytes:
     image = Image.new('RGB', (100, 80), color='red')
     exif = image.getexif()
     exif[0x0131] = 'TestSoftware 1.0'  # Software tag
-    return _jpeg_bytes(exif=exif)
+    return _jpeg_bytes(image=image, exif=exif)
 
 
 @pytest.fixture
@@ -43,7 +44,7 @@ def jpeg_with_gps() -> bytes:
         6: IFDRational(100, 1),
     }
     exif[0x8825] = gps_ifd
-    return _jpeg_bytes(exif=exif)
+    return _jpeg_bytes(image=image, exif=exif)
 
 
 @pytest.fixture
@@ -53,3 +54,25 @@ def png_bytes() -> bytes:
     buf = io.BytesIO()
     image.save(buf, format='PNG')
     return buf.getvalue()
+
+
+@pytest.fixture
+def progressive_jpeg_bytes() -> bytes:
+    """A progressive JPEG (SOF2), large enough to have real DCT content."""
+    image = Image.new('RGB', (64, 64), color='red')
+    buf = io.BytesIO()
+    image.save(buf, format='JPEG', progressive=True)
+    return buf.getvalue()
+
+
+def jpeg_bytes_at_quality(quality: int) -> bytes:
+    """A JPEG saved at a known quality, for sanity-checking the quality estimate."""
+    image = Image.new('RGB', (64, 64), color='red')
+    buf = io.BytesIO()
+    image.save(buf, format='JPEG', quality=quality)
+    return buf.getvalue()
+
+
+@pytest.fixture
+def jpeg_quality_80_bytes() -> bytes:
+    return jpeg_bytes_at_quality(80)

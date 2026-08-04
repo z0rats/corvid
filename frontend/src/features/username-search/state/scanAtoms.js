@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 
 export const SCAN_INITIAL_STATE = {
   phase: 'idle', // idle | running | completed | cancelled | failed
-  source: 'maigret', // maigret | social_analyzer
+  source: 'maigret', // maigret | social_analyzer | threat_actor_usernames
   username: '',
   checked: 0,
   totalSites: 0,

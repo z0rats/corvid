@@ -13,17 +13,32 @@
     "analyzeButton": "Анализировать"
   },
   "exif": {
-    "empty": "В этом изображении не найдены EXIF-данные."
+    "empty": "В этом изображении не найдены EXIF-данные.",
+    "thumbnailTitle": "Встроенная миниатюра",
+    "thumbnailHint": "Вторая, уменьшенная копия изображения, хранящаяся внутри EXIF-данных.",
+    "thumbnailAlt": "Встроенная EXIF-миниатюра"
   },
   "gps": {
     "empty": "В этом изображении не найдены GPS-данные.",
     "viewOnMap": "Посмотреть на карте",
-    "altitude": "(высота {{value}} м)"
+    "altitude": "(высота {{value}} м)",
+    "embeddedMapTitle": "Карта с GPS-положением фото",
+    "embeddedMapHint": "Загружает тайл карты с OpenStreetMap по указанным выше координатам."
   },
   "analysisResult": {
     "generalInfo": "Общая информация",
     "gpsLocation": "GPS-местоположение",
     "exifMetadata": "EXIF-метаданные"
+  },
+  "geolocation": {
+    "title": "AI-гипотеза локации",
+    "analyzeButton": "Определить локацию с помощью AI",
+    "loading": "Анализ визуальных признаков…",
+    "modelUsed": "Модель: {{model}}",
+    "candidates": "Возможные локации",
+    "clues": "Визуальные признаки",
+    "caveats": "Оговорки",
+    "noKeyHint": "Настройте API-ключ LLM в Настройках, чтобы включить AI-анализ локации."
   },
   "fileMetadata": {
     "fileProperties": "Свойства файла",
@@ -36,7 +51,67 @@
     "fileSize": "Размер файла",
     "copied": "Скопировано!",
     "copy": "Копировать",
-    "copyHashAriaLabel": "Скопировать хеш"
+    "copyHashAriaLabel": "Скопировать хеш",
+    "phash": "pHash"
+  },
+  "chapters": {
+    "general": "Общее",
+    "anomalies": "Аномалии",
+    "exif": "EXIF и теги",
+    "gps": "GPS-местоположение",
+    "structure": "Структура и качество",
+    "geolocation": "AI-геолокация",
+    "removeMetadata": "Удаление метаданных"
+  },
+  "anomalies": {
+    "noneDetected": "Аномалий не обнаружено",
+    "checksRun_one": "Выполнена {{count}} проверка",
+    "checksRun_few": "Выполнено {{count}} проверки",
+    "checksRun_many": "Выполнено {{count}} проверок",
+    "checksRun_other": "Выполнено {{count}} проверки",
+    "checks": {
+      "timestamp_consistency": "Несовпадение времени",
+      "editing_software": "ПО для редактирования",
+      "thumbnail_mismatch": "Несовпадение миниатюры",
+      "trailing_data": "Данные после EOI",
+      "marker_order": "Порядок маркеров",
+      "quantization_tables": "Таблицы квантования"
+    }
+  },
+  "structureAnalyzer": {
+    "jpegOnly": "Анализ структуры доступен только для файлов JPEG.",
+    "baseline": "Baseline",
+    "progressive": "Прогрессивный",
+    "qualityEstimate": "Качество ~{{value}}%",
+    "compressionRatio": "Сжатие {{value}}:1",
+    "bitsPerPixel": "{{value}} бит/пиксель",
+    "quantizationTables": "Таблицы квантования",
+    "tableId": "Таблица №{{id}}",
+    "huffmanTables": "Таблицы Хаффмана",
+    "totalCodes": "{{count}} кодов",
+    "markerMap": "Карта маркеров ({{count}})",
+    "offset": "смещение {{value}}",
+    "length": "{{value}} байт"
+  },
+  "removeMetadata": {
+    "description": "Скачайте копию изображения без метаданных. JPEG очищается без потерь — пиксельные данные не пересжимаются.",
+    "modeAll": "Удалить все метаданные (EXIF, XMP, IPTC, комментарии)",
+    "modeLocationOnly": "Удалить только геолокацию (сохранить данные камеры и время съёмки)",
+    "downloadButton": "Скачать очищенный файл",
+    "success": "Очищенный файл скачан."
+  },
+  "compare": {
+    "title": "Сравнить два изображения",
+    "chooseFirst": "Выбрать первое изображение",
+    "chooseSecond": "Выбрать второе изображение",
+    "compareButton": "Сравнить",
+    "field": "Поле",
+    "matchCount": "Совпадений: {{count}}",
+    "differCount": "Отличий: {{count}}",
+    "onlyLeftCount": "Только в первом: {{count}}",
+    "onlyRightCount": "Только во втором: {{count}}",
+    "pixelsMatch": "Пиксели вероятно совпадают (расстояние {{value}})",
+    "pixelsDiffer": "Пиксели вероятно различаются (расстояние {{value}})"
   },
   "welcome": {
     "title": "Инструменты для изображений",

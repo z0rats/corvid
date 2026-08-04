@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Corvid Quick Send",
+  "version": "0.1.0",
+  "description": "Send the selected text on the current page to your Corvid instance for IOC lookup.",
+  "action": {
+    "default_title": "Send selection to Corvid"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "permissions": ["activeTab", "scripting", "storage"]
+}

@@ -61,7 +61,7 @@ function sha256Fallback(bytes) {
 /**
  * SHA-256 hex digest of a File/Blob, cascading like clipboard.js's copyToClipboard: prefers
  * `crypto.subtle` (Web Crypto), which requires a secure context and is unavailable on Corvid's
- * default plain-HTTP deployment (see AGENTS.md), falling back to a pure-JS implementation so the
+ * default plain-HTTP deployment (see CLAUDE.md), falling back to a pure-JS implementation so the
  * drag-and-drop-a-file-to-search flow (StartScreen.jsx) still works there.
  */
 export async function sha256Hex(file) {

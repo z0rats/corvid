@@ -48,6 +48,10 @@ from app.features.username_search.service.social_analyzer_service import (
     cancel_scan as cancel_social_analyzer_scan,
     run_scan as run_social_analyzer_scan,
 )
+from app.features.username_search.service.threat_actor_usernames_service import (
+    cancel_scan as cancel_threat_actor_usernames_scan,
+    run_scan as run_threat_actor_usernames_scan,
+)
 from app.features.username_search.service.username_search_service import cancel_scan as cancel_maigret_scan, run_scan as run_maigret_scan
 
 logger = logging.getLogger(__name__)
@@ -58,7 +62,8 @@ router = APIRouter(prefix="/api/username-search", tags=["Username Search"])
 @router.post(
     "/scan",
     summary="Start a username search",
-    description="Start a username search (Maigret or social-analyzer), streaming progress as Server-Sent Events",
+    description="Start a username search (Maigret, social-analyzer, or Threat Actor Username Search), "
+    "streaming progress as Server-Sent Events",
 )
 @limiter.limit("3/minute")
 async def start_scan(request: Request, scan_request: ScanRequest):
@@ -68,6 +73,8 @@ async def start_scan(request: Request, scan_request: ScanRequest):
     queue: asyncio.Queue = asyncio.Queue()
     if scan_request.source == "social_analyzer":
         asyncio.create_task(run_social_analyzer_scan(scan_request.username, queue))
+    elif scan_request.source == "threat_actor_usernames":
+        asyncio.create_task(run_threat_actor_usernames_scan(scan_request.username, queue))
     else:
         asyncio.create_task(run_maigret_scan(
             scan_request.username,
@@ -88,7 +95,11 @@ async def start_scan(request: Request, scan_request: ScanRequest):
 )
 async def cancel_scan_endpoint(search_id: int) -> None:
     """Cancel a running scan, regardless of which source is running it"""
-    cancelled = cancel_maigret_scan(search_id) or cancel_social_analyzer_scan(search_id)
+    cancelled = (
+        cancel_maigret_scan(search_id)
+        or cancel_social_analyzer_scan(search_id)
+        or cancel_threat_actor_usernames_scan(search_id)
+    )
     if not cancelled:
         raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="USERNAME_SEARCH_NOT_RUNNING")
     logger.info("Cancellation requested for username search run %s", search_id)

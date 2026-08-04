@@ -28,6 +28,36 @@ describe('GpsMap', () => {
     expect(link).toHaveAttribute('target', '_blank');
   });
 
+  it('embeds an OpenStreetMap iframe centered on the coordinates', () => {
+    const gps = {
+      latitude: 40.446194,
+      longitude: -79.948778,
+      altitude: null,
+      map_url: 'https://www.google.com/maps?q=40.446194,-79.948778',
+    };
+
+    render(<GpsMap gps={gps} />);
+
+    const iframe = screen.getByTitle(/map showing the photo's gps position/i);
+    expect(iframe.tagName).toBe('IFRAME');
+    expect(iframe).toHaveAttribute('src', expect.stringContaining('openstreetmap.org/export/embed.html'));
+    expect(iframe).toHaveAttribute('src', expect.stringContaining('marker=40.446194,-79.948778'));
+  });
+
+  it('shows the reverse-geocoded address when present', () => {
+    const gps = {
+      latitude: 40.446194,
+      longitude: -79.948778,
+      altitude: null,
+      address: '123 Fake Street, Pittsburgh, PA',
+      map_url: 'https://www.google.com/maps?q=40.446194,-79.948778',
+    };
+
+    render(<GpsMap gps={gps} />);
+
+    expect(screen.getByText('123 Fake Street, Pittsburgh, PA')).toBeInTheDocument();
+  });
+
   it('omits the altitude suffix when altitude is not provided', () => {
     const gps = {
       latitude: 1.234567,

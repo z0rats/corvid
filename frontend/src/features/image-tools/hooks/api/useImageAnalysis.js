@@ -12,7 +12,7 @@ let activeAbortController = null;
 
 export function useImageAnalysis() {
   const [state, setState] = useAtom(imageAnalysisStateAtom);
-  const { result, previewUrl, isLoading, error, uploadProgress } = state;
+  const { result, previewUrl, isLoading, error, uploadProgress, file } = state;
 
   const analyzeImage = useCallback(async (file) => {
     if (!file) {
@@ -25,7 +25,7 @@ export function useImageAnalysis() {
     const { signal } = activeAbortController;
 
     try {
-      setState({ ...IMAGE_ANALYSIS_INITIAL_STATE, isLoading: true, previewUrl: URL.createObjectURL(file) });
+      setState({ ...IMAGE_ANALYSIS_INITIAL_STATE, isLoading: true, previewUrl: URL.createObjectURL(file), file });
 
       progressInterval = setInterval(() => {
         setState(prev => {
@@ -74,6 +74,7 @@ export function useImageAnalysis() {
     isLoading,
     error,
     uploadProgress,
+    file,
     analyzeImage,
     reset
   };

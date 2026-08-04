@@ -21,6 +21,7 @@ const MODULE_CONFIG_FIELDS = [
   'newsfeed_report_model',
   'email_analyzer_model',
   'llm_templates_model',
+  'image_geolocation_model',
 ];
 
 function ModelSelector({ label, description, value, models, onChange, disabled, allowDefault = false }) {

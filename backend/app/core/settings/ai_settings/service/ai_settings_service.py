@@ -18,6 +18,7 @@ MODULE_FIELDS = {
     "newsfeed_report_model",
     "email_analyzer_model",
     "llm_templates_model",
+    "image_geolocation_model",
 }
 
 

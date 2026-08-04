@@ -27,4 +27,10 @@ describe('ExifDetails', () => {
     expect(screen.getByText('Software')).toBeInTheDocument();
     expect(screen.getByText('TestSoftware 1.0')).toBeInTheDocument();
   });
+
+  it('renders the embedded thumbnail above the tag groups when present', () => {
+    render(<ExifDetails exif={{ 'Image Software': 'Test' }} hasThumbnail={true} thumbnailBase64="data:image/jpeg;base64,abc" />);
+
+    expect(screen.getByRole('img')).toHaveAttribute('src', 'data:image/jpeg;base64,abc');
+  });
 });

@@ -6,6 +6,7 @@ export const IMAGE_ANALYSIS_INITIAL_STATE = {
   isLoading: false,
   error: null,
   uploadProgress: 0,
+  file: null,
 };
 
 // Module-scoped atom (rather than component-local useState) so an in-progress

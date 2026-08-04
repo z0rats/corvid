@@ -12,7 +12,7 @@ import FoundSitesList from './FoundSitesList';
 export default function LiveScanView({ scan }) {
   const { t } = useTranslation('usernameSearch');
   const { phase, source, checked, totalSites, currentSite, foundSites, error, cancelScan } = scan;
-  const isCoarseProgress = source === 'social_analyzer';
+  const isCoarseProgress = source === 'social_analyzer' || source === 'threat_actor_usernames';
   const progress = totalSites > 0 ? Math.min(100, (checked / totalSites) * 100) : 0;
 
   return (

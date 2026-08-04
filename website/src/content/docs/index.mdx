@@ -1,0 +1,35 @@
+---
+title: Corvid
+description: Self-hostable OSINT/security-analyst web app.
+template: splash
+hero:
+  tagline: Self-hostable OSINT and security-analyst toolkit — FastAPI backend, React frontend, runs via Docker Compose.
+  actions:
+    - text: Getting Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/z0rats/corvid
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is Corvid?
+
+Corvid bundles IOC lookups, newsfeed/threat-intel aggregation, email and image analysis,
+username/email/Reddit recon, git repository correlation, dork running, and more into a
+single self-hosted app — no accounts, one shared access token.
+
+<CardGrid stagger>
+	<Card title="Getting Started" icon="rocket">
+		Install and run Corvid with Docker Compose in a few minutes.
+	</Card>
+	<Card title="Architecture" icon="setting">
+		How the FastAPI backend and React frontend are structured.
+	</Card>
+	<Card title="Features" icon="magnifier">
+		Browse every module: IOC tools, newsfeed, image tools, recon tools, and more.
+	</Card>
+</CardGrid>

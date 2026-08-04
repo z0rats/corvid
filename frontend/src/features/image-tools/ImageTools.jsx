@@ -11,6 +11,7 @@ import ImageUploadForm from './components/forms/ImageUploadForm';
 import WelcomeScreen from './components/ui/WelcomeScreen';
 import ImageAnalysisResult from './components/ui/ImageAnalysisResult';
 import ReverseSearchLinks from './components/ui/ReverseSearchLinks';
+import ImageCompareTool from './components/ui/ImageCompareTool';
 
 export default function ImageTools() {
   const { t } = useTranslation('imageTools');
@@ -23,6 +24,7 @@ export default function ImageTools() {
     isLoading,
     error,
     uploadProgress,
+    file,
     analyzeImage,
   } = useImageAnalysis();
 
@@ -90,10 +92,12 @@ export default function ImageTools() {
         <ReverseSearchLinks imageUrl={imageUrl} />
       </Paper>
 
+      <ImageCompareTool />
+
       {result ? (
-        <ImageAnalysisResult result={result} previewUrl={previewUrl} />
+        <ImageAnalysisResult result={result} previewUrl={previewUrl} file={file} />
       ) : (
-        <WelcomeScreen />
+        <WelcomeScreen onTrySample={analyzeImage} />
       )}
     </Box>
   );

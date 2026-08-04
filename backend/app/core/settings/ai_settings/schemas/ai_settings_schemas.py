@@ -9,6 +9,7 @@ class AISettingsResponse(BaseModel):
     newsfeed_report_model: str | None = Field(None, description="Override model for newsfeed report generation")
     email_analyzer_model: str | None = Field(None, description="Override model for email AI analysis")
     llm_templates_model: str | None = Field(None, description="Override model for new LLM templates")
+    image_geolocation_model: str | None = Field(None, description="Override model for AI photo geolocation")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -20,6 +21,7 @@ class AISettingsUpdate(BaseModel):
     newsfeed_report_model: str | None = Field(None, description="Override model for newsfeed report generation")
     email_analyzer_model: str | None = Field(None, description="Override model for email AI analysis")
     llm_templates_model: str | None = Field(None, description="Override model for new LLM templates")
+    image_geolocation_model: str | None = Field(None, description="Override model for AI photo geolocation")
 
 
 class AvailableModel(BaseModel):

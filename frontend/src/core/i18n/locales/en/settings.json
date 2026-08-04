@@ -60,6 +60,10 @@
       "llm_templates_model": {
         "label": "LLM Templates (new template default)",
         "description": "Default model for newly created templates"
+      },
+      "image_geolocation_model": {
+        "label": "Image Geolocation",
+        "description": "Model used for AI-based photo location analysis (needs vision support)"
       }
     }
   },

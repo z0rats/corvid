@@ -4,8 +4,17 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import ImageTools from './ImageTools';
 import { imageAnalyzerApi } from './services/api/imageAnalyzerApi';
+import { imageAnomalyApi } from './services/api/imageAnomalyApi';
+import { imageStructureApi } from './services/api/imageStructureApi';
+import { imageVisualAnalysisApi } from './services/api/imageVisualAnalysisApi';
 
 vi.mock('./services/api/imageAnalyzerApi');
+// Every chapter mounts at once now (scroll-spy, not a tab switcher), so the
+// chapters that auto-analyze on mount need their API calls stubbed here too -
+// otherwise they'd fire real, unmocked network requests during this test.
+vi.mock('./services/api/imageAnomalyApi');
+vi.mock('./services/api/imageStructureApi');
+vi.mock('./services/api/imageVisualAnalysisApi');
 
 beforeEach(() => {
   global.URL.createObjectURL = vi.fn(() => 'blob:mock-preview-url');
@@ -88,9 +97,14 @@ describe('ImageTools', () => {
 
     expect(imageAnalyzerApi.analyzeImage).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/lets you inspect an image file/i)).not.toBeInTheDocument();
+
+    // No GPS in this result - the GPS Location chapter shouldn't appear at all.
+    expect(screen.queryByText('GPS Location')).not.toBeInTheDocument();
+
+    // EXIF & Tags is a stacked section on the same scrollable document, not a
+    // hidden tab - its content is already visible without clicking anything.
     expect(screen.getByText('Software')).toBeInTheDocument();
     expect(screen.getByText('TestSoftware 1.0')).toBeInTheDocument();
-    expect(screen.getByText(/no gps data found/i)).toBeInTheDocument();
   });
 
   it('shows an error message when analysis fails', async () => {

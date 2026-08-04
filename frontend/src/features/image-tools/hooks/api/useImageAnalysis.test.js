@@ -68,6 +68,19 @@ describe('useImageAnalysis', () => {
     expect(imageAnalyzerApi.analyzeImage).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the uploaded file available for other panels to reuse', async () => {
+    imageAnalyzerApi.analyzeImage.mockResolvedValue({ file_info: {}, hashes: {}, exif: {} });
+    const { result } = renderImageAnalysisHook();
+    const uploadedFile = makeFile();
+
+    await act(async () => {
+      await result.current.analyzeImage(uploadedFile);
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.file).toBe(uploadedFile);
+  });
+
   it('surfaces the API error message on failure', async () => {
     imageAnalyzerApi.analyzeImage.mockRejectedValue({
       response: { data: { detail: 'Image analysis failed' } },

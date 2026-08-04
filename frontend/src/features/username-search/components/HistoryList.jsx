@@ -4,6 +4,7 @@ import Chip from '@mui/material/Chip';
 
 import HistoryTable from '../../../core/components/HistoryTable';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
+import { sourceLabelKey } from '../utils/sourceLabels';
 
 const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 
@@ -20,7 +21,7 @@ export default function HistoryList() {
         <Chip
           size="small"
           variant="outlined"
-          label={t(`form.source${run.source === 'social_analyzer' ? 'SocialAnalyzer' : 'Maigret'}`)}
+          label={t(sourceLabelKey(run.source))}
         />
       ),
     },
