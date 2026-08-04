@@ -469,6 +469,7 @@ function Layout() {
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
           p: 2,
