@@ -24,6 +24,15 @@ import LinkIcon from '@mui/icons-material/Link';
 import HttpIcon from '@mui/icons-material/Http';
 import TagIcon from '@mui/icons-material/Tag';
 
+// Inline SVG data URI so the fallback doesn't need its own CSP img-src allowance.
+const NO_SCREENSHOT_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="225">'
+  + '<rect width="100%" height="100%" fill="#EEE"/>'
+  + '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" '
+  + 'font-family="sans-serif" font-size="16" fill="#31343C">No Screenshot</text>'
+  + '</svg>'
+);
+
 function NoDetails({ message }) {
   return (
     <Paper sx={{ p: 3, textAlign: 'center', margin: 1 }}>
@@ -148,7 +157,7 @@ export default function UrlScanDetails({ result }) {
                     sx={{ width: { xs: '100%', md: 300 }, height: 225, objectFit: 'cover', borderRight: (t) => ({ md: `1px solid ${t.palette.divider}` }) }}
                     image={scan.screenshot}
                     alt={t('providers.urlscan.screenshotAlt', { url: scan.task.url })}
-                    onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/300x225/EEE/31343C?text=No+Screenshot'; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = NO_SCREENSHOT_PLACEHOLDER; }}
                 />
               <Grid container spacing={2} sx={{ p: 2 }}>
                 <Grid size={{ xs: 12, md: 6 }}>
