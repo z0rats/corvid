@@ -47,9 +47,12 @@ async def perform_domain_lookup(domain_request: DomainLookupRequest) -> DomainLo
         
         # Process and validate scan results
         processed_results = validate_scan_results_response(raw_scan_results)
-        
+
+        # Collapse repeat scans of the same page URL down to the latest one
+        deduplicated_results = deduplicate_scan_results(processed_results)
+
         # Convert to UrlScanResult objects
-        scan_results = convert_to_urlscan_results(processed_results)
+        scan_results = convert_to_urlscan_results(deduplicated_results)
         
         response = DomainLookupResponse(
             domain=domain,
@@ -77,6 +80,40 @@ async def perform_domain_lookup(domain_request: DomainLookupRequest) -> DomainLo
             detail="An unexpected error occurred during domain lookup",
             error_code="DOMAIN_LOOKUP_ERROR",
         )
+
+
+def deduplicate_scan_results(processed_results: list[dict]) -> list[dict]:
+    """
+    Collapse repeat scans of the same page URL down to the most recent one.
+
+    URLScan.io's search API returns one row per individual scan submission, so a
+    frequently-scanned page (e.g. a domain's homepage) can appear dozens of times
+    with different scan UUIDs/timestamps. Results arrive newest-first, so keeping
+    the first occurrence of each URL keeps the latest scan.
+
+    Args:
+        processed_results: List of processed scan result dictionaries
+
+    Returns:
+        List of scan result dictionaries with duplicate page URLs removed
+    """
+    deduplicated_results = []
+    seen_urls: set[str] = set()
+
+    for result in processed_results:
+        page_url = (result.get('page') or {}).get('url')
+        if page_url is None or page_url not in seen_urls:
+            deduplicated_results.append(result)
+            if page_url is not None:
+                seen_urls.add(page_url)
+
+    if len(deduplicated_results) != len(processed_results):
+        logger.debug(
+            "Deduplicated scan results by page URL - Before: %s, After: %s",
+            len(processed_results), len(deduplicated_results)
+        )
+
+    return deduplicated_results
 
 
 def convert_to_urlscan_results(processed_results: list[dict]) -> list[UrlScanResult]:
