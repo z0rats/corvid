@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
-import { usernameScanStateAtom, SCAN_INITIAL_STATE } from '../state/scanAtoms';
+import { usernameScanStateAtomFamily, buildInitialState } from '../state/scanAtoms';
 import { useResumableScan } from '../../../core/hooks/useResumableScan';
 import { createLogger } from '../../../core/utils/logger';
 
@@ -73,14 +73,14 @@ async function reconcile(prev, run) {
   };
 }
 
-export function useUsernameSearchScan() {
-  const [state, setState] = useAtom(usernameScanStateAtom);
+export function useUsernameSearchScan(source) {
+  const [state, setState] = useAtom(usernameScanStateAtomFamily(source));
 
   const { startScan: resumableStartScan, cancelScan, reset } = useResumableScan({
-    scopeKey: 'username-search',
+    scopeKey: `username-search-${source}`,
     state,
     setState,
-    initialState: SCAN_INITIAL_STATE,
+    initialState: buildInitialState(source),
     terminalStatuses: TERMINAL_STATUSES,
     api,
     reduce,
@@ -88,9 +88,9 @@ export function useUsernameSearchScan() {
   });
 
   const startScan = useCallback((username, options = {}) => resumableStartScan(
-    { username, source: options.source || 'maigret', tags: options.tags, excludedTags: options.excludedTags },
-    { ...SCAN_INITIAL_STATE, phase: 'running', username, source: options.source || 'maigret' },
-  ), [resumableStartScan]);
+    { username, source, tags: options.tags, excludedTags: options.excludedTags },
+    { ...buildInitialState(source), phase: 'running', username },
+  ), [resumableStartScan, source]);
 
   return { ...state, startScan, cancelScan, reset };
 }

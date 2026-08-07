@@ -185,6 +185,50 @@ class TestCheckFfraud:
         assert result == {"fraud_score": 0}
 
 
+# --- check_hudsonrock: keyless, ioc_type-dependent endpoint selection -----
+
+
+class TestCheckHudsonrock:
+    def test_email_type_uses_search_by_email_endpoint(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json={"stealers": []}))
+
+        _run(external_api_clients.check_hudsonrock("test@example.com", "email"))
+
+        assert "/osint-tools/search-by-email" in fake.last_call["url"]
+        assert fake.last_call["params"] == {"email": "test@example.com"}
+
+    def test_ip_type_uses_search_by_ip_endpoint(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json={"stealers": []}))
+
+        _run(external_api_clients.check_hudsonrock("1.1.1.1", "ip"))
+
+        assert "/osint-tools/search-by-ip" in fake.last_call["url"]
+        assert fake.last_call["params"] == {"ip": "1.1.1.1"}
+
+    def test_domain_type_uses_search_by_domain_endpoint(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json={"total": 0}))
+
+        _run(external_api_clients.check_hudsonrock("example.com", "domain"))
+
+        assert "/osint-tools/search-by-domain" in fake.last_call["url"]
+        assert fake.last_call["params"] == {"domain": "example.com"}
+
+    def test_no_hit_shape_passes_through_unchanged(self, monkeypatch):
+        no_hit = {"message": "not associated", "stealers": [], "total_corporate_services": 0, "total_user_services": 0}
+        _patch_client(monkeypatch, _response(200, json=no_hit))
+
+        result = _run(external_api_clients.check_hudsonrock("clean@example.com", "email"))
+
+        assert result == no_hit
+
+    def test_succeeds_without_an_apikey_argument(self, monkeypatch):
+        _patch_client(monkeypatch, _response(200, json={"stealers": []}))
+
+        result = _run(external_api_clients.check_hudsonrock("test@example.com", "email"))
+
+        assert result == {"stealers": []}
+
+
 # --- check_blacklist: local DB lookup, no HTTP at all ---------------------
 
 

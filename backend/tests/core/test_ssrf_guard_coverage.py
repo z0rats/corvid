@@ -41,6 +41,7 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "features/ioc_tools/ioc_lookup/single_lookup/service/client_base.py",
     "features/reddit_search/service/reddit_search_service.py",
     "features/username_search/service/threat_actor_usernames_service.py",
+    "features/username_search/service/hudson_rock_service.py",
     # Dork runner: fixed search-engine hosts (DuckDuckGo/Google/Bing); only the
     # dork query string is user-supplied, never the host
     "features/dork_runner/service/engines/base.py",
@@ -55,6 +56,12 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # Local Ollama model auto-discovery: host comes from settings.llm.ollama_base_url
     # (an operator-configured env var, LLM_OLLAMA_BASE_URL), never a request-time value
     "utils/llm_service.py",
+    # YouTube metadata lookup: fixed www.youtube.com/i.ytimg.com/googleapis.com hosts;
+    # only an already-validated, canonicalized video ID (and, for the API tier, the
+    # user's own YouTube Data API key) are ever user-derived, never the host
+    "features/youtube/service/youtube_oembed_service.py",
+    "features/youtube/service/youtube_page_service.py",
+    "features/youtube/service/youtube_api_service.py",
 }
 
 # Implementation module itself, and its own tests

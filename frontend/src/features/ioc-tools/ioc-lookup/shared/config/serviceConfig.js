@@ -9,6 +9,7 @@ import FfraudIpDetails from '../components/service-details/FFraud/FfraudIpDetail
 import FfraudEmailDetails from '../components/service-details/FFraud/FfraudEmailDetails';
 import GithubDetails from '../components/service-details/GitHub/GithubDetails';
 import HaveibeenpwndDetails from '../components/service-details/HIBP/HaveibeenpwndDetails';
+import HudsonRockDetails from '../components/service-details/HudsonRock/HudsonRockDetails';
 import HunterioDetails from '../components/service-details/HunterIO/HunterioDetails';
 import IpQualityscoreDetails from '../components/service-details/IpQualityScore/IpqualityscoreDetails';
 import MandiantDetails from '../components/service-details/Mandiant/MandiantDetails';
@@ -211,6 +212,31 @@ export const SERVICE_DEFINITIONS = {
         const breachCount = responseData.breachedaccount?.length || 0;
         return { summary: `Found in ${breachCount} breach(es)`, tlp: breachCount > 0 ? 'RED' : 'GREEN', keyMetric: breachCount };
     },
+  },
+  hudsonrock: {
+    name: 'Hudson Rock',
+    icon: 'default_icon',
+    detailComponent: HudsonRockDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['IPv4', 'Domain', 'Email'],
+    lookupEndpoint: createSingleEndpoint('hudsonrock'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (responseData.data) {
+        const total = responseData.total || 0;
+        if (total === 0) return { summary: 'No infostealer exposure found', tlp: 'GREEN' };
+        return {
+          summary: `${total} infected machine(s), ${responseData.employees || 0} employee(s) affected`,
+          tlp: responseData.employees > 0 ? 'RED' : 'AMBER',
+          keyMetric: total,
+        };
+      }
+      const count = responseData.stealers?.length || 0;
+      return {
+        summary: count > 0 ? `Found in ${count} infostealer infection(s)` : 'No infostealer exposure found',
+        tlp: count > 0 ? 'RED' : 'GREEN',
+        keyMetric: count,
+      };
+    })),
   },
   hunterio: {
     name: 'Hunter.io',

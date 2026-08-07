@@ -58,6 +58,21 @@ class SearchRunDetail(SearchRunSummary):
     has_export: bool = Field(default=False, description="Whether a full report is available for export")
 
 
+class HudsonRockStealerSummary(BaseModel):
+    """One infostealer infection linked to a username, per Hudson Rock's public API"""
+
+    date_compromised: str | None = Field(default=None, description="When the infected computer's data was harvested")
+    computer_name: str | None = Field(default=None, description="Name of the infected computer, if known")
+    operating_system: str | None = Field(default=None, description="OS of the infected computer, if known")
+
+
+class HudsonRockCheckResponse(BaseModel):
+    """Result of checking a username against Hudson Rock's free infostealer-exposure API"""
+
+    username: str = Field(..., description="Username that was checked")
+    stealers: list[HudsonRockStealerSummary] = Field(default_factory=list, description="Infostealer infections linked to this username")
+
+
 class UsernameSearchInfo(BaseModel):
     """Info about the underlying search tool and its site database"""
 

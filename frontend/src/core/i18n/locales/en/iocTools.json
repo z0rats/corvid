@@ -546,6 +546,26 @@
       "communityBlacklisted": "Community Blacklisted",
       "blacklistReports": "Yes ({{count}} report(s))"
     },
+    "hudsonrock": {
+      "errorFetching": "Error fetching Hudson Rock details: {{error}}",
+      "unavailable": "Hudson Rock details are unavailable or the data is incomplete.",
+      "noExposureFound": "No infostealer exposure found.",
+      "infectionsFound": "{{count}} infostealer infection(s) found",
+      "domainInfectionsFound": "{{count}} infected machine(s) linked to this domain",
+      "dateCompromised": "Date Compromised",
+      "computerName": "Computer",
+      "malwarePath": "Malware Path",
+      "antiviruses": "Antivirus(es)",
+      "sampleLogins": "Sample Logins Found",
+      "userServices": "{{count}} user service(s)",
+      "corporateServices": "{{count}} corporate service(s)",
+      "employees": "Employees",
+      "users": "Users",
+      "thirdParties": "Third Parties",
+      "topEmployeeUrls": "Top Employee-Associated URLs",
+      "occurrences": "{{count}} occurrence(s)",
+      "attribution": "Data provided by Hudson Rock —"
+    },
     "hunterio": {
       "errorFetching": "Error fetching Hunter.io details: {{error}}",
       "unavailable": "Hunter.io details are unavailable or the data is incomplete.",

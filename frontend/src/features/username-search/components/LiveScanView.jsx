@@ -9,14 +9,15 @@ import CancelIcon from '@mui/icons-material/Cancel';
 
 import FoundSitesList from './FoundSitesList';
 
-export default function LiveScanView({ scan }) {
+export default function LiveScanView({ scan, title }) {
   const { t } = useTranslation('usernameSearch');
   const { phase, source, checked, totalSites, currentSite, foundSites, error, cancelScan } = scan;
   const isCoarseProgress = source === 'social_analyzer' || source === 'threat_actor_usernames';
   const progress = totalSites > 0 ? Math.min(100, (checked / totalSites) * 100) : 0;
 
   return (
-    <Box>
+    <Box sx={{ mb: 3 }}>
+      {title && <Typography variant="subtitle1" sx={{ mb: 1 }}>{title}</Typography>}
       {phase === 'running' && (
         <Box sx={{ mb: 2 }}>
           <LinearProgress variant={isCoarseProgress ? 'indeterminate' : 'determinate'} value={progress} />

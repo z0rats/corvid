@@ -215,6 +215,26 @@ async def check_hibp(ioc: str, apikey: str) -> dict[str, Any]:
     return await handle_response("HIBP", response)
 
 
+_HUDSON_ROCK_ENDPOINTS = {
+    'email': ('search-by-email', 'email'),
+    'ip': ('search-by-ip', 'ip'),
+    'domain': ('search-by-domain', 'domain'),
+}
+
+
+async def check_hudsonrock(ioc: str, ioc_type: str) -> dict[str, Any]:
+    """Check for infostealer/malware-log exposure using Hudson Rock's free, keyless public API"""
+    endpoint, param = _HUDSON_ROCK_ENDPOINTS[ioc_type]
+    logger.debug("Checking %s %s with Hudson Rock", ioc_type, ioc)
+
+    client = get_client()
+    response = await client.get(
+        url=f'https://cavalier.hudsonrock.com/api/json/v2/osint-tools/{endpoint}',
+        params={param: ioc},
+    )
+    return await handle_response("Hudson Rock", response)
+
+
 async def check_hunter(ioc: str, apikey: str) -> dict[str, Any]:
     """Verify email address using Hunter.io API"""
     _require_apikey("Hunter.io", apikey)

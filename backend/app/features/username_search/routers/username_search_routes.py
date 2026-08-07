@@ -1,8 +1,9 @@
 import asyncio
 import logging
 
+import httpx
 import maigret
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, Query, Request, Response, status
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
@@ -32,12 +33,14 @@ from app.features.username_search.crud.username_search_crud import (
     list_search_runs,
 )
 from app.features.username_search.schemas.username_search_schemas import (
+    HudsonRockCheckResponse,
     ScanRequest,
     SearchRunDetail,
     SearchRunSummary,
     UsernameSearchInfo,
 )
 from app.features.username_search.service.db_refresh_service import refresh_database
+from app.features.username_search.service.hudson_rock_service import check_username as check_hudson_rock_username
 from app.features.username_search.service.report_service import (
     delete_scan_results,
     generate_export,
@@ -84,6 +87,29 @@ async def start_scan(request: Request, scan_request: ScanRequest):
         ))
 
     return sse_response(queue)
+
+
+@router.get(
+    "/hudson-rock",
+    response_model=HudsonRockCheckResponse,
+    summary="Check Hudson Rock for infostealer exposure",
+    description="Check Hudson Rock's free, keyless public API for infostealer/malware-log exposure associated with a username",
+)
+@limiter.limit("20/minute")
+async def get_hudson_rock_check(
+    request: Request,
+    username: str = Query(..., min_length=1, max_length=100),
+) -> HudsonRockCheckResponse:
+    """Check a username against Hudson Rock's infostealer-exposure API"""
+    try:
+        return await check_hudson_rock_username(username)
+    except httpx.HTTPError as exc:
+        logger.warning("Hudson Rock check failed for '%s': %s", username, exc)
+        raise AppHTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Hudson Rock lookup failed",
+            error_code="USERNAME_SEARCH_HUDSON_ROCK_FAILED",
+        ) from exc
 
 
 @router.post(

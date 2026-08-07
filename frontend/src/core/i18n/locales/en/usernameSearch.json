@@ -11,12 +11,14 @@
   },
 
   "form": {
+    "modulesLabel": "Search with (select one or more)",
     "usernameLabel": "Username",
     "usernamePlaceholder": "e.g. johndoe",
     "searchButton": "Search",
     "sourceMaigret": "Maigret",
     "sourceSocialAnalyzer": "Social Analyzer",
     "sourceThreatActorUsernames": "Threat Actor Usernames",
+    "sourceHudsonRock": "Hudson Rock",
     "tagsLabel": "Site tags",
     "tagsPlaceholder": "All sites",
     "tagsHelp": "Only scan sites with at least one of the selected tags (leave empty to scan all)"
@@ -36,6 +38,13 @@
     "empty": "No profiles found",
     "foundCount": "{{count}} profile(s) found",
     "matchedAs": "matched as \"{{username}}\""
+  },
+
+  "hudsonRock": {
+    "found": "{{count}} infostealer infection(s) found",
+    "clean": "No infostealer exposure",
+    "unknownComputer": "Unknown computer",
+    "attribution": "Data provided by Hudson Rock"
   },
 
   "history": {

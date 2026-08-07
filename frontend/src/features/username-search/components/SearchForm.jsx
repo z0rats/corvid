@@ -4,8 +4,10 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Autocomplete from '@mui/material/Autocomplete';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import CheckIcon from '@mui/icons-material/Check';
 import SearchIcon from '@mui/icons-material/Search';
 
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
@@ -13,12 +15,22 @@ import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('UsernameSearchForm');
 
+const DEFAULT_MODULES = ['maigret'];
+
+const MODULE_KEYS = ['maigret', 'social_analyzer', 'threat_actor_usernames', 'hudson_rock'];
+const MODULE_LABEL_KEYS = {
+  maigret: 'form.sourceMaigret',
+  social_analyzer: 'form.sourceSocialAnalyzer',
+  threat_actor_usernames: 'form.sourceThreatActorUsernames',
+  hudson_rock: 'form.sourceHudsonRock',
+};
+
 export default function SearchForm({ onSearch, disabled, initialUsername }) {
   const { t } = useTranslation('usernameSearch');
   // `initialUsername` comes from usePrefillFromQuery, which yields `null` (not `undefined`) when
   // absent — a default parameter wouldn't catch that, so this normalizes it explicitly.
   const [username, setUsername] = useState(initialUsername || '');
-  const [source, setSource] = useState('maigret');
+  const [modules, setModules] = useState(DEFAULT_MODULES);
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
 
@@ -30,27 +42,40 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
     return () => { ignore = true; };
   }, []);
 
+  const toggleModule = (moduleKey) => {
+    setModules((prev) => (
+      prev.includes(moduleKey) ? prev.filter((m) => m !== moduleKey) : [...prev, moduleKey]
+    ));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = username.trim();
-    if (!trimmed) return;
-    onSearch(trimmed, { source, tags: source === 'maigret' ? tags : undefined });
+    if (!trimmed || modules.length === 0) return;
+    onSearch(trimmed, { modules, tags: modules.includes('maigret') ? tags : undefined });
   };
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mb: 2 }}>
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        value={source}
-        onChange={(_, value) => value && setSource(value)}
-        disabled={disabled}
-        sx={{ mb: 2 }}
-      >
-        <ToggleButton value="maigret">{t('form.sourceMaigret')}</ToggleButton>
-        <ToggleButton value="social_analyzer">{t('form.sourceSocialAnalyzer')}</ToggleButton>
-        <ToggleButton value="threat_actor_usernames">{t('form.sourceThreatActorUsernames')}</ToggleButton>
-      </ToggleButtonGroup>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+        {t('form.modulesLabel')}
+      </Typography>
+      <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+        {MODULE_KEYS.map((moduleKey) => {
+          const selected = modules.includes(moduleKey);
+          return (
+            <Chip
+              key={moduleKey}
+              label={t(MODULE_LABEL_KEYS[moduleKey])}
+              icon={selected ? <CheckIcon /> : undefined}
+              color={selected ? 'primary' : 'default'}
+              variant={selected ? 'filled' : 'outlined'}
+              onClick={() => toggleModule(moduleKey)}
+              disabled={disabled}
+            />
+          );
+        })}
+      </Stack>
       <Box sx={{ display: 'flex', gap: 2 }}>
         <TextField
           fullWidth
@@ -65,13 +90,13 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
           type="submit"
           variant="contained"
           startIcon={<SearchIcon />}
-          disabled={disabled || !username.trim()}
+          disabled={disabled || !username.trim() || modules.length === 0}
           sx={{ whiteSpace: 'nowrap' }}
         >
           {t('form.searchButton')}
         </Button>
       </Box>
-      {source === 'maigret' && (
+      {modules.includes('maigret') && (
         <Autocomplete
           multiple
           size="small"

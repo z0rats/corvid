@@ -102,6 +102,17 @@ def register_services(ioc_lookup_service_module) -> None:
             supported_ioc_types=[IOC_TYPES['EMAIL']],
             api_key=ApiKeySpec(setting_name='hibp_api_key'),
         ),
+        'hudsonrock': ProviderSpec(
+            func=ioc_lookup_service_module.check_hudsonrock,
+            name='Hudson Rock',
+            supported_ioc_types=[IOC_TYPES['EMAIL'], IOC_TYPES['IPV4'], IOC_TYPES['DOMAIN']],
+            type_mapping=TypeMapping(
+                param='ioc_type',
+                values={
+                    IOC_TYPES['EMAIL']: 'email', IOC_TYPES['IPV4']: 'ip', IOC_TYPES['DOMAIN']: 'domain',
+                },
+            ),
+        ),
         'hunterio': ProviderSpec(
             func=ioc_lookup_service_module.check_hunter,
             name='Hunter.io',

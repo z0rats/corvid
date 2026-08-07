@@ -11,6 +11,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundSitesList from './FoundSitesList';
+import HudsonRockStatusChip from './HudsonRockStatusChip';
+import { useHudsonRockCheck } from '../hooks/api/useHudsonRockCheck';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { sourceLabelKey } from '../utils/sourceLabels';
 
@@ -22,6 +24,7 @@ export default function HistoryDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: run, loading } = useHistoryDetail(usernameSearchApi.getRun, id);
+  const hudsonRockResult = useHudsonRockCheck(run?.username);
 
   if (loading) return <LinearProgress />;
   if (!run) return <Typography color="text.secondary">{t('history.notFound')}</Typography>;
@@ -66,6 +69,7 @@ export default function HistoryDetail() {
         </Stack>
       )}
 
+      <HudsonRockStatusChip result={hudsonRockResult} />
       <FoundSitesList sites={run.site_results} />
     </Box>
   );

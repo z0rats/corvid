@@ -30,6 +30,11 @@ export const usernameSearchApi = {
     await api.post(`/api/username-search/runs/${searchId}/cancel`);
   },
 
+  async checkHudsonRock(username, { signal } = {}) {
+    const response = await api.get('/api/username-search/hudson-rock', { params: { username }, signal });
+    return response.data;
+  },
+
   async getTags() {
     const response = await api.get('/api/username-search/tags');
     return response.data;
