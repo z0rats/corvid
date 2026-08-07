@@ -1,4 +1,4 @@
-import { detectIocType, IOC_TYPES } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isYoutubeVideoUrl } from './iocTypeDetection';
 
 /**
  * Pure, framework-free parsing of the command palette's input grammar (see
@@ -17,6 +17,7 @@ export const TYPE_TOKEN_ALIASES = {
   url: [IOC_TYPES.URL],
   email: [IOC_TYPES.EMAIL],
   hash: [IOC_TYPES.MD5, IOC_TYPES.SHA1, IOC_TYPES.SHA256],
+  youtube: [IOC_TYPES.YOUTUBE_VIDEO_URL],
   md5: [IOC_TYPES.MD5],
   sha1: [IOC_TYPES.SHA1],
   sha256: [IOC_TYPES.SHA256],
@@ -227,7 +228,18 @@ export function parseQuery(rawInput, ctx = {}) {
 
   const iocType = detectIocType(input);
   if (iocType !== IOC_TYPES.UNKNOWN) {
-    return { kind: 'value', value: input, iocType, matches: rankToolsForValue(iocType, context.registry) };
+    const matches = rankToolsForValue(iocType, context.registry);
+    // detectIocType classifies a YouTube link as plain URL (see iocTypeDetection.js's
+    // YOUTUBE_VIDEO_URL comment for why that stays true rather than adding a real pattern for
+    // it) - so a more specific YouTube-module match, when one is registered, is surfaced here as
+    // an addition on top of the generic URL matches rather than instead of them.
+    const youtubeMatches = iocType === IOC_TYPES.URL && isYoutubeVideoUrl(input)
+      ? rankToolsForValue(IOC_TYPES.YOUTUBE_VIDEO_URL, context.registry)
+      : [];
+    const orderedMatches = youtubeMatches.length > 0
+      ? [...youtubeMatches, ...matches.filter((entry) => !youtubeMatches.includes(entry))]
+      : matches;
+    return { kind: 'value', value: input, iocType, matches: orderedMatches };
   }
 
   const pivot = parsePivot(input, context);

@@ -32,6 +32,7 @@ import enGitRecon from './locales/en/gitRecon.json';
 import ruGitRecon from './locales/ru/gitRecon.json';
 import enCommandPalette from './locales/en/commandPalette.json';
 import ruCommandPalette from './locales/ru/commandPalette.json';
+import enYoutube from './locales/en/youtube.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -52,6 +53,7 @@ export const NAMESPACES = [
   'dorkRunner',
   'gitRecon',
   'commandPalette',
+  'youtube',
 ];
 
 i18n
@@ -75,6 +77,7 @@ i18n
         dorkRunner: enDorkRunner,
         gitRecon: enGitRecon,
         commandPalette: enCommandPalette,
+        youtube: enYoutube,
       },
       ru: {
         common: ruCommon,

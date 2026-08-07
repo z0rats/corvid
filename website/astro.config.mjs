@@ -55,6 +55,7 @@ export default defineConfig({
 						{ label: 'Reddit Search', slug: 'features/reddit-search' },
 						{ label: 'Git Recon', slug: 'features/git-recon' },
 						{ label: 'Dork Runner', slug: 'features/dork-runner' },
+						{ label: 'YouTube', slug: 'features/youtube' },
 						{ label: 'LLM Templates', slug: 'features/llm-templates' },
 						{ label: 'CVSS Calculator', slug: 'features/cvss-calculator' },
 						{ label: 'Rule Creator', slug: 'features/rule-creator' },

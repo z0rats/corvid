@@ -321,6 +321,17 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.SECURITY_SCANNING,
         icon="urlscanio_logo_small"
     ),
+    "youtube": ServiceDefinition(
+        name="YouTube Data API",
+        key="youtube",
+        description="Optional key unlocking extended YouTube video stats (views, likes, duration, publish date, tags, category) beyond the module's keyless oEmbed/page-scrape data.",
+        documentation_url="https://developers.google.com/youtube/v3/getting-started",
+        supported_ioc_types=["URL"],
+        required_keys=["youtube"],
+        tier=ServiceTier.FREE,
+        category=ServiceCategory.SOCIAL_MEDIA,
+        icon="default_icon"
+    ),
     "virustotal": ServiceDefinition(
         name="VirusTotal",
         key="virustotal",

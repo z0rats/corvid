@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { detectIocType, IOC_TYPES } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isYoutubeVideoUrl } from './iocTypeDetection';
 
 // Shared with the backend's test_ioc_type_detection.py via
 // testdata/ioc-type-detection-cases.json at the repo root, so the two implementations
@@ -51,5 +51,38 @@ describe('detectIocType — edge cases (mirrors backend edge-case tests)', () =>
 
   it('does not misclassify an out-of-range IPv4 octet', () => {
     expect(detectIocType('999.999.999.999')).not.toBe(IOC_TYPES.IPV4);
+  });
+});
+
+describe('isYoutubeVideoUrl', () => {
+  const VIDEO_ID = 'dQw4w9WgXcQ';
+
+  it.each([
+    `https://www.youtube.com/watch?v=${VIDEO_ID}`,
+    `https://youtube.com/watch?v=${VIDEO_ID}`,
+    `https://www.youtube.com/watch?v=${VIDEO_ID}&list=PL123`,
+    `https://m.youtube.com/watch?v=${VIDEO_ID}`,
+    `https://music.youtube.com/watch?v=${VIDEO_ID}`,
+    `https://youtu.be/${VIDEO_ID}`,
+    `https://youtu.be/${VIDEO_ID}?si=abc123`,
+    `https://www.youtube.com/shorts/${VIDEO_ID}`,
+    `https://www.youtube.com/embed/${VIDEO_ID}`,
+    `https://www.youtube.com/live/${VIDEO_ID}`,
+  ])('accepts %s', (url) => {
+    expect(isYoutubeVideoUrl(url)).toBe(true);
+    // still plain URL for ioc_lookup's own routing/provider selection - see the
+    // YOUTUBE_VIDEO_URL comment in iocTypeDetection.js for why this stays true
+    expect(detectIocType(url)).toBe(IOC_TYPES.URL);
+  });
+
+  it.each([
+    '',
+    'not a url',
+    'https://example.com/watch?v=dQw4w9WgXcQ',
+    'https://youtube.com.evil.com/watch?v=dQw4w9WgXcQ',
+    'https://www.youtube.com/',
+    'https://www.youtube.com/channel/UC123456789',
+  ])('rejects %s', (url) => {
+    expect(isYoutubeVideoUrl(url)).toBe(false);
   });
 });

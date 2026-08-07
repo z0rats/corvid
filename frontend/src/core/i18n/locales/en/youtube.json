@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "YouTube",
+    "description": "Look up metadata for a YouTube video: title, author, description, duration, thumbnails, and (with an optional API key) view/like/comment counts."
+  },
+
+  "welcomeScreen": {
+    "title": "YouTube Video Metadata",
+    "intro": "Paste a YouTube video link above (youtube.com/watch, youtu.be, /shorts, or /embed) and look it up.",
+    "description": "Title, author, description, duration, and thumbnails are fetched without an API key. Add a YouTube Data API key under Settings > API Keys to also see view/like/comment counts, tags, and category."
+  },
+
+  "form": {
+    "urlLabel": "YouTube video URL",
+    "urlPlaceholder": "e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "lookupButton": "Look up"
+  },
+
+  "overview": {
+    "untitled": "Untitled video",
+    "watchOnYoutube": "Watch on YouTube",
+    "duration": "Duration",
+    "published": "Published",
+    "genre": "Genre",
+    "channelId": "Channel ID"
+  },
+
+  "stats": {
+    "title": "Extended stats",
+    "notConfigured": "Add a YouTube Data API key under Settings > API Keys to see view/like/comment counts, tags, and category for this video.",
+    "addKeyAction": "Add API key",
+    "fetchFailed": "The YouTube Data API request failed (invalid/quota-exceeded key, or the video isn't accessible via the API). Showing keyless data only.",
+    "notAvailable": "Not available",
+    "fields": {
+      "viewCount": "Views",
+      "likeCount": "Likes",
+      "commentCount": "Comments",
+      "duration": "Duration",
+      "publishedAt": "Published at",
+      "definition": "Definition",
+      "categoryId": "Category ID"
+    }
+  },
+
+  "thumbnails": {
+    "title": "Thumbnails",
+    "maxresHint": "Higher resolutions (e.g. maxresdefault) may not exist for every video."
+  }
+}

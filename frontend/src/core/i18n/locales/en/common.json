@@ -79,7 +79,9 @@
     "gitReconTabs": {
       "newSearch": "New Search",
       "history": "History"
-    }
+    },
+
+    "youtube": "YouTube"
   },
 
   "layout": {

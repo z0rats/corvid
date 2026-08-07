@@ -29,6 +29,7 @@ import RedditIcon from "@mui/icons-material/Reddit";
 import TroubleshootIcon from "@mui/icons-material/TroubleshootOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import KeyboardCommandKeyIcon from "@mui/icons-material/KeyboardCommandKeyOutlined";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
 // aliases/tags/accepts/acceptsRouting power the command palette's registry
@@ -164,6 +165,18 @@ const MAIN_MENU_ITEMS_CONFIG = [
     aliases: ["git recon", "github recon", "gitcolombo", "commit history"],
     tags: ["recon", "identity"],
     accepts: [],
+  },
+  {
+    i18nKey: "nav.youtube",
+    icon: <YouTubeIcon />,
+    path: "/youtube",
+    moduleId: "youtube",
+    aliases: ["youtube", "yt", "video metadata", "youtube metadata"],
+    tags: ["recon", "osint"],
+    // Not reachable via detectIocType's own priority chain (a YouTube link is still typed as
+    // plain URL there) - commandParser.js's parseQuery injects this match itself when
+    // isYoutubeVideoUrl(input) is true, see iocTypeDetection.js's YOUTUBE_VIDEO_URL comment.
+    accepts: [IOC_TYPES.YOUTUBE_VIDEO_URL],
   },
 ];
 

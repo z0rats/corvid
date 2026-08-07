@@ -28,6 +28,10 @@ const registry = [
     id: 'dork_runner', label: 'Dork Runner', path: '/dork-runner',
     aliases: ['dork runner', 'dork'], tags: ['recon'], accepts: [IOC_TYPES.DOMAIN], acceptsRouting: {},
   },
+  {
+    id: 'youtube', label: 'YouTube', path: '/youtube',
+    aliases: ['youtube', 'yt'], tags: ['recon'], accepts: [IOC_TYPES.YOUTUBE_VIDEO_URL], acceptsRouting: {},
+  },
 ];
 
 const playbooks = [
@@ -80,6 +84,20 @@ describe('parseQuery — recognized value', () => {
     const result = parseQuery('evil.com', { registry });
     expect(result.kind).toBe('value');
     expect(result.matches.map((m) => m.id).sort()).toEqual(['dork_runner', 'ioc_tools']);
+  });
+
+  it('a plain URL stays typed as URL and does not surface the youtube module', () => {
+    const result = parseQuery('https://example.com/login', { registry });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.URL);
+    expect(result.matches.map((m) => m.id)).not.toContain('youtube');
+  });
+
+  it('a YouTube video URL is still typed as URL but surfaces the youtube module first', () => {
+    const result = parseQuery('https://youtu.be/dQw4w9WgXcQ', { registry });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.URL);
+    expect(result.matches.map((m) => m.id)).toEqual(['youtube']);
   });
 });
 

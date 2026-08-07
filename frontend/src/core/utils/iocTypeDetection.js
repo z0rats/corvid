@@ -17,6 +17,13 @@ export const IOC_TYPES = {
   CVE: 'CVE',
   EVM_ADDRESS: 'EVMAddress',
   BITCOIN_ADDRESS: 'BitcoinAddress',
+  // Deliberately NOT part of IOC_TYPE_PATTERNS/detectIocType's priority chain below, and not
+  // mirrored in the backend's ioc_utils.py/testdata fixture - detectIocType still classifies a
+  // YouTube link as plain URL (so ioc_lookup's provider routing for it is unaffected). This exists
+  // only so commandParser.js can tag the youtube sidebar entry's `accepts` array with a value from
+  // this shared enum (required by commandRegistry.test.js's "no garbage accepts values" guard) and
+  // inject it into the palette's match list via isYoutubeVideoUrl() - see commandParser.js.
+  YOUTUBE_VIDEO_URL: 'YouTubeVideoURL',
   UNKNOWN: 'unknown',
 };
 
@@ -59,4 +66,43 @@ export function detectIocType(rawValue) {
   if (IOC_TYPE_PATTERNS[IOC_TYPES.EMAIL].test(value)) return IOC_TYPES.EMAIL;
 
   return IOC_TYPES.UNKNOWN;
+}
+
+const YOUTUBE_HOST_SUFFIXES = ['youtube.com', 'youtube-nocookie.com'];
+const YOUTUBE_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+
+/**
+ * Whether `value` is a YouTube video URL (watch/shorts/embed/live/youtu.be) - a JS mirror of
+ * backend/app/features/youtube/utils/youtube_url_utils.py's extract_video_id, kept separate from
+ * detectIocType (see the YOUTUBE_VIDEO_URL comment above for why).
+ */
+export function isYoutubeVideoUrl(value) {
+  let parsed;
+  try {
+    parsed = new URL((value ?? '').trim());
+  } catch {
+    return false;
+  }
+
+  let host = parsed.hostname.toLowerCase();
+  if (host.startsWith('www.')) host = host.slice(4);
+
+  if (host === 'youtu.be') {
+    const id = parsed.pathname.replace(/^\//, '').split('/')[0];
+    return YOUTUBE_VIDEO_ID_RE.test(id);
+  }
+
+  if (!YOUTUBE_HOST_SUFFIXES.some((suffix) => host === suffix || host.endsWith(`.${suffix}`))) {
+    return false;
+  }
+
+  if (parsed.pathname === '/watch') {
+    const id = parsed.searchParams.get('v');
+    return Boolean(id) && YOUTUBE_VIDEO_ID_RE.test(id);
+  }
+
+  return ['/shorts/', '/embed/', '/live/'].some((prefix) => {
+    if (!parsed.pathname.startsWith(prefix)) return false;
+    return YOUTUBE_VIDEO_ID_RE.test(parsed.pathname.slice(prefix.length).split('/')[0]);
+  });
 }
