@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Corvid</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 0;
+        font-size: 13px;
+      }
+      h1 {
+        font-size: 15px;
+        margin: 0;
+        padding: 12px 16px 0;
+      }
+      h2 {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        opacity: 0.6;
+        margin: 0 0 6px;
+      }
+      main {
+        padding: 12px 16px 16px;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        padding: 8px 16px 0;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+      }
+      .tab {
+        all: initial;
+        font-family: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 6px 6px 0 0;
+        opacity: 0.6;
+      }
+      .tab.active {
+        opacity: 1;
+        background: rgba(128, 128, 128, 0.12);
+        font-weight: 600;
+      }
+      .tab:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+      section {
+        margin-bottom: 18px;
+      }
+      input[type='text'] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        font-size: 13px;
+        font-family: inherit;
+      }
+      button {
+        padding: 6px 12px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .row {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .row input {
+        flex: 1;
+      }
+      .hint {
+        min-height: 16px;
+        font-size: 11px;
+        opacity: 0.65;
+        margin-top: 4px;
+      }
+      .quick-links {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .quick-links a {
+        color: inherit;
+        text-decoration: none;
+        padding: 6px 8px;
+        border-radius: 6px;
+        background: rgba(128, 128, 128, 0.08);
+      }
+      .quick-links a:hover {
+        background: rgba(128, 128, 128, 0.18);
+      }
+      .tips {
+        font-size: 11px;
+        opacity: 0.6;
+        line-height: 1.5;
+      }
+      .status {
+        margin-left: 8px;
+        font-size: 11px;
+        color: #2e7d32;
+      }
+      .thumb {
+        max-width: 100%;
+        max-height: 160px;
+        border-radius: 6px;
+        display: block;
+        margin-bottom: 12px;
+        object-fit: contain;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 3px 0;
+        vertical-align: top;
+        word-break: break-word;
+      }
+      td.label {
+        width: 42%;
+        opacity: 0.65;
+        padding-right: 8px;
+      }
+      .empty,
+      .error,
+      .loading {
+        opacity: 0.75;
+        line-height: 1.5;
+      }
+      .error {
+        color: #d32f2f;
+      }
+      a {
+        color: #1976d2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Corvid</h1>
+    <div class="tabs">
+      <button id="tab-home" class="tab" type="button">Home</button>
+      <button id="tab-exif" class="tab" type="button" disabled>EXIF</button>
+    </div>
+
+    <main id="home-view">
+      <section>
+        <h2>Search</h2>
+        <input id="search-input" type="text" placeholder="Paste an IP, domain, URL, email, hash, CVE…" />
+        <div id="search-hint" class="hint"></div>
+        <div class="row">
+          <button id="search-button" disabled>Search in Corvid</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Quick links</h2>
+        <div id="quick-links" class="quick-links"></div>
+      </section>
+
+      <section>
+        <h2>Settings</h2>
+        <label for="base-url">Corvid base URL</label>
+        <div class="row">
+          <input id="base-url" type="text" placeholder="http://localhost:4000" />
+          <button id="save-base-url">Save</button>
+        </div>
+        <span id="settings-status" class="status"></span>
+      </section>
+
+      <p class="tips">
+        Right-click an image on any page for reverse search or EXIF metadata. Select text that
+        matches a supported IOC type for an instant search popup.
+      </p>
+    </main>
+
+    <main id="exif-view" style="display: none">
+      <div id="content" class="loading">Right-click an image and choose "Show EXIF metadata".</div>
+    </main>
+
+    <script src="exif-parser.js"></script>
+    <script src="ioc-type-detection.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

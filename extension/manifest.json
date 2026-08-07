@@ -1,14 +1,25 @@
 {
   "manifest_version": 3,
   "name": "Corvid Quick Send",
-  "version": "0.1.0",
-  "description": "Send the selected text on the current page to your Corvid instance for IOC lookup.",
+  "version": "0.6.0",
+  "description": "Search selected text as an IOC (via a right-click menu or an inline popup), reverse-image-search, view EXIF metadata, from a side panel with its own search and settings.",
   "action": {
-    "default_title": "Send selection to Corvid"
+    "default_title": "Open Corvid panel"
   },
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["ioc-type-detection.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "options_page": "options.html",
-  "permissions": ["activeTab", "scripting", "storage"]
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "permissions": ["storage", "contextMenus", "sidePanel"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"]
 }
