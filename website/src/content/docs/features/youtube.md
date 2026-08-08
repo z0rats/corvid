@@ -18,5 +18,11 @@ Two tiers of data are available:
   configured under Settings → API Keys like any other provider. Unlocks view/like/comment counts,
   tags, and category, on top of the keyless data above.
 
+That same API key also unlocks the **comments panel** — there's no keyless tier for comments.
+Load top comments (newest-first or top-first) with pagination, or search: YouTube's API has no
+native comment-text search, so a search scans multiple pages server-side, filtering by author or
+text. A heavily-commented video's search stops after a page/result cap rather than scanning
+forever — a "load more" button continues the scan from where it left off.
+
 Results are ephemeral, like Domain Finder and Dork Runner — no history is persisted. Pasting a
 YouTube link into the command palette (`/` or `⌘K`/`Ctrl+K`) suggests this module directly.

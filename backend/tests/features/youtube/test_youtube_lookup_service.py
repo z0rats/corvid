@@ -17,19 +17,13 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-class _FakeApikey:
-    def __init__(self, key: str, is_active: bool = True):
-        self.key = key
-        self.is_active = is_active
-
-
-async def _fake_get_apikey_none(db, name):
+async def _fake_get_key_none(db):
     return None
 
 
-def _fake_get_apikey_with(key: str, is_active: bool = True):
-    async def _fake(db, name):
-        return _FakeApikey(key, is_active)
+def _fake_get_key_with(key: str | None):
+    async def _fake(db):
+        return key
     return _fake
 
 
@@ -63,7 +57,7 @@ async def _fake_page_metadata_full(video_url):
 
 @pytest.fixture(autouse=True)
 def _patch_fetchers(monkeypatch):
-    monkeypatch.setattr(youtube_lookup_service, "get_apikey", _fake_get_apikey_none)
+    monkeypatch.setattr(youtube_lookup_service, "get_youtube_api_key", _fake_get_key_none)
     monkeypatch.setattr(youtube_lookup_service, "fetch_oembed_data", _fake_oembed_success)
     monkeypatch.setattr(youtube_lookup_service, "fetch_page_metadata", _fake_page_metadata_empty)
 
@@ -102,7 +96,7 @@ def test_perform_lookup_maps_page_metadata_when_scrape_succeeds(monkeypatch):
 
 
 def test_perform_lookup_uses_data_api_when_key_configured(monkeypatch):
-    monkeypatch.setattr(youtube_lookup_service, "get_apikey", _fake_get_apikey_with("test-key"))
+    monkeypatch.setattr(youtube_lookup_service, "get_youtube_api_key", _fake_get_key_with("test-key"))
 
     async def _fake_api_data(video_id, api_key):
         assert video_id == VIDEO_ID
@@ -126,18 +120,8 @@ def test_perform_lookup_uses_data_api_when_key_configured(monkeypatch):
     assert result.api_data.privacy_status == "public"
 
 
-def test_perform_lookup_treats_inactive_key_as_not_configured(monkeypatch):
-    monkeypatch.setattr(youtube_lookup_service, "get_apikey", _fake_get_apikey_with("test-key", is_active=False))
-
-    request = YoutubeLookupRequest(url=VIDEO_URL)
-    result = _run(youtube_lookup_service.perform_youtube_lookup(request, db=None))
-
-    assert result.api_configured is False
-    assert result.api_data is None
-
-
 def test_perform_lookup_survives_data_api_failure(monkeypatch):
-    monkeypatch.setattr(youtube_lookup_service, "get_apikey", _fake_get_apikey_with("test-key"))
+    monkeypatch.setattr(youtube_lookup_service, "get_youtube_api_key", _fake_get_key_with("test-key"))
 
     async def _fake_api_data_fails(video_id, api_key):
         return None

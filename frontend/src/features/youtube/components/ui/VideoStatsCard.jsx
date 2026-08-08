@@ -1,11 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { Link as RouterLink } from 'react-router';
 import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid';
-import Link from '@mui/material/Link';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -36,21 +34,11 @@ export default function VideoStatsCard({ result }) {
   const { t } = useTranslation('youtube');
   const { api_configured: apiConfigured, api_data: apiData } = result;
 
+  // The page-level ApiKeyRequiredAlert (YoutubeLookup.jsx) already covers the unconfigured
+  // case for both this card and CommentsPanel - showing it again per-card here would be a
+  // duplicate "add a key" banner for the exact same key.
   if (!apiConfigured) {
-    return (
-      <Alert
-        severity="info"
-        variant="outlined"
-        sx={{ borderRadius: 1, mb: 2 }}
-        action={
-          <Link component={RouterLink} to="/settings/apikeys" underline="hover" sx={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
-            {t('stats.addKeyAction')}
-          </Link>
-        }
-      >
-        {t('stats.notConfigured')}
-      </Alert>
-    );
+    return null;
   }
 
   if (!apiData) {

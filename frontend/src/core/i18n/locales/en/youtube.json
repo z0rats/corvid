@@ -25,10 +25,13 @@
     "channelId": "Channel ID"
   },
 
+  "apiKey": {
+    "addKeyAction": "Add API key",
+    "notConfigured": "Add a YouTube Data API key under Settings > API Keys to see view/like/comment counts, tags, category, and comments for this video - there's no keyless tier for those."
+  },
+
   "stats": {
     "title": "Extended stats",
-    "notConfigured": "Add a YouTube Data API key under Settings > API Keys to see view/like/comment counts, tags, and category for this video.",
-    "addKeyAction": "Add API key",
     "fetchFailed": "The YouTube Data API request failed (invalid/quota-exceeded key, or the video isn't accessible via the API). Showing keyless data only.",
     "notAvailable": "Not available",
     "fields": {
@@ -39,6 +42,21 @@
       "publishedAt": "Published at",
       "definition": "Definition",
       "categoryId": "Category ID"
+    }
+  },
+
+  "comments": {
+    "title": "Comments",
+    "searchLabel": "Search comments",
+    "searchPlaceholder": "e.g. a username or keyword",
+    "loadButton": "Load",
+    "searchButton": "Search",
+    "loadMore": "Load more",
+    "empty": "No comments found.",
+    "truncatedNotice": "Search stopped after scanning a page/result limit - there may be more matches. Load more to keep scanning from where it left off.",
+    "order": {
+      "relevance": "Top comments",
+      "time": "Newest first"
     }
   },
 
