@@ -1,0 +1,7 @@
+# SBOM + provenance attestation on the merged manifest digest, not per-arch builds
+
+Release images (`corvid-backend`/`corvid-frontend`) get a CycloneDX SBOM (`anchore/sbom-action`) and a Sigstore-signed build-provenance attestation (`actions/attest`), both generated in the `merge-backend`/`merge-frontend` jobs after `docker buildx imagetools create` merges the per-architecture digests into one manifest list, then pushed to GHCR as OCI attestations on that merged digest.
+
+`docker/build-push-action` supports `provenance:`/`sbom:` inputs that generate the same kind of artifacts inline during the build step, with no extra actions needed — not used here because this pipeline builds each architecture as a separate matrix job that pushes by digest only (`build-backend`/`build-frontend`), and only becomes a single multi-arch image in the later merge job. Attesting at build time would describe per-arch intermediates nobody ever pulls; the SBOM and provenance need to describe the manifest-list digest operators actually reference by tag, which exists only after the merge step. `actions/attest` and `anchore/sbom-action` run there instead, against the digest extracted from `imagetools create --metadata-file`.
+
+`actions/attest`'s `create-storage-record` (on by default) is left `false`: GitHub's Artifact Metadata Storage Record API only activates for organization-owned repositories and no-ops otherwise, so enabling it here would add the `artifact-metadata: write` permission for a feature that can never do anything on this personal repo.
