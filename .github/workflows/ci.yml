@@ -14,7 +14,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0 # need history to diff against the base/before commit, not just HEAD
+
+      - name: Determine which components changed
+        id: filter
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$base" ] || ! git cat-file -e "$base" 2>/dev/null; then
+            echo "::warning::Could not resolve a base commit to diff against - running backend and frontend unconditionally."
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed="$(git diff --name-only "$base" "${{ github.sha }}")"
+          echo "$changed"
+
+          backend=false
+          frontend=false
+          grep -q '^backend/' <<< "$changed" && backend=true
+          grep -q '^frontend/' <<< "$changed" && frontend=true
+
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+
   backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -79,6 +120,8 @@ jobs:
           pip-audit --desc
 
   frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -102,9 +145,6 @@ jobs:
           node-version: "24"
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
-
-      - name: Check every feature has a docs page
-        run: node ../.github/scripts/check-docs-coverage.mjs
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -134,6 +174,28 @@ jobs:
       - name: Audit dependencies for known CVEs (yarn npm audit)
         continue-on-error: true
         run: yarn npm audit --severity moderate --all
+
+  docs-coverage:
+    # Not path-scoped like backend/frontend above: this check spans frontend's feature
+    # registry and website's docs pages, so it must run even on a website-only change.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+
+      - name: Check every feature has a docs page
+        run: node .github/scripts/check-docs-coverage.mjs
 
   docker-build:
     runs-on: ubuntu-latest
