@@ -7,6 +7,9 @@
 
 📖 [Documentation](https://z0rats.github.io/corvid/)
 
+_Originaly Corvid started as a fork of [dev-lu/osint_toolkit](https://github.com/dev-lu/osint_toolkit) with
+an updated stack, and has since diverged substantially._
+
 ## One search bar for everything you look up today
 
 If your daily routine is a wall of browser tabs — VirusTotal in one, Shodan in another, three more for a username or a phishing domain — Corvid replaces that wall with a single keyboard-first search bar. Paste an IP, domain, hash, email, or username and it's routed to the right tools automatically; type a tool name to jump straight to it.
