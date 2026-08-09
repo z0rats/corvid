@@ -1,6 +1,8 @@
 ---
 title: Settings Reference
 description: Every settings tab in the app, and what it controls.
+sidebar:
+  order: 40
 ---
 
 Settings are reached from the app's **Settings** section and are stored in the database (not in

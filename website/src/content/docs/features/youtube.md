@@ -1,6 +1,8 @@
 ---
 title: YouTube
 description: Look up metadata for a YouTube video URL.
+sidebar:
+  order: 100
 ---
 
 Looks up metadata for a YouTube video from a pasted URL (`youtube.com/watch`, `youtu.be`,

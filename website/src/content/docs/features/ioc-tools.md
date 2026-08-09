@@ -1,6 +1,8 @@
 ---
 title: IOC Tools
 description: IOC lookup, extraction, defanging, domain finder, and WHOIS/CT tools.
+sidebar:
+  order: 20
 ---
 
 A set of tools for working with indicators of compromise:

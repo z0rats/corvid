@@ -1,6 +1,8 @@
 ---
 title: Local Development
 description: Running the backend, frontend, and docs site without Docker.
+sidebar:
+  order: 60
 ---
 
 Docker Compose is the primary way to run Corvid (see [Installation](/corvid/getting-started/installation/)),

@@ -1,6 +1,8 @@
 ---
 title: Security
 description: Access control, SSRF protection, and secrets handling.
+sidebar:
+  order: 30
 ---
 
 Corvid is not production-hardened (early prototype, per the README) — treat the notes below as

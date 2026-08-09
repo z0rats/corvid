@@ -1,6 +1,8 @@
 ---
 title: Introduction
 description: What Corvid is and who it's for.
+sidebar:
+  order: 10
 ---
 
 Corvid is a self-hostable, single-user OSINT/security-analyst web app. It replaces a wall of

@@ -1,6 +1,8 @@
 ---
 title: Reports & Exports
 description: Generating HTML/PDF reports from lookups and analyses.
+sidebar:
+  order: 50
 ---
 
 Several features can turn a result into a shareable report:

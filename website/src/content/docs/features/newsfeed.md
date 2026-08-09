@@ -1,6 +1,8 @@
 ---
 title: Newsfeed
 description: Aggregated cybersecurity news with automatic IOC extraction.
+sidebar:
+  order: 10
 ---
 
 Aggregates articles from trusted sources (Wired, The Hacker News, Security Magazine, Threatpost,

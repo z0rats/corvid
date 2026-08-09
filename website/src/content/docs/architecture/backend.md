@@ -1,6 +1,8 @@
 ---
 title: Backend
 description: Backend stack and layout.
+sidebar:
+  order: 10
 ---
 
 ## Stack

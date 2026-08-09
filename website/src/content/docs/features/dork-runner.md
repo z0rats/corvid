@@ -1,6 +1,8 @@
 ---
 title: Dork Runner
 description: Run parameterized search-engine dorks against a domain, username, or email.
+sidebar:
+  order: 90
 ---
 
 Runs a library of parameterized dork templates (`site:`, `filetype:`, `intext:`, and more)

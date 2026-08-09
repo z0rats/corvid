@@ -1,6 +1,8 @@
 ---
 title: Rule Creator
 description: A GUI for building Sigma, Yara, and Snort/Suricata rules.
+sidebar:
+  order: 130
 ---
 
 A guided GUI for authoring detection rules across three formats:

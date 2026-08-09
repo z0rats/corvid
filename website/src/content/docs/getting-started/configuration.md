@@ -1,6 +1,8 @@
 ---
 title: Configuration
 description: Environment variables, API keys, and backup.
+sidebar:
+  order: 30
 ---
 
 ## Environment variables

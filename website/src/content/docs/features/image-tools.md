@@ -1,6 +1,8 @@
 ---
 title: Image Tools
 description: EXIF/metadata extraction, hashing, reverse image search, and AI geolocation.
+sidebar:
+  order: 40
 ---
 
 Upload an image to see every piece of metadata it carries — EXIF camera/device info, capture

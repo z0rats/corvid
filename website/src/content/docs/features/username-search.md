@@ -1,6 +1,8 @@
 ---
 title: Username Search
 description: Find accounts registered to a username across hundreds of sites.
+sidebar:
+  order: 50
 ---
 
 Searches for a username across a large list of sites. Two pluggable, independently selectable

@@ -103,6 +103,9 @@ jobs:
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
 
+      - name: Check every feature has a docs page
+        run: node ../.github/scripts/check-docs-coverage.mjs
+
       - name: Install dependencies
         run: yarn install --immutable
 

@@ -1,6 +1,8 @@
 ---
 title: Installation
 description: Deploy Corvid with Docker Compose.
+sidebar:
+  order: 20
 ---
 
 ## System requirements

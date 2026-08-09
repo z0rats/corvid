@@ -1,6 +1,8 @@
 ---
 title: Backup & Operational Security
 description: Backing up data/, disk usage, and safe operating practices.
+sidebar:
+  order: 50
 ---
 
 ## Backup

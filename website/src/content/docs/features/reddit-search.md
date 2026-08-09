@@ -1,6 +1,8 @@
 ---
 title: Reddit Search
 description: A Reddit user's full post and comment history, including removed content.
+sidebar:
+  order: 70
 ---
 
 Finds a Reddit user's full post and comment history — including content removed by moderators or

@@ -1,6 +1,8 @@
 ---
 title: Frontend
 description: Frontend stack and layout.
+sidebar:
+  order: 20
 ---
 
 ## Stack

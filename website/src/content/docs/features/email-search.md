@@ -1,6 +1,8 @@
 ---
 title: Email Search
 description: Find which mail providers a username is registered at.
+sidebar:
+  order: 60
 ---
 
 Checks a username against roughly two dozen mail providers using

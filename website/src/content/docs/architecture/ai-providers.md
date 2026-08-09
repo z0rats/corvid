@@ -1,6 +1,8 @@
 ---
 title: AI / LLM Providers
 description: Configuring Anthropic, Google, OpenAI, or a local Ollama server for AI features.
+sidebar:
+  order: 40
 ---
 
 Several features are AI-assisted and optional: newsfeed article analysis and report generation,

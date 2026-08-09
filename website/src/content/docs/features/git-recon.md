@@ -1,6 +1,8 @@
 ---
 title: Git Recon
 description: Correlate names, emails, and GitHub logins from commit history.
+sidebar:
+  order: 80
 ---
 
 Correlates names, emails, and GitHub logins from git commit history using

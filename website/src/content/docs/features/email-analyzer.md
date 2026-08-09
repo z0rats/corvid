@@ -1,6 +1,8 @@
 ---
 title: Email Analyzer
 description: .eml parsing, header checks, and AI-assisted analysis.
+sidebar:
+  order: 30
 ---
 
 Drag and drop an `.eml` file to parse it: headers, a battery of security checks, and IOC

@@ -1,6 +1,8 @@
 ---
 title: Troubleshooting
 description: Common issues and how to work around them.
+sidebar:
+  order: 70
 ---
 
 ## Lost the access token

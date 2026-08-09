@@ -1,6 +1,8 @@
 ---
 title: LLM Templates
 description: User-defined AI prompt templates for analysis tasks.
+sidebar:
+  order: 110
 ---
 
 Create reusable AI prompt templates, organized into categories, for tasks like log data analysis,

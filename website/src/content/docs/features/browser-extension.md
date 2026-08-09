@@ -1,6 +1,8 @@
 ---
 title: Browser Extension
 description: Minimal Chrome extension with a side panel, an inline selection popup, and a flat right-click menu for IOC lookup, reverse image search, and EXIF metadata.
+sidebar:
+  order: 140
 ---
 
 `extension/` is a minimal MV3 Chrome extension ("Corvid Quick Send"). No build step (load
