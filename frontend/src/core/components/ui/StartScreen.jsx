@@ -16,7 +16,10 @@ import { useAtomValue } from 'jotai';
 import SearchIcon from '@mui/icons-material/SearchOutlined';
 import { generalSettingsState } from '../../state/atoms';
 import { buildCommandRegistry, resolveEntryPath } from '../../config/commandRegistry';
-import { parseQuery, VALUE_KINDS, getSelectableResults } from '../../utils/commandParser';
+import {
+  parseQuery, getSelectableResults,
+  mergeEmptyStateResults, getBannerDescriptor, resolveSelection, createGrammarDispatch, handleGrammarNavKey,
+} from '../../utils/commandParser';
 import { detectIocType } from '../../utils/iocTypeDetection';
 import { buildPrefillUrl } from '../../utils/crossFeatureNav';
 import { copyToClipboard } from '../../utils/clipboard';
@@ -78,23 +81,24 @@ export default function StartScreen() {
   const parsed = useMemo(() => parseQuery(query, { registry }), [query, registry]);
   const results = useMemo(() => getSelectableResults(parsed), [parsed]);
 
-  const emptyStateResults = useMemo(() => {
-    if (parsed.kind !== 'empty') return null;
-    const pinnedEntries = getPinnedToolIds().map((id) => registry.find((e) => e.id === id)).filter(Boolean);
-    const recentEntries = getRecents().map((r) => registry.find((e) => e.id === r.toolId)).filter(Boolean);
-    const seen = new Set();
-    return [...pinnedEntries, ...recentEntries, ...registry]
-      .filter((entry) => (seen.has(entry.id) ? false : seen.add(entry.id)))
-      .map((entry) => ({ type: 'entry', entry }));
-  }, [parsed.kind, registry]);
-
-  const visibleResults = parsed.kind === 'empty' ? emptyStateResults : results;
+  // The actually-displayed list — same grammar as the modal palette (see
+  // core/hooks/useCommandPalette.js's identical computation), just fed from a local read of
+  // pinned/recents instead of hook state, since this page has no palette-open lifecycle to key
+  // that state off of.
+  const visibleResults = useMemo(() => {
+    if (parsed.kind !== 'empty') return results;
+    return mergeEmptyStateResults({ pinnedIds: getPinnedToolIds(), recents: getRecents(), registry });
+  }, [parsed.kind, registry, results]);
 
   const recentNames = useMemo(
     () => getRecents().map((r) => registry.find((e) => e.id === r.toolId)?.label).filter(Boolean).slice(0, 3),
     [registry],
   );
 
+  // Host-specific effects — no close()/breadcrumb/recording here, unlike the modal palette's
+  // own openEntry/runInstantAnswer/runAction (core/hooks/useCommandPalette.js): this is a page,
+  // not something with an open/closed lifecycle. What each kind of parsed input *means* is
+  // shared grammar (commandParser.js); only what happens next differs per host.
   const openEntry = (entry, value) => {
     const iocType = value ? detectIocType(value) : undefined;
     const path = resolveEntryPath(entry, iocType);
@@ -147,14 +151,6 @@ export default function StartScreen() {
     inputRef.current?.focus();
   };
 
-  const completeWhichKey = (index) => {
-    const suggestion = visibleResults[index]?.value;
-    if (!suggestion) return;
-    const trimmed = query.trim();
-    const operator = trimmed[0] === '#' ? '#' : (trimmed.toLowerCase().startsWith('type:') ? 'type:' : '>');
-    setQuery(operator === '#' ? `#${suggestion}` : operator === 'type:' ? `type:${suggestion}` : `>${suggestion}`);
-  };
-
   const runInstantAnswer = async (op, value) => {
     try {
       const response = await api.post('/api/defang/', { text: value, operation: op });
@@ -182,16 +178,17 @@ export default function StartScreen() {
     setQuery('');
   };
 
-  const handleSelect = (index) => {
-    const item = visibleResults[index];
-    if (!item) return;
-    if (item.type === 'entry') {
-      const value = VALUE_KINDS.includes(parsed.kind) ? parsed.value : null;
-      openEntry(item.entry, value);
-      return;
-    }
-    if (item.type === 'suggestion') completeWhichKey(index);
-  };
+  // Not memoized, unlike useCommandPalette.js's version — openEntry/runInstantAnswer/runAction
+  // here are plain closures re-created every render (not useCallback), so memoizing this against
+  // a narrower dep list would risk capturing a stale one.
+  const dispatch = createGrammarDispatch({
+    onQueryChange: setQuery,
+    onInstantAnswer: runInstantAnswer,
+    onAction: runAction,
+    onOpenEntry: openEntry,
+  });
+
+  const handleSelect = (index) => dispatch(resolveSelection(parsed, visibleResults, index));
 
   const handleKeyDown = (event) => {
     if (event.key === 'Escape') {
@@ -199,77 +196,10 @@ export default function StartScreen() {
       setSelectedIndex(0);
       return;
     }
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, Math.max((visibleResults?.length ?? 1) - 1, 0)));
-      return;
-    }
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, 0));
-      return;
-    }
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      if (parsed.kind === 'instant') { runInstantAnswer(parsed.op, parsed.value); return; }
-      if (parsed.kind === 'action') { runAction(parsed); return; }
-      handleSelect(selectedIndex);
-      return;
-    }
-    if (event.key === 'Tab' && parsed.kind === 'which-key' && visibleResults?.length > 0) {
-      event.preventDefault();
-      completeWhichKey(0);
-      return;
-    }
-    // Requires Cmd/Ctrl — a bare digit must stay a plain character, since typed values (IPs,
-    // ports, hashes, CVE years) are full of digits and would otherwise never reach the input.
-    if ((event.metaKey || event.ctrlKey) && event.key >= '1' && event.key <= '9') {
-      const index = Number(event.key) - 1;
-      if (visibleResults && index < visibleResults.length) {
-        event.preventDefault();
-        handleSelect(index);
-      }
-    }
+    handleGrammarNavKey(event, { parsed, visibleResults, selectedIndex, setSelectedIndex, dispatch });
   };
 
-  const renderBanner = () => {
-    if (parsed.kind === 'value') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
-          {t('banners.detectedType', { type: parsed.iocType, value: parsed.value })}
-        </Alert>
-      );
-    }
-    if (parsed.kind === 'pivot') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
-          {t('banners.pivot', { value: parsed.value, tool: parsed.tool.label })}
-        </Alert>
-      );
-    }
-    if (parsed.kind === 'fallback') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
-          {t('banners.fallback', { value: parsed.value })}
-        </Alert>
-      );
-    }
-    if (parsed.kind === 'instant') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
-          {t('banners.instant', { op: parsed.op, value: parsed.value })}
-        </Alert>
-      );
-    }
-    if (parsed.kind === 'action' && parsed.action === 'unknown') {
-      return (
-        <Alert severity="warning" variant="outlined" sx={{ mt: 2 }}>
-          {t('banners.unknownAction', { raw: parsed.raw })}
-        </Alert>
-      );
-    }
-    return null;
-  };
+  const banner = useMemo(() => getBannerDescriptor(parsed), [parsed]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 120px)' }}>
@@ -367,7 +297,11 @@ export default function StartScreen() {
             {t('startScreen.pasteHint')}
           </Typography>
 
-          {renderBanner()}
+          {banner && (
+            <Alert severity={banner.severity} variant="outlined" sx={{ mt: 2 }}>
+              {t(banner.i18nKey, banner.params)}
+            </Alert>
+          )}
 
           {query === '' && recentNames.length > 0 && (
             <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>

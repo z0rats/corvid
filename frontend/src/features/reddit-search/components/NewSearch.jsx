@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -19,15 +19,8 @@ export default function NewSearch() {
   const { t } = useTranslation('redditSearch');
   const [kind, setKind] = useState('posts');
   const { username, posts, comments, search, goNext, goPrev } = useRedditSearch();
-  const { prefillValue, clearPrefill } = usePrefillFromQuery();
-
-  useEffect(() => {
-    // Hand-off from a command-palette pivot (e.g. "john_doe reddit") — see crossFeatureNav.js.
-    if (!prefillValue) return;
-    search(prefillValue);
-    clearPrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillValue]);
+  // Hand-off from a command-palette pivot (e.g. "john_doe reddit") — see crossFeatureNav.js.
+  const prefillValue = usePrefillFromQuery(useCallback((value) => search(value), [search]));
 
   const active = kind === 'posts' ? posts : comments;
   const hasSearched = Boolean(username);

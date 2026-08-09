@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useSetAtom } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { apiKeysState } from '../../../../core/state/atoms';
 import { settingsApi } from '../../services/api/settingsApi';
+import { useSettingsMutation } from '../../../../core/hooks/useSettingsMutation';
 import { createLogger } from '../../../../core/utils/logger';
 
 const logger = createLogger('ApiKeys');
@@ -12,8 +13,7 @@ const logger = createLogger('ApiKeys');
  */
 export function useApiKeys() {
   const { t } = useTranslation('settings');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { loading, error, run } = useSettingsMutation();
   const setApiKeys = useSetAtom(apiKeysState);
 
   const refreshApiKeys = useCallback(async () => {
@@ -27,114 +27,63 @@ export function useApiKeys() {
     }
   }, [setApiKeys]);
 
-  const getServicesConfig = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const getServicesConfig = useCallback(() => run(async () => {
+    const config = await settingsApi.getServicesConfig();
+    return { data: config };
+  }, t('notifications.loadError')), [run, t]);
+
+  const getKeyStatus = useCallback((keyName, relatedKeys = []) => run(async () => {
+    const [configuredResponse, activeResponse] = await Promise.all([
+      settingsApi.getConfiguredApiKeys(),
+      settingsApi.getActiveApiKeys(),
+    ]);
+
+    const primaryKeyExists = configuredResponse[keyName] || false;
+    const allKeysAssociatedWithService = [keyName, ...relatedKeys];
+    const serviceIsActive = allKeysAssociatedWithService.some(key => activeResponse[key]);
+
+    return {
+      data: {
+        existsInBackend: primaryKeyExists,
+        isServiceActive: serviceIsActive,
+      },
+    };
+  }, t('notifications.loadError')), [run, t]);
+
+  const saveApiKey = useCallback((name, key) => run(async () => {
     try {
-      const config = await settingsApi.getServicesConfig();
-      return { success: true, data: config };
+      await settingsApi.createApiKey(name, key);
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || t('notifications.loadError');
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
-
-  const getKeyStatus = useCallback(async (keyName, relatedKeys = []) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [configuredResponse, activeResponse] = await Promise.all([
-        settingsApi.getConfiguredApiKeys(),
-        settingsApi.getActiveApiKeys(),
-      ]);
-
-      const primaryKeyExists = configuredResponse[keyName] || false;
-      const allKeysAssociatedWithService = [keyName, ...relatedKeys];
-      const serviceIsActive = allKeysAssociatedWithService.some(key => activeResponse[key]);
-
-      return {
-        success: true,
-        data: {
-          existsInBackend: primaryKeyExists,
-          isServiceActive: serviceIsActive,
-        },
-      };
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || t('notifications.loadError');
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
-
-  const saveApiKey = useCallback(async (name, key) => {
-    setLoading(true);
-    setError(null);
-    try {
-      try {
-        await settingsApi.createApiKey(name, key);
-      } catch (err) {
-        if (err.response?.status === 409) {
-          await settingsApi.updateApiKey(name, key);
-        } else {
-          throw err;
-        }
+      if (err.response?.status === 409) {
+        await settingsApi.updateApiKey(name, key);
+      } else {
+        throw err;
       }
-      await refreshApiKeys();
-      return { success: true, message: t('notifications.apiKeySaved') };
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || t('notifications.saveError');
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
     }
-  }, [refreshApiKeys, t]);
+    await refreshApiKeys();
+    return { message: t('notifications.apiKeySaved') };
+  }, t('notifications.saveError')), [run, refreshApiKeys, t]);
 
-  const deleteApiKey = useCallback(async (name) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await settingsApi.updateApiKey(name, '', false, false);
-      await refreshApiKeys();
-      return { success: true, message: t('notifications.apiKeyRemoved') };
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || t('notifications.saveError');
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshApiKeys, t]);
+  const deleteApiKey = useCallback((name) => run(async () => {
+    await settingsApi.updateApiKey(name, '', false, false);
+    await refreshApiKeys();
+    return { message: t('notifications.apiKeyRemoved') };
+  }, t('notifications.saveError')), [run, refreshApiKeys, t]);
 
-  const toggleServiceActivation = useCallback(async (keyNames, currentStatus, serviceName) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const targetIsActive = !currentStatus;
+  const toggleServiceActivation = useCallback((keyNames, currentStatus, serviceName) => run(async () => {
+    const targetIsActive = !currentStatus;
 
-      await Promise.all(
-        keyNames.map(keyName => settingsApi.updateApiKeyStatus(keyName, targetIsActive))
-      );
+    await Promise.all(
+      keyNames.map(keyName => settingsApi.updateApiKeyStatus(keyName, targetIsActive))
+    );
 
-      await refreshApiKeys();
-      const message = targetIsActive
-        ? t('notifications.serviceActivated', { service: serviceName })
-        : t('notifications.serviceDeactivated', { service: serviceName });
+    await refreshApiKeys();
+    const message = targetIsActive
+      ? t('notifications.serviceActivated', { service: serviceName })
+      : t('notifications.serviceDeactivated', { service: serviceName });
 
-      return { success: true, message, isActive: targetIsActive };
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || t('notifications.saveError');
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshApiKeys, t]);
+    return { message, isActive: targetIsActive };
+  }, t('notifications.saveError')), [run, refreshApiKeys, t]);
 
   return {
     loading,

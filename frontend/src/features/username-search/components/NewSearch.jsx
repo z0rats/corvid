@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -18,7 +18,6 @@ export default function NewSearch() {
   const threatActorScan = useUsernameSearchScan('threat_actor_usernames');
   const [hudsonRockUsername, setHudsonRockUsername] = useState(null);
   const hudsonRockResult = useHudsonRockCheck(hudsonRockUsername);
-  const { prefillValue, clearPrefill } = usePrefillFromQuery();
 
   const scansByModule = {
     maigret: maigretScan,
@@ -37,15 +36,10 @@ export default function NewSearch() {
     });
   };
 
-  useEffect(() => {
-    // Hand-off from a command-palette pivot (e.g. "john_doe username") — see crossFeatureNav.js.
-    // Deliberately only starts Maigret, not every module, so a quick pivot click doesn't
-    // surprise the user with several parallel scans.
-    if (!prefillValue) return;
-    maigretScan.startScan(prefillValue);
-    clearPrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillValue]);
+  // Hand-off from a command-palette pivot (e.g. "john_doe username") — see crossFeatureNav.js.
+  // Deliberately only starts Maigret, not every module, so a quick pivot click doesn't surprise
+  // the user with several parallel scans.
+  const prefillValue = usePrefillFromQuery(useCallback((value) => maigretScan.startScan(value), [maigretScan]));
 
   return (
     <Box>

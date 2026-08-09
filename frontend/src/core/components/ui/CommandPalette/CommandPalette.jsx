@@ -14,7 +14,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useCommandPalette } from '../../../hooks/useCommandPalette';
-import { VALUE_KINDS } from '../../../utils/commandParser';
+import { VALUE_KINDS, getBannerDescriptor } from '../../../utils/commandParser';
 import ResultList from './ResultList';
 import ActionPanel from './ActionPanel';
 import Breadcrumbs from './Breadcrumbs';
@@ -45,24 +45,7 @@ export default function CommandPalette() {
     return undefined;
   }, [palette.isOpen]);
 
-  const emptyStateResults = useMemo(() => {
-    if (palette.parsed.kind !== 'empty') return null;
-    const recentEntries = palette.recents
-      .map((r) => palette.registry.find((e) => e.id === r.toolId))
-      .filter(Boolean);
-    const pinnedEntries = palette.pinnedIds
-      .map((id) => palette.registry.find((e) => e.id === id))
-      .filter(Boolean);
-    const seen = new Set();
-    const merged = [...pinnedEntries, ...recentEntries, ...palette.registry].filter((entry) => {
-      if (seen.has(entry.id)) return false;
-      seen.add(entry.id);
-      return true;
-    });
-    return merged.map((entry) => ({ type: 'entry', entry }));
-  }, [palette.parsed.kind, palette.recents, palette.pinnedIds, palette.registry]);
-
-  const visibleResults = palette.parsed.kind === 'empty' ? emptyStateResults : palette.results;
+  const { visibleResults } = palette;
 
   const actionPanelEntry = palette.actionPanelIndex !== null
     ? visibleResults?.[palette.actionPanelIndex]?.entry
@@ -74,44 +57,7 @@ export default function CommandPalette() {
     palette.runSelected(index);
   };
 
-  const renderBanner = () => {
-    if (palette.parsed.kind === 'value') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mx: 2, mt: 1 }}>
-          {t('banners.detectedType', { type: palette.parsed.iocType, value: palette.parsed.value })}
-        </Alert>
-      );
-    }
-    if (palette.parsed.kind === 'pivot') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mx: 2, mt: 1 }}>
-          {t('banners.pivot', { value: palette.parsed.value, tool: palette.parsed.tool.label })}
-        </Alert>
-      );
-    }
-    if (palette.parsed.kind === 'fallback') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mx: 2, mt: 1 }}>
-          {t('banners.fallback', { value: palette.parsed.value })}
-        </Alert>
-      );
-    }
-    if (palette.parsed.kind === 'instant') {
-      return (
-        <Alert severity="info" variant="outlined" sx={{ mx: 2, mt: 1 }}>
-          {t('banners.instant', { op: palette.parsed.op, value: palette.parsed.value })}
-        </Alert>
-      );
-    }
-    if (palette.parsed.kind === 'action' && palette.parsed.action === 'unknown') {
-      return (
-        <Alert severity="warning" variant="outlined" sx={{ mx: 2, mt: 1 }}>
-          {t('banners.unknownAction', { raw: palette.parsed.raw })}
-        </Alert>
-      );
-    }
-    return null;
-  };
+  const banner = useMemo(() => getBannerDescriptor(palette.parsed), [palette.parsed]);
 
   return (
     <>
@@ -170,7 +116,11 @@ export default function CommandPalette() {
             )}
 
             <Divider />
-            {renderBanner()}
+            {banner && (
+              <Alert severity={banner.severity} variant="outlined" sx={{ mx: 2, mt: 1 }}>
+                {t(banner.i18nKey, banner.params)}
+              </Alert>
+            )}
             <Breadcrumbs trail={palette.breadcrumbs} />
 
             {palette.view === 'playbook-manage' ? (

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { determineIocType } from '../../../shared/utils/iocDefinitions';
 import { lookupHistoryApi } from '../../services/api/lookupHistoryApi';
 import { createLogger } from '../../../../../../core/utils/logger';
@@ -12,7 +12,6 @@ export function useSingleLookup() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [shouldShowTable, setShouldShowTable] = useState(false);
   const inputRef = useRef(null);
-  const { prefillValue, clearPrefill } = usePrefillFromQuery();
 
   const handleValidation = useCallback((iocInput) => {
     const trimmedIoc = iocInput.trim();
@@ -61,15 +60,12 @@ export function useSingleLookup() {
     });
   }, []);
 
-  useEffect(() => {
-    if (!prefillValue) return;
+  usePrefillFromQuery(useCallback((value) => {
     if (inputRef.current) {
-      inputRef.current.value = prefillValue;
+      inputRef.current.value = value;
     }
-    handleValidation(prefillValue);
-    clearPrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillValue]);
+    handleValidation(value);
+  }, [handleValidation]));
 
   return {
     searchValue,

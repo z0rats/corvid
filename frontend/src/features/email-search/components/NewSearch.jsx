@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -12,15 +12,8 @@ import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 export default function NewSearch() {
   const { t } = useTranslation('emailSearch');
   const scan = useEmailSearchScan();
-  const { prefillValue, clearPrefill } = usePrefillFromQuery();
-
-  useEffect(() => {
-    // Hand-off from a command-palette pivot (e.g. "john_doe email") — see crossFeatureNav.js.
-    if (!prefillValue) return;
-    scan.startScan(prefillValue);
-    clearPrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillValue]);
+  // Hand-off from a command-palette pivot (e.g. "john_doe email") — see crossFeatureNav.js.
+  const prefillValue = usePrefillFromQuery(useCallback((value) => scan.startScan(value), [scan]));
 
   return (
     <Box>

@@ -253,3 +253,137 @@ export function parseQuery(rawInput, ctx = {}) {
 
   return { kind: 'text', query: input, matches: [] };
 }
+
+/**
+ * Shared grammar layer consumed by both palette hosts (the modal CommandPalette and the `/`
+ * StartScreen page) — everything about *what a given input means* lives here so it's defined
+ * once; what each host actually *does* about it (navigate+close+breadcrumb vs. plain navigate)
+ * stays with the host. See docs/adr/ note on the StartScreen/CommandPalette split for why the
+ * two hosts exist at all rather than being collapsed into one.
+ */
+
+/**
+ * Merges pinned tools, recently-used tools, and the full registry into the empty-query result
+ * list, deduped by entry id (pinned first, then recent, then the rest of the registry).
+ */
+export function mergeEmptyStateResults({ pinnedIds, recents, registry }) {
+  const pinnedEntries = pinnedIds.map((id) => registry.find((e) => e.id === id)).filter(Boolean);
+  const recentEntries = recents.map((r) => registry.find((e) => e.id === r.toolId)).filter(Boolean);
+  const seen = new Set();
+  return [...pinnedEntries, ...recentEntries, ...registry]
+    .filter((entry) => (seen.has(entry.id) ? false : seen.add(entry.id)))
+    .map((entry) => ({ type: 'entry', entry }));
+}
+
+/**
+ * Plain data (not JSX) describing the informational banner for a parsed query, so each host can
+ * render it with its own Alert styling/spacing via its own i18n `t()`. Returns null when the
+ * current `parsed.kind` has no banner.
+ */
+export function getBannerDescriptor(parsed) {
+  if (parsed.kind === 'value') {
+    return { severity: 'info', i18nKey: 'banners.detectedType', params: { type: parsed.iocType, value: parsed.value } };
+  }
+  if (parsed.kind === 'pivot') {
+    return { severity: 'info', i18nKey: 'banners.pivot', params: { value: parsed.value, tool: parsed.tool.label } };
+  }
+  if (parsed.kind === 'fallback') {
+    return { severity: 'info', i18nKey: 'banners.fallback', params: { value: parsed.value } };
+  }
+  if (parsed.kind === 'instant') {
+    return { severity: 'info', i18nKey: 'banners.instant', params: { op: parsed.op, value: parsed.value } };
+  }
+  if (parsed.kind === 'action' && parsed.action === 'unknown') {
+    return { severity: 'warning', i18nKey: 'banners.unknownAction', params: { raw: parsed.raw } };
+  }
+  return null;
+}
+
+/**
+ * Decides what selecting (click, Enter, digit-jump) row `index` of `visibleResults` means for
+ * the current `parsed` query — a plain decision object, not an effect. `visibleResults` must be
+ * the actually-displayed list (i.e. `mergeEmptyStateResults`'s output for `kind: 'empty'`, not
+ * just `getSelectableResults(parsed)`) so an empty-state pinned/recent row resolves to `open`
+ * like every other entry row, instead of falling through unhandled.
+ */
+export function resolveSelection(parsed, visibleResults, index) {
+  if (parsed.kind === 'which-key') {
+    const suggestion = visibleResults[index]?.value;
+    return suggestion ? { type: 'complete-suggestion', operator: parsed.operator, suggestion } : null;
+  }
+  if (parsed.kind === 'instant') {
+    return { type: 'instant', op: parsed.op, value: parsed.value };
+  }
+  if (parsed.kind === 'action') {
+    return { type: 'action', action: parsed };
+  }
+  if (parsed.kind === 'pivot') {
+    const entry = visibleResults[index]?.entry ?? parsed.tool;
+    return { type: 'open', entry, value: parsed.value };
+  }
+  if (parsed.kind === 'value' || parsed.kind === 'fallback') {
+    const entry = visibleResults[index]?.entry;
+    return entry ? { type: 'open', entry, value: parsed.value } : null;
+  }
+  // 'empty' rows are always { type: 'entry' }, same shape as 'text'/'tag'/'type' matches - none
+  // of these kinds carry a typed value, so the opened entry gets none either.
+  const entry = visibleResults[index]?.entry;
+  return entry ? { type: 'open', entry, value: null } : null;
+}
+
+/** Turns a `resolveSelection` decision into a call against the host's own effect functions. */
+export function createGrammarDispatch({ onQueryChange, onInstantAnswer, onAction, onOpenEntry }) {
+  return (decision) => {
+    if (!decision) return;
+    if (decision.type === 'complete-suggestion') {
+      onQueryChange(`${decision.operator}${decision.suggestion}`);
+      return;
+    }
+    if (decision.type === 'instant') { onInstantAnswer(decision.op, decision.value); return; }
+    if (decision.type === 'action') { onAction(decision.action); return; }
+    if (decision.type === 'open') { onOpenEntry(decision.entry, decision.value); }
+  };
+}
+
+/**
+ * The keyboard subset common to both palette hosts: bounded arrow-key navigation, Tab-completes
+ * the top which-key suggestion, Enter/digit-jump resolve+dispatch a selection. Returns whether it
+ * handled the event, so a host can layer its own extra shortcuts (history cycling, action panel,
+ * copy, ...) on top by checking this first. Escape is deliberately excluded - closing vs. merely
+ * clearing the query is host UI lifecycle, not grammar.
+ */
+export function handleGrammarNavKey(event, { parsed, visibleResults, selectedIndex, setSelectedIndex, dispatch }) {
+  const results = visibleResults ?? [];
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    setSelectedIndex((prev) => Math.min(prev + 1, Math.max(results.length - 1, 0)));
+    return true;
+  }
+  if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    setSelectedIndex((prev) => Math.max(prev - 1, 0));
+    return true;
+  }
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    dispatch(resolveSelection(parsed, results, selectedIndex));
+    return true;
+  }
+  if (event.key === 'Tab' && parsed.kind === 'which-key' && results.length > 0) {
+    event.preventDefault();
+    dispatch(resolveSelection(parsed, results, 0));
+    return true;
+  }
+  // Requires Cmd/Ctrl - a bare digit must stay a plain character, since typed values (IPs,
+  // ports, hashes, CVE years) are full of digits and would otherwise never reach the input.
+  if ((event.metaKey || event.ctrlKey) && event.key >= '1' && event.key <= '9') {
+    const index = Number(event.key) - 1;
+    if (index < results.length) {
+      event.preventDefault();
+      dispatch(resolveSelection(parsed, results, index));
+      return true;
+    }
+  }
+  return false;
+}

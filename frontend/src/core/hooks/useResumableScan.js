@@ -5,6 +5,24 @@ const logger = createLogger('ResumableScan');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * The `failed`-event branch every `phase`/`searchId`-shaped feature's `reduce` needs, byte-for-
+ * byte identical across them: fall back to the previous `searchId` when the event itself doesn't
+ * carry one, so a connection-loss failure (synthesized by this hook, see `reconcileAfterStreamError`
+ * below) doesn't clobber an already-known id. Features with a different state shape (git-recon
+ * uses `loading`/`error`, not `phase`/`searchId`) write their own `failed` branch instead of using
+ * this - forcing every shape through one function would make the function itself as complex as
+ * what it replaces.
+ */
+export function failedReduce(prev, event) {
+  return { ...prev, phase: 'failed', error: event.error, searchId: event.search_id ?? prev.searchId };
+}
+
+/** The `{...initialState, phase: 'running', ...extra}` seed every `startScan` wrapper builds. */
+export function buildRunningSeed(initialState, extra) {
+  return { ...initialState, phase: 'running', ...extra };
+}
+
 const RECONCILE_POLL_INITIAL_MS = 1000;
 const RECONCILE_POLL_MAX_MS = 15000;
 const RECONCILE_POLL_BACKOFF_FACTOR = 1.5;

@@ -4,6 +4,11 @@ import {
   rankToolsForValue,
   resolvePlaybook,
   getWhichKeySuggestions,
+  mergeEmptyStateResults,
+  getBannerDescriptor,
+  resolveSelection,
+  createGrammarDispatch,
+  handleGrammarNavKey,
   TYPE_TOKEN_ALIASES,
   BUILTIN_ACTIONS,
 } from './commandParser';
@@ -356,5 +361,172 @@ describe('getWhichKeySuggestions', () => {
 
   it('returns an empty array for an unrecognized operator', () => {
     expect(getWhichKeySuggestions('$', { registry })).toEqual([]);
+  });
+});
+
+describe('mergeEmptyStateResults', () => {
+  it('orders pinned first, then recent, then the rest of the registry, deduped by id', () => {
+    const merged = mergeEmptyStateResults({
+      pinnedIds: ['dork_runner'],
+      recents: [{ toolId: 'youtube' }, { toolId: 'dork_runner' }],
+      registry,
+    });
+    expect(merged.map((r) => r.entry.id)).toEqual([
+      'dork_runner', 'youtube', 'reddit_search', 'username_search', 'ioc_tools',
+    ]);
+    expect(merged.every((r) => r.type === 'entry')).toBe(true);
+  });
+
+  it('drops pinned/recent ids no longer present in the registry', () => {
+    const merged = mergeEmptyStateResults({ pinnedIds: ['deleted_tool'], recents: [], registry });
+    expect(merged.map((r) => r.entry.id)).not.toContain('deleted_tool');
+  });
+});
+
+describe('getBannerDescriptor', () => {
+  it('describes a detected-value banner', () => {
+    const parsed = { kind: 'value', value: '1.2.3.4', iocType: IOC_TYPES.IPV4 };
+    expect(getBannerDescriptor(parsed)).toEqual({
+      severity: 'info', i18nKey: 'banners.detectedType', params: { type: IOC_TYPES.IPV4, value: '1.2.3.4' },
+    });
+  });
+
+  it('describes an unknown-action banner as a warning', () => {
+    const parsed = { kind: 'action', action: 'unknown', raw: 'bogus' };
+    expect(getBannerDescriptor(parsed)?.severity).toBe('warning');
+  });
+
+  it('returns null for kinds with no banner', () => {
+    expect(getBannerDescriptor({ kind: 'empty' })).toBeNull();
+    expect(getBannerDescriptor({ kind: 'text', query: 'x', matches: [] })).toBeNull();
+  });
+});
+
+describe('resolveSelection', () => {
+  it('resolves an empty-state row to an open decision (regression: used to fall through unhandled)', () => {
+    const visibleResults = mergeEmptyStateResults({ pinnedIds: ['youtube'], recents: [], registry });
+    expect(resolveSelection({ kind: 'empty' }, visibleResults, 0)).toEqual({
+      type: 'open', entry: registry.find((e) => e.id === 'youtube'), value: null,
+    });
+  });
+
+  it('resolves a which-key row using parsed.operator, not a re-derived one', () => {
+    const parsed = { kind: 'which-key', operator: 'type:', suggestions: ['ip', 'domain'] };
+    const results = [{ type: 'suggestion', value: 'ip' }];
+    expect(resolveSelection(parsed, results, 0)).toEqual({ type: 'complete-suggestion', operator: 'type:', suggestion: 'ip' });
+  });
+
+  it('resolves an instant-answer query without needing a row', () => {
+    const parsed = { kind: 'instant', op: 'defang', value: '1.2.3.4' };
+    expect(resolveSelection(parsed, [], 0)).toEqual({ type: 'instant', op: 'defang', value: '1.2.3.4' });
+  });
+
+  it('resolves an action query without needing a row', () => {
+    const parsed = { kind: 'action', action: 'settings' };
+    expect(resolveSelection(parsed, [], 0)).toEqual({ type: 'action', action: parsed });
+  });
+
+  it('resolves a pivot to its matched tool with the pivoted value', () => {
+    const parsed = { kind: 'pivot', value: 'john_doe', tool: registry[0], matches: [registry[0]] };
+    const results = [{ type: 'entry', entry: registry[0] }];
+    expect(resolveSelection(parsed, results, 0)).toEqual({ type: 'open', entry: registry[0], value: 'john_doe' });
+  });
+
+  it('carries the typed value through for value/fallback kinds', () => {
+    const parsed = { kind: 'value', value: '1.2.3.4', iocType: IOC_TYPES.IPV4, matches: [registry[2]] };
+    const results = [{ type: 'entry', entry: registry[2] }];
+    expect(resolveSelection(parsed, results, 0)).toEqual({ type: 'open', entry: registry[2], value: '1.2.3.4' });
+  });
+
+  it('returns null when the row at index does not exist', () => {
+    expect(resolveSelection({ kind: 'text', query: 'x', matches: [] }, [], 0)).toBeNull();
+  });
+});
+
+describe('createGrammarDispatch', () => {
+  it('routes each decision type to its own callback', () => {
+    const onQueryChange = vi.fn();
+    const onInstantAnswer = vi.fn();
+    const onAction = vi.fn();
+    const onOpenEntry = vi.fn();
+    const dispatch = createGrammarDispatch({ onQueryChange, onInstantAnswer, onAction, onOpenEntry });
+
+    dispatch({ type: 'complete-suggestion', operator: '#', suggestion: 'recon' });
+    expect(onQueryChange).toHaveBeenCalledWith('#recon');
+
+    dispatch({ type: 'instant', op: 'defang', value: '1.2.3.4' });
+    expect(onInstantAnswer).toHaveBeenCalledWith('defang', '1.2.3.4');
+
+    dispatch({ type: 'action', action: { kind: 'action', action: 'settings' } });
+    expect(onAction).toHaveBeenCalledWith({ kind: 'action', action: 'settings' });
+
+    dispatch({ type: 'open', entry: registry[0], value: null });
+    expect(onOpenEntry).toHaveBeenCalledWith(registry[0], null);
+  });
+
+  it('is a no-op for a null decision', () => {
+    const onOpenEntry = vi.fn();
+    createGrammarDispatch({ onOpenEntry })(null);
+    expect(onOpenEntry).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleGrammarNavKey', () => {
+  const visibleResults = [
+    { type: 'entry', entry: registry[0] },
+    { type: 'entry', entry: registry[1] },
+  ];
+
+  function fire(key, overrides = {}) {
+    const dispatch = vi.fn();
+    const setSelectedIndex = vi.fn();
+    const event = { key, preventDefault: vi.fn(), metaKey: false, ctrlKey: false, ...overrides };
+    const handled = handleGrammarNavKey(event, {
+      parsed: { kind: 'text', query: 'x', matches: [] },
+      visibleResults,
+      selectedIndex: 0,
+      setSelectedIndex,
+      dispatch,
+    });
+    return { handled, dispatch, setSelectedIndex, event };
+  }
+
+  it('bounds ArrowDown/ArrowUp within the visible results', () => {
+    const down = fire('ArrowDown');
+    expect(down.handled).toBe(true);
+    expect(down.setSelectedIndex).toHaveBeenCalledWith(expect.any(Function));
+    expect(down.setSelectedIndex.mock.calls[0][0](0)).toBe(1);
+    expect(down.setSelectedIndex.mock.calls[0][0](1)).toBe(1); // clamped at last index
+
+    const up = fire('ArrowUp');
+    expect(up.setSelectedIndex.mock.calls[0][0](0)).toBe(0); // clamped at 0
+  });
+
+  it('dispatches resolveSelection on Enter', () => {
+    const { handled, dispatch } = fire('Enter');
+    expect(handled).toBe(true);
+    expect(dispatch).toHaveBeenCalledWith({ type: 'open', entry: registry[0], value: null });
+  });
+
+  it('only completes a which-key suggestion on Tab, not other kinds', () => {
+    const notWhichKey = fire('Tab');
+    expect(notWhichKey.handled).toBe(false);
+    expect(notWhichKey.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('digit-jumps only with Cmd/Ctrl held', () => {
+    const withMeta = fire('2', { metaKey: true });
+    expect(withMeta.handled).toBe(true);
+    expect(withMeta.dispatch).toHaveBeenCalledWith({ type: 'open', entry: registry[1], value: null });
+
+    const withoutMeta = fire('2');
+    expect(withoutMeta.handled).toBe(false);
+    expect(withoutMeta.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('returns false for an unrelated key, leaving the host free to handle it', () => {
+    const { handled, dispatch } = fire('a');
+    expect(handled).toBe(false);
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });

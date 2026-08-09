@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -19,8 +19,6 @@ export default function DomainMonitoring() {
   const [searchDomain, setSearchDomain] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState(null);
-  const { prefillValue, clearPrefill } = usePrefillFromQuery();
-
   const handleSearch = (domain) => {
     setSearchDomain(domain);
     setShowResults(true);
@@ -32,12 +30,7 @@ export default function DomainMonitoring() {
     setShowResults(false);
   };
 
-  useEffect(() => {
-    if (!prefillValue) return;
-    handleSearch(prefillValue);
-    clearPrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillValue]);
+  usePrefillFromQuery(handleSearch);
 
   return (
     <>

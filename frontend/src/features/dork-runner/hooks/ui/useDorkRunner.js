@@ -14,7 +14,6 @@ export function useDorkRunner() {
   const [templates, setTemplates] = useState([]);
   const [selectedTemplateKeys, setSelectedTemplateKeys] = useState([]);
   const [{ result, loading, error }, setScanState] = useAtom(dorkRunnerStateAtom);
-  const { prefillValue, clearPrefill } = usePrefillFromQuery();
 
   useEffect(() => {
     let ignore = false;
@@ -58,13 +57,10 @@ export function useDorkRunner() {
     }
   }, [target, targetType, engine, selectedTemplateKeys, setScanState]);
 
-  useEffect(() => {
-    if (!prefillValue) return;
-    setTarget(prefillValue);
-    runDorks(prefillValue);
-    clearPrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillValue]);
+  usePrefillFromQuery(useCallback((value) => {
+    setTarget(value);
+    runDorks(value);
+  }, [runDorks]));
 
   return {
     target,

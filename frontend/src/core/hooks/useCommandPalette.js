@@ -8,7 +8,10 @@ import api from '../services/baseApi';
 import { useGlobalPaletteShortcuts } from './useGlobalPaletteShortcuts';
 import { usePlaybooks } from './usePlaybooks';
 import { buildCommandRegistry, resolveEntryPath } from '../config/commandRegistry';
-import { parseQuery, VALUE_KINDS, getSelectableResults } from '../utils/commandParser';
+import {
+  parseQuery, VALUE_KINDS, getSelectableResults,
+  mergeEmptyStateResults, resolveSelection, createGrammarDispatch, handleGrammarNavKey,
+} from '../utils/commandParser';
 import { detectIocType } from '../utils/iocTypeDetection';
 import { copyToClipboard } from '../utils/clipboard';
 import { buildPrefillUrl } from '../utils/crossFeatureNav';
@@ -112,6 +115,16 @@ export function useCommandPalette() {
 
   const results = useMemo(() => getSelectableResults(parsed), [parsed]);
 
+  // The actually-displayed list: for an empty query this is the pinned/recent/registry merge,
+  // not `results` (which `getSelectableResults` leaves empty for `kind: 'empty'`). Computed here
+  // rather than in CommandPalette.jsx so `runSelected`/`handlePaletteKeyDown` below resolve
+  // against the same rows the user sees - selecting a pinned/recent row used to silently no-op
+  // in the list view (only the tile-grid view opened it, via its own direct `openEntry` call).
+  const visibleResults = useMemo(
+    () => (parsed.kind === 'empty' ? mergeEmptyStateResults({ pinnedIds, recents, registry }) : results),
+    [parsed.kind, pinnedIds, recents, registry, results],
+  );
+
   const runInstantAnswer = useCallback(async (op, value) => {
     try {
       const processed = await defangOrFang(value, op);
@@ -164,45 +177,17 @@ export function useCommandPalette() {
     playbookApi.requestRecordStopName, playbookApi.runPlaybook,
   ]);
 
+  const dispatch = useMemo(() => createGrammarDispatch({
+    onQueryChange: setQuery,
+    onInstantAnswer: runInstantAnswer,
+    onAction: runAction,
+    onOpenEntry: openEntry,
+  }), [runInstantAnswer, runAction, openEntry]);
+
   const runSelected = useCallback((explicitIndex) => {
     const index = explicitIndex ?? selectedIndex;
-
-    if (parsed.kind === 'which-key') {
-      const suggestion = results[index]?.value;
-      if (!suggestion) return;
-      const operator = query.trim()[0] === '#' ? '#' : (query.trim().toLowerCase().startsWith('type:') ? 'type:' : '>');
-      setQuery(operator === '#' ? `#${suggestion}` : operator === 'type:' ? `type:${suggestion}` : `>${suggestion}`);
-      return;
-    }
-    if (parsed.kind === 'instant') {
-      runInstantAnswer(parsed.op, parsed.value);
-      return;
-    }
-    if (parsed.kind === 'action') {
-      runAction(parsed);
-      return;
-    }
-    if (parsed.kind === 'pivot') {
-      const entry = results[index]?.entry ?? parsed.tool;
-      openEntry(entry, parsed.value);
-      return;
-    }
-    if (parsed.kind === 'value' || parsed.kind === 'fallback') {
-      const entry = results[index]?.entry;
-      if (entry) openEntry(entry, parsed.value);
-      return;
-    }
-    if (['text', 'tag', 'type'].includes(parsed.kind)) {
-      const entry = results[index]?.entry;
-      if (entry) openEntry(entry, null);
-    }
-  }, [parsed, results, selectedIndex, query, openEntry, runInstantAnswer, runAction]);
-
-  const completeTop = useCallback(() => {
-    if (parsed.kind === 'which-key' && results.length > 0) {
-      runSelected(0);
-    }
-  }, [parsed, results, runSelected]);
+    dispatch(resolveSelection(parsed, visibleResults, index));
+  }, [dispatch, parsed, visibleResults, selectedIndex]);
 
   const cycleQueryHistory = useCallback((direction) => {
     const history = getQueryHistory();
@@ -243,26 +228,7 @@ export function useCommandPalette() {
       else close();
       return;
     }
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, Math.max(results.length - 1, 0)));
-      return;
-    }
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, 0));
-      return;
-    }
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      runSelected();
-      return;
-    }
-    if (event.key === 'Tab') {
-      event.preventDefault();
-      completeTop();
-      return;
-    }
+    if (handleGrammarNavKey(event, { parsed, visibleResults, selectedIndex, setSelectedIndex, dispatch })) return;
     if ((event.metaKey || event.ctrlKey) && event.key === 'ArrowUp') {
       event.preventDefault();
       cycleQueryHistory(1);
@@ -295,20 +261,11 @@ export function useCommandPalette() {
     }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'p') {
       event.preventDefault();
-      const entry = results[selectedIndex]?.entry;
+      const entry = visibleResults[selectedIndex]?.entry;
       if (entry) togglePin(entry.id);
     }
-    // Requires Cmd/Ctrl — a bare digit must stay a plain character, since typed values (IPs,
-    // ports, hashes, CVE years) are full of digits and would otherwise never reach the input.
-    if ((event.metaKey || event.ctrlKey) && event.key >= '1' && event.key <= '9') {
-      const index = Number(event.key) - 1;
-      if (index < results.length) {
-        event.preventDefault();
-        runSelected(index);
-      }
-    }
   }, [
-    query, close, results, runSelected, completeTop, cycleQueryHistory,
+    query, close, parsed, visibleResults, dispatch, cycleQueryHistory,
     toggleActionPanel, selectedIndex, copyFocusedValue, addFocusedValueToBulk, togglePin,
   ]);
 
@@ -320,7 +277,7 @@ export function useCommandPalette() {
 
   return {
     // state
-    isOpen, query, selectedIndex, parsed, results, view, notice,
+    isOpen, query, selectedIndex, parsed, results, visibleResults, view, notice,
     isRecording: playbookApi.isRecording,
     recordingSteps: playbookApi.recordingSteps,
     pendingRecordStopName: playbookApi.pendingRecordStopName,

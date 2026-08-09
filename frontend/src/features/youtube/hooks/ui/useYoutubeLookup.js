@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { youtubeApi } from '../../services/api/youtubeApi';
 import { youtubeLookupStateAtom } from '../../state/youtubeAtoms';
@@ -7,7 +7,6 @@ import { usePrefillFromQuery } from '../../../../core/hooks/usePrefillFromQuery'
 export function useYoutubeLookup() {
   const [url, setUrl] = useState('');
   const [{ result, loading, error }, setLookupState] = useAtom(youtubeLookupStateAtom);
-  const { prefillValue, clearPrefill } = usePrefillFromQuery();
 
   const lookupVideo = useCallback(async (urlOverride) => {
     const urlValue = (urlOverride ?? url).trim();
@@ -26,13 +25,10 @@ export function useYoutubeLookup() {
     }
   }, [url, setLookupState]);
 
-  useEffect(() => {
-    if (!prefillValue) return;
-    setUrl(prefillValue);
-    lookupVideo(prefillValue);
-    clearPrefill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillValue]);
+  usePrefillFromQuery(useCallback((value) => {
+    setUrl(value);
+    lookupVideo(value);
+  }, [lookupVideo]));
 
   return { url, setUrl, result, loading, error, lookupVideo };
 }

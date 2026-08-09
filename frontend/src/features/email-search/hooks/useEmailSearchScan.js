@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { emailSearchApi } from '../services/api/emailSearchApi';
 import { emailScanStateAtom, SCAN_INITIAL_STATE } from '../state/scanAtoms';
-import { useResumableScan } from '../../../core/hooks/useResumableScan';
+import { useResumableScan, failedReduce, buildRunningSeed } from '../../../core/hooks/useResumableScan';
 
 const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
 
@@ -37,7 +37,7 @@ function reduce(prev, event) {
     };
   }
   if (event.type === 'failed') {
-    return { ...prev, phase: 'failed', error: event.error, searchId: event.search_id ?? prev.searchId };
+    return failedReduce(prev, event);
   }
   return prev;
 }
@@ -69,7 +69,7 @@ export function useEmailSearchScan() {
 
   const startScan = useCallback((username) => resumableStartScan(
     { username },
-    { ...SCAN_INITIAL_STATE, phase: 'running', username },
+    buildRunningSeed(SCAN_INITIAL_STATE, { username }),
   ), [resumableStartScan]);
 
   return { ...state, startScan, cancelScan, reset };

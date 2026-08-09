@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { usernameScanStateAtomFamily, buildInitialState } from '../state/scanAtoms';
-import { useResumableScan } from '../../../core/hooks/useResumableScan';
+import { useResumableScan, failedReduce, buildRunningSeed } from '../../../core/hooks/useResumableScan';
 import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('UsernameSearchScan');
@@ -57,7 +57,7 @@ async function reduce(prev, event) {
     };
   }
   if (event.type === 'failed') {
-    return { ...prev, phase: 'failed', error: event.error, searchId: event.search_id ?? prev.searchId };
+    return failedReduce(prev, event);
   }
   return prev;
 }
@@ -89,7 +89,7 @@ export function useUsernameSearchScan(source) {
 
   const startScan = useCallback((username, options = {}) => resumableStartScan(
     { username, source, tags: options.tags, excludedTags: options.excludedTags },
-    { ...buildInitialState(source), phase: 'running', username },
+    buildRunningSeed(buildInitialState(source), { username }),
   ), [resumableStartScan, source]);
 
   return { ...state, startScan, cancelScan, reset };
