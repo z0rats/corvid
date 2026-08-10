@@ -176,7 +176,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.14.8, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.23.2, @babel/runtime@npm:^7.26.7, @babel/runtime@npm:^7.28.4, @babel/runtime@npm:^7.29.2, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
+"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.14.8, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.23.2, @babel/runtime@npm:^7.26.7, @babel/runtime@npm:^7.28.4, @babel/runtime@npm:^7.29.2, @babel/runtime@npm:^7.29.7, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
   version: 7.29.7
   resolution: "@babel/runtime@npm:7.29.7"
   checksum: 10c0/ca11572f7146b21e0bde6a9ed4bb6a89eafbee5f0944c7eb54d0d8a2dac962c33638a1d611e14faa71dfbb92b4b5f9236232208568a6b7d5c6f3f39ddb91771e
@@ -1677,19 +1677,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/icons-material@npm:9.2.0":
-  version: 9.2.0
-  resolution: "@mui/icons-material@npm:9.2.0"
+"@mui/icons-material@npm:9.3.1":
+  version: 9.3.1
+  resolution: "@mui/icons-material@npm:9.3.1"
   dependencies:
-    "@babel/runtime": "npm:^7.29.2"
+    "@babel/runtime": "npm:^7.29.7"
   peerDependencies:
-    "@mui/material": ^9.2.0
+    "@mui/material": ^9.3.1
     "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
     react: ^17.0.0 || ^18.0.0 || ^19.0.0
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 10c0/7fc499bdb1018f90c028983da136810ec7d0a9a9ecc7b40773d9c2d8c5d76c4c765d3859de2d9e3cccd9b0c44961d9a17417fbda9a68874f2bff5a471e1bd62f
+  checksum: 10c0/108c331f96e885799246e1fd55bde61a0e7fbdb681440345ccae7e720ca63dfc2a3137849fbb2147b4252a4dc7012ffe96184966db786593379f8d38fc31718a
   languageName: node
   linkType: hard
 
@@ -3805,7 +3805,7 @@ __metadata:
     "@fontsource/jetbrains-mono": "npm:^5.2.8"
     "@hello-pangea/dnd": "npm:^18.0.1"
     "@mdxeditor/editor": "npm:^4.0.4"
-    "@mui/icons-material": "npm:9.2.0"
+    "@mui/icons-material": "npm:9.3.1"
     "@mui/lab": "npm:^9.0.0-beta.6"
     "@mui/material": "npm:9.2.0"
     "@testing-library/dom": "npm:^10.4.1"
