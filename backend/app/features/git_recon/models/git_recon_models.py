@@ -14,7 +14,7 @@ class GitReconSearch(Base):
     id: Mapped[int] = mapped_column(primary_key=True, comment="Surrogate primary key")
     mode: Mapped[str] = mapped_column(String(20), comment="gitcolombo scan mode (e.g. 'user', 'org', 'repo')")
     target: Mapped[str] = mapped_column(String(300), index=True, comment="GitHub user/org/repo that was scanned")
-    status: Mapped[str] = mapped_column(String(20), default="completed", comment="completed or failed")
+    status: Mapped[str] = mapped_column(String(20), default="completed", comment="running, completed, cancelled, or failed")
     error: Mapped[str | None] = mapped_column(Text, comment="Error detail if status is failed")
     repos_scanned: Mapped[int] = mapped_column(Integer, default=0, comment="Repositories successfully scanned")
     repos_failed: Mapped[int] = mapped_column(Integer, default=0, comment="Repositories that failed to scan")

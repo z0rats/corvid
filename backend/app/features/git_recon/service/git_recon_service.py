@@ -9,16 +9,30 @@ import urllib.request
 from collections import defaultdict
 
 import gitcolombo
+import psutil
 
-from app.core.database import managed_session
+from app.core.scans.cancellable import GitCloneCancellable
+from app.core.scans.run import ScanCancelled, ScanOutcome, ScanRun
+from app.core.scans.sse import queue_sink
 from app.features.git_recon.config.git_recon_config import (
     CLONE_WORKERS,
     MAX_REPOS_PER_SCAN,
     WALL_CLOCK_TIMEOUT_SECONDS,
 )
-from app.features.git_recon.crud.git_recon_crud import complete_search, create_running_search, fail_search
+from app.features.git_recon.crud.git_recon_crud import SCAN_COLUMNS
+from app.features.git_recon.models.git_recon_models import GitReconSearch
 
 logger = logging.getLogger(__name__)
+
+FEATURE_NAME = "git_recon"
+
+
+async def cancel_scan(search_id: int) -> bool:
+    """Request cancellation of a currently-running git recon scan, keeping
+    whatever repos were cloned/analyzed before cancellation. Returns False if
+    no scan with that id is currently running."""
+    return await ScanRun.cancel(FEATURE_NAME, search_id)
+
 
 # gitcolombo's git_clone() shells out to `git clone <url> <dir>` via subprocess -
 # git itself accepts arbitrary URL schemes (file://, ssh://, and on older git,
@@ -205,18 +219,13 @@ def build_mentions(commits_by_repo: dict[str, list["gitcolombo.Commit"]]) -> dic
     return mentions
 
 
-def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_logins: bool) -> dict:
-    notes: list[str] = []
-    cloned = gitcolombo.clone_many(sources, repos_dir, workers=CLONE_WORKERS)
-    repo_outcomes = [{"url": url, "cloned": path is not None} for url, path in cloned.items()]
-
-    analyst = gitcolombo.GitAnalyst(repos_dir=repos_dir)
-    # gitcolombo.Person only tracks a single last-seen repo/commit per identity
-    # (overwritten on every _upsert), so it can't answer "which repos/commits
-    # mention this person" itself. analyst.commits is a flat list with no repo
-    # attached to each Commit either - the only place that association exists
-    # is here, at the per-url append() call site, so we slice out each repo's
-    # own commits right after appending them to build that mapping ourselves.
+def _track_commits_per_repo(
+    analyst: "gitcolombo.GitAnalyst", cloned: dict[str, str | None],
+) -> dict[str, list["gitcolombo.Commit"]]:
+    """For each successfully cloned repo, append its commits to `analyst` and record
+    which of analyst.commits came from that repo. gitcolombo.Person only tracks a
+    single last-seen repo/commit, and Commit carries no repo reference of its own -
+    this is the only place that association exists, so we slice it out here."""
     commits_by_repo: dict[str, list["gitcolombo.Commit"]] = {}
     for url, path in cloned.items():
         if not path:
@@ -224,7 +233,16 @@ def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_l
         start = len(analyst.commits)
         analyst.append(url, cloned_path=path)
         commits_by_repo[url] = analyst.commits[start:]
+    return commits_by_repo
 
+
+def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_logins: bool) -> dict:
+    notes: list[str] = []
+    cloned = gitcolombo.clone_many(sources, repos_dir, workers=CLONE_WORKERS)
+    repo_outcomes = [{"url": url, "cloned": path is not None} for url, path in cloned.items()]
+
+    analyst = gitcolombo.GitAnalyst(repos_dir=repos_dir)
+    commits_by_repo = _track_commits_per_repo(analyst, cloned)
     mentions = build_mentions(commits_by_repo)
 
     failed = sum(1 for o in repo_outcomes if not o["cloned"])
@@ -327,63 +345,53 @@ async def run_scan_task(
     cloning/GitHub API calls, not per-site checks like maigret), so this only
     emits "started" and a single terminal event, same as social_analyzer_service.py.
     """
-    async with managed_session() as db:
-        search = await create_running_search(db, mode=mode, target=target)
-        search_id = search.id
+    on_event = queue_sink(queue)
 
-    queue.put_nowait({"type": "started", "search_id": search_id, "mode": mode, "target": target})
-
+    # Snapshot of this process's children before the scan's own git subprocesses
+    # exist, so GitCloneCancellable only ever kills processes this scan itself
+    # spawned - see its own docstring.
     try:
-        result = await run_scan(
-            mode=mode,
-            target=target,
-            include_forks=include_forks,
-            resolve_github_logins=resolve_github_logins,
-            ignore_noreply=ignore_noreply,
-            github_token=github_token,
-        )
-    except GitReconError as exc:
-        async with managed_session() as db:
-            await fail_search(db, search_id, error=str(exc))
-        queue.put_nowait({"type": "failed", "search_id": search_id, "error": str(exc)})
-        queue.put_nowait(None)
-        return
-    except TimeoutError:
-        error = "Scan timed out"
-        async with managed_session() as db:
-            await fail_search(db, search_id, error=error)
-        queue.put_nowait({"type": "failed", "search_id": search_id, "error": error})
-        queue.put_nowait(None)
-        return
-    except Exception as exc:
-        logger.error("Git recon %s scan for '%s' failed: %s", mode, target, exc, exc_info=True)
-        async with managed_session() as db:
-            await fail_search(db, search_id, error=str(exc))
-        queue.put_nowait({"type": "failed", "search_id": search_id, "error": str(exc)})
-        queue.put_nowait(None)
-        return
+        before_pids = {c.pid for c in psutil.Process().children(recursive=True)}
+    except psutil.Error:
+        before_pids = set()
+    cancellable = GitCloneCancellable(before_pids)
 
-    repo_outcomes = result.get("repos", [])
-    repos_scanned = sum(1 for r in repo_outcomes if r["cloned"])
-    repos_failed = sum(1 for r in repo_outcomes if not r["cloned"])
-    persons_found = len(result.get("persons", []))
+    async def run_work(search_id: int) -> ScanOutcome:
+        try:
+            result = await run_scan(
+                mode=mode,
+                target=target,
+                include_forks=include_forks,
+                resolve_github_logins=resolve_github_logins,
+                ignore_noreply=ignore_noreply,
+                github_token=github_token,
+            )
+        except TimeoutError:
+            raise TimeoutError("Scan timed out") from None
 
-    async with managed_session() as db:
-        await complete_search(
-            db, search_id,
-            repos_scanned=repos_scanned, repos_failed=repos_failed, persons_found=persons_found, result=result,
+        repo_outcomes = result.get("repos", [])
+        repos_scanned = sum(1 for r in repo_outcomes if r["cloned"])
+        repos_failed = sum(1 for r in repo_outcomes if not r["cloned"])
+        persons_found = len(result.get("persons", []))
+
+        logger.info(
+            "Git recon %s scan for '%s': %d person(s), %d repo(s) scanned",
+            mode, target, persons_found, repos_scanned,
         )
 
-    logger.info(
-        "Git recon %s scan for '%s': %d person(s), %d repo(s) scanned",
-        mode, target, persons_found, repos_scanned,
+        outcome = ScanOutcome(
+            fields={"repos_scanned": repos_scanned, "repos_failed": repos_failed, "persons_found": persons_found},
+            db_only_fields={"result": result},
+        )
+        if cancellable.cancelled:
+            raise ScanCancelled(outcome)
+        return outcome
+
+    await ScanRun.execute(
+        FEATURE_NAME, GitReconSearch, run_work, on_event,
+        columns=SCAN_COLUMNS,
+        create_fields={"mode": mode, "target": target},
+        started_fields={"mode": mode, "target": target},
+        cancellable=cancellable,
+        expected_exceptions=(GitReconError, TimeoutError),
     )
-
-    queue.put_nowait({
-        "type": "completed",
-        "search_id": search_id,
-        "repos_scanned": repos_scanned,
-        "repos_failed": repos_failed,
-        "persons_found": persons_found,
-    })
-    queue.put_nowait(None)

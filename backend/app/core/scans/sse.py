@@ -3,6 +3,18 @@ import json
 
 from fastapi.responses import StreamingResponse
 
+from app.core.scans.run import OnEvent, ScanEvent
+
+
+def queue_sink(queue: asyncio.Queue) -> OnEvent:
+    """Adapt a `ScanRun`/`run_work` `on_event` callback onto a raw `asyncio.Queue`
+    for `sse_response`: nests each `ScanEvent` as the wire's `{"type": ..., "data":
+    {...}}` shape, and forwards the `None` sentinel through as-is to end the stream.
+    """
+    def sink(event: ScanEvent | None) -> None:
+        queue.put_nowait({"type": event.type, "data": event.data} if event is not None else None)
+    return sink
+
 
 def sse_response(queue: asyncio.Queue) -> StreamingResponse:
     """Stream dict events off `queue` as Server-Sent Events, one `data: {json}\\n\\n`

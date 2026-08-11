@@ -1,41 +1,15 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.scans.crud import ScanColumns, create_running, mark_completed, mark_failed
+from app.core.scans.crud import ScanColumns
 from app.core.scans.reconciliation import mark_stale_running_as_failed
 from app.features.git_recon.models.git_recon_models import GitReconSearch
 
-_COLUMNS = ScanColumns(error_column="error", completed_at_column=None)
-
-
-async def create_running_search(db: AsyncSession, *, mode: str, target: str) -> GitReconSearch:
-    """Create a new git_recon search in the 'running' state, before the scan itself starts"""
-    return await create_running(db, GitReconSearch, mode=mode, target=target)
-
-
-async def complete_search(
-    db: AsyncSession,
-    search_id: int,
-    *,
-    repos_scanned: int,
-    repos_failed: int,
-    persons_found: int,
-    result: dict,
-) -> GitReconSearch | None:
-    """Mark a search as completed, storing its result"""
-    return await mark_completed(
-        db, GitReconSearch, search_id,
-        columns=_COLUMNS,
-        repos_scanned=repos_scanned,
-        repos_failed=repos_failed,
-        persons_found=persons_found,
-        result=result,
-    )
-
-
-async def fail_search(db: AsyncSession, search_id: int, *, error: str) -> GitReconSearch | None:
-    """Mark a search as failed"""
-    return await mark_failed(db, GitReconSearch, search_id, columns=_COLUMNS, error_message=error)
+# ScanRun.execute() now owns row create/complete/cancel/fail directly via
+# core/scans/crud.py, using this. GitReconSearch has no completed_at column and
+# names its error column `error` (not `error_message`, unlike the other two
+# scan-style models).
+SCAN_COLUMNS = ScanColumns(error_column="error", completed_at_column=None)
 
 
 async def interrupt_running_searches(db: AsyncSession) -> int:
@@ -44,9 +18,9 @@ async def interrupt_running_searches(db: AsyncSession) -> int:
     a process restart)."""
     return await mark_stale_running_as_failed(
         db, GitReconSearch,
-        error_column=_COLUMNS.error_column,
+        error_column=SCAN_COLUMNS.error_column,
         error_message="Interrupted by server restart",
-        completed_at_column=_COLUMNS.completed_at_column,
+        completed_at_column=SCAN_COLUMNS.completed_at_column,
     )
 
 

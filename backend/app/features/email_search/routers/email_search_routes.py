@@ -7,15 +7,13 @@ from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
 from app.core.scans.sse import sse_response
-from app.core.settings.email_search.crud.email_search_settings_crud import (
-    get_email_search_config,
-    record_pypi_check,
-)
+from app.core.settings.email_search.crud.email_search_settings_crud import get_email_search_config
+from app.core.utils.pypi_version_check import check_for_update, compute_update_available
 from app.features.email_search.config.mailcat_config import (
     DEFAULT_CHECKERS,
     HEADLESS_CHECKERS,
+    PACKAGE_NAME,
     SMTP_CHECKERS,
-    fetch_latest_pypi_version,
     get_installed_version,
 )
 from app.features.email_search.crud.email_search_crud import (
@@ -70,7 +68,7 @@ async def start_scan(request: Request, scan_request: ScanRequest):
 )
 async def cancel_scan_endpoint(search_id: int) -> None:
     """Cancel a running scan"""
-    if not cancel_scan(search_id):
+    if not await cancel_scan(search_id):
         raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="EMAIL_SEARCH_NOT_RUNNING")
     logger.info("Cancellation requested for email search run %s", search_id)
 
@@ -85,16 +83,13 @@ async def read_info(db: ReadSessionDep) -> EmailSearchInfo:
     """Get info about the mailcat tool and its installed/available version"""
     config = await get_email_search_config(db)
     installed_version = get_installed_version()
-    update_available = (
-        bool(config.latest_pypi_version) and config.latest_pypi_version != installed_version
-    )
 
     return EmailSearchInfo(
         tool="mailcat",
         version=installed_version,
         provider_count=_active_provider_count(config),
         latest_version=config.latest_pypi_version,
-        update_available=update_available if config.latest_pypi_version else None,
+        update_available=compute_update_available(config.latest_pypi_version, installed_version),
     )
 
 
@@ -107,16 +102,16 @@ async def read_info(db: ReadSessionDep) -> EmailSearchInfo:
 )
 async def check_update(db: SessionDep) -> EmailSearchInfo:
     """Manually check PyPI for a newer mailcat-osint release"""
-    latest_version = await fetch_latest_pypi_version()
-    config = await record_pypi_check(db, latest_version)
+    config = await get_email_search_config(db)
     installed_version = get_installed_version()
+    result = await check_for_update(db, PACKAGE_NAME, config, installed_version)
 
     return EmailSearchInfo(
         tool="mailcat",
         version=installed_version,
         provider_count=_active_provider_count(config),
-        latest_version=config.latest_pypi_version,
-        update_available=bool(config.latest_pypi_version) and config.latest_pypi_version != installed_version,
+        latest_version=result.latest_version,
+        update_available=result.update_available,
     )
 
 

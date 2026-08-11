@@ -46,10 +46,3 @@ class CTISettingsUpdate(BaseModel):
     settings: dict[str, Any] = Field(..., description="Updated CTI profile settings")
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class CTISettingsCreate(BaseModel):
-    """Request model for creating CTI settings"""
-    settings: dict[str, Any] = Field(..., description="Initial CTI profile settings")
-
-    model_config = ConfigDict(from_attributes=True)

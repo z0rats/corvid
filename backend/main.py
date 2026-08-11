@@ -136,12 +136,28 @@ def _check_disk_space() -> None:
         )
 
 
+def _register_keyless_providers() -> None:
+    """Tell api_keys settings which ioc_lookup providers need no key, so its routes don't
+    have to import from ioc_tools directly (settings is a lower-level module than features)."""
+    from app.core.settings.api_keys.service.keyless_providers import set_keyless_provider_names
+    from app.features.ioc_tools.ioc_lookup.single_lookup.service import external_api_clients
+    from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import (
+        get_all_services, register_services,
+    )
+
+    # The registry is normally populated lazily on first lookup; force it now so it's ready
+    # this early in startup. register_services() is idempotent, so the later lazy call is harmless.
+    register_services(external_api_clients)
+    set_keyless_provider_names({name for name, spec in get_all_services().items() if not spec.required_key_names})
+
+
 async def handle_application_startup() -> None:
     """Handle application startup tasks"""
     logger.info("Application starting up...")
     try:
         get_access_token()  # eager: prints/persists the token now, not on first request
         _check_disk_space()
+        _register_keyless_providers()
         await _create_database_tables()
         await _reconcile_stale_scans()
         await _run_application_defaults()

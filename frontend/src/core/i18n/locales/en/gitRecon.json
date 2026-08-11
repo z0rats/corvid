@@ -28,6 +28,7 @@
     },
     "optionsButton": "Options",
     "scanButton": "Scan",
+    "cancelButton": "Cancel",
     "includeForksLabel": "Include forked repositories",
     "resolveGithubLoginsLabel": "Resolve GitHub logins (extra requests per identity)",
     "ignoreNoreplyLabel": "Ignore service noreply addresses"
@@ -77,6 +78,7 @@
     "status": {
       "running": "Running",
       "completed": "Completed",
+      "cancelled": "Cancelled",
       "failed": "Failed"
     },
     "headers": {

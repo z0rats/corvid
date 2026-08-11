@@ -21,6 +21,10 @@ export const gitReconApi = {
     return response.body;
   },
 
+  async cancelScan(searchId) {
+    await api.post(`/api/git-recon/history/${searchId}/cancel`);
+  },
+
   async listHistory(skip = 0, limit = 100) {
     const response = await api.get('/api/git-recon/history', { params: { skip, limit } });
     return response.data;

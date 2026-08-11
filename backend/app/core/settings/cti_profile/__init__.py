@@ -18,7 +18,6 @@ from .routers.cti_profile_routes import router as cti_profile_router
 from .schemas.cti_profile_schemas import (
     CTISettingsResponse,
     CTISettingsUpdate,
-    CTISettingsCreate,
     CTISettingsData,
     NotificationPreferences
 )
@@ -38,8 +37,7 @@ __all__ = [
     
     # Schemas
     "CTISettingsResponse",
-    "CTISettingsUpdate", 
-    "CTISettingsCreate",
+    "CTISettingsUpdate",
     "CTISettingsData",
     "NotificationPreferences",
     

@@ -1,5 +1,3 @@
-import datetime
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.email_search.models.email_search_settings_models import EmailSearchConfig
@@ -19,16 +17,6 @@ async def update_email_search_config(
     config = await get_email_search_config(db)
     for field, value in config_data.model_dump(exclude_none=True).items():
         setattr(config, field, value)
-    await db.flush()
-    await db.refresh(config)
-    return config
-
-
-async def record_pypi_check(db: AsyncSession, latest_version: str | None) -> EmailSearchConfig:
-    """Record the result of a PyPI latest-version check"""
-    config = await get_email_search_config(db)
-    config.latest_pypi_version = latest_version
-    config.pypi_checked_at = datetime.datetime.now(datetime.timezone.utc)
     await db.flush()
     await db.refresh(config)
     return config

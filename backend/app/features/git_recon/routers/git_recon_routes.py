@@ -11,7 +11,7 @@ from app.core.scans.sse import sse_response
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
 from app.features.git_recon.crud.git_recon_crud import delete_search, get_search, list_searches
 from app.features.git_recon.schemas.git_recon_schemas import ScanRequest, SearchDetail, SearchSummary
-from app.features.git_recon.service.git_recon_service import run_scan_task
+from app.features.git_recon.service.git_recon_service import cancel_scan, run_scan_task
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,19 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest):
     ))
 
     return sse_response(queue)
+
+
+@router.post(
+    "/history/{search_id}/cancel",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Cancel a running search",
+    description="Cancel a currently-running git recon scan, keeping whatever repos were cloned/analyzed before cancellation",
+    responses={404: {"description": "No running search with that ID"}},
+)
+async def cancel_scan_endpoint(search_id: int) -> None:
+    if not await cancel_scan(search_id):
+        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="GIT_RECON_NOT_FOUND")
+    logger.info("Cancellation requested for git recon search %s", search_id)
 
 
 @router.get(

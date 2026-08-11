@@ -2,34 +2,20 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.scans.crud import ScanColumns, create_running, mark_cancelled, mark_completed, mark_failed
+from app.core.scans.crud import ScanColumns
 from app.core.scans.reconciliation import mark_stale_running_as_failed
 from app.features.email_search.models.email_search_models import MailSearch, MailSearchResult
 
-_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
+# ScanRun.execute() now owns row create/complete/cancel/fail directly via
+# core/scans/crud.py, using this.
+SCAN_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
 
 
-async def create_search_run(db: AsyncSession, username: str) -> MailSearch:
-    """Create a new search run in the 'running' state"""
-    return await create_running(db, MailSearch, username=username)
-
-
-async def complete_search_run(
-    db: AsyncSession,
-    search_id: int,
-    total_providers_checked: int,
-    found_providers: list[dict],
-) -> MailSearch | None:
-    """Mark a search run as completed, storing its found-provider results"""
-    search = await mark_completed(
-        db, MailSearch, search_id,
-        columns=_COLUMNS,
-        total_providers_checked=total_providers_checked,
-        found_count=len(found_providers),
-    )
-    if not search:
-        return None
-
+async def add_provider_results(db: AsyncSession, search_id: int, found_providers: list[dict]) -> None:
+    """Persist found-provider child rows for a search run. Called by run_work
+    once it has results (on both normal completion and mid-scan cancellation) -
+    ScanRun's generic mark_completed/mark_cancelled only ever touch scalar
+    columns on the parent row, never these child rows."""
     for provider in found_providers:
         db.add(MailSearchResult(
             search_id=search_id,
@@ -37,43 +23,7 @@ async def complete_search_run(
             emails=provider["emails"],
             extra=provider.get("extra"),
         ))
-
     await db.flush()
-    return search
-
-
-async def cancel_search_run(
-    db: AsyncSession,
-    search_id: int,
-    total_providers_checked: int,
-    found_providers: list[dict],
-) -> MailSearch | None:
-    """Mark a search run as cancelled, storing whatever found-provider results
-    were captured before cancellation."""
-    search = await mark_cancelled(
-        db, MailSearch, search_id,
-        columns=_COLUMNS,
-        total_providers_checked=total_providers_checked,
-        found_count=len(found_providers),
-    )
-    if not search:
-        return None
-
-    for provider in found_providers:
-        db.add(MailSearchResult(
-            search_id=search_id,
-            provider_name=provider["provider_name"],
-            emails=provider["emails"],
-            extra=provider.get("extra"),
-        ))
-
-    await db.flush()
-    return search
-
-
-async def fail_search_run(db: AsyncSession, search_id: int, error_message: str) -> MailSearch | None:
-    """Mark a search run as failed"""
-    return await mark_failed(db, MailSearch, search_id, columns=_COLUMNS, error_message=error_message)
 
 
 async def interrupt_running_search_runs(db: AsyncSession) -> int:
@@ -82,9 +32,9 @@ async def interrupt_running_search_runs(db: AsyncSession) -> int:
     a process restart)."""
     return await mark_stale_running_as_failed(
         db, MailSearch,
-        error_column=_COLUMNS.error_column,
+        error_column=SCAN_COLUMNS.error_column,
         error_message="Interrupted by server restart",
-        completed_at_column=_COLUMNS.completed_at_column,
+        completed_at_column=SCAN_COLUMNS.completed_at_column,
     )
 
 

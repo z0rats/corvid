@@ -1,22 +1,16 @@
 import json
-import logging
 import shutil
 from functools import lru_cache
 from importlib import metadata as importlib_metadata
 
-import httpx
-
 PACKAGE_NAME = "social-analyzer"
 BINARY_NAME = "social-analyzer"
-PYPI_JSON_URL = f"https://pypi.org/pypi/{PACKAGE_NAME}/json"
 
 # Hard ceiling on total subprocess runtime, independent of the per-site
 # `--timeout`/`--top` CLI flags (which can be user-configured to 0 = unbounded).
 # Guards against a hung/runaway subprocess never being reaped when nothing
 # calls cancel_scan() and no client is waiting on the SSE stream.
 PROCESS_WATCHDOG_SECONDS = 1800
-
-logger = logging.getLogger(__name__)
 
 
 def find_binary() -> str | None:
@@ -40,19 +34,3 @@ def get_bundled_site_count() -> int:
     with open(dist.locate_file(sites_path), encoding="utf-8") as f:
         data = json.load(f)
     return len(data.get("websites_entries", []))
-
-
-async def fetch_latest_pypi_version(timeout_seconds: float = 5.0) -> str | None:
-    """Check PyPI for the latest published social-analyzer version.
-
-    Returns None on any network/parsing error rather than raising - this is
-    a best-effort "is an update available" check, not a required operation.
-    """
-    try:
-        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
-            response = await client.get(PYPI_JSON_URL)
-            response.raise_for_status()
-            return response.json()["info"]["version"]
-    except (httpx.HTTPError, KeyError, ValueError) as exc:
-        logger.warning("Failed to check PyPI for latest social-analyzer version: %s", exc)
-        return None

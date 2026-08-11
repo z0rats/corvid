@@ -5,7 +5,7 @@ import Chip from '@mui/material/Chip';
 import HistoryTable from '../../../core/components/HistoryTable';
 import { gitReconApi } from '../services/api/gitReconApi';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', failed: 'error' };
+const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 
 export default function HistoryList() {
   const { t } = useTranslation('gitRecon');

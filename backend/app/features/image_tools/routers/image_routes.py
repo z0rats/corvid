@@ -1,12 +1,11 @@
-import asyncio
 import logging
 from typing import Literal
 
-from fastapi import APIRouter, File, HTTPException, Query, Request, Response, UploadFile, status
+from fastapi import APIRouter, File, Query, Request, Response, UploadFile
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep
-from app.core.exceptions import AppHTTPException, safe_error_detail
+from app.core.utils.file_upload import run_file_endpoint, validate_uploaded_file
 from ..config.image_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
 from ..schemas.image_schemas import (
     ImageAnalysisResponse,
@@ -32,25 +31,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/image", tags=["Image Tools"])
 
 
-async def validate_uploaded_file(file: UploadFile) -> bytes:
-    """Validate and read the uploaded image file, raising HTTPException on failure."""
-    if not file.filename:
-        logger.warning("File upload rejected: no filename provided")
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided", error_code="IMAGE_NO_FILE")
-
-    try:
-        file_content = await file.read()
-    except Exception as e:
-        logger.error("Error reading uploaded file '%s': %s", file.filename, e)
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading uploaded file", error_code="IMAGE_READ_ERROR")
-
-    is_valid, error_message = validate_file_upload(file.filename, len(file_content))
-    if not is_valid:
-        logger.warning("File upload rejected: %s", error_message)
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message, error_code="IMAGE_VALIDATION_ERROR")
-
-    logger.info("File validation passed for '%s' (%s bytes)", file.filename, len(file_content))
-    return file_content
+async def _validate_uploaded_image(file: UploadFile) -> bytes:
+    return await validate_uploaded_file(
+        file, no_file_code="IMAGE_NO_FILE", read_error_code="IMAGE_READ_ERROR", validate_fn=validate_file_upload
+    )
 
 
 @router.post(
@@ -71,17 +55,15 @@ async def analyze_image_file(
 ) -> ImageAnalysisResponse:
     logger.info("Received image analysis request for file: %s", file.filename)
 
-    file_content = await validate_uploaded_file(file)
+    file_content = await _validate_uploaded_image(file)
 
-    try:
-        result = await asyncio.to_thread(analyze_image_content, file.filename, file_content)
-    except Exception as e:
-        logger.error("Image analysis failed for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=safe_error_detail(e, "Image analysis failed"),
-            error_code="IMAGE_ANALYSIS_FAILED",
-        )
+    result = await run_file_endpoint(
+        analyze_image_content,
+        file.filename,
+        file_content,
+        error_code="IMAGE_ANALYSIS_FAILED",
+        failure_message="Image analysis failed",
+    )
 
     if result.gps:
         result.gps.address = await reverse_geocode(result.gps.latitude, result.gps.longitude)
@@ -109,24 +91,17 @@ async def geolocate_image_file(
 ) -> ImageGeolocationResponse:
     logger.info("Received image geolocation request for file: %s", file.filename)
 
-    file_content = await validate_uploaded_file(file)
+    file_content = await _validate_uploaded_image(file)
 
-    try:
-        result = await analyze_image_location(filename=file.filename, image_data=file_content, db=db)
-    except ValueError as e:
-        logger.error("Image geolocation failed for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-            error_code="IMAGE_GEOLOCATION_FAILED",
-        )
-    except Exception as e:
-        logger.error("Image geolocation failed for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=safe_error_detail(e, "Image geolocation failed"),
-            error_code="IMAGE_GEOLOCATION_FAILED",
-        )
+    result = await run_file_endpoint(
+        analyze_image_location,
+        file.filename,
+        file_content,
+        db,
+        error_code="IMAGE_GEOLOCATION_FAILED",
+        failure_message="Image geolocation failed",
+        run_in_thread=False,
+    )
 
     logger.info("Image geolocation completed successfully for '%s'", file.filename)
     return result
@@ -151,24 +126,16 @@ async def analyze_image_structure(
 ) -> ImageStructureResponse:
     logger.info("Received image structure analysis request for file: %s", file.filename)
 
-    file_content = await validate_uploaded_file(file)
+    file_content = await _validate_uploaded_image(file)
 
-    try:
-        result = await asyncio.to_thread(analyze_jpeg_structure, file.filename, file_content)
-    except ValueError as e:
-        logger.warning("Structure analysis rejected for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-            error_code="IMAGE_NOT_JPEG",
-        )
-    except Exception as e:
-        logger.error("Structure analysis failed for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=safe_error_detail(e, "Structure analysis failed"),
-            error_code="IMAGE_STRUCTURE_FAILED",
-        )
+    result = await run_file_endpoint(
+        analyze_jpeg_structure,
+        file.filename,
+        file_content,
+        error_code="IMAGE_STRUCTURE_FAILED",
+        failure_message="Structure analysis failed",
+        value_error_code="IMAGE_NOT_JPEG",
+    )
 
     logger.info("Structure analysis completed successfully for '%s'", file.filename)
     return result
@@ -193,24 +160,15 @@ async def analyze_image_anomalies_route(
 ) -> ImageAnomalyResponse:
     logger.info("Received image anomaly detection request for file: %s", file.filename)
 
-    file_content = await validate_uploaded_file(file)
+    file_content = await _validate_uploaded_image(file)
 
-    try:
-        result = await asyncio.to_thread(analyze_image_anomalies, file.filename, file_content)
-    except ValueError as e:
-        logger.warning("Anomaly detection rejected for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-            error_code="IMAGE_ANOMALY_DETECTION_FAILED",
-        )
-    except Exception as e:
-        logger.error("Anomaly detection failed for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=safe_error_detail(e, "Anomaly detection failed"),
-            error_code="IMAGE_ANOMALY_DETECTION_FAILED",
-        )
+    result = await run_file_endpoint(
+        analyze_image_anomalies,
+        file.filename,
+        file_content,
+        error_code="IMAGE_ANOMALY_DETECTION_FAILED",
+        failure_message="Anomaly detection failed",
+    )
 
     logger.info("Anomaly detection completed successfully for '%s' - %s findings", file.filename, len(result.findings))
     return result
@@ -233,24 +191,15 @@ async def analyze_image_visuals_route(
 ) -> ImageVisualAnalysisResponse:
     logger.info("Received image visual analysis request for file: %s", file.filename)
 
-    file_content = await validate_uploaded_file(file)
+    file_content = await _validate_uploaded_image(file)
 
-    try:
-        result = await asyncio.to_thread(analyze_image_visuals, file.filename, file_content)
-    except ValueError as e:
-        logger.warning("Visual analysis rejected for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-            error_code="IMAGE_VISUAL_ANALYSIS_FAILED",
-        )
-    except Exception as e:
-        logger.error("Visual analysis failed for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=safe_error_detail(e, "Visual analysis failed"),
-            error_code="IMAGE_VISUAL_ANALYSIS_FAILED",
-        )
+    result = await run_file_endpoint(
+        analyze_image_visuals,
+        file.filename,
+        file_content,
+        error_code="IMAGE_VISUAL_ANALYSIS_FAILED",
+        failure_message="Visual analysis failed",
+    )
 
     logger.info("Visual analysis completed successfully for '%s'", file.filename)
     return result
@@ -275,20 +224,18 @@ async def compare_image_files(
 ) -> ImageCompareResponse:
     logger.info("Received image comparison request for files: %s, %s", file_left.filename, file_right.filename)
 
-    left_content = await validate_uploaded_file(file_left)
-    right_content = await validate_uploaded_file(file_right)
+    left_content = await _validate_uploaded_image(file_left)
+    right_content = await _validate_uploaded_image(file_right)
 
-    try:
-        result = await asyncio.to_thread(
-            compare_images, file_left.filename, left_content, file_right.filename, right_content
-        )
-    except Exception as e:
-        logger.error("Image comparison failed for '%s'/'%s': %s", file_left.filename, file_right.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=safe_error_detail(e, "Image comparison failed"),
-            error_code="IMAGE_COMPARE_FAILED",
-        )
+    result = await run_file_endpoint(
+        compare_images,
+        file_left.filename,
+        left_content,
+        file_right.filename,
+        right_content,
+        error_code="IMAGE_COMPARE_FAILED",
+        failure_message="Image comparison failed",
+    )
 
     logger.info("Image comparison completed successfully for '%s'/'%s'", file_left.filename, file_right.filename)
     return result
@@ -312,24 +259,16 @@ async def strip_image_metadata(
 ) -> Response:
     logger.info("Received metadata removal request for file: %s (mode=%s)", file.filename, mode)
 
-    file_content = await validate_uploaded_file(file)
+    file_content = await _validate_uploaded_image(file)
 
-    try:
-        cleaned_bytes, media_type, out_filename = await asyncio.to_thread(strip_metadata, file.filename, file_content, mode)
-    except ValueError as e:
-        logger.warning("Metadata removal rejected for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-            error_code="IMAGE_STRIP_FAILED",
-        )
-    except Exception as e:
-        logger.error("Metadata removal failed for '%s': %s", file.filename, e)
-        raise AppHTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=safe_error_detail(e, "Metadata removal failed"),
-            error_code="IMAGE_STRIP_FAILED",
-        )
+    cleaned_bytes, media_type, out_filename = await run_file_endpoint(
+        strip_metadata,
+        file.filename,
+        file_content,
+        mode,
+        error_code="IMAGE_STRIP_FAILED",
+        failure_message="Metadata removal failed",
+    )
 
     logger.info("Metadata removal completed successfully for '%s'", file.filename)
     return Response(

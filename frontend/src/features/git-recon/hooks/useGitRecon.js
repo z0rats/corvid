@@ -7,29 +7,28 @@ import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('GitRecon');
 
-const TERMINAL_STATUSES = ['completed', 'failed'];
+const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
 
-// No `cancelScan` - git_recon has no cancel capability server-side, unlike
-// username-search/email-search (no endpoint, no service function; a scan runs
-// to completion or to its wall-clock timeout).
 const api = {
   startScan: (payload, { signal }) => gitReconApi.startScan(payload, { signal }),
   fetchPersisted: (searchId) => gitReconApi.getHistory(searchId),
+  cancelScan: (searchId) => gitReconApi.cancelScan(searchId),
 };
 
 async function reduce(prev, event) {
+  const { data } = event;
   if (event.type === 'started') {
-    return { ...prev, searchId: event.search_id };
+    return { ...prev, searchId: data.search_id };
   }
-  if (event.type === 'completed') {
-    const result = await gitReconApi.getHistory(event.search_id).catch((err) => {
+  if (event.type === 'completed' || event.type === 'cancelled') {
+    const result = await gitReconApi.getHistory(data.search_id).catch((err) => {
       logger.error('Failed to fetch persisted search result:', err);
       return null;
     });
     return { ...prev, loading: false, result, error: null };
   }
   if (event.type === 'failed') {
-    return { ...prev, loading: false, error: event.error };
+    return { ...prev, loading: false, error: data.error };
   }
   return prev;
 }
@@ -38,7 +37,7 @@ function reconcile(prev, search) {
   return {
     ...prev,
     loading: false,
-    result: search.status === 'completed' ? search : prev.result,
+    result: search.status === 'completed' || search.status === 'cancelled' ? search : prev.result,
     error: search.status === 'failed' ? (search.error || 'Scan failed') : null,
   };
 }
@@ -46,7 +45,7 @@ function reconcile(prev, search) {
 export function useGitRecon() {
   const [state, setState] = useAtom(gitReconStateAtom);
 
-  const { startScan: resumableStartScan } = useResumableScan({
+  const { startScan: resumableStartScan, cancelScan } = useResumableScan({
     scopeKey: 'git-recon',
     state,
     setState,
@@ -62,5 +61,5 @@ export function useGitRecon() {
     { ...GIT_RECON_INITIAL_STATE, loading: true },
   ), [resumableStartScan]);
 
-  return { ...state, scan };
+  return { ...state, scan, cancelScan };
 }

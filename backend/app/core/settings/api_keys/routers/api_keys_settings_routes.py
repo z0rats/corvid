@@ -27,6 +27,10 @@ from app.core.settings.api_keys.service.api_keys_service import (
     update_apikey_service,
     get_all_apikeys_configured_status,
 )
+from app.core.settings.api_keys.service.keyless_providers import (
+    get_keyless_provider_names,
+    is_keyless_provider,
+)
 
 
 router = APIRouter(prefix="/api/apikeys", tags=["Settings"])
@@ -72,11 +76,9 @@ async def get_all_apikeys_is_active(db: ReadSessionDep) -> dict[str, bool]:
     description="Get the bulk lookup enabled/disabled status for all API keys, including keyless services",
 )
 async def get_all_apikeys_bulk_lookup(db: ReadSessionDep) -> dict[str, bool]:
-    from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_all_services
     result = await get_all_apikeys_bulk_lookup_status(db)
-    for service_name, config in get_all_services().items():
-        if not config.required_key_names:
-            result.setdefault(service_name, True)
+    for name in get_keyless_provider_names():
+        result.setdefault(name, True)
     return result
 
 
@@ -156,9 +158,7 @@ async def update_apikey_bulk_lookup(name: ApiKeyName, data: UpdateBulkLookupStat
     result = await update_apikey_bulk_lookup_status(db, name, data.bulk_ioc_lookup)
     if result is not None:
         return result
-    from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
-    service_config = get_service(name)
-    if service_config and not service_config.required_key_names:
+    if is_keyless_provider(name):
         return await upsert_apikey_bulk_lookup_status(db, name, data.bulk_ioc_lookup)
     raise AppHTTPException(
         status_code=status.HTTP_404_NOT_FOUND,

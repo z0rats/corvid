@@ -2,36 +2,22 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.scans.crud import ScanColumns, create_running, mark_cancelled, mark_completed, mark_failed
+from app.core.scans.crud import ScanColumns
 from app.core.scans.reconciliation import mark_stale_running_as_failed
 from app.features.username_search.models.username_search_models import MaigretSearch, MaigretSiteResult
 
-_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
+# Shared by all three username_search sources (maigret/social_analyzer/
+# threat_actor_usernames all target this same table) - passed to ScanRun.execute()
+# by each source's service module, which now owns row create/complete/cancel/fail
+# directly via core/scans/crud.py.
+SCAN_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
 
 
-async def create_search_run(
-    db: AsyncSession, username: str, tags: list[str] | None = None, source: str = "maigret"
-) -> MaigretSearch:
-    """Create a new search run in the 'running' state"""
-    return await create_running(db, MaigretSearch, username=username, tags=tags, source=source)
-
-
-async def complete_search_run(
-    db: AsyncSession,
-    search_id: int,
-    total_sites_checked: int,
-    found_sites: list[dict],
-) -> MaigretSearch | None:
-    """Mark a search run as completed, storing its found-site results"""
-    search = await mark_completed(
-        db, MaigretSearch, search_id,
-        columns=_COLUMNS,
-        total_sites_checked=total_sites_checked,
-        found_count=len(found_sites),
-    )
-    if not search:
-        return None
-
+async def add_site_results(db: AsyncSession, search_id: int, found_sites: list[dict]) -> None:
+    """Persist found-site child rows for a search run. Called by each source's
+    own run_work once it has results (on both normal completion and mid-scan
+    cancellation) - ScanRun's generic mark_completed/mark_cancelled only ever
+    touch scalar columns on the parent row, never these child rows."""
     for site in found_sites:
         db.add(MaigretSiteResult(
             search_id=search_id,
@@ -40,44 +26,7 @@ async def complete_search_run(
             http_status=site.get("http_status"),
             extra=site.get("extra"),
         ))
-
     await db.flush()
-    return search
-
-
-async def cancel_search_run(
-    db: AsyncSession,
-    search_id: int,
-    total_sites_checked: int,
-    found_sites: list[dict],
-) -> MaigretSearch | None:
-    """Mark a search run as cancelled, storing whatever found-site results
-    were captured before cancellation."""
-    search = await mark_cancelled(
-        db, MaigretSearch, search_id,
-        columns=_COLUMNS,
-        total_sites_checked=total_sites_checked,
-        found_count=len(found_sites),
-    )
-    if not search:
-        return None
-
-    for site in found_sites:
-        db.add(MaigretSiteResult(
-            search_id=search_id,
-            site_name=site["site_name"],
-            url_user=site["url_user"],
-            http_status=site.get("http_status"),
-            extra=site.get("extra"),
-        ))
-
-    await db.flush()
-    return search
-
-
-async def fail_search_run(db: AsyncSession, search_id: int, error_message: str) -> MaigretSearch | None:
-    """Mark a search run as failed"""
-    return await mark_failed(db, MaigretSearch, search_id, columns=_COLUMNS, error_message=error_message)
 
 
 async def interrupt_running_search_runs(db: AsyncSession) -> int:
@@ -86,9 +35,9 @@ async def interrupt_running_search_runs(db: AsyncSession) -> int:
     a process restart)."""
     return await mark_stale_running_as_failed(
         db, MaigretSearch,
-        error_column=_COLUMNS.error_column,
+        error_column=SCAN_COLUMNS.error_column,
         error_message="Interrupted by server restart",
-        completed_at_column=_COLUMNS.completed_at_column,
+        completed_at_column=SCAN_COLUMNS.completed_at_column,
     )
 
 

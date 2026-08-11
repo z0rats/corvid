@@ -1,14 +1,23 @@
 """run_scan/run_scan_task's own orchestration logic (mode dispatch, validation,
-persistence, SSE event shape) - the actual gitcolombo clone/API calls are
-mocked out rather than exercised, per this coverage push's "base logic only,
-no real subprocess/API calls" scope for this module."""
+run_work/feature_name plumbing into ScanRun) - only the real git clone/network
+calls are mocked out here; the per-repo commit-slicing logic they'd otherwise
+exercise (_track_commits_per_repo) is covered directly, against a fake
+analyst, in tests/features/git_recon/test_identity_correlation.py.
+
+run_scan_task's own lifecycle (create running row -> started -> terminal event
++ mark row) is no longer this module's concern - ScanRun.execute() owns that
+now and is covered end to end by tests/core/scans/test_run.py. What's specific
+to git_recon and still worth testing here is only what run_scan_task itself
+builds: the run_work closure's mapping from a gitcolombo result to a ScanOutcome
+(including its GitReconError/TimeoutError handling), and that it's handed to
+ScanRun.execute() with the right feature_name/model/create_fields/cancellable.
+"""
 import asyncio
 
 import pytest
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base
+from app.core.scans.cancellable import GitCloneCancellable
+from app.core.scans.run import ScanCancelled
 from app.features.git_recon.models.git_recon_models import GitReconSearch
 from app.features.git_recon.service import git_recon_service as svc
 from app.features.git_recon.service.git_recon_service import GitReconError, run_scan, run_scan_task
@@ -97,104 +106,86 @@ class TestRunScanDispatch:
 
 
 class TestRunScanTask:
+    """Captures the `run_work`/`cancellable` run_scan_task hands to ScanRun.execute()
+    (mocked out here - its own lifecycle is ScanRun's concern, not this module's,
+    see the module docstring), then calls that closure directly to check its
+    result-mapping and error-handling."""
+
     @pytest.fixture
-    def session_factory(self, monkeypatch):
-        engine = create_async_engine(
-            "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+    def captured(self, monkeypatch):
+        captured = {}
+
+        async def fake_execute(feature_name, model, run_work, on_event, **kwargs):
+            captured.update(feature_name=feature_name, model=model, run_work=run_work, on_event=on_event, **kwargs)
+
+        monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
+        return captured
+
+    def _start(self, **overrides):
+        kwargs = dict(
+            mode="url", target="https://github.com/octocat/Hello-World", include_forks=False,
+            resolve_github_logins=False, ignore_noreply=False, github_token=None, queue=asyncio.Queue(),
         )
+        kwargs.update(overrides)
+        _run(run_scan_task(**kwargs))
 
-        async def _create_tables():
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all, tables=[GitReconSearch.__table__])
+    def test_hands_scan_run_the_right_feature_name_model_and_fields(self, captured):
+        self._start()
 
-        _run(_create_tables())
-        factory = async_sessionmaker(engine, expire_on_commit=False)
+        assert captured["feature_name"] == "git_recon"
+        assert captured["model"] is GitReconSearch
+        assert captured["create_fields"] == {
+            "mode": "url", "target": "https://github.com/octocat/Hello-World",
+        }
+        assert captured["started_fields"] == {
+            "mode": "url", "target": "https://github.com/octocat/Hello-World",
+        }
+        assert isinstance(captured["cancellable"], GitCloneCancellable)
 
-        import contextlib
-
-        @contextlib.asynccontextmanager
-        async def fake_managed_session():
-            async with factory() as db:
-                yield db
-                await db.commit()
-
-        monkeypatch.setattr(svc, "managed_session", fake_managed_session)
-        return factory
-
-    def test_success_path_persists_and_emits_started_then_completed(self, monkeypatch, session_factory):
+    def test_run_work_maps_a_successful_scan_result_to_a_scan_outcome(self, monkeypatch, captured):
         async def fake_run_scan(**kwargs):
-            return {"repos": [{"url": "r1", "cloned": True}], "persons": [{"key": "p1"}]}
+            return {
+                "repos": [{"url": "r1", "cloned": True}, {"url": "r2", "cloned": False}],
+                "persons": [{"key": "p1"}],
+            }
 
         monkeypatch.setattr(svc, "run_scan", fake_run_scan)
+        self._start()
 
-        async def _scenario():
-            queue = asyncio.Queue()
-            await run_scan_task(
-                mode="url", target="https://github.com/octocat/Hello-World", include_forks=False,
-                resolve_github_logins=False, ignore_noreply=False, github_token=None, queue=queue,
-            )
-            events = []
-            while True:
-                item = queue.get_nowait()
-                if item is None:
-                    break
-                events.append(item)
-            return events
+        outcome = _run(captured["run_work"](123))
 
-        events = _run(_scenario())
+        assert outcome.fields == {"repos_scanned": 1, "repos_failed": 1, "persons_found": 1}
+        assert outcome.db_only_fields["result"]["persons"] == [{"key": "p1"}]
 
-        assert events[0]["type"] == "started"
-        assert events[-1]["type"] == "completed"
-        assert events[-1]["repos_scanned"] == 1
-        assert events[-1]["persons_found"] == 1
-
-    def test_git_recon_error_marks_search_failed_and_emits_failed_event(self, monkeypatch, session_factory):
+    def test_run_work_lets_git_recon_error_propagate_unwrapped(self, monkeypatch, captured):
         async def fake_run_scan(**kwargs):
             raise GitReconError("No repositories to scan")
 
         monkeypatch.setattr(svc, "run_scan", fake_run_scan)
+        self._start()
 
-        async def _scenario():
-            queue = asyncio.Queue()
-            await run_scan_task(
-                mode="url", target="https://github.com/octocat/Hello-World", include_forks=False,
-                resolve_github_logins=False, ignore_noreply=False, github_token=None, queue=queue,
-            )
-            events = []
-            while True:
-                item = queue.get_nowait()
-                if item is None:
-                    break
-                events.append(item)
-            return events
+        with pytest.raises(GitReconError, match="No repositories to scan"):
+            _run(captured["run_work"](123))
 
-        events = _run(_scenario())
-
-        assert events[-1] == {
-            "type": "failed", "search_id": events[0]["search_id"], "error": "No repositories to scan",
-        }
-
-    def test_timeout_error_marks_search_failed_with_timeout_message(self, monkeypatch, session_factory):
+    def test_run_work_rewrites_a_bare_timeout_error_with_a_message(self, monkeypatch, captured):
         async def fake_run_scan(**kwargs):
             raise TimeoutError()
 
         monkeypatch.setattr(svc, "run_scan", fake_run_scan)
+        self._start()
 
-        async def _scenario():
-            queue = asyncio.Queue()
-            await run_scan_task(
-                mode="url", target="https://github.com/octocat/Hello-World", include_forks=False,
-                resolve_github_logins=False, ignore_noreply=False, github_token=None, queue=queue,
-            )
-            events = []
-            while True:
-                item = queue.get_nowait()
-                if item is None:
-                    break
-                events.append(item)
-            return events
+        with pytest.raises(TimeoutError, match="Scan timed out"):
+            _run(captured["run_work"](123))
 
-        events = _run(_scenario())
+    def test_run_work_raises_scan_cancelled_once_the_cancellable_was_triggered(self, monkeypatch, captured):
+        async def fake_run_scan(**kwargs):
+            return {"repos": [{"url": "r1", "cloned": False}], "persons": []}
 
-        assert events[-1]["type"] == "failed"
-        assert events[-1]["error"] == "Scan timed out"
+        monkeypatch.setattr(svc, "run_scan", fake_run_scan)
+        self._start()
+
+        captured["cancellable"].cancelled = True
+
+        with pytest.raises(ScanCancelled) as exc_info:
+            _run(captured["run_work"](123))
+        assert exc_info.value.outcome.fields == {"repos_scanned": 0, "repos_failed": 1, "persons_found": 0}

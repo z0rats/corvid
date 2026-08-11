@@ -31,28 +31,29 @@ async function fetchFoundSites(searchId) {
 }
 
 async function reduce(prev, event) {
+  const { data } = event;
   if (event.type === 'started') {
-    return { ...prev, searchId: event.search_id, totalSites: event.total_sites };
+    return { ...prev, searchId: data.search_id, totalSites: data.total_sites };
   }
   if (event.type === 'progress') {
     return {
       ...prev,
-      checked: event.checked,
-      totalSites: event.total_sites,
-      currentSite: event.site_name,
-      foundSites: event.found
-        ? [...prev.foundSites, { site_name: event.site_name, url_user: event.url_user }]
+      checked: data.checked,
+      totalSites: data.total_sites,
+      currentSite: data.site_name,
+      foundSites: data.found
+        ? [...prev.foundSites, { site_name: data.site_name, url_user: data.url_user }]
         : prev.foundSites,
     };
   }
   if (event.type === 'completed' || event.type === 'cancelled') {
-    const foundSites = await fetchFoundSites(event.search_id);
+    const foundSites = await fetchFoundSites(data.search_id);
     return {
       ...prev,
       phase: event.type,
-      checked: event.total_sites_checked,
-      totalSites: event.total_sites_checked,
-      searchId: event.search_id,
+      checked: data.total_sites_checked,
+      totalSites: data.total_sites_checked,
+      searchId: data.search_id,
       foundSites: foundSites ?? prev.foundSites,
     };
   }

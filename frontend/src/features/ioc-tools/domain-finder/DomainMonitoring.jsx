@@ -13,6 +13,7 @@ import CtSubdomainsPanel from './components/ui/CtSubdomainsPanel';
 import DnsRecordsPanel from './components/ui/DnsRecordsPanel';
 import DnsDumpsterPanel from './components/ui/DnsDumpsterPanel';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
+import { domainUtils } from './utils/domainUtils';
 
 export default function DomainMonitoring() {
   const { t } = useTranslation('iocTools');
@@ -20,7 +21,13 @@ export default function DomainMonitoring() {
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState(null);
   const handleSearch = (domain) => {
-    setSearchDomain(domain);
+    const normalizedDomain = domainUtils.normalizeDomainInput(domain);
+    if (!normalizedDomain) {
+      setError(t('domainFinder.errors.invalidPattern'));
+      setShowResults(false);
+      return;
+    }
+    setSearchDomain(normalizedDomain);
     setShowResults(true);
     setError(null);
   };

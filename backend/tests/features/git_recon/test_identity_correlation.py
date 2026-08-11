@@ -12,6 +12,7 @@ from app.features.git_recon.service.git_recon_service import (
     _analyst_to_result,
     _person_to_dict,
     _record_mention,
+    _track_commits_per_repo,
     build_mentions,
 )
 
@@ -119,6 +120,69 @@ def test_build_mentions_counts_author_and_committer_across_multiple_commits():
 
 def test_build_mentions_handles_empty_commits_by_repo():
     assert build_mentions({}) == {}
+
+
+# --- _track_commits_per_repo --------------------------------------------
+
+
+class _FakeAnalyst:
+    """Stands in for gitcolombo.GitAnalyst: .append(url, cloned_path) appends
+    however many fake commits `commits_per_url` says that url is worth to
+    .commits, mirroring how the real GitAnalyst.append() grows analyst.commits
+    in place as it walks a repo's `git log --all`."""
+
+    def __init__(self, commits_per_url: dict[str, int]):
+        self._commits_per_url = commits_per_url
+        self.commits: list[object] = []
+        self.appended_urls: list[str] = []
+
+    def append(self, url, cloned_path=None):
+        self.appended_urls.append(url)
+        for _ in range(self._commits_per_url.get(url, 0)):
+            self.commits.append(object())
+
+
+def test_track_commits_per_repo_gives_each_repo_its_own_slice_only():
+    analyst = _FakeAnalyst({"repo1": 2, "repo2": 3})
+    cloned = {"repo1": "/tmp/repo1", "repo2": "/tmp/repo2"}
+
+    commits_by_repo = _track_commits_per_repo(analyst, cloned)
+
+    assert len(commits_by_repo["repo1"]) == 2
+    assert len(commits_by_repo["repo2"]) == 3
+    assert set(commits_by_repo["repo1"]) & set(commits_by_repo["repo2"]) == set()
+    assert commits_by_repo["repo1"] == analyst.commits[0:2]
+    assert commits_by_repo["repo2"] == analyst.commits[2:5]
+
+
+def test_track_commits_per_repo_skips_repos_with_failed_clone():
+    analyst = _FakeAnalyst({"repo1": 2})
+    cloned = {"repo1": "/tmp/repo1", "repo2": None}
+
+    commits_by_repo = _track_commits_per_repo(analyst, cloned)
+
+    assert "repo2" not in commits_by_repo
+    assert analyst.appended_urls == ["repo1"]
+
+
+def test_track_commits_per_repo_zero_commit_repo_does_not_shift_the_next_slice():
+    analyst = _FakeAnalyst({"repo1": 0, "repo2": 3})
+    cloned = {"repo1": "/tmp/repo1", "repo2": "/tmp/repo2"}
+
+    commits_by_repo = _track_commits_per_repo(analyst, cloned)
+
+    assert commits_by_repo["repo1"] == []
+    assert len(commits_by_repo["repo2"]) == 3
+    assert commits_by_repo["repo2"] == analyst.commits
+
+
+def test_track_commits_per_repo_orders_result_by_cloned_processing_order():
+    analyst = _FakeAnalyst({"repo_b": 1, "repo_a": 1, "repo_c": 1})
+    cloned = {"repo_b": "/tmp/b", "repo_a": "/tmp/a", "repo_c": "/tmp/c"}
+
+    commits_by_repo = _track_commits_per_repo(analyst, cloned)
+
+    assert list(commits_by_repo.keys()) == ["repo_b", "repo_a", "repo_c"]
 
 
 # --- _person_to_dict ---------------------------------------------------

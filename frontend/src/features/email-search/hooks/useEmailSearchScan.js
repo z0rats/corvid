@@ -13,17 +13,18 @@ const api = {
 };
 
 function reduce(prev, event) {
+  const { data } = event;
   if (event.type === 'started') {
-    return { ...prev, searchId: event.search_id, totalProviders: event.total_providers };
+    return { ...prev, searchId: data.search_id, totalProviders: data.total_providers };
   }
   if (event.type === 'progress') {
     return {
       ...prev,
-      checked: event.checked,
-      totalProviders: event.total_providers,
-      currentProvider: event.checker_name,
-      foundProviders: event.found
-        ? [...prev.foundProviders, { provider_name: event.provider_name, emails: event.emails }]
+      checked: data.checked,
+      totalProviders: data.total_providers,
+      currentProvider: data.checker_name,
+      foundProviders: data.found
+        ? [...prev.foundProviders, { provider_name: data.provider_name, emails: data.emails }]
         : prev.foundProviders,
     };
   }
@@ -31,9 +32,9 @@ function reduce(prev, event) {
     return {
       ...prev,
       phase: event.type,
-      checked: event.total_providers_checked,
-      totalProviders: event.total_providers_checked,
-      searchId: event.search_id,
+      checked: data.total_providers_checked,
+      totalProviders: data.total_providers_checked,
+      searchId: data.search_id,
     };
   }
   if (event.type === 'failed') {

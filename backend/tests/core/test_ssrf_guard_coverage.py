@@ -30,9 +30,7 @@ _SAFE_GET_IMPORT_RE = re.compile(r"from app\.core\.security\.ssrf_guard import[^
 # this list in sync when one of these starts accepting a user-controlled host.
 ALLOWLISTED_FIXED_HOST_FILES = {
     # PyPI version-check calls (fixed pypi.org host)
-    "features/email_search/config/mailcat_config.py",
-    "features/username_search/config/maigret_config.py",
-    "features/username_search/config/social_analyzer_config.py",
+    "core/utils/pypi_version_check.py",
     # Fixed third-party API hosts; only path/query values (IOC, username) are
     # user-supplied, never the host itself
     "features/ioc_tools/domain_finder/service/urlscan_api_service.py",

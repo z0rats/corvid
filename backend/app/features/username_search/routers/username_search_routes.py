@@ -9,21 +9,16 @@ from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
 from app.core.scans.sse import sse_response
-from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
-    get_social_analyzer_config,
-    record_pypi_check as record_social_analyzer_pypi_check,
-)
-from app.core.settings.username_search.crud.username_search_settings_crud import (
-    get_username_search_config,
-    record_pypi_check as record_maigret_pypi_check,
-)
+from app.core.settings.username_search.crud.social_analyzer_settings_crud import get_social_analyzer_config
+from app.core.settings.username_search.crud.username_search_settings_crud import get_username_search_config
+from app.core.utils.pypi_version_check import check_for_update, compute_update_available
 from app.features.username_search.config.maigret_config import (
-    fetch_latest_pypi_version as fetch_latest_maigret_pypi_version,
+    PACKAGE_NAME as MAIGRET_PACKAGE_NAME,
     get_available_tags,
     get_maigret_database,
 )
 from app.features.username_search.config.social_analyzer_config import (
-    fetch_latest_pypi_version as fetch_latest_social_analyzer_pypi_version,
+    PACKAGE_NAME as SOCIAL_ANALYZER_PACKAGE_NAME,
     get_bundled_site_count,
     get_installed_version as get_social_analyzer_version,
 )
@@ -122,9 +117,9 @@ async def get_hudson_rock_check(
 async def cancel_scan_endpoint(search_id: int) -> None:
     """Cancel a running scan, regardless of which source is running it"""
     cancelled = (
-        cancel_maigret_scan(search_id)
-        or cancel_social_analyzer_scan(search_id)
-        or cancel_threat_actor_usernames_scan(search_id)
+        await cancel_maigret_scan(search_id)
+        or await cancel_social_analyzer_scan(search_id)
+        or await cancel_threat_actor_usernames_scan(search_id)
     )
     if not cancelled:
         raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="USERNAME_SEARCH_NOT_RUNNING")
@@ -152,14 +147,8 @@ async def read_info(db: ReadSessionDep) -> list[UsernameSearchInfo]:
     """Get info about both search tools and their site databases"""
     maigret_config = await get_username_search_config(db)
     maigret_site_count = maigret_config.db_site_count or len(get_maigret_database().sites)
-    maigret_update_available = (
-        bool(maigret_config.latest_pypi_version) and maigret_config.latest_pypi_version != maigret.__version__
-    )
 
     sa_config = await get_social_analyzer_config(db)
-    sa_update_available = (
-        bool(sa_config.latest_pypi_version) and sa_config.latest_pypi_version != get_social_analyzer_version()
-    )
 
     return [
         UsernameSearchInfo(
@@ -168,14 +157,14 @@ async def read_info(db: ReadSessionDep) -> list[UsernameSearchInfo]:
             site_count=maigret_site_count,
             db_last_updated_at=maigret_config.db_last_updated_at,
             latest_version=maigret_config.latest_pypi_version,
-            update_available=maigret_update_available if maigret_config.latest_pypi_version else None,
+            update_available=compute_update_available(maigret_config.latest_pypi_version, maigret.__version__),
         ),
         UsernameSearchInfo(
             tool="social_analyzer",
             version=get_social_analyzer_version(),
             site_count=get_bundled_site_count(),
             latest_version=sa_config.latest_pypi_version,
-            update_available=sa_update_available if sa_config.latest_pypi_version else None,
+            update_available=compute_update_available(sa_config.latest_pypi_version, get_social_analyzer_version()),
         ),
     ]
 
@@ -207,15 +196,15 @@ async def refresh_db_endpoint(db: SessionDep) -> UsernameSearchInfo:
 )
 async def check_social_analyzer_update(db: SessionDep) -> UsernameSearchInfo:
     """Manually check PyPI for a newer social-analyzer release"""
-    latest_version = await fetch_latest_social_analyzer_pypi_version()
-    config = await record_social_analyzer_pypi_check(db, latest_version)
+    config = await get_social_analyzer_config(db)
     installed_version = get_social_analyzer_version()
+    result = await check_for_update(db, SOCIAL_ANALYZER_PACKAGE_NAME, config, installed_version)
     return UsernameSearchInfo(
         tool="social_analyzer",
         version=installed_version,
         site_count=get_bundled_site_count(),
-        latest_version=config.latest_pypi_version,
-        update_available=bool(config.latest_pypi_version) and config.latest_pypi_version != installed_version,
+        latest_version=result.latest_version,
+        update_available=result.update_available,
     )
 
 
@@ -228,16 +217,16 @@ async def check_social_analyzer_update(db: SessionDep) -> UsernameSearchInfo:
 )
 async def check_maigret_update(db: SessionDep) -> UsernameSearchInfo:
     """Manually check PyPI for a newer maigret release"""
-    latest_version = await fetch_latest_maigret_pypi_version()
-    config = await record_maigret_pypi_check(db, latest_version)
+    config = await get_username_search_config(db)
+    result = await check_for_update(db, MAIGRET_PACKAGE_NAME, config, maigret.__version__)
     site_count = config.db_site_count or len(get_maigret_database().sites)
     return UsernameSearchInfo(
         tool="maigret",
         version=maigret.__version__,
         site_count=site_count,
         db_last_updated_at=config.db_last_updated_at,
-        latest_version=config.latest_pypi_version,
-        update_available=bool(config.latest_pypi_version) and config.latest_pypi_version != maigret.__version__,
+        latest_version=result.latest_version,
+        update_available=result.update_available,
     )
 
 

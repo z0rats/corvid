@@ -5,118 +5,59 @@ FastAPI routes for CTI (Cyber Threat Intelligence) profile settings management.
 """
 
 import logging
+from typing import Literal, NoReturn
 
-from fastapi import APIRouter, status
+from fastapi import status
 
-from app.core.dependencies import SessionDep
 from app.core.exceptions import AppHTTPException
 from app.core.settings.cti_profile.schemas.cti_profile_schemas import (
     CTISettingsResponse,
     CTISettingsUpdate,
-    CTISettingsCreate
 )
 from app.core.settings.cti_profile.service.cti_profile_service import (
     get_cti_profile_settings,
     update_cti_profile_settings
 )
+from app.core.settings.settings_router_factory import build_singleton_settings_router
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/settings/cti", tags=["CTI Profile Settings"])
+
+_ERROR_DETAIL = {
+    "get": ("Failed to retrieve CTI profile settings", "CTI_SETTINGS_RETRIEVE_FAILED"),
+    "update": ("Failed to update CTI profile settings", "CTI_SETTINGS_UPDATE_FAILED"),
+}
 
 
-@router.get(
-    "",
-    response_model=CTISettingsResponse,
-    summary="Get CTI profile settings",
-    description="Retrieve current CTI (Cyber Threat Intelligence) profile settings",
-    responses={
-        400: {"description": "Invalid settings data"},
-        500: {"description": "Failed to retrieve settings"},
-    },
-)
-async def get_cti_settings(db: SessionDep) -> CTISettingsResponse:
-    """Retrieve CTI profile settings with automatic initialization if not found"""
-    try:
-        return await get_cti_profile_settings(db)
-    except ValueError as e:
-        logger.warning("Validation error retrieving CTI settings: %s", str(e))
+def _map_cti_error(exc: Exception, op: Literal["get", "update"]) -> NoReturn:
+    """Map get_cti_profile_settings/update_cti_profile_settings errors to AppHTTPException.
+
+    Preserves the pre-factory behavior: a ValueError (settings validation
+    failure) becomes 400, anything else becomes 500 - with distinct
+    detail/error_code per operation.
+    """
+    if isinstance(exc, ValueError):
+        logger.warning("Validation error during CTI settings %s: %s", op, str(exc))
         raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid settings data: {str(e)}",
+            detail=f"Invalid settings data: {str(exc)}",
             error_code="CTI_SETTINGS_INVALID",
-        )
-    except Exception as e:
-        logger.error("Unexpected error retrieving CTI settings: %s", str(e))
-        raise AppHTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve CTI profile settings",
-            error_code="CTI_SETTINGS_RETRIEVE_FAILED",
-        )
+        ) from exc
+
+    detail, error_code = _ERROR_DETAIL[op]
+    logger.error("Unexpected error during CTI settings %s: %s", op, str(exc))
+    raise AppHTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=detail,
+        error_code=error_code,
+    ) from exc
 
 
-@router.put(
-    "",
-    response_model=CTISettingsResponse,
-    summary="Update CTI profile settings",
-    description="Update CTI (Cyber Threat Intelligence) profile settings with validation",
-    responses={
-        400: {"description": "Invalid settings data"},
-        500: {"description": "Failed to update settings"},
-    },
+router = build_singleton_settings_router(
+    prefix="/api/settings/cti",
+    tags=["CTI Profile Settings"],
+    response_schema=CTISettingsResponse,
+    update_schema=CTISettingsUpdate,
+    get_service=get_cti_profile_settings,
+    update_service=update_cti_profile_settings,
+    on_error=_map_cti_error,
 )
-async def update_cti_settings(
-    settings_update: CTISettingsUpdate,
-    db: SessionDep
-) -> CTISettingsResponse:
-    """Update CTI profile settings with comprehensive validation"""
-    try:
-        return await update_cti_profile_settings(db, settings_update)
-    except ValueError as e:
-        logger.warning("Validation error updating CTI settings: %s", str(e))
-        raise AppHTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid settings data: {str(e)}",
-            error_code="CTI_SETTINGS_INVALID",
-        )
-    except Exception as e:
-        logger.error("Unexpected error updating CTI settings: %s", str(e))
-        raise AppHTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update CTI profile settings",
-            error_code="CTI_SETTINGS_UPDATE_FAILED",
-        )
-
-
-@router.post(
-    "",
-    response_model=CTISettingsResponse,
-    summary="Create CTI profile settings",
-    description="Create new CTI (Cyber Threat Intelligence) profile settings",
-    status_code=status.HTTP_201_CREATED,
-    responses={
-        400: {"description": "Invalid settings data"},
-        500: {"description": "Failed to create settings"},
-    },
-)
-async def create_cti_settings(
-    settings_create: CTISettingsCreate,
-    db: SessionDep
-) -> CTISettingsResponse:
-    """Create new CTI profile settings"""
-    try:
-        settings_update = CTISettingsUpdate(settings=settings_create.settings)
-        return await update_cti_profile_settings(db, settings_update)
-    except ValueError as e:
-        logger.warning("Validation error creating CTI settings: %s", str(e))
-        raise AppHTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid settings data: {str(e)}",
-            error_code="CTI_SETTINGS_INVALID",
-        )
-    except Exception as e:
-        logger.error("Unexpected error creating CTI settings: %s", str(e))
-        raise AppHTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create CTI profile settings",
-            error_code="CTI_SETTINGS_CREATE_FAILED",
-        )

@@ -10,7 +10,7 @@ import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import ResultsView from './ResultsView';
 import { gitReconApi } from '../services/api/gitReconApi';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', failed: 'error' };
+const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 
 export default function HistoryDetail() {
   const { t } = useTranslation('gitRecon');
