@@ -304,7 +304,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `id` | int | no | — | PK | Surrogate primary key |
 | `mode` | string(20) | no | — | — | gitcolombo scan mode (e.g. 'user', 'org', 'repo') |
 | `target` | string(300) | no | — | — | GitHub user/org/repo that was scanned |
-| `status` | string(20) | no | 'completed' | — | completed or failed |
+| `status` | string(20) | no | 'completed' | — | running, completed, cancelled, or failed |
 | `error` | text | yes | — | — | Error detail if status is failed |
 | `repos_scanned` | int | no | 0 | — | Repositories successfully scanned |
 | `repos_failed` | int | no | 0 | — | Repositories that failed to scan |
