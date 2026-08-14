@@ -4,7 +4,9 @@ import uuid
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-request_id_ctx: contextvars.ContextVar[str | None] = contextvars.ContextVar("request_id", default=None)
+request_id_ctx: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "request_id", default=None
+)
 
 REQUEST_ID_HEADER = "x-request-id"
 MAX_REQUEST_ID_LENGTH = 128

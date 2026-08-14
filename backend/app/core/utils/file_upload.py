@@ -6,9 +6,11 @@ endpoint. `validate_uploaded_file` covers the "read + validate" half;
 `run_file_endpoint` covers the "call the service, map its errors to a 422" half
 that follows.
 """
+
 import asyncio
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import UploadFile, status
 
@@ -31,20 +33,28 @@ async def validate_uploaded_file(
     """
     if not file.filename:
         logger.warning("File upload rejected: no filename provided")
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file provided", error_code=no_file_code)
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No file provided",
+            error_code=no_file_code,
+        )
 
     try:
         file_content = await file.read()
     except Exception as e:
         logger.error("Error reading uploaded file '%s': %s", file.filename, e)
         raise AppHTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading uploaded file", error_code=read_error_code
-        )
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error reading uploaded file",
+            error_code=read_error_code,
+        ) from e
 
     is_valid, error_code, error_message = validate_fn(file.filename, len(file_content))
     if not is_valid:
         logger.warning("File upload rejected: %s", error_message)
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message, error_code=error_code)
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=error_message, error_code=error_code
+        )
 
     logger.info("File validation passed for '%s' (%s bytes)", file.filename, len(file_content))
     return file_content
@@ -76,11 +86,11 @@ async def run_file_endpoint(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
             error_code=value_error_code or error_code,
-        )
+        ) from e
     except Exception as e:
         logger.error("%s: %s", failure_message, e)
         raise AppHTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=safe_error_detail(e, failure_message),
             error_code=error_code,
-        )
+        ) from e

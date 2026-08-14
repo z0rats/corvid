@@ -1,9 +1,14 @@
 import logging
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from sqlalchemy import event
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config.settings import settings
@@ -13,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
     """SQLAlchemy declarative base class"""
+
     pass
 
 
@@ -100,7 +106,7 @@ async def dispose_database_engine() -> None:
 
 
 @asynccontextmanager
-async def managed_session() -> AsyncGenerator[AsyncSession, None]:
+async def managed_session() -> AsyncGenerator[AsyncSession]:
     """Async context manager providing a session with automatic commit and cleanup.
 
     Use this outside of FastAPI's dependency injection (e.g., startup tasks,

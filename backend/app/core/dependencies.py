@@ -1,15 +1,15 @@
 import logging
 import shutil
-from functools import lru_cache
 from collections.abc import AsyncGenerator
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends, Query
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import AsyncSessionLocal, managed_session
 from app.core.config.settings import AppSettings, get_settings
+from app.core.database import AsyncSessionLocal, managed_session
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 def _get_database_type() -> str:
     """Get database type from the SQLAlchemy engine dialect (cached)"""
     from app.core.database import engine
+
     return engine.dialect.name
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_db() -> AsyncGenerator[AsyncSession]:
     """FastAPI dependency for write operations.
 
     Commits on success so handlers don't need to call commit() themselves.
@@ -36,7 +37,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
-async def get_read_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_read_db() -> AsyncGenerator[AsyncSession]:
     """FastAPI dependency for read-only operations.
 
     Does NOT auto-commit — avoids unnecessary write transactions for GET endpoints.
@@ -73,7 +74,7 @@ async def get_database_health() -> dict[str, str]:
         return {
             "status": "healthy" if is_connected else "unhealthy",
             "connection": "active" if is_connected else "failed",
-            "database_type": _get_database_type()
+            "database_type": _get_database_type(),
         }
     except Exception as e:
         logger.error("Error checking database health: %s", e)
@@ -81,14 +82,14 @@ async def get_database_health() -> dict[str, str]:
             "status": "unhealthy",
             "connection": "error",
             "database_type": "unknown",
-            "error": str(e)
+            "error": str(e),
         }
 
 
 DatabaseHealthDep = Annotated[dict[str, str], Depends(get_database_health)]
 
 
-def get_disk_space_health(settings: AppSettings = Depends(get_settings)) -> dict[str, str]:
+def get_disk_space_health(settings: SettingsDep) -> dict[str, str]:
     """Check free disk space on the data directory's mount.
 
     Warns rather than blocks: DB, logs, maigret's site database, pyppeteer's
@@ -101,8 +102,8 @@ def get_disk_space_health(settings: AppSettings = Depends(get_settings)) -> dict
         status = "healthy" if usage.free >= settings.low_disk_space_threshold_bytes else "low"
         return {
             "status": status,
-            "free_gb": f"{usage.free / (1024 ** 3):.2f}",
-            "total_gb": f"{usage.total / (1024 ** 3):.2f}",
+            "free_gb": f"{usage.free / (1024**3):.2f}",
+            "total_gb": f"{usage.total / (1024**3):.2f}",
         }
     except OSError as e:
         logger.error("Error checking disk space: %s", e)

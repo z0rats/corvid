@@ -20,6 +20,7 @@ history is a single squashed revision that creates the schema from scratch
 (see `migrations/versions/`), so there's no separate stamp-and-create_all path
 for a fresh install anymore.
 """
+
 import os
 import pwd
 import subprocess

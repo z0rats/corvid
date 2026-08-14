@@ -39,10 +39,12 @@ async def _get_by_id(db: AsyncSession, model: type, search_id: int):
 
 def _touch_completed_at(instance, columns: ScanColumns) -> None:
     if columns.completed_at_column is not None:
-        setattr(instance, columns.completed_at_column, datetime.datetime.now(datetime.timezone.utc))
+        setattr(instance, columns.completed_at_column, datetime.datetime.now(datetime.UTC))
 
 
-async def mark_completed(db: AsyncSession, model: type, search_id: int, *, columns: ScanColumns, **fields):
+async def mark_completed(
+    db: AsyncSession, model: type, search_id: int, *, columns: ScanColumns, **fields
+):
     """Mark a row as completed, applying whatever status fields the caller passes
     (counts, etc.). Callers that persist child rows (e.g. found-provider results)
     do so themselves right after calling this - this function never touches
@@ -60,7 +62,9 @@ async def mark_completed(db: AsyncSession, model: type, search_id: int, *, colum
     return instance
 
 
-async def mark_cancelled(db: AsyncSession, model: type, search_id: int, *, columns: ScanColumns, **fields):
+async def mark_cancelled(
+    db: AsyncSession, model: type, search_id: int, *, columns: ScanColumns, **fields
+):
     """Mark a row as cancelled, applying whatever status fields the caller passes.
     Not used by git_recon, which has no cancellation path."""
     instance = await _get_by_id(db, model, search_id)
@@ -76,7 +80,9 @@ async def mark_cancelled(db: AsyncSession, model: type, search_id: int, *, colum
     return instance
 
 
-async def mark_failed(db: AsyncSession, model: type, search_id: int, *, columns: ScanColumns, error_message: str):
+async def mark_failed(
+    db: AsyncSession, model: type, search_id: int, *, columns: ScanColumns, error_message: str
+):
     """Mark a row as failed, truncating the error message to fit the error column."""
     instance = await _get_by_id(db, model, search_id)
     if not instance:

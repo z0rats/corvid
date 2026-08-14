@@ -4,15 +4,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.api_keys.config.create_defaults import add_default_api_keys
-from app.core.settings.general.crud.general_settings_crud import create_general_settings, get_first_general_settings
-from app.core.settings.modules.crud.modules_settings_crud import create_module_setting, module_setting_exists
+from app.core.settings.general.crud.general_settings_crud import (
+    create_general_settings,
+    get_first_general_settings,
+)
+from app.core.settings.modules.crud.modules_settings_crud import (
+    create_module_setting,
+    module_setting_exists,
+)
 from app.features.llm_templates.constants import DEFAULT_CATEGORY_ID
 from app.features.llm_templates.crud.llm_template_crud import create_new_template
 from app.features.llm_templates.crud.template_category_crud import ensure_system_categories_exist
 from app.features.llm_templates.models.llm_template_models import AITemplate
 from app.features.llm_templates.schemas.llm_template_schemas import AITemplateCreate
 from app.features.llm_templates.utils import DEFAULT_TEMPLATES
-from app.features.newsfeed.crud.newsfeed_settings_crud import create_newsfeed_setting, get_feed_by_name
+from app.features.newsfeed.crud.newsfeed_settings_crud import (
+    create_newsfeed_setting,
+    get_feed_by_name,
+)
 from app.features.newsfeed.schemas.newsfeed_schemas import NewsfeedSettingsSchema
 
 logger = logging.getLogger(__name__)
@@ -36,7 +45,7 @@ async def create_default_module_settings(db: AsyncSession) -> None:
         ("llm_templates", True),
         ("cvss_calculator", True),
         ("rule_creator", True),
-        ("username_search", True)
+        ("username_search", True),
     ]
 
     for name, enabled in default_modules:

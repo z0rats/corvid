@@ -1,9 +1,10 @@
 import logging
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.jobstores.base import JobLookupError
 
 from app.core.config.settings import settings
 
@@ -75,14 +76,21 @@ def configure_recurring_job(
 
 
 def wrap_job_errors(
-    job_name: str, coro_factory: Callable[[], Awaitable[Any]],
+    job_name: str,
+    coro_factory: Callable[[], Awaitable[Any]],
 ) -> Callable[[], Awaitable[None]]:
-    """Wrap a coroutine factory so exceptions are logged and swallowed instead of removing the job from the scheduler."""
+    """Wrap a coroutine factory so exceptions are logged and swallowed.
+
+    Keeps the job registered on the scheduler instead of letting an
+    unhandled exception remove it.
+    """
+
     async def _wrapped() -> None:
         try:
             await coro_factory()
         except Exception as e:
             logger.error("Error in %s job: %s", job_name, e)
+
     return _wrapped
 
 
@@ -122,23 +130,16 @@ def get_scheduler_status() -> dict[str, Any]:
 
         if is_running:
             for job in scheduler.get_jobs():
-                jobs.append({
-                    "id": job.id,
-                    "name": job.name or "Unnamed Job",
-                    "next_run": job.next_run_time.isoformat() if job.next_run_time else None
-                })
+                jobs.append(
+                    {
+                        "id": job.id,
+                        "name": job.name or "Unnamed Job",
+                        "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                    }
+                )
 
-        return {
-            "running": is_running,
-            "job_count": len(jobs),
-            "jobs": jobs
-        }
+        return {"running": is_running, "job_count": len(jobs), "jobs": jobs}
 
     except Exception as e:
         logger.error("Error getting scheduler status: %s", e)
-        return {
-            "running": False,
-            "job_count": 0,
-            "jobs": [],
-            "error": str(e)
-        }
+        return {"running": False, "job_count": 0, "jobs": [], "error": str(e)}

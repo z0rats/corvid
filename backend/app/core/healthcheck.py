@@ -124,7 +124,9 @@ async def detailed_healthcheck(
     description="Kubernetes/Docker readiness probe endpoint",
     responses={503: {"description": "Service not ready"}},
 )
-async def readiness_probe(database_health: DatabaseHealthDep, response: Response) -> ReadinessResponse:
+async def readiness_probe(
+    database_health: DatabaseHealthDep, response: Response
+) -> ReadinessResponse:
     """Return 200 if service is ready to accept traffic, 503 otherwise"""
 
     if database_health.get("status") == "healthy":

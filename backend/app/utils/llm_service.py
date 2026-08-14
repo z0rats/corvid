@@ -1,21 +1,24 @@
+from __future__ import annotations
+
 import logging
 import time as _time
-from typing import TypeVar
+from typing import TYPE_CHECKING
 
 import httpx
 from pydantic import BaseModel
-from pydantic_ai import Agent, BinaryContent
-from pydantic_ai.settings import ModelSettings
-from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel, OpenAIResponsesModelSettings
-from pydantic_ai.providers.openai import OpenAIProvider
-from pydantic_ai.models.anthropic import AnthropicModel
-from pydantic_ai.providers.anthropic import AnthropicProvider
-from pydantic_ai.models.google import GoogleModel
-from pydantic_ai.providers.google import GoogleProvider
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.settings import settings as app_settings
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
+
+if TYPE_CHECKING:
+    from pydantic_ai.settings import ModelSettings
+
+# pydantic_ai and each provider SDK (openai/anthropic/google-genai) are imported lazily,
+# inside the functions that actually need them, rather than at module level - this module
+# is imported eagerly at app startup (via api_keys_service.py, for invalidate_model_registry_
+# cache), and each of these SDKs costs several hundred ms to a second-plus to import, only
+# to sit unused until an LLM feature is actually invoked.
 
 logger = logging.getLogger(__name__)
 
@@ -54,15 +57,28 @@ def _is_reasoning_model(model_id: str) -> bool:
 
 
 def _create_model(provider: str, model_name: str, api_key: str):
-    """Create a PydanticAI model instance for the given provider"""
+    """Create a PydanticAI model instance for the given provider.
+
+    Only the SDK for the requested provider gets imported (and only when a scan/prompt
+    actually needs it) - callers only reach this per provider with a configured API key,
+    so an unused provider's SDK is never loaded at all."""
     if provider == "openai":
+        from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
+        from pydantic_ai.providers.openai import OpenAIProvider
+
         openai_provider = OpenAIProvider(api_key=api_key)
         if _is_reasoning_model(model_name):
             return OpenAIResponsesModel(model_name, provider=openai_provider)
         return OpenAIChatModel(model_name, provider=openai_provider)
     if provider == "anthropic":
+        from pydantic_ai.models.anthropic import AnthropicModel
+        from pydantic_ai.providers.anthropic import AnthropicProvider
+
         return AnthropicModel(model_name, provider=AnthropicProvider(api_key=api_key))
     if provider == "google":
+        from pydantic_ai.models.google import GoogleModel
+        from pydantic_ai.providers.google import GoogleProvider
+
         return GoogleModel(model_name, provider=GoogleProvider(api_key=api_key))
     raise ValueError(f"Unknown provider: {provider}")
 
@@ -83,13 +99,18 @@ async def _discover_ollama_models() -> dict:
         logger.debug("Ollama not reachable at %s, skipping local models: %s", base_url, e)
         return {}
 
+    from pydantic_ai.models.openai import OpenAIChatModel
+    from pydantic_ai.providers.openai import OpenAIProvider
+
     provider = OpenAIProvider(base_url=base_url, api_key="ollama")
     models: dict = {}
     for entry in data.get("data", []):
         model_name = entry.get("id")
         if not model_name:
             continue
-        models[f"{OLLAMA_MODEL_ID_PREFIX}{model_name}"] = OpenAIChatModel(model_name, provider=provider)
+        models[f"{OLLAMA_MODEL_ID_PREFIX}{model_name}"] = OpenAIChatModel(
+            model_name, provider=provider
+        )
 
     logger.info("Discovered %d local Ollama model(s) at %s", len(models), base_url)
     return models
@@ -123,6 +144,9 @@ def _build_model_settings(
     max_tokens: int | None,
 ) -> ModelSettings | None:
     """Build appropriate model settings based on model type"""
+    from pydantic_ai.models.openai import OpenAIResponsesModel, OpenAIResponsesModelSettings
+    from pydantic_ai.settings import ModelSettings
+
     if isinstance(model, OpenAIResponsesModel):
         kwargs: dict = {}
         if _is_reasoning_model(model_id):
@@ -151,6 +175,8 @@ async def execute_prompt(
     max_tokens: int | None = None,
 ) -> str:
     """Execute a prompt using the specified model from the registry"""
+    from pydantic_ai import Agent
+
     if model_id not in models:
         raise ValueError(f"Model '{model_id}' not registered")
 
@@ -170,13 +196,10 @@ async def execute_prompt(
         raise
     except Exception as e:
         logger.error("Error executing prompt with model '%s': %s", model_id, e)
-        raise ValueError(f"Failed to execute prompt with model '{model_id}': {e}")
+        raise ValueError(f"Failed to execute prompt with model '{model_id}': {e}") from e
 
 
-T = TypeVar("T", bound=BaseModel)
-
-
-async def execute_structured_prompt(
+async def execute_structured_prompt[T: BaseModel](
     models: dict,
     model_id: str,
     system_prompt: str,
@@ -193,6 +216,8 @@ async def execute_structured_prompt(
     validation and retry on validation failures. Pass image_data for a
     multimodal (vision) request - not every model/provider supports it.
     """
+    from pydantic_ai import Agent, BinaryContent
+
     if model_id not in models:
         raise ValueError(f"Model '{model_id}' not registered")
 
@@ -208,8 +233,13 @@ async def execute_structured_prompt(
         result = await agent.run(user_input, model_settings=settings)
         return result.output
     except Exception as e:
-        logger.error("Error executing structured prompt with model '%s': %s (type: %s)", model_id, e, type(e).__name__)
-        raise ValueError(f"Failed to execute structured prompt with model '{model_id}': {e}")
+        logger.error(
+            "Error executing structured prompt with model '%s': %s (type: %s)",
+            model_id,
+            e,
+            type(e).__name__,
+        )
+        raise ValueError(f"Structured prompt failed for model '{model_id}': {e}") from e
 
 
 _registry_cache: dict | None = None
@@ -246,18 +276,22 @@ async def get_available_models(db: AsyncSession) -> list[dict[str, str]]:
     available = []
     for model_id in registry:
         if model_id.startswith(OLLAMA_MODEL_ID_PREFIX):
-            available.append({
-                "id": model_id,
-                "name": model_id.removeprefix(OLLAMA_MODEL_ID_PREFIX),
-                "provider": OLLAMA_PROVIDER_DISPLAY_NAME,
-            })
+            available.append(
+                {
+                    "id": model_id,
+                    "name": model_id.removeprefix(OLLAMA_MODEL_ID_PREFIX),
+                    "provider": OLLAMA_PROVIDER_DISPLAY_NAME,
+                }
+            )
             continue
         provider, _, display_name = MODEL_DEFINITIONS[model_id]
-        available.append({
-            "id": model_id,
-            "name": display_name,
-            "provider": PROVIDER_DISPLAY_NAMES.get(provider, provider),
-        })
+        available.append(
+            {
+                "id": model_id,
+                "name": display_name,
+                "provider": PROVIDER_DISPLAY_NAMES.get(provider, provider),
+            }
+        )
     return available
 
 

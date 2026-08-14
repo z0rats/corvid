@@ -2,13 +2,20 @@ import hmac
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Path, status, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, BackgroundTasks, Path, WebSocket, WebSocketDisconnect, status
 
+from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
 from app.core.security.access_control import get_access_token
-from app.core.dependencies import ReadSessionDep, SessionDep, SkipQuery, LimitQuery
+
 from ..crud import alerts_crud
-from ..schemas.alerts_schemas import AlertSchema, AlertCreateSchema, AlertUpdateSchema, AlertBulkActionResponse, UnreadCountResponse
+from ..schemas.alerts_schemas import (
+    AlertBulkActionResponse,
+    AlertCreateSchema,
+    AlertSchema,
+    AlertUpdateSchema,
+    UnreadCountResponse,
+)
 from ..utils.alerts_websocket import manager
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
@@ -46,6 +53,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str = ""):
 
 
 # Fixed paths must be defined before parameterized paths to avoid conflicts
+
 
 @router.get(
     "/count/unread",
@@ -106,7 +114,9 @@ async def create_new_alert(
     db: SessionDep,
 ) -> AlertSchema:
     """Create a new alert and broadcast it via WebSocket"""
-    new_alert = await alerts_crud.create_alert(db, module=alert.module, title=alert.title, message=alert.message)
+    new_alert = await alerts_crud.create_alert(
+        db, module=alert.module, title=alert.title, message=alert.message
+    )
     logger.info("Created alert %s for module %s", new_alert.id, new_alert.module)
 
     background_tasks.add_task(
@@ -171,7 +181,9 @@ async def get_alert(alert_id: AlertId, db: ReadSessionDep) -> AlertSchema:
     description="Partially update an alert, for example to mark it as read or unread",
     responses={404: {"description": "Alert not found"}},
 )
-async def update_alert(alert_id: AlertId, update_data: AlertUpdateSchema, db: SessionDep) -> AlertSchema:
+async def update_alert(
+    alert_id: AlertId, update_data: AlertUpdateSchema, db: SessionDep
+) -> AlertSchema:
     """Partially update an alert (e.g. mark as read or unread)"""
     alert = await alerts_crud.update_alert_read_status(db, alert_id, update_data.read)
     if not alert:

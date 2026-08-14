@@ -27,10 +27,8 @@ async def mark_stale_running_as_failed(
     """
     values: dict = {"status": "failed", error_column: error_message}
     if completed_at_column is not None:
-        values[completed_at_column] = datetime.datetime.now(datetime.timezone.utc)
+        values[completed_at_column] = datetime.datetime.now(datetime.UTC)
 
-    result = await db.execute(
-        update(model).where(model.status == "running").values(**values)
-    )
+    result = await db.execute(update(model).where(model.status == "running").values(**values))
     await db.flush()
     return result.rowcount

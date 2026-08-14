@@ -11,8 +11,10 @@ def queue_sink(queue: asyncio.Queue) -> OnEvent:
     for `sse_response`: nests each `ScanEvent` as the wire's `{"type": ..., "data":
     {...}}` shape, and forwards the `None` sentinel through as-is to end the stream.
     """
+
     def sink(event: ScanEvent | None) -> None:
         queue.put_nowait({"type": event.type, "data": event.data} if event is not None else None)
+
     return sink
 
 
@@ -26,6 +28,7 @@ def sse_response(queue: asyncio.Queue) -> StreamingResponse:
     live progress for however long the scan takes rather than blocking behind a
     reverse proxy's read timeout.
     """
+
     async def event_stream():
         while True:
             event = await queue.get()

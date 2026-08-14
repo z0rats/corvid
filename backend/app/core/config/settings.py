@@ -20,15 +20,19 @@ def _dev_version() -> str:
             # match instead, since git describe just picks the nearest reachable tag.
             ["git", "describe", "--tags", "--dirty", "--always", "--match", "v[0-9]*"],
             cwd=Path(__file__).resolve().parent,
-            capture_output=True, text=True, timeout=2, check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=True,
         )
         return result.stdout.strip().removeprefix("v")
-    except (OSError, subprocess.SubprocessError):
+    except OSError, subprocess.SubprocessError:
         return "0.0.0-dev"
 
 
 class DatabaseSettings(BaseSettings):
     """Database configuration settings"""
+
     model_config = SettingsConfigDict(env_prefix="DB_", env_file=".env", env_file_encoding="utf-8")
 
     url: str = Field(default="sqlite:///./data/corvid.db", description="Database URL")
@@ -53,12 +57,15 @@ class DatabaseSettings(BaseSettings):
 
 class LoggingSettings(BaseSettings):
     """Logging configuration settings"""
+
     model_config = SettingsConfigDict(env_prefix="LOG_", env_file=".env", env_file_encoding="utf-8")
 
     level: str = Field(default="INFO", description="Logging level")
     dir: str = Field(default="data/logs", description="Log directory path")
     app_name: str = Field(default="corvid", description="Application name for log files")
-    max_file_size: int = Field(default=10 * 1024 * 1024, description="Maximum log file size in bytes")
+    max_file_size: int = Field(
+        default=10 * 1024 * 1024, description="Maximum log file size in bytes"
+    )
     backup_count: int = Field(default=5, description="Number of backup log files")
     enable_console: bool = Field(default=True, description="Enable console logging")
     enable_file: bool = Field(default=True, description="Enable file logging")
@@ -66,18 +73,24 @@ class LoggingSettings(BaseSettings):
 
 class APISettings(BaseSettings):
     """API configuration settings"""
+
     model_config = SettingsConfigDict(env_prefix="API_", env_file=".env", env_file_encoding="utf-8")
 
     title: str = Field(default="Corvid", description="API title")
     version: str = Field(default_factory=_dev_version, description="Application version")
     description: str = Field(
-        default="## Corvid interactive API documentation",
-        description="API description"
+        default="## Corvid interactive API documentation", description="API description"
     )
     debug: bool = Field(default=False, description="Enable debug mode")
-    max_request_body_bytes: int = Field(default=50 * 1024 * 1024, description="Maximum request body size in bytes")
-    cors_origins: list[str] = Field(default=["http://localhost:3000"], description="CORS allowed origins")
-    trusted_hosts: list[str] = Field(default=["localhost", "127.0.0.1"], description="Allowed Host header values")
+    max_request_body_bytes: int = Field(
+        default=50 * 1024 * 1024, description="Maximum request body size in bytes"
+    )
+    cors_origins: list[str] = Field(
+        default=["http://localhost:3000"], description="CORS allowed origins"
+    )
+    trusted_hosts: list[str] = Field(
+        default=["localhost", "127.0.0.1"], description="Allowed Host header values"
+    )
     access_token: str = Field(
         default="",
         description=(
@@ -90,7 +103,10 @@ class APISettings(BaseSettings):
 
 class SecuritySettings(BaseSettings):
     """Security-related configuration settings"""
-    model_config = SettingsConfigDict(env_prefix="SECURITY_", env_file=".env", env_file_encoding="utf-8")
+
+    model_config = SettingsConfigDict(
+        env_prefix="SECURITY_", env_file=".env", env_file_encoding="utf-8"
+    )
 
     allow_private_network_targets: bool = Field(
         default=False,
@@ -110,15 +126,23 @@ class SecuritySettings(BaseSettings):
 
 class SchedulerSettings(BaseSettings):
     """Scheduler configuration settings"""
-    model_config = SettingsConfigDict(env_prefix="SCHEDULER_", env_file=".env", env_file_encoding="utf-8")
 
-    default_fetch_interval: int = Field(default=30, description="Default news fetch interval in minutes")
+    model_config = SettingsConfigDict(
+        env_prefix="SCHEDULER_", env_file=".env", env_file_encoding="utf-8"
+    )
+
+    default_fetch_interval: int = Field(
+        default=30, description="Default news fetch interval in minutes"
+    )
     max_job_instances: int = Field(default=1, description="Maximum concurrent instances per job")
-    blacklist_refresh_interval_hours: int = Field(default=24, description="Address blacklist refresh interval in hours")
+    blacklist_refresh_interval_hours: int = Field(
+        default=24, description="Address blacklist refresh interval in hours"
+    )
 
 
 class LLMSettings(BaseSettings):
     """Local LLM provider configuration settings"""
+
     model_config = SettingsConfigDict(env_prefix="LLM_", env_file=".env", env_file_encoding="utf-8")
 
     ollama_base_url: str = Field(
@@ -135,13 +159,14 @@ class LLMSettings(BaseSettings):
 
 class AppSettings(BaseSettings):
     """Main application settings"""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     environment: str = Field(default="development", description="Application environment")
     data_dir: str = Field(default="data", description="Data directory path")
     static_dir: str = Field(default="app/static", description="Static files directory")
     low_disk_space_threshold_bytes: int = Field(
-        default=1 * 1024 ** 3,
+        default=1 * 1024**3,
         description=(
             "Below this much free space on the data_dir mount, healthcheck/startup "
             "report 'low' disk status instead of 'healthy'. Lower this on deployments "

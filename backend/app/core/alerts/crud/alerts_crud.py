@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.alerts_models import Alert
@@ -20,7 +20,9 @@ async def get_alert_by_id(db: AsyncSession, alert_id: int) -> Alert | None:
     return result.scalar_one_or_none()
 
 
-async def get_alerts_by_module(db: AsyncSession, module: str, skip: int = 0, limit: int = 100) -> list[Alert]:
+async def get_alerts_by_module(
+    db: AsyncSession, module: str, skip: int = 0, limit: int = 100
+) -> list[Alert]:
     """Retrieve alerts for a specific module with pagination"""
     result = await db.execute(
         select(Alert)
@@ -34,12 +36,7 @@ async def get_alerts_by_module(db: AsyncSession, module: str, skip: int = 0, lim
 
 async def create_alert(db: AsyncSession, module: str, title: str, message: str) -> Alert:
     """Create a new alert"""
-    new_alert = Alert(
-        module=module,
-        title=title,
-        message=message,
-        read=False
-    )
+    new_alert = Alert(module=module, title=title, message=message, read=False)
     db.add(new_alert)
     await db.flush()
     return new_alert
@@ -53,7 +50,7 @@ async def update_alert_read_status(db: AsyncSession, alert_id: int, read: bool) 
 
     alert.read = read
     if read and not alert.timestamp_read:
-        alert.timestamp_read = datetime.now(timezone.utc)
+        alert.timestamp_read = datetime.now(UTC)
     elif not read:
         alert.timestamp_read = None
 
@@ -66,7 +63,7 @@ async def bulk_mark_all_alerts_read(db: AsyncSession) -> int:
     result = await db.execute(
         update(Alert)
         .where(Alert.read.is_(False))
-        .values(read=True, timestamp_read=datetime.now(timezone.utc))
+        .values(read=True, timestamp_read=datetime.now(UTC))
         .execution_options(synchronize_session=False)
     )
     await db.flush()
@@ -93,7 +90,5 @@ async def bulk_delete_all_alerts(db: AsyncSession) -> int:
 
 async def count_unread_alerts(db: AsyncSession) -> int:
     """Count the number of unread alerts"""
-    result = await db.execute(
-        select(func.count()).select_from(Alert).where(Alert.read.is_(False))
-    )
+    result = await db.execute(select(func.count()).select_from(Alert).where(Alert.read.is_(False)))
     return result.scalar_one()

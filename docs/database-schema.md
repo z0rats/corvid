@@ -279,7 +279,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `use_tor` | boolean | no | False | — | Whether to route checks through Tor |
 | `enable_smtp_checks` | boolean | no | False | — | Whether to run SMTP-based mailbox existence checks |
 | `enable_headless_checks` | boolean | no | False | — | Whether to run headless-browser-based provider checks |
-| `latest_pypi_version` | string(50) | yes | — | — | Latest version seen on PyPI for the vendored tool, cached from the last manual check |
+| `latest_pypi_version` | string(50) | yes | — | — | Latest version seen on PyPI for the vendored tool, cached from the last check |
 | `pypi_checked_at` | datetime | yes | — | — | When latest_pypi_version was last refreshed |
 | `created_at` | datetime | no | server: now() | — | When this row was created |
 | `updated_at` | datetime | no | server: now() | — | When this row was last updated |
@@ -462,6 +462,51 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `include_nsfw` | boolean | no | True | — | Whether NSFW-flagged content is included |
 | `searched_at` | datetime | no | server: now() | — | When the search ran |
 
+### `ru_business_check_searches`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `query` | string(500) | no | — | — | Raw user input - ИНН or company/IP name |
+| `resolved_inn` | string(12) | yes | — | — | Resolved ИНН, once the ЕГРЮЛ lookup matches a single entity |
+| `entity_type` | string(30) | yes | — | — | 'legal_entity' or 'individual_entrepreneur', once resolved |
+| `status` | string(20) | no | 'running' | — | running, completed, cancelled, or failed |
+| `error` | text | yes | — | — | Error detail if status is failed |
+| `searched_at` | datetime | no | server: now() | — | When the scan started |
+| `completed_at` | datetime | yes | — | — | When the scan reached a terminal state - the report's 'as of' date |
+| `egrul_data` | json | yes | — | — | Parsed ЕГРЮЛ/ЕГРИП fields (name, address, director, founders, ОКВЭД, capital, registry status) |
+| `egrul_raw` | text | yes | — | — | Verbatim ЕГРЮЛ payload (search-result JSON + extracted PDF text) as received from egrul.nalog.ru |
+| `disqualification_result` | json | yes | — | — | РДЛ check result: {checked, matched, requires_manual_review, matches: [...]} |
+| `disqualification_raw` | text | yes | — | — | Verbatim РДЛ payload as received from service.nalog.ru/disqualified.do |
+| `arbitration_data` | json | yes | — | — | Arbitration case list: {checked, cases: [{case_number, date_registered, role, status, court, claim_amount, case_url}]} |
+| `arbitration_raw` | text | yes | — | — | Verbatim arbitration search-result payload as received from kad.arbitr.ru |
+| `fedresurs_data` | json | yes | — | — | Bankruptcy check result: {checked, found, status_text, is_active_bankruptcy, profile_url} |
+| `fedresurs_raw` | text | yes | — | — | Verbatim bankruptcy search-result payload as received from fedresurs.ru |
+| `pb_nalog_data` | json | yes | — | — | Прозрачный бизнес result: {checked, found, mass_address_count, mass_address_companies, profile_url} |
+| `pb_nalog_raw` | text | yes | — | — | Verbatim search+detail payload as received from pb.nalog.ru |
+| `fedsfm_result` | json | yes | — | — | ФедСФМ (терроризм/финансирование ОМУ) check result: {checked, matched, requires_manual_review, matches: [...]} |
+| `fedsfm_raw` | text | yes | — | — | Verbatim ФедСФМ payload as received from fedsfm.ru/TerroristSearch |
+| `website` | string(255) | yes | — | — | Optional company website, user-supplied - display-only, not analyzed by this feature itself; the UI links it out to domain_finder's own WHOIS/DNS/CT analysis instead of duplicating it here |
+| `rnp_data` | json | yes | — | — | РНП (реестр недобросовестных поставщиков) check result: {checked, entries: [{registry_number, law, name, inn, included_date, updated_date, planned_exclusion_date, status, eruz_number, detail_url}]} |
+| `rnp_raw` | text | yes | — | — | Verbatim RSS payload as received from zakupki.gov.ru |
+| `flags` | json | yes | — | — | List of {code, severity, title, detail} risk flags |
+| `risk_level` | string(10) | yes | — | — | low, medium, or high - based only on checked_sources, never implies full-methodology coverage |
+| `checked_sources` | json | yes | — | — | Source keys actually queried this scan, snapshotted at scan time |
+| `pending_sources` | json | yes | — | — | Source keys not yet available this stage, snapshotted at scan time |
+| `candidates` | json | yes | — | — | Brief per-entity info when the query matched multiple ЕГРЮЛ/ЕГРИП rows (name search) - empty once resolved to a single entity |
+
+### `ru_business_check_settings`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Singleton row id, always 1 |
+| `fresh_registration_threshold_days` | int | no | 365 | — | Registration age below which the soft 'fresh registration' flag fires |
+| `history_retention_days` | int | no | 90 | — | Days a search (including its raw scraped payloads) is kept before automatic deletion; 0 = unlimited |
+| `small_claim_amount_threshold` | int | no | 100000 | — | Claim amount (RUB) below which a single resolved arbitration case as defendant is a soft flag |
+| `large_claim_amount_threshold` | int | no | 1000000 | — | Claim amount (RUB) above which any arbitration case as defendant triggers the 'significant claims' soft flag |
+| `multiple_claims_defendant_threshold` | int | no | 3 | — | Number of arbitration cases as defendant at/above which the 'multiple claims' soft flag fires |
+| `mass_address_threshold` | int | no | 10 | — | Number of other entities registered at the same address (pb.nalog.ru) at/above which the 'mass registration address' soft flag fires |
+
 ### `single_lookup_results`
 
 | Column | Type | Nullable | Default | Key | Comment |
@@ -491,7 +536,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `id` | int | no | — | PK | Singleton row id, always 1 |
 | `timeout_seconds` | int | no | 0 | — | Per-site check timeout, in seconds (0 = no timeout) |
 | `top_sites_count` | int | no | 0 | — | Max number of top sites to scan (0 = scan all sites) |
-| `latest_pypi_version` | string(50) | yes | — | — | Latest version seen on PyPI for the vendored tool, cached from the last manual check |
+| `latest_pypi_version` | string(50) | yes | — | — | Latest version seen on PyPI for the vendored tool, cached from the last check |
 | `pypi_checked_at` | datetime | yes | — | — | When latest_pypi_version was last refreshed |
 | `created_at` | datetime | no | server: now() | — | When this row was created |
 | `updated_at` | datetime | no | server: now() | — | When this row was last updated |
@@ -531,7 +576,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `auto_update_interval_hours` | int | no | 24 | — | Hours between automatic site-database refreshes |
 | `db_last_updated_at` | datetime | yes | — | — | When the Maigret site database was last refreshed |
 | `db_site_count` | int | no | 0 | — | Number of sites in the current Maigret site database |
-| `latest_pypi_version` | string(50) | yes | — | — | Latest version seen on PyPI for the vendored tool, cached from the last manual check |
+| `latest_pypi_version` | string(50) | yes | — | — | Latest version seen on PyPI for the vendored tool, cached from the last check |
 | `pypi_checked_at` | datetime | yes | — | — | When latest_pypi_version was last refreshed |
 | `created_at` | datetime | no | server: now() | — | When this row was created |
 | `updated_at` | datetime | no | server: now() | — | When this row was last updated |

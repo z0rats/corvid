@@ -19,7 +19,9 @@ class TimestampMixin:
         DateTime(timezone=True), server_default=func.now(), comment="When this row was created"
     )
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(),
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
         comment="When this row was last updated",
     )
 
@@ -35,7 +37,8 @@ class PypiVersionCheckMixin:
     """
 
     latest_pypi_version: Mapped[str | None] = mapped_column(
-        String(50), comment="Latest version seen on PyPI for the vendored tool, cached from the last manual check"
+        String(50),
+        comment="Latest version seen on PyPI for the vendored tool, cached from the last check",
     )
     pypi_checked_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), comment="When latest_pypi_version was last refreshed"

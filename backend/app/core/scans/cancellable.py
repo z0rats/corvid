@@ -3,6 +3,7 @@ underlying work can actually be stopped in this codebase: an asyncio task, a
 subprocess, or (for git_recon, which has neither) killing the worker thread's
 own child processes out from under it.
 """
+
 import asyncio
 import contextlib
 import logging
@@ -93,6 +94,8 @@ class GitCloneCancellable:
             try:
                 if child.name().lower() in _GIT_PROCESS_NAMES:
                     child.kill()
-                    logger.info("Killed git process (pid=%s) for cancelled git_recon scan", child.pid)
+                    logger.info(
+                        "Killed git process (pid=%s) for cancelled git_recon scan", child.pid
+                    )
             except psutil.NoSuchProcess:
                 pass

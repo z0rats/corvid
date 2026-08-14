@@ -11,8 +11,11 @@ from .settings import settings
 def create_detailed_formatter() -> logging.Formatter:
     """Create detailed formatter with request ID for log correlation"""
     return logging.Formatter(
-        fmt='%(asctime)s [%(levelname)s] [%(request_id)s] %(name)s - %(funcName)s:%(lineno)d - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        fmt=(
+            "%(asctime)s [%(levelname)s] [%(request_id)s] %(name)s - "
+            "%(funcName)s:%(lineno)d - %(message)s"
+        ),
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
 
@@ -31,13 +34,12 @@ def create_console_handler(log_level: int) -> logging.StreamHandler:
     return handler
 
 
-def create_file_handler(log_file: Path, log_level: int, max_bytes: int, backup_count: int) -> logging.handlers.RotatingFileHandler:
+def create_file_handler(
+    log_file: Path, log_level: int, max_bytes: int, backup_count: int
+) -> logging.handlers.RotatingFileHandler:
     """Create rotating file logging handler"""
     handler = logging.handlers.RotatingFileHandler(
-        filename=log_file,
-        maxBytes=max_bytes,
-        backupCount=backup_count,
-        encoding='utf-8'
+        filename=log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
     )
     handler.setLevel(log_level)
     handler.setFormatter(create_detailed_formatter())
@@ -46,13 +48,12 @@ def create_file_handler(log_file: Path, log_level: int, max_bytes: int, backup_c
     return handler
 
 
-def create_error_handler(log_file: Path, max_bytes: int, backup_count: int) -> logging.handlers.RotatingFileHandler:
+def create_error_handler(
+    log_file: Path, max_bytes: int, backup_count: int
+) -> logging.handlers.RotatingFileHandler:
     """Create error-only file logging handler"""
     handler = logging.handlers.RotatingFileHandler(
-        filename=log_file,
-        maxBytes=max_bytes,
-        backupCount=backup_count,
-        encoding='utf-8'
+        filename=log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
     )
     handler.setLevel(logging.ERROR)
     handler.setFormatter(create_detailed_formatter())
@@ -85,7 +86,7 @@ def setup_logging(
     max_file_size: int | None = None,
     backup_count: int | None = None,
     enable_console: bool | None = None,
-    enable_file: bool | None = None
+    enable_file: bool | None = None,
 ) -> None:
     """Configure centralized logging for the application"""
     config = settings.logging
@@ -112,16 +113,23 @@ def setup_logging(
 
     if enable_file:
         log_path = Path(log_dir)
-        root_logger.addHandler(create_file_handler(
-            log_path / f"{app_name}.log", logging.DEBUG, max_file_size, backup_count
-        ))
-        root_logger.addHandler(create_error_handler(
-            log_path / f"{app_name}_errors.log", max_file_size, backup_count
-        ))
+        root_logger.addHandler(
+            create_file_handler(
+                log_path / f"{app_name}.log", logging.DEBUG, max_file_size, backup_count
+            )
+        )
+        root_logger.addHandler(
+            create_error_handler(log_path / f"{app_name}_errors.log", max_file_size, backup_count)
+        )
 
     configure_third_party_loggers()
 
     logger = logging.getLogger(__name__)
-    logger.info("Logging configured - Level: %s, Console: %s, File: %s", log_level, enable_console, enable_file)
+    logger.info(
+        "Logging configured - Level: %s, Console: %s, File: %s",
+        log_level,
+        enable_console,
+        enable_file,
+    )
     if enable_file:
         logger.info("Log files location: %s", Path(log_dir).absolute())

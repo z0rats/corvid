@@ -1,40 +1,52 @@
 from fastapi import APIRouter, Depends, FastAPI
 
 from app.core import healthcheck
-from app.core.security.access_control import verify_access_token
 from app.core.alerts.routes import alerts_routes
-from app.core.settings.api_keys.routers import api_keys_settings_routes, quota_routes, service_config_routes
-from app.core.settings.cti_profile.routers import cti_profile_routes
+from app.core.security.access_control import verify_access_token
 from app.core.settings.ai_settings.routers import ai_settings_routes
+from app.core.settings.api_keys.routers import (
+    api_keys_settings_routes,
+    quota_routes,
+    service_config_routes,
+)
+from app.core.settings.cti_profile.routers import cti_profile_routes
 from app.core.settings.email_search.routers import email_search_settings_routes
 from app.core.settings.general.routers import general_settings_routes
 from app.core.settings.keywords.routers import keywords_settings_routes
 from app.core.settings.modules.routers import modules_settings_routes
-from app.core.settings.username_search.routers import social_analyzer_settings_routes, username_search_settings_routes
+from app.core.settings.ru_business_check.routers import ru_business_check_settings_routes
+from app.core.settings.username_search.routers import (
+    social_analyzer_settings_routes,
+    username_search_settings_routes,
+)
 from app.features.cvss_calculator.routers import cvss_routes
 from app.features.dork_runner.routers import dork_routes
+from app.features.email_analyzer.routers import email_routes
 from app.features.email_search.routers import email_search_routes
 from app.features.git_recon.routers import git_recon_routes
-from app.features.ioc_tools.domain_finder.routers import domain_routes
-from app.features.email_analyzer.routers import email_routes
 from app.features.image_tools.routers import image_routes
+from app.features.ioc_tools.domain_finder.routers import domain_routes
 from app.features.ioc_tools.ioc_defanger.routers import internal_defang_routes
 from app.features.ioc_tools.ioc_extractor.routers import internal_ioc_extractor_routes
 from app.features.ioc_tools.ioc_lookup.bulk_lookup.routers import bulk_ioc_lookup_routes
-from app.features.ioc_tools.ioc_lookup.single_lookup.routers import lookup_history_routes, unified_routes
+from app.features.ioc_tools.ioc_lookup.single_lookup.routers import (
+    lookup_history_routes,
+    unified_routes,
+)
 from app.features.llm_templates.routers import llm_template_routes, template_category_routes
-from app.features.reddit_search.routers import reddit_search_routes
-from app.features.username_search.routers import username_search_routes
-from app.features.youtube.routers import youtube_routes
 from app.features.newsfeed.routers import (
-    external_newsfeed_routes,
-    newsfeed_settings_routes,
-    article_routes,
-    feed_management_routes,
     analysis_routes,
     analytics_routes,
+    article_routes,
+    external_newsfeed_routes,
+    feed_management_routes,
+    newsfeed_settings_routes,
     trends_blacklist_routes,
 )
+from app.features.reddit_search.routers import reddit_search_routes
+from app.features.ru_business_check.routers import ru_business_check_routes
+from app.features.username_search.routers import username_search_routes
+from app.features.youtube.routers import youtube_routes
 
 
 def get_public_routers() -> list[APIRouter]:
@@ -75,6 +87,7 @@ def get_settings_routers() -> list[APIRouter]:
         username_search_settings_routes.router,
         social_analyzer_settings_routes.router,
         email_search_settings_routes.router,
+        ru_business_check_settings_routes.router,
     ]
 
 
@@ -101,6 +114,7 @@ def get_feature_routers() -> list[APIRouter]:
         email_search_routes.router,
         reddit_search_routes.router,
         git_recon_routes.router,
+        ru_business_check_routes.router,
         youtube_routes.router,
     ]
 

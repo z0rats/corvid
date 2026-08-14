@@ -15,7 +15,8 @@ _TEMPLATE = """<!DOCTYPE html>
   body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #1a1a1a; }
   h1 { font-size: 18px; margin-bottom: 4px; }
   .generated-at { color: #666; font-size: 9px; margin-bottom: 20px; }
-  h2 { font-size: 13px; margin-top: 20px; margin-bottom: 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+  h2 { font-size: 13px; margin-top: 20px; margin-bottom: 6px;
+    border-bottom: 1px solid #ccc; padding-bottom: 3px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
   td { padding: 4px 6px; vertical-align: top; border-bottom: 1px solid #eee; }
   td.label { width: 25%; font-weight: bold; color: #444; white-space: nowrap; }
@@ -30,7 +31,8 @@ _TEMPLATE = """<!DOCTYPE html>
     {% for row in section.rows %}
     <tr>
       <td class="label">{{ row.label }}</td>
-      <td>{{ row.value }}</td>
+      <td>{% if row.href %}<a href="{{ row.href }}">{{ row.value }}</a>{% else %}{{ row.value }}
+      {%- endif %}</td>
     </tr>
     {% endfor %}
   </table>
@@ -43,13 +45,15 @@ _env = Environment(autoescape=True)
 _template = _env.from_string(_TEMPLATE)
 
 
-def render_html(title: str, sections: list[ReportSection], locale: str, generated_at_label: str) -> str:
+def render_html(
+    title: str, sections: list[ReportSection], locale: str, generated_at_label: str
+) -> str:
     return _template.render(
         title=title,
         sections=sections,
         locale=locale,
         generated_at_label=generated_at_label,
-        generated_at=datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        generated_at=datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M UTC"),
     )
 
 

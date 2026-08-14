@@ -8,27 +8,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config.body_limit_config import RequestBodyLimitMiddleware
-from app.core.config.fastapi_config import get_fastapi_config, get_cors_config
+from app.core.config.fastapi_config import get_cors_config, get_fastapi_config
 from app.core.config.logging_config import setup_logging
 from app.core.config.rate_limit_config import limiter
 from app.core.config.request_id_config import RequestIdMiddleware
 from app.core.config.security_config import SecurityHeadersMiddleware
 from app.core.config.settings import settings
 from app.core.config.validation import ensure_required_directories, log_validation_results
-from app.core.database import Base, engine, managed_session, dispose_database_engine
+from app.core.database import Base, dispose_database_engine, engine, managed_session
 from app.core.dependencies import get_disk_space_health
 from app.core.exceptions import register_exception_handlers
 from app.core.scheduler import stop_scheduler
 from app.core.security.access_control import get_access_token, verify_access_token
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import close_client
-from app.utils.startup_service import initialize_application_defaults
 from app.utils.router_registry import register_all_routers
 from app.utils.scheduler_registry import initialize_all_schedulers
+from app.utils.startup_service import initialize_application_defaults
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ def configure_logging() -> None:
         log_dir=settings.logging.dir,
         app_name=settings.logging.app_name,
         enable_console=settings.logging.enable_console,
-        enable_file=settings.logging.enable_file
+        enable_file=settings.logging.enable_file,
     )
 
 
@@ -52,20 +51,6 @@ async def _run_application_defaults() -> None:
 
 async def _create_database_tables() -> None:
     """Create all database tables if they don't exist"""
-    import app.core.settings.general.models.general_settings_models
-    import app.core.settings.modules.models.modules_settings_models 
-    import app.core.settings.api_keys.models.api_keys_settings_models   
-    import app.core.settings.keywords.models.keywords_settings_models   
-    import app.core.settings.ai_settings.models.ai_settings_models
-    import app.core.settings.cti_profile.models.cti_profile_models
-    import app.core.alerts.models.alerts_models   
-    import app.features.newsfeed.models.newsfeed_models   
-    import app.features.llm_templates.models.llm_template_models
-    import app.features.llm_templates.models.template_category_models
-    import app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models
-    import app.core.settings.username_search.models.username_search_settings_models
-    import app.core.settings.username_search.models.social_analyzer_settings_models
-    import app.features.username_search.models.username_search_models
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -84,46 +69,65 @@ async def _fetch_favicons_in_background() -> None:
 
 
 async def _reconcile_stale_scans() -> None:
-    """Mark username/email/git-recon search runs still 'running' from a previous process as failed.
+    """Mark username/email/git-recon/ru-business-check search runs still 'running' from a
+    previous process as failed.
 
-    All three scans are driven by a detached `asyncio.create_task()` (see their
+    All four scans are driven by a detached `asyncio.create_task()` (see their
     `routers/*_routes.py` `scan`/`start_scan` handlers) that outlives the SSE request but
     not the process itself, so a container stop/crash mid-scan leaves the row
     stuck at 'running' with nothing to ever move it out of that state.
     """
-    from app.features.username_search.crud.username_search_crud import interrupt_running_search_runs
     from app.features.email_search.crud.email_search_crud import (
         interrupt_running_search_runs as interrupt_running_mail_runs,
     )
-    from app.features.git_recon.crud.git_recon_crud import interrupt_running_searches as interrupt_running_git_recon
+    from app.features.git_recon.crud.git_recon_crud import (
+        interrupt_running_searches as interrupt_running_git_recon,
+    )
+    from app.features.ru_business_check.crud.ru_business_check_crud import (
+        interrupt_running_searches as interrupt_running_ru_business_check,
+    )
+    from app.features.username_search.crud.username_search_crud import interrupt_running_search_runs
 
     async with managed_session() as db:
         maigret_count = await interrupt_running_search_runs(db)
         mail_count = await interrupt_running_mail_runs(db)
         git_recon_count = await interrupt_running_git_recon(db)
-        if maigret_count or mail_count or git_recon_count:
+        ru_business_check_count = await interrupt_running_ru_business_check(db)
+        if maigret_count or mail_count or git_recon_count or ru_business_check_count:
             logger.info(
                 "Reconciled stale scan runs left 'running' by a previous process: "
-                "%s username-search, %s email-search, %s git-recon",
-                maigret_count, mail_count, git_recon_count,
+                "%s username-search, %s email-search, %s git-recon, %s ru-business-check",
+                maigret_count,
+                mail_count,
+                git_recon_count,
+                ru_business_check_count,
             )
 
 
-async def _populate_blacklist_if_empty_in_background() -> None:
-    """On first-ever startup (empty table), populate the address blacklist immediately
-    in the background rather than waiting for the next scheduled refresh."""
+async def _populate_blacklist_if_stale_in_background() -> None:
+    """On startup, catch up immediately if the address blacklist is empty or older than its
+    configured refresh interval, rather than relying solely on the recurring scheduler job.
+
+    That job's in-memory countdown resets on every process restart (no persistent job store),
+    so on a host that restarts more often than the interval — common during active development,
+    but also true of any production redeploy — it may never actually fire on its own and the
+    data silently goes stale. This check re-derives staleness from the DB on every startup."""
+    from datetime import timedelta
+
     from app.features.ioc_tools.ioc_lookup.single_lookup.service.blacklist_refresh_service import (
-        is_blacklist_empty, refresh_blacklist,
+        is_blacklist_stale,
+        refresh_blacklist,
     )
 
     try:
+        max_age = timedelta(hours=settings.scheduler.blacklist_refresh_interval_hours)
         async with managed_session() as db:
-            if await is_blacklist_empty(db):
-                logger.info("Address blacklist is empty; populating in the background")
+            if await is_blacklist_stale(db, max_age):
+                logger.info("Address blacklist is empty or stale; refreshing in the background")
                 summary = await refresh_blacklist(db)
-                logger.info("Initial blacklist populate completed: %s", summary)
+                logger.info("Blacklist catch-up refresh completed: %s", summary)
     except Exception as e:
-        logger.error("Background blacklist populate failed: %s", e)
+        logger.error("Background blacklist refresh failed: %s", e)
 
 
 def _check_disk_space() -> None:
@@ -132,7 +136,9 @@ def _check_disk_space() -> None:
     if health.get("status") == "low":
         logger.warning(
             "Low disk space on data directory mount: %s GB free of %s GB total (%s)",
-            health.get("free_gb"), health.get("total_gb"), settings.data_dir,
+            health.get("free_gb"),
+            health.get("total_gb"),
+            settings.data_dir,
         )
 
 
@@ -142,13 +148,16 @@ def _register_keyless_providers() -> None:
     from app.core.settings.api_keys.service.keyless_providers import set_keyless_provider_names
     from app.features.ioc_tools.ioc_lookup.single_lookup.service import external_api_clients
     from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import (
-        get_all_services, register_services,
+        get_all_services,
+        register_services,
     )
 
     # The registry is normally populated lazily on first lookup; force it now so it's ready
     # this early in startup. register_services() is idempotent, so the later lazy call is harmless.
     register_services(external_api_clients)
-    set_keyless_provider_names({name for name, spec in get_all_services().items() if not spec.required_key_names})
+    set_keyless_provider_names(
+        {name for name, spec in get_all_services().items() if not spec.required_key_names}
+    )
 
 
 async def handle_application_startup() -> None:
@@ -162,7 +171,7 @@ async def handle_application_startup() -> None:
         await _reconcile_stale_scans()
         await _run_application_defaults()
         asyncio.create_task(_fetch_favicons_in_background())
-        asyncio.create_task(_populate_blacklist_if_empty_in_background())
+        asyncio.create_task(_populate_blacklist_if_stale_in_background())
         await initialize_all_schedulers()
         logger.info("Application startup completed successfully")
     except Exception as e:

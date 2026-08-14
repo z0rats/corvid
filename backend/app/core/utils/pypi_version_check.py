@@ -3,6 +3,7 @@ pattern shared by `username_search` (maigret, social-analyzer) and `email_search
 (mailcat-osint). Was three near-identical fetch+record+bool blocks before this
 existed. See docs/database-schema-audit.md section 6, phase 3 addendum.
 """
+
 import datetime
 import logging
 from dataclasses import dataclass
@@ -21,7 +22,9 @@ class UpdateCheckResult:
     update_available: bool | None
 
 
-def compute_update_available(latest_pypi_version: str | None, installed_version: str) -> bool | None:
+def compute_update_available(
+    latest_pypi_version: str | None, installed_version: str
+) -> bool | None:
     """None if never checked, else latest != installed"""
     if latest_pypi_version is None:
         return None
@@ -44,10 +47,12 @@ async def fetch_latest_pypi_version(package_name: str, timeout_seconds: float = 
         return None
 
 
-async def record_pypi_check(db: AsyncSession, config: PypiVersionCheckMixin, latest_version: str | None) -> None:
+async def record_pypi_check(
+    db: AsyncSession, config: PypiVersionCheckMixin, latest_version: str | None
+) -> None:
     """Persist the result of a PyPI check onto any config row using `PypiVersionCheckMixin`"""
     config.latest_pypi_version = latest_version
-    config.pypi_checked_at = datetime.datetime.now(datetime.timezone.utc)
+    config.pypi_checked_at = datetime.datetime.now(datetime.UTC)
     await db.flush()
     await db.refresh(config)
 

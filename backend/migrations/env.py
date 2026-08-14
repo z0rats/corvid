@@ -3,11 +3,10 @@ import importlib
 from logging.config import fileConfig
 from pathlib import Path
 
-from sqlalchemy import pool
 from alembic import context
 
-from app.core.database import engine, Base
 from app.core.config.settings import settings
+from app.core.database import Base, engine
 
 
 def _import_all_models() -> None:

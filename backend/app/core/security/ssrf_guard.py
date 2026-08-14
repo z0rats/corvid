@@ -5,9 +5,10 @@ by the user, e.g. a feed URL for favicon discovery. Without it, an attacker-cont
 URL could make the server reach cloud metadata endpoints (169.254.169.254), other
 services on the internal docker network, or localhost-only admin interfaces.
 """
+
 import ipaddress
 import socket
-from urllib.parse import urlsplit, urlunsplit, urljoin
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 import httpx
 
@@ -85,7 +86,9 @@ async def safe_get(
         ip = validate_public_url(url, allow_private=allow_private)
         pinned_host = f"[{ip}]" if ":" in ip else ip
         pinned_netloc = f"{pinned_host}:{parsed.port}" if parsed.port else pinned_host
-        pinned_url = urlunsplit((parsed.scheme, pinned_netloc, parsed.path or "/", parsed.query, parsed.fragment))
+        pinned_url = urlunsplit(
+            (parsed.scheme, pinned_netloc, parsed.path or "/", parsed.query, parsed.fragment)
+        )
         extensions = {"sni_hostname": parsed.hostname} if parsed.scheme == "https" else {}
         headers = {**extra_headers, "Host": parsed.hostname}
         response = await client.get(pinned_url, headers=headers, extensions=extensions, **kwargs)

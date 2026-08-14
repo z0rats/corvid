@@ -7,6 +7,7 @@ file makes previously encrypted values permanently unreadable, so back it up
 alongside the database, or set SECURITY_ENCRYPTION_KEY explicitly for portable
 deployments.
 """
+
 import base64
 import hashlib
 import logging
@@ -37,7 +38,8 @@ def _load_or_create_key_file() -> bytes:
             "Generated a new encryption key at %s/%s to encrypt API keys at rest. "
             "Back this file up together with the database, or set SECURITY_ENCRYPTION_KEY "
             "to a stable secret for portable/reproducible deployments.",
-            settings.data_dir, _KEY_FILE_NAME,
+            settings.data_dir,
+            _KEY_FILE_NAME,
         )
     return value.encode("utf-8")
 
@@ -67,5 +69,5 @@ def decrypt_value(value: str) -> str:
         return value
     try:
         return _get_fernet().decrypt(value.encode("utf-8")).decode("utf-8")
-    except (InvalidToken, ValueError):
+    except InvalidToken, ValueError:
         return value

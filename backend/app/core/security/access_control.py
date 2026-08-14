@@ -10,6 +10,7 @@ The WebSocket route (`alerts_routes.py`) checks this same token itself via a
 query param instead of this dependency, since browsers can't attach a custom
 Authorization header to a WebSocket handshake.
 """
+
 import hmac
 import logging
 import secrets
@@ -54,7 +55,9 @@ async def verify_access_token(authorization: str | None = Header(default=None)) 
     """FastAPI dependency: require `Authorization: Bearer <token>` matching the configured token."""
     provided = None
     if authorization and authorization.lower().startswith("bearer "):
-        provided = authorization[len("bearer "):]
+        provided = authorization[len("bearer ") :]
 
     if not provided or not hmac.compare_digest(provided, get_access_token()):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing access token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing access token"
+        )

@@ -1,6 +1,5 @@
 import logging
 
-from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -52,6 +51,6 @@ def _extract_content_length(scope: Scope) -> int | None:
         if key.lower() == b"content-length":
             try:
                 return int(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 return None
     return None

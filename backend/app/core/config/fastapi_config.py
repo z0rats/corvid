@@ -14,46 +14,19 @@ def get_license_info() -> dict[str, str]:
 def get_tags_metadata() -> list[dict[str, str]]:
     """Get OpenAPI tags metadata for API documentation"""
     return [
-        {
-            "name": "System",
-            "description": "Health checks and liveness/readiness probes"
-        },
-        {
-            "name": "Alerts",
-            "description": "System alert management and notifications"
-        },
-        {
-            "name": "AI Templates", 
-            "description": "LLM template management for analysis workflows"
-        },
-        {
-            "name": "CVSS Calculator",
-            "description": "CVSS vulnerability scoring calculations"
-        },
+        {"name": "System", "description": "Health checks and liveness/readiness probes"},
+        {"name": "Alerts", "description": "System alert management and notifications"},
+        {"name": "AI Templates", "description": "LLM template management for analysis workflows"},
+        {"name": "CVSS Calculator", "description": "CVSS vulnerability scoring calculations"},
         {
             "name": "Domain Lookup",
-            "description": "Domain information and reputation lookup services"
+            "description": "Domain information and reputation lookup services",
         },
-        {
-            "name": "Email Analyzer",
-            "description": "Email header analysis and security assessment"
-        },
-        {
-            "name": "IOC Extractor",
-            "description": "Extract indicators of compromise from text"
-        },
-        {
-            "name": "IOC Lookup",
-            "description": "Lookup and analyze indicators of compromise"
-        },
-        {
-            "name": "Newsfeed",
-            "description": "Security news aggregation and monitoring"
-        },
-        {
-            "name": "Settings",
-            "description": "Application configuration and preferences"
-        },
+        {"name": "Email Analyzer", "description": "Email header analysis and security assessment"},
+        {"name": "IOC Extractor", "description": "Extract indicators of compromise from text"},
+        {"name": "IOC Lookup", "description": "Lookup and analyze indicators of compromise"},
+        {"name": "Newsfeed", "description": "Security news aggregation and monitoring"},
+        {"name": "Settings", "description": "Application configuration and preferences"},
     ]
 
 

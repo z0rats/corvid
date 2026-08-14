@@ -11,12 +11,14 @@ _DOCS_PATH_PREFIXES = ("/docs", "/redoc", "/openapi.json")
 _DOCS_CSP = (
     b"content-security-policy",
     b"default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-    b"style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data: https://fastapi.tiangolo.com; "
+    b"style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+    b"img-src 'self' data: https://fastapi.tiangolo.com; "
     b"connect-src 'self'",
 )
 _APP_CSP = (
     b"content-security-policy",
-    b"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'",
+    b"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+    b"img-src 'self' data:; connect-src 'self'",
 )
 
 
@@ -57,10 +59,12 @@ class SecurityHeadersMiddleware:
                 headers.extend(self._base_headers)
                 headers.append(_DOCS_CSP if is_docs else _APP_CSP)
                 if not is_static:
-                    headers.extend([
-                        (b"cache-control", b"no-store, max-age=0"),
-                        (b"pragma", b"no-cache"),
-                    ])
+                    headers.extend(
+                        [
+                            (b"cache-control", b"no-store, max-age=0"),
+                            (b"pragma", b"no-cache"),
+                        ]
+                    )
                 message = {**message, "headers": headers}
             await send(message)
 

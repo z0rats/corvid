@@ -9,6 +9,7 @@ handle, and push the SSE sentinel. `ScanRun.execute()` is that skeleton; only th
 feature-specific scan logic (and its own progress events) is now unique to each
 service, expressed as a `run_work` coroutine the feature supplies.
 """
+
 import asyncio
 import dataclasses
 import logging
@@ -16,7 +17,13 @@ from collections.abc import Awaitable, Callable
 from typing import Any, Literal
 
 from app.core.database import managed_session
-from app.core.scans.crud import ScanColumns, create_running, mark_cancelled, mark_completed, mark_failed
+from app.core.scans.crud import (
+    ScanColumns,
+    create_running,
+    mark_cancelled,
+    mark_completed,
+    mark_failed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +151,14 @@ class ScanRun:
                 async with managed_session() as db:
                     if exc.outcome.persist_children:
                         await exc.outcome.persist_children(db)
-                    await mark_cancelled(db, model, search_id, columns=columns, **exc.outcome.fields, **exc.outcome.db_only_fields)
+                    await mark_cancelled(
+                        db,
+                        model,
+                        search_id,
+                        columns=columns,
+                        **exc.outcome.fields,
+                        **exc.outcome.db_only_fields,
+                    )
                 on_event(ScanEvent("cancelled", {"search_id": search_id, **exc.outcome.fields}))
                 return
             except asyncio.CancelledError:
@@ -156,7 +170,9 @@ class ScanRun:
                 if isinstance(exc, expected_exceptions):
                     logger.warning("%s scan %s failed: %s", feature_name, search_id, exc)
                 else:
-                    logger.error("%s scan %s failed: %s", feature_name, search_id, exc, exc_info=True)
+                    logger.error(
+                        "%s scan %s failed: %s", feature_name, search_id, exc, exc_info=True
+                    )
                 async with managed_session() as db:
                     await mark_failed(db, model, search_id, columns=columns, error_message=str(exc))
                 on_event(ScanEvent("failed", {"search_id": search_id, "error": str(exc)}))
@@ -165,7 +181,14 @@ class ScanRun:
             async with managed_session() as db:
                 if outcome.persist_children:
                     await outcome.persist_children(db)
-                await mark_completed(db, model, search_id, columns=columns, **outcome.fields, **outcome.db_only_fields)
+                await mark_completed(
+                    db,
+                    model,
+                    search_id,
+                    columns=columns,
+                    **outcome.fields,
+                    **outcome.db_only_fields,
+                )
             on_event(ScanEvent("completed", {"search_id": search_id, **outcome.fields}))
         finally:
             cls._registry.pop(key, None)
