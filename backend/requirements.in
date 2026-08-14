@@ -17,7 +17,9 @@ lxml[html-clean]
 maigret[pdf]
 mailcat-osint
 mitreattack-python
+mypy
 newspaper4k
+pdfplumber
 pillow
 psutil
 pydantic[email]
@@ -27,6 +29,7 @@ pytest
 pytest-cov
 regex
 requests
+ruff
 slowapi
 social-analyzer
 sqlalchemy

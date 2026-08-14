@@ -98,6 +98,17 @@ jobs:
             exit 1
           fi
 
+      - name: Lint and type-check (ruff, mypy)
+        # Report-only for now: the existing codebase predates this tooling and
+        # carries a real backlog of findings (~1780 ruff, ~180 mypy as of
+        # introduction) - fail every build on pre-existing issues until that
+        # backlog is triaged down, then flip to blocking.
+        continue-on-error: true
+        run: |
+          ruff check .
+          ruff format --check .
+          mypy app
+
       - name: Run tests
         run: pytest -v --cov=app --cov-report=xml
 
@@ -156,6 +167,9 @@ jobs:
 
       - name: Lint
         run: yarn lint
+
+      - name: Type-check
+        run: yarn typecheck
 
       - name: Build
         run: yarn build

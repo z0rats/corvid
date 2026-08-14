@@ -62,6 +62,8 @@ asn1crypto==1.5.1
     #   oscrypto
     #   pyhanko
     #   pyhanko-certvalidator
+ast-serialize==0.8.0
+    # via mypy
 asttokens==3.0.2
     # via stack-data
 asyncpg==0.31.0
@@ -102,6 +104,7 @@ cffi==2.1.0
     #   pycares
 charset-normalizer==3.4.9
     # via
+    #   pdfminer-six
     #   reportlab
     #   requests
 click==8.4.2
@@ -119,6 +122,7 @@ coverage==7.15.2
 cryptography==50.0.0
     # via
     #   google-auth
+    #   pdfminer-six
     #   pyhanko
     #   pyhanko-certvalidator
 cssselect==1.4.0
@@ -265,6 +269,8 @@ jsonpickle==4.1.2
     # via pyvis
 langdetect==1.0.9
     # via social-analyzer
+librt==0.15.0
+    # via mypy
 limits==5.8.0
     # via slowapi
 logfire-api==4.37.0
@@ -311,6 +317,10 @@ multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
+mypy==2.3.0
+    # via -r requirements.in
+mypy-extensions==1.1.0
+    # via mypy
 networkx==2.8.8
     # via
     #   maigret
@@ -347,6 +357,12 @@ parse==1.22.1
     # via requests-html
 parso==0.8.7
     # via jedi
+pathspec==1.1.1
+    # via mypy
+pdfminer-six==20260107
+    # via pdfplumber
+pdfplumber==0.11.10
+    # via -r requirements.in
 pexpect==4.9.0
     # via ipython
 pillow==12.3.0
@@ -355,6 +371,7 @@ pillow==12.3.0
     #   galeodes
     #   mitreattack-python
     #   newspaper4k
+    #   pdfplumber
     #   reportlab
     #   svglib
     #   xhtml2pdf
@@ -433,6 +450,8 @@ pyhanko-certvalidator==0.31.1
     #   xhtml2pdf
 pypdf==6.14.2
     # via xhtml2pdf
+pypdfium2==5.12.1
+    # via pdfplumber
 pyppeteer==0.0.25
     # via requests-html
 pyquery==2.0.1
@@ -519,6 +538,8 @@ rich-toolkit==0.20.3
     #   fastapi-cloud-cli
 rignore==0.8.0
     # via fastapi-cloud-cli
+ruff==0.16.2
+    # via -r requirements.in
 selenium==4.46.0
     # via galeodes
 sentry-sdk==2.66.0
@@ -617,6 +638,7 @@ typing-extensions==4.16.0
     #   limits
     #   maigret
     #   mitreattack-python
+    #   mypy
     #   newspaper4k
     #   openai
     #   opentelemetry-api
