@@ -1,12 +1,13 @@
 """
 Domain lookup utility functions
 """
+
 from .validation_utils import (
+    extract_root_domain_from_subdomain,
     sanitize_domain_input,
+    validate_and_format_domain_for_api,
     validate_domain_format,
     validate_ip_address_format,
-    extract_root_domain_from_subdomain,
-    validate_and_format_domain_for_api
 )
 
 __all__ = [

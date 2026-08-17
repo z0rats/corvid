@@ -2,7 +2,9 @@ import re
 
 from app.core.reports.schemas import ReportRow, ReportSection
 from app.core.reports.service import EXPORT_FORMATS, generate_report
-from app.features.ioc_tools.ioc_lookup.single_lookup.models.lookup_history_models import SingleLookupSearch
+from app.features.ioc_tools.ioc_lookup.single_lookup.models.lookup_history_models import (
+    SingleLookupSearch,
+)
 
 LABELS: dict[str, dict[str, str]] = {
     "en": {
@@ -60,14 +62,18 @@ def build_sections(search: SingleLookupSearch, locale: str) -> list[ReportSectio
     return [search_section, results_section]
 
 
-def generate_search_report(search: SingleLookupSearch, fmt: str, locale: str = "en") -> tuple[bytes, str, str]:
+def generate_search_report(
+    search: SingleLookupSearch, fmt: str, locale: str = "en"
+) -> tuple[bytes, str, str]:
     """Generate an HTML/PDF report for a single-IOC lookup search.
 
     Returns (content, media_type, filename).
     """
     t = _labels(locale)
     sections = build_sections(search, locale)
-    content, media_type = generate_report(t["report_title"], sections, fmt, locale, t["generated_at"])
+    content, media_type = generate_report(
+        t["report_title"], sections, fmt, locale, t["generated_at"]
+    )
     ext = EXPORT_FORMATS[fmt][1]
     safe_ioc = re.sub(r"[^A-Za-z0-9._-]+", "_", search.ioc)[:80]
     filename = f"ioc-lookup-{search.id}-{safe_ioc}{ext}"

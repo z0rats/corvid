@@ -17,7 +17,8 @@ async def interrupt_running_searches(db: AsyncSession) -> int:
     docstring for why this is needed (an in-memory asyncio task doesn't survive
     a process restart)."""
     return await mark_stale_running_as_failed(
-        db, GitReconSearch,
+        db,
+        GitReconSearch,
         error_column=SCAN_COLUMNS.error_column,
         error_message="Interrupted by server restart",
         completed_at_column=SCAN_COLUMNS.completed_at_column,

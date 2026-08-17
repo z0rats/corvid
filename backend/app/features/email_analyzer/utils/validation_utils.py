@@ -1,19 +1,17 @@
 """Validation utilities for email analyzer."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-from ..config.email_config import (
-    MAX_FILE_SIZE_BYTES, 
-    ALLOWED_FILE_EXTENSIONS,
-    MAX_EMAIL_AGE_DAYS
-)
+from ..config.email_config import ALLOWED_FILE_EXTENSIONS, MAX_EMAIL_AGE_DAYS, MAX_FILE_SIZE_BYTES
 
 logger = logging.getLogger(__name__)
 
 
-def validate_file_upload(filename: str | None, file_size: int) -> tuple[bool, str | None, str | None]:
+def validate_file_upload(
+    filename: str | None, file_size: int
+) -> tuple[bool, str | None, str | None]:
     """
     Validate uploaded email file.
 
@@ -39,7 +37,7 @@ def validate_file_upload(filename: str | None, file_size: int) -> tuple[bool, st
         return (
             False,
             "EMAIL_FILE_TOO_LARGE",
-            f"File too large. Maximum size: {MAX_FILE_SIZE_BYTES // (1024*1024)}MB",
+            f"File too large. Maximum size: {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB",
         )
 
     if file_size == 0:
@@ -51,29 +49,29 @@ def validate_file_upload(filename: str | None, file_size: int) -> tuple[bool, st
 def validate_email_date(date_header: str | None) -> tuple[bool, str | None]:
     """
     Validate email date header for anomalies.
-    
+
     Args:
         date_header: Email date header value
-        
+
     Returns:
         Tuple of (is_valid, error_message)
     """
     if not date_header:
         return True, None
-        
+
     try:
         email_date = parsedate_to_datetime(date_header)
-        current_time = datetime.now(timezone.utc)
-        
+        current_time = datetime.now(UTC)
+
         if email_date > current_time:
             return False, f"Email has a future date: {date_header}"
-        
+
         time_diff = current_time - email_date
         if time_diff.days > MAX_EMAIL_AGE_DAYS:
             return False, f"Email is {time_diff.days} days old"
-            
+
         return True, None
-        
+
     except Exception:
         return False, f"Email has an invalid date format: {date_header}"
 
@@ -81,36 +79,37 @@ def validate_email_date(date_header: str | None) -> tuple[bool, str | None]:
 def validate_hash_algorithm(hash_type: str) -> bool:
     """
     Validate if hash algorithm is supported.
-    
+
     Args:
         hash_type: Hash algorithm name
-        
+
     Returns:
         True if algorithm is supported
     """
     from ..config.email_config import SUPPORTED_HASH_ALGORITHMS
+
     return hash_type in SUPPORTED_HASH_ALGORITHMS
 
 
 def sanitize_filename(filename: str) -> str:
     """
     Sanitize filename for safe processing.
-    
+
     Args:
         filename: Original filename
-        
+
     Returns:
         Sanitized filename
     """
     import re
-    
+
     if not filename:
         return "unknown"
-        
-    sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
-    
+
+    sanitized = re.sub(r'[<>:"/\\|?*]', "_", filename)
+
     if len(sanitized) > 255:
-        name, ext = sanitized.rsplit('.', 1) if '.' in sanitized else (sanitized, '')
-        sanitized = name[:250] + ('.' + ext if ext else '')
-    
+        name, ext = sanitized.rsplit(".", 1) if "." in sanitized else (sanitized, "")
+        sanitized = name[:250] + ("." + ext if ext else "")
+
     return sanitized or "unknown"

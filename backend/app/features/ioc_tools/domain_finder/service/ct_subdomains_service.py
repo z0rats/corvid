@@ -4,6 +4,7 @@ raw log entries into a deduplicated subdomain list plus per-certificate
 detail, for feeding domain_finder's existing typosquat/phishing discovery
 flow with a subdomain list to also scan.
 """
+
 import logging
 from datetime import datetime
 
@@ -42,18 +43,22 @@ async def perform_ct_subdomains_lookup(ct_request: CtSubdomainsRequest) -> CtSub
         name_value = entry.get("name_value") or ""
         # A multi-domain (SAN) cert's name_value can include hosts unrelated to the
         # queried domain, so only keep names that actually belong to it
-        names = {name.strip().lower().lstrip("*.") for name in name_value.split("\n") if name.strip()}
+        names = {
+            name.strip().lower().lstrip("*.") for name in name_value.split("\n") if name.strip()
+        }
         names = {name for name in names if name == domain or name.endswith(f".{domain}")}
         subdomains.update(names)
 
-        certificates.append(CtCertificate(
-            id=entry.get("id"),
-            issuer_name=entry.get("issuer_name"),
-            common_name=entry.get("common_name"),
-            name_value=name_value,
-            not_before=_parse_crtsh_date(entry.get("not_before")),
-            not_after=_parse_crtsh_date(entry.get("not_after")),
-        ))
+        certificates.append(
+            CtCertificate(
+                id=entry.get("id"),
+                issuer_name=entry.get("issuer_name"),
+                common_name=entry.get("common_name"),
+                name_value=name_value,
+                not_before=_parse_crtsh_date(entry.get("not_before")),
+                not_after=_parse_crtsh_date(entry.get("not_after")),
+            )
+        )
 
     response = CtSubdomainsResponse(
         domain=domain,
@@ -63,8 +68,13 @@ async def perform_ct_subdomains_lookup(ct_request: CtSubdomainsRequest) -> CtSub
     )
 
     logger.info(
-        "CT subdomain enumeration completed for %s - %s unique subdomains from %s certificate entries",
-        domain, len(subdomains), len(certificates),
+        (
+            "CT subdomain enumeration completed for %s - %s unique subdomains from "
+            "%s certificate entries"
+        ),
+        domain,
+        len(subdomains),
+        len(certificates),
     )
     return response
 

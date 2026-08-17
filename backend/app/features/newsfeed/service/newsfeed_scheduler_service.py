@@ -2,13 +2,18 @@ import logging
 
 from app.core.config.settings import settings
 from app.core.database import managed_session
-from app.core.scheduler import configure_recurring_job, is_scheduler_running, start_scheduler, wrap_job_errors
+from app.core.scheduler import (
+    configure_recurring_job,
+    is_scheduler_running,
+    start_scheduler,
+    wrap_job_errors,
+)
 from app.features.newsfeed.crud.newsfeed_config_crud import get_newsfeed_config
 from app.features.newsfeed.service.feed_processing_service import fetch_and_store_news
 
 logger = logging.getLogger(__name__)
 
-NEWS_FETCH_JOB_ID = 'news_fetch'
+NEWS_FETCH_JOB_ID = "news_fetch"
 
 
 async def _execute_news_fetch_job() -> None:
@@ -31,7 +36,9 @@ def configure_news_scheduler(enabled: bool, interval_minutes: int) -> None:
     configure_recurring_job(
         NEWS_FETCH_JOB_ID,
         wrap_job_errors("news fetch", _execute_news_fetch_job),
-        enabled=enabled, interval=interval_minutes, unit="minutes",
+        enabled=enabled,
+        interval=interval_minutes,
+        unit="minutes",
     )
 
 
@@ -39,7 +46,9 @@ def _register_news_fetch_job(enabled: bool, interval_minutes: int) -> None:
     configure_recurring_job(
         NEWS_FETCH_JOB_ID,
         wrap_job_errors("news fetch", _execute_news_fetch_job),
-        enabled=enabled, interval=interval_minutes, unit="minutes",
+        enabled=enabled,
+        interval=interval_minutes,
+        unit="minutes",
     )
 
 

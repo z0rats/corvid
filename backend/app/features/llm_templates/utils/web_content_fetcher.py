@@ -3,14 +3,16 @@ import logging
 import re
 from typing import Any
 from urllib.parse import urlparse
+
+import html2text
 import httpx
 from bs4 import BeautifulSoup
-import html2text
 
 from app.core.config.settings import settings
-from app.core.security.ssrf_guard import safe_get, SSRFValidationError
+from app.core.security.ssrf_guard import SSRFValidationError, safe_get
 
 logger = logging.getLogger(__name__)
+
 
 class WebContentFetcher:
     """Secure web content fetcher for LLM templates with safety measures."""
@@ -19,34 +21,34 @@ class WebContentFetcher:
     MAX_REDIRECTS = 5
     TIMEOUT = 30
 
-    ALLOWED_SCHEMES = {'http', 'https'}
+    ALLOWED_SCHEMES = {"http", "https"}
 
     def __init__(self):
         self.client = httpx.AsyncClient(
             timeout=self.TIMEOUT,
             follow_redirects=False,  # safe_get() follows redirects itself, re-validating each hop
             headers={
-                'User-Agent': 'Corvid-WebFetcher/1.0',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-            }
+                "User-Agent": "Corvid-WebFetcher/1.0",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Accept-Encoding": "gzip, deflate",
+                "DNT": "1",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1",
+            },
         )
         self.html_converter = html2text.HTML2Text()
         self.html_converter.ignore_links = False
         self.html_converter.ignore_images = True
         self.html_converter.ignore_emphasis = False
         self.html_converter.body_width = 0  # Don't wrap lines
-    
+
     async def __aenter__(self):
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.client.aclose()
-    
+
     def _validate_url(self, url: str) -> tuple[bool, str | None]:
         """Basic format validation. Real SSRF protection (private/loopback/link-local
         IP resolution) happens in safe_get(), which resolves and pins the actual host."""
@@ -64,86 +66,97 @@ class WebContentFetcher:
 
         except Exception as e:
             return False, f"URL validation error: {str(e)}"
-    
+
     def _extract_text_content(self, html_content: str, url: str) -> str:
         """Extract and clean text content from HTML."""
         try:
-            soup = BeautifulSoup(html_content, 'html.parser')
-            
+            soup = BeautifulSoup(html_content, "html.parser")
+
             # Remove script and style elements
             for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
                 script.decompose()
-            
+
             # Try to find main content areas first
             main_content = None
-            for selector in ['main', 'article', '[role="main"]', '.content', '#content', '.post', '.entry']:
+            for selector in [
+                "main",
+                "article",
+                '[role="main"]',
+                ".content",
+                "#content",
+                ".post",
+                ".entry",
+            ]:
                 main_content = soup.select_one(selector)
                 if main_content:
                     break
-            
+
             # If no main content found, use body
             if not main_content:
-                main_content = soup.find('body') or soup
-            
+                main_content = soup.find("body") or soup
+
             markdown_content = self.html_converter.handle(str(main_content))
-            lines = markdown_content.split('\n')
+            lines = markdown_content.split("\n")
             cleaned_lines = []
-            
+
             for line in lines:
                 line = line.strip()
                 # Skip empty lines and lines with only special characters
-                if line and not re.match(r'^[*\-_=\s]*$', line):
+                if line and not re.match(r"^[*\-_=\s]*$", line):
                     cleaned_lines.append(line)
-            
-            content = '\n'.join(cleaned_lines)
-            
+
+            content = "\n".join(cleaned_lines)
+
             if len(content) > self.MAX_CONTENT_SIZE:
-                content = content[:self.MAX_CONTENT_SIZE] + "\n\n[Content truncated due to size limit]"
-            
+                content = (
+                    content[: self.MAX_CONTENT_SIZE] + "\n\n[Content truncated due to size limit]"
+                )
+
             return content
-            
+
         except Exception as e:
             logger.error("Error extracting text from %s: %s", url, str(e))
             return f"Error extracting content: {str(e)}"
-    
+
     async def fetch_content(self, url: str) -> tuple[bool, str, str | None]:
         """Fetch and extract content from a URL."""
         is_valid, error = self._validate_url(url)
         if not is_valid:
             return False, f"URL validation failed: {error}", None
-        
+
         try:
             logger.info("Fetching content from: %s", url)
 
             response = await safe_get(
-                self.client, url,
+                self.client,
+                url,
                 allow_private=settings.security.allow_private_network_targets,
                 max_redirects=self.MAX_REDIRECTS,
             )
             response.raise_for_status()
 
-            content_type = response.headers.get('content-type', '').lower()
-            if 'text/html' not in content_type and 'application/xhtml' not in content_type:
+            content_type = response.headers.get("content-type", "").lower()
+            if "text/html" not in content_type and "application/xhtml" not in content_type:
                 return False, f"Unsupported content type: {content_type}", None
-            
+
             content_length = len(response.content)
             if content_length > self.MAX_CONTENT_SIZE:
                 return False, f"Content too large: {content_length} bytes", None
-            
+
             title = None
             try:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                title_tag = soup.find('title')
+                soup = BeautifulSoup(response.text, "html.parser")
+                title_tag = soup.find("title")
                 if title_tag:
                     title = title_tag.get_text().strip()
             except Exception:
                 pass
-            
+
             content = self._extract_text_content(response.text, url)
-            
+
             logger.info("Successfully fetched content from %s (%s characters)", url, len(content))
             return True, content, title
-            
+
         except SSRFValidationError as e:
             error_msg = f"URL validation failed: {e}"
             logger.warning(error_msg)
@@ -158,60 +171,62 @@ class WebContentFetcher:
             error_msg = f"HTTP {e.response.status_code} error for {url}"
             logger.error(error_msg)
             return False, error_msg, None
-            
+
         except Exception as e:
             error_msg = f"Error fetching {url}: {str(e)}"
             logger.error(error_msg)
             return False, error_msg, None
-    
+
     async def fetch_multiple_urls(self, web_contexts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Fetch content from multiple URLs concurrently."""
         if not web_contexts:
             return []
-        
+
         logger.info("Fetching content from %s URLs", len(web_contexts))
-        
+
         # Create tasks for concurrent fetching
         tasks = []
         for context in web_contexts:
-            url = context.get('url', '').strip()
+            url = context.get("url", "").strip()
             if url:
                 task = self._fetch_single_context(context)
                 tasks.append(task)
-        
+
         if not tasks:
             return []
-        
+
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         successful_results = []
         for result in results:
             if isinstance(result, dict):
                 successful_results.append(result)
             elif isinstance(result, Exception):
                 logger.error("Error in concurrent fetch: %s", str(result))
-        
-        logger.info("Successfully fetched %s out of %s URLs", len(successful_results), len(web_contexts))
+
+        logger.info(
+            "Successfully fetched %s out of %s URLs", len(successful_results), len(web_contexts)
+        )
         return successful_results
-    
+
     async def _fetch_single_context(self, context: dict[str, Any]) -> dict[str, Any]:
         """Fetch content for a single web context."""
-        url = context.get('url', '').strip()
-        name = context.get('name', 'Web Content')
-        description = context.get('description', '')
-        
+        url = context.get("url", "").strip()
+        name = context.get("name", "Web Content")
+        description = context.get("description", "")
+
         success, content, title = await self.fetch_content(url)
-        
+
         result = {
-            'name': name,
-            'url': url,
-            'description': description,
-            'success': success,
-            'content': content,
-            'title': title,
-            'error': None if success else content
+            "name": name,
+            "url": url,
+            "description": description,
+            "success": success,
+            "content": content,
+            "title": title,
+            "error": None if success else content,
         }
-        
+
         return result
 
 
@@ -219,7 +234,7 @@ async def fetch_web_contexts(web_contexts: list[dict[str, Any]]) -> list[dict[st
     """Convenience function to fetch web contexts."""
     if not web_contexts:
         return []
-    
+
     async with WebContentFetcher() as fetcher:
         return await fetcher.fetch_multiple_urls(web_contexts)
 
@@ -228,37 +243,39 @@ def format_web_contexts_for_prompt(fetched_contexts: list[dict[str, Any]]) -> st
     """Format fetched web contexts for inclusion in LLM prompts."""
     if not fetched_contexts:
         return ""
-    
+
     formatted_parts = []
-    
+
     for context in fetched_contexts:
-        if not context.get('success', False):
+        if not context.get("success", False):
             formatted_parts.append(
                 f"## {context.get('name', 'Web Content')} (FAILED)\n"
                 f"URL: {context.get('url', 'Unknown')}\n"
                 f"Error: {context.get('error', 'Unknown error')}\n"
             )
             continue
-        
-        name = context.get('name', 'Web Content')
-        url = context.get('url', '')
-        title = context.get('title', '')
-        description = context.get('description', '')
-        content = context.get('content', '')
-        
+
+        name = context.get("name", "Web Content")
+        url = context.get("url", "")
+        title = context.get("title", "")
+        description = context.get("description", "")
+        content = context.get("content", "")
+
         header_parts = [f"## {name}"]
         if title and title != name:
             header_parts.append(f"({title})")
-        
-        formatted_part = "\n".join([
-            " ".join(header_parts),
-            f"URL: {url}",
-            f"Description: {description}" if description else "",
-            "",
-            content,
-            ""
-        ])
-        
+
+        formatted_part = "\n".join(
+            [
+                " ".join(header_parts),
+                f"URL: {url}",
+                f"Description: {description}" if description else "",
+                "",
+                content,
+                "",
+            ]
+        )
+
         formatted_parts.append(formatted_part.strip())
-    
+
     return "\n\n---\n\n".join(formatted_parts)

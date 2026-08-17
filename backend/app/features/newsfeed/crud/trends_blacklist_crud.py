@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.features.newsfeed.models.newsfeed_models import TrendsBlacklistEntry
 
 
-async def get_blacklist_entries(db: AsyncSession, entry_type: str | None = None) -> list[TrendsBlacklistEntry]:
+async def get_blacklist_entries(
+    db: AsyncSession, entry_type: str | None = None
+) -> list[TrendsBlacklistEntry]:
     """Retrieve blacklist entries, optionally filtered by type"""
     stmt = select(TrendsBlacklistEntry)
     if entry_type:
@@ -22,7 +24,9 @@ async def get_blacklist_values(db: AsyncSession, entry_type: str) -> set[str]:
     return {row[0] for row in result.all()}
 
 
-async def create_blacklist_entry(db: AsyncSession, value: str, entry_type: str) -> TrendsBlacklistEntry:
+async def create_blacklist_entry(
+    db: AsyncSession, value: str, entry_type: str
+) -> TrendsBlacklistEntry:
     """Create a new blacklist entry"""
     entry = TrendsBlacklistEntry(value=value.strip().lower(), type=entry_type)
     db.add(entry)
@@ -32,7 +36,9 @@ async def create_blacklist_entry(db: AsyncSession, value: str, entry_type: str) 
 
 async def delete_blacklist_entry(db: AsyncSession, entry_id: int) -> bool:
     """Delete a blacklist entry by ID"""
-    result = await db.execute(delete(TrendsBlacklistEntry).where(TrendsBlacklistEntry.id == entry_id))
+    result = await db.execute(
+        delete(TrendsBlacklistEntry).where(TrendsBlacklistEntry.id == entry_id)
+    )
     await db.flush()
     return result.rowcount > 0
 

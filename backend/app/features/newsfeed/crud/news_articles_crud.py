@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import Select, String, cast, delete, func, or_, and_, select
+from sqlalchemy import Select, String, and_, cast, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,27 +13,33 @@ from app.features.newsfeed.utils.time_utils import parse_time_range
 logger = logging.getLogger(__name__)
 
 
-async def get_all_news_articles(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[NewsArticle]:
+async def get_all_news_articles(
+    db: AsyncSession, skip: int = 0, limit: int = 100
+) -> list[NewsArticle]:
     """Retrieve all news articles with pagination"""
     result = await db.execute(select(NewsArticle).offset(skip).limit(limit))
     return list(result.scalars().all())
 
 
-async def get_news_articles_by_retention(db: AsyncSession, retention_days: int) -> list[NewsArticle]:
+async def get_news_articles_by_retention(
+    db: AsyncSession, retention_days: int
+) -> list[NewsArticle]:
     """Retrieve news articles within the specified retention period"""
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
+    cutoff_date = datetime.now(UTC) - timedelta(days=retention_days)
     result = await db.execute(select(NewsArticle).where(NewsArticle.date >= cutoff_date))
     return list(result.scalars().all())
 
 
-async def create_news_article(db: AsyncSession, news_article: NewsArticleSchema) -> NewsArticle | None:
+async def create_news_article(
+    db: AsyncSession, news_article: NewsArticleSchema
+) -> NewsArticle | None:
     """Create a new news article, returning None if the link already exists.
 
     Uses flush (not commit) so the caller's session contract is respected.
     Rolls back only the failed flush on duplicates, leaving the session usable.
     """
     logger.debug("Creating news article: %s", news_article.title)
-    db_news_article = NewsArticle(**news_article.model_dump(exclude={'id'}))
+    db_news_article = NewsArticle(**news_article.model_dump(exclude={"id"}))
     db.add(db_news_article)
     try:
         await db.flush()
@@ -99,7 +105,7 @@ async def delete_old_news_articles(db: AsyncSession, retention_days: int) -> Non
     """Delete news articles older than the retention period. Skip when 0 (unlimited)"""
     if retention_days == 0:
         return
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
+    cutoff_date = datetime.now(UTC) - timedelta(days=retention_days)
     await db.execute(delete(NewsArticle).where(NewsArticle.date < cutoff_date))
     await db.flush()
 
@@ -122,7 +128,9 @@ async def get_news_articles_by_ids(db: AsyncSession, article_ids: list[int]) -> 
     return list(result.scalars().all())
 
 
-async def get_recent_news_articles(db: AsyncSession, time_filter: str = "7d") -> list[RecentArticleSchema]:
+async def get_recent_news_articles(
+    db: AsyncSession, time_filter: str = "7d"
+) -> list[RecentArticleSchema]:
     """Retrieve recent articles filtered by a relative time range"""
     try:
         cutoff_date = parse_time_range(time_filter)
@@ -130,7 +138,7 @@ async def get_recent_news_articles(db: AsyncSession, time_filter: str = "7d") ->
         cutoff_date = None
 
     if cutoff_date is None:
-        cutoff_date = datetime.min.replace(tzinfo=timezone.utc)
+        cutoff_date = datetime.min.replace(tzinfo=UTC)
 
     result = await db.execute(
         select(NewsArticle.id, NewsArticle.title, NewsArticle.feedname, NewsArticle.date)
@@ -146,10 +154,12 @@ async def get_recent_news_articles(db: AsyncSession, time_filter: str = "7d") ->
 
 def _escape_like(value: str) -> str:
     """Escape SQL LIKE wildcards so a raw IOC value can be matched literally."""
-    return value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-async def get_articles_mentioning_ioc(db: AsyncSession, ioc: str, limit: int = 5) -> list[NewsArticle]:
+async def get_articles_mentioning_ioc(
+    db: AsyncSession, ioc: str, limit: int = 5
+) -> list[NewsArticle]:
     """Find recent articles whose extracted IOCs (NewsArticle.iocs) include the given value.
 
     Matches against the JSON-serialized `iocs` dict as a quoted substring, case-insensitively,
@@ -164,7 +174,7 @@ async def get_articles_mentioning_ioc(db: AsyncSession, ioc: str, limit: int = 5
     result = await db.execute(
         select(NewsArticle)
         .where(NewsArticle.iocs.is_not(None))
-        .where(func.lower(cast(NewsArticle.iocs, String)).like(pattern, escape='\\'))
+        .where(func.lower(cast(NewsArticle.iocs, String)).like(pattern, escape="\\"))
         .order_by(NewsArticle.date.desc())
         .limit(limit)
     )
@@ -201,8 +211,8 @@ def _filter_json_dict(stmt: Select, column: Any, is_null: bool) -> Select:
 def _filter_text(stmt: Select, column: Any, is_null: bool) -> Select:
     """Apply a presence filter on a plain text column"""
     if is_null:
-        return stmt.where(or_(column.is_(None), column == ''))
-    return stmt.where(and_(column.is_not(None), column != ''))
+        return stmt.where(or_(column.is_(None), column == ""))
+    return stmt.where(and_(column.is_not(None), column != ""))
 
 
 def apply_article_filters(
@@ -260,27 +270,37 @@ async def get_paginated_articles(
 ) -> dict[str, Any]:
     """Retrieve paginated news articles with optional filtering"""
     filter_args = dict(
-        start_date=start_date, end_date=end_date,
-        matches_null=matches_null, iocs_null=iocs_null,
+        start_date=start_date,
+        end_date=end_date,
+        matches_null=matches_null,
+        iocs_null=iocs_null,
         relevant_iocs_null=relevant_iocs_null,
         analysis_result_null=analysis_result_null,
-        note_null=note_null, tlp=tlp, read=read,
+        note_null=note_null,
+        tlp=tlp,
+        read=read,
     )
 
-    total_count = (await db.execute(
-        apply_article_filters(select(func.count(NewsArticle.id)), **filter_args)
-    )).scalar_one()
+    total_count = (
+        await db.execute(apply_article_filters(select(func.count(NewsArticle.id)), **filter_args))
+    ).scalar_one()
 
-    articles = (await db.execute(
-        apply_article_filters(select(NewsArticle), **filter_args)
-        .order_by(NewsArticle.date.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-    )).scalars().all()
+    articles = (
+        (
+            await db.execute(
+                apply_article_filters(select(NewsArticle), **filter_args)
+                .order_by(NewsArticle.date.desc())
+                .offset((page - 1) * page_size)
+                .limit(page_size)
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     return {
         "total_count": total_count,
         "page": page,
         "page_size": page_size,
-        "articles": [NewsArticleSchema.model_validate(article) for article in articles]
+        "articles": [NewsArticleSchema.model_validate(article) for article in articles],
     }

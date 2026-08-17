@@ -1,4 +1,5 @@
 """URL parsing helpers for YouTube video links."""
+
 import re
 from urllib.parse import parse_qs, urlparse
 
@@ -34,7 +35,7 @@ def extract_video_id(url: str) -> str | None:
 
     for prefix in ("/shorts/", "/embed/", "/live/"):
         if parsed.path.startswith(prefix):
-            candidate = parsed.path[len(prefix):].split("/")[0]
+            candidate = parsed.path[len(prefix) :].split("/")[0]
             return candidate if _VIDEO_ID_RE.match(candidate) else None
 
     return None

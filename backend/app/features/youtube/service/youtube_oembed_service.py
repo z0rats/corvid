@@ -2,6 +2,7 @@
 Only the video URL query param is user-derived (an already-validated, canonicalized
 video ID), never the request host - see ssrf_guard's ALLOWLISTED_FIXED_HOST_FILES.
 """
+
 import logging
 from typing import Any
 
@@ -27,7 +28,11 @@ async def fetch_oembed_data(video_url: str) -> dict[str, Any]:
             response = await client.get(OEMBED_URL, params={"url": video_url, "format": "json"})
 
             if response.status_code in (401, 403, 404):
-                logger.info("YouTube oEmbed reported video unavailable (status %s): %s", response.status_code, video_url)
+                logger.info(
+                    "YouTube oEmbed reported video unavailable (status %s): %s",
+                    response.status_code,
+                    video_url,
+                )
                 raise AppHTTPException(
                     status_code=404,
                     detail="Video not found, private, or embedding disabled",
@@ -40,27 +45,31 @@ async def fetch_oembed_data(video_url: str) -> dict[str, Any]:
     except httpx.TimeoutException as e:
         logger.error("Timeout fetching YouTube oEmbed data: %s", e)
         raise AppHTTPException(
-            status_code=504, detail="Request timeout while connecting to YouTube", error_code="YOUTUBE_TIMEOUT",
-        )
+            status_code=504,
+            detail="Request timeout while connecting to YouTube",
+            error_code="YOUTUBE_TIMEOUT",
+        ) from e
     except httpx.RequestError as e:
         logger.error("Request error fetching YouTube oEmbed data: %s", e)
         raise AppHTTPException(
-            status_code=503, detail=f"Failed to connect to YouTube: {e}", error_code="YOUTUBE_CONNECTION_ERROR",
-        )
+            status_code=503,
+            detail=f"Failed to connect to YouTube: {e}",
+            error_code="YOUTUBE_CONNECTION_ERROR",
+        ) from e
     except httpx.HTTPStatusError as e:
         logger.error("HTTP status error from YouTube oEmbed: %s", e.response.status_code)
         raise AppHTTPException(
             status_code=e.response.status_code,
             detail=f"YouTube oEmbed returned error: {e.response.status_code}",
             error_code="YOUTUBE_OEMBED_ERROR",
-        )
+        ) from e
     except ValueError as e:
         logger.error("Could not parse YouTube oEmbed JSON response: %s", e)
         raise AppHTTPException(
             status_code=502,
             detail="YouTube returned an unexpected (non-JSON) response",
             error_code="YOUTUBE_INVALID_RESPONSE",
-        )
+        ) from e
     except AppHTTPException:
         raise
     except Exception as e:
@@ -69,4 +78,4 @@ async def fetch_oembed_data(video_url: str) -> dict[str, Any]:
             status_code=500,
             detail="An unexpected error occurred while fetching YouTube oEmbed data",
             error_code="YOUTUBE_UNEXPECTED_ERROR",
-        )
+        ) from e

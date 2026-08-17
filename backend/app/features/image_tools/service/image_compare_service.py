@@ -8,9 +8,9 @@ images guarantees a fair diff.
 
 import logging
 
+from ..schemas.image_schemas import FieldDiff, FieldDiffSummary, ImageCompareResponse
 from ..utils.phash_utils import hamming_distance
 from .image_metadata_service import analyze_image_content
-from ..schemas.image_schemas import FieldDiff, FieldDiffSummary, ImageCompareResponse
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,9 @@ def _diff_exif_fields(left_exif: dict, right_exif: dict) -> list[FieldDiff]:
             status = "only_left"
         else:
             status = "only_right"
-        diffs.append(FieldDiff(field=field, left_value=left_value, right_value=right_value, status=status))
+        diffs.append(
+            FieldDiff(field=field, left_value=left_value, right_value=right_value, status=status)
+        )
     return diffs
 
 
@@ -42,7 +44,9 @@ def _summarize(diffs: list[FieldDiff]) -> FieldDiffSummary:
     )
 
 
-def compare_images(left_filename: str, left_data: bytes, right_filename: str, right_data: bytes) -> ImageCompareResponse:
+def compare_images(
+    left_filename: str, left_data: bytes, right_filename: str, right_data: bytes
+) -> ImageCompareResponse:
     """Compare two images. Raises ValueError if either file isn't a readable image."""
     left = analyze_image_content(left_filename, left_data)
     right = analyze_image_content(right_filename, right_data)
@@ -54,7 +58,11 @@ def compare_images(left_filename: str, left_data: bytes, right_filename: str, ri
 
     logger.info(
         "Compared '%s' vs '%s': %s match, %s differ, phash distance %s",
-        left_filename, right_filename, summary.match_count, summary.differ_count, distance,
+        left_filename,
+        right_filename,
+        summary.match_count,
+        summary.differ_count,
+        distance,
     )
 
     return ImageCompareResponse(

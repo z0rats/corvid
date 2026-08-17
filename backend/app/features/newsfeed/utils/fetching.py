@@ -7,7 +7,7 @@ import httpx
 from newspaper import Article
 
 from app.core.config.settings import settings
-from app.core.security.ssrf_guard import safe_get, SSRFValidationError
+from app.core.security.ssrf_guard import SSRFValidationError, safe_get
 from app.features.ioc_tools.ioc_extractor.service.ioc_extractor_service import extract_iocs
 
 logger = logging.getLogger(__name__)
@@ -33,8 +33,8 @@ async def _fetch_safely(url: str, timeout: float) -> bytes | None:
 
 
 def _parse_article(url: str, html: bytes) -> str:
-    article = Article(url, language='en')
-    article.download(input_html=html.decode('utf-8', errors='replace'))
+    article = Article(url, language="en")
+    article.download(input_html=html.decode("utf-8", errors="replace"))
     article.parse()
     return article.text
 
@@ -57,8 +57,8 @@ def _parse_feed_bytes(feed_url: str, raw: bytes) -> feedparser.FeedParserDict:
         warnings.filterwarnings("ignore", message=".*encoding.*")
         feed = feedparser.parse(raw)
 
-    if feed.get('bozo', 0) == 1:
-        exception = feed.get('bozo_exception')
+    if feed.get("bozo", 0) == 1:
+        exception = feed.get("bozo_exception")
         if exception:
             error_msg = str(exception)
             if "encoding" in error_msg.lower() or "declared as" in error_msg.lower():
@@ -90,23 +90,25 @@ def extract_and_categorize_iocs(summary_content: str, full_text: str) -> dict[st
         full_text_iocs = None
         if full_text:
             full_text_iocs = extract_iocs(full_text)
-            logger.info("Full text IOCs found: %s total IOCs", full_text_iocs.statistics.total_unique_iocs)
+            logger.info(
+                "Full text IOCs found: %s total IOCs", full_text_iocs.statistics.total_unique_iocs
+            )
 
         iocs_dict: dict[str, list] = {
-            'ips': [],
-            'md5': [],
-            'sha1': [],
-            'sha256': [],
-            'emails': [],
-            'cves': [],
+            "ips": [],
+            "md5": [],
+            "sha1": [],
+            "sha256": [],
+            "emails": [],
+            "cves": [],
         }
 
         all_ips = set(summary_iocs.ips)
         if full_text_iocs:
             all_ips.update(full_text_iocs.ips)
-        iocs_dict['ips'] = list(all_ips)
+        iocs_dict["ips"] = list(all_ips)
 
-        for ioc_type in ['md5', 'sha1', 'sha256', 'emails', 'cves']:
+        for ioc_type in ["md5", "sha1", "sha256", "emails", "cves"]:
             combined = set(getattr(summary_iocs, ioc_type, []))
             if full_text_iocs:
                 combined.update(getattr(full_text_iocs, ioc_type, []))

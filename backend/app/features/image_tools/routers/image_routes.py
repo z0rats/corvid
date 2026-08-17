@@ -6,6 +6,7 @@ from fastapi import APIRouter, File, Query, Request, Response, UploadFile
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep
 from app.core.utils.file_upload import run_file_endpoint, validate_uploaded_file
+
 from ..config.image_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
 from ..schemas.image_schemas import (
     ImageAnalysisResponse,
@@ -33,7 +34,10 @@ router = APIRouter(prefix="/api/image", tags=["Image Tools"])
 
 async def _validate_uploaded_image(file: UploadFile) -> bytes:
     return await validate_uploaded_file(
-        file, no_file_code="IMAGE_NO_FILE", read_error_code="IMAGE_READ_ERROR", validate_fn=validate_file_upload
+        file,
+        no_file_code="IMAGE_NO_FILE",
+        read_error_code="IMAGE_READ_ERROR",
+        validate_fn=validate_file_upload,
     )
 
 
@@ -42,7 +46,9 @@ async def _validate_uploaded_image(file: UploadFile) -> bytes:
     response_model=ImageAnalysisResponse,
     response_model_exclude_none=True,
     summary="Analyze image file for metadata",
-    description="Upload an image file to extract EXIF/GPS metadata, file properties, and hash values.",
+    description=(
+        "Upload an image file to extract EXIF/GPS metadata, file properties, and hash values."
+    ),
     responses={
         400: {"description": "Invalid or missing file"},
         422: {"description": "Image analysis failed"},
@@ -76,8 +82,8 @@ async def analyze_image_file(
     "/geolocate",
     response_model=ImageGeolocationResponse,
     summary="Analyze image for AI-based location clues",
-    description="Upload an image file to get an AI-generated location hypothesis based on visual clues "
-                "(signage, architecture, vegetation, road markings, etc.), with reasoning per clue.",
+    description="Upload an image file to get an AI-generated location hypothesis based on visual "
+    "clues (signage, architecture, vegetation, road markings, etc.), with reasoning per clue.",
     responses={
         400: {"description": "Invalid or missing file"},
         422: {"description": "Geolocation analysis failed"},
@@ -113,7 +119,7 @@ async def geolocate_image_file(
     response_model_exclude_none=True,
     summary="Analyze JPEG structure",
     description="Upload a JPEG to inspect its marker map, quantization/Huffman tables, "
-                "frame parameters, and an estimated save quality.",
+    "frame parameters, and an estimated save quality.",
     responses={
         400: {"description": "Invalid or missing file"},
         422: {"description": "Structure analysis failed, or file is not a JPEG"},
@@ -145,9 +151,9 @@ async def analyze_image_structure(
     "/anomalies",
     response_model=ImageAnomalyResponse,
     summary="Run tamper/anomaly heuristics on an image",
-    description="Upload an image to check EXIF timestamp consistency, editing-software fingerprints, "
-                "embedded thumbnail vs main image mismatch, trailing data after EOI, marker order, "
-                "and quantization table consistency (JPEG-only checks are skipped for other formats).",
+    description="Upload an image to check EXIF timestamp consistency, editing-software "
+    "fingerprints, embedded thumbnail vs main image mismatch, trailing data after EOI, marker "
+    "order, and quantization table consistency (JPEG-only checks are skipped for other formats).",
     responses={
         400: {"description": "Invalid or missing file"},
         422: {"description": "Anomaly detection failed"},
@@ -170,7 +176,11 @@ async def analyze_image_anomalies_route(
         failure_message="Anomaly detection failed",
     )
 
-    logger.info("Anomaly detection completed successfully for '%s' - %s findings", file.filename, len(result.findings))
+    logger.info(
+        "Anomaly detection completed successfully for '%s' - %s findings",
+        file.filename,
+        len(result.findings),
+    )
     return result
 
 
@@ -210,7 +220,7 @@ async def analyze_image_visuals_route(
     response_model=ImageCompareResponse,
     summary="Compare two images field by field",
     description="Upload two images to diff their EXIF/IPTC/XMP fields and compare pixel "
-                "content via a perceptual-hash distance.",
+    "content via a perceptual-hash distance.",
     responses={
         400: {"description": "Invalid or missing file"},
         422: {"description": "Comparison failed"},
@@ -222,7 +232,11 @@ async def compare_image_files(
     file_left: UploadFile = File(..., description="First image to compare"),
     file_right: UploadFile = File(..., description="Second image to compare"),
 ) -> ImageCompareResponse:
-    logger.info("Received image comparison request for files: %s, %s", file_left.filename, file_right.filename)
+    logger.info(
+        "Received image comparison request for files: %s, %s",
+        file_left.filename,
+        file_right.filename,
+    )
 
     left_content = await _validate_uploaded_image(file_left)
     right_content = await _validate_uploaded_image(file_right)
@@ -237,7 +251,11 @@ async def compare_image_files(
         failure_message="Image comparison failed",
     )
 
-    logger.info("Image comparison completed successfully for '%s'/'%s'", file_left.filename, file_right.filename)
+    logger.info(
+        "Image comparison completed successfully for '%s'/'%s'",
+        file_left.filename,
+        file_right.filename,
+    )
     return result
 
 
@@ -245,7 +263,7 @@ async def compare_image_files(
     "/strip-metadata",
     summary="Remove metadata from an image",
     description="Upload an image and download a copy with metadata removed. JPEGs are "
-                "cleaned losslessly at the byte level; other formats use a best-effort re-encode.",
+    "cleaned losslessly at the byte level; other formats use a best-effort re-encode.",
     responses={
         400: {"description": "Invalid or missing file"},
         422: {"description": "Metadata removal failed"},
@@ -255,7 +273,9 @@ async def compare_image_files(
 async def strip_image_metadata(
     request: Request,
     file: UploadFile = File(..., description="Image file to clean"),
-    mode: Literal["all", "location_only"] = Query("all", description="'all' strips every metadata field, 'location_only' strips just GPS"),
+    mode: Literal["all", "location_only"] = Query(
+        "all", description="'all' strips every metadata field, 'location_only' strips just GPS"
+    ),
 ) -> Response:
     logger.info("Received metadata removal request for file: %s (mode=%s)", file.filename, mode)
 

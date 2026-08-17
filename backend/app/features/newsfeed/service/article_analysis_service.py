@@ -6,10 +6,13 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.newsfeed.crud.news_articles_crud import get_news_article_by_id, update_news_article
+from app.core.settings.cti_profile.crud.cti_profile_crud import get_cti_settings
+from app.features.newsfeed.crud.news_articles_crud import (
+    get_news_article_by_id,
+    update_news_article,
+)
 from app.features.newsfeed.models.newsfeed_models import NewsArticle
 from app.features.newsfeed.service.mitre_enrichment_service import enrich_article_with_mitre
-from app.core.settings.cti_profile.crud.cti_profile_crud import get_cti_settings
 from app.utils.llm_service import build_model_registry, execute_prompt
 
 logger = logging.getLogger(__name__)
@@ -20,9 +23,12 @@ DEFAULT_CTI_PROFILE = (
 )
 
 SYSTEM_PROMPT = """
-You are an expert cybersecurity analyst specializing in threat intelligence, vulnerability analysis, and security operations.
-Your task is to analyze cybersecurity news articles and determine their relevance and implications.
-Provide clear, concise, and actionable insights that security teams can use to improve their security posture.
+You are an expert cybersecurity analyst specializing in threat intelligence, vulnerability
+analysis, and security operations.
+Your task is to analyze cybersecurity news articles and determine their relevance and
+implications.
+Provide clear, concise, and actionable insights that security teams can use to improve their
+security posture.
 """
 
 RELEVANCE_INDICATORS = {
@@ -127,19 +133,21 @@ def build_cti_profile_text(cti_settings) -> str:
 def build_analysis_prompts(newsfeed_item: dict, cti_profile_text: str) -> tuple[str, str]:
     """Build the system and user prompts for article analysis"""
     user_prompt = f"""
-You are an AI assistant that analyzes a news article based on a user's Cyber Threat Intelligence (CTI) profile. Below you will find the CTI profile, the news article and instructions for your analysis.
+You are an AI assistant that analyzes a news article based on a user's Cyber Threat Intelligence
+(CTI) profile. Below you will find the CTI profile, the news article and instructions for your
+analysis.
 
 <CTI Profile>
 {cti_profile_text}
 </CTI Profile>
 
 <News Article>
-Title: {newsfeed_item['title']}
-Source: {newsfeed_item['source']}
-Date: {newsfeed_item['date']}
+Title: {newsfeed_item["title"]}
+Source: {newsfeed_item["source"]}
+Date: {newsfeed_item["date"]}
 
 Content:
-{newsfeed_item['content']}
+{newsfeed_item["content"]}
 </News Article>
 
 <Instructions>
@@ -189,7 +197,7 @@ def _parse_llm_json_response(analysis_text: str) -> dict:
         return json.loads(json_match.group(1))
     except json.JSONDecodeError:
         logger.error("Extracted text is not valid JSON")
-        raise ValueError("Could not extract valid JSON from the model response")
+        raise ValueError("Could not extract valid JSON from the model response") from None
 
 
 def _build_formatted_result(analysis_json: dict) -> dict:
@@ -237,14 +245,20 @@ async def _run_concurrent_analysis(
 ) -> tuple:
     """Run general analysis and MITRE enrichment concurrently"""
     analysis_task = execute_prompt(
-        models, model_id=model_id,
-        system_prompt=system_prompt, user_prompt=user_prompt,
-        temperature=temperature, max_tokens=max_tokens,
+        models,
+        model_id=model_id,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        temperature=temperature,
+        max_tokens=max_tokens,
     )
     mitre_task = enrich_article_with_mitre(
-        models, model_id=model_id,
-        newsfeed_item=newsfeed_item, cti_profile_text=cti_profile_text,
-        temperature=temperature, max_tokens=max(max_tokens, 3000),
+        models,
+        model_id=model_id,
+        newsfeed_item=newsfeed_item,
+        cti_profile_text=cti_profile_text,
+        temperature=temperature,
+        max_tokens=max(max_tokens, 3000),
     )
     return await asyncio.gather(analysis_task, mitre_task, return_exceptions=True)
 
@@ -269,11 +283,16 @@ async def _run_mitre_only(
     """Run only the MITRE enrichment when general analysis is already cached"""
     try:
         result = await enrich_article_with_mitre(
-            models, model_id=model_id,
-            newsfeed_item=newsfeed_item, cti_profile_text=cti_profile_text,
-            temperature=temperature, max_tokens=max(max_tokens, 3000),
+            models,
+            model_id=model_id,
+            newsfeed_item=newsfeed_item,
+            cti_profile_text=cti_profile_text,
+            temperature=temperature,
+            max_tokens=max(max_tokens, 3000),
         )
-        return MitreOutcome(succeeded=True, data=result.model_dump() if result.has_mitre_data else None)
+        return MitreOutcome(
+            succeeded=True, data=result.model_dump() if result.has_mitre_data else None
+        )
     except Exception as e:
         logger.error("MITRE enrichment failed: %s", e)
         return MitreOutcome(succeeded=False, data=None)
@@ -302,7 +321,10 @@ async def analyze_article_with_llm(
     """Orchestrate LLM-based analysis of a news article"""
     logger.info(
         "Starting analysis for article ID: %d with model %s, force=%s, mode=%s",
-        article_id, model_id, force, mode,
+        article_id,
+        model_id,
+        force,
+        mode,
     )
 
     news_article_record = await get_news_article_by_id(db=db, article_id=article_id)
@@ -322,7 +344,9 @@ async def analyze_article_with_llm(
             try:
                 return {
                     "message": "Analysis already completed",
-                    "analysis_result": json.loads(news_article_record.analysis_result) if has_cached_analysis else None,
+                    "analysis_result": json.loads(news_article_record.analysis_result)
+                    if has_cached_analysis
+                    else None,
                     "mitre_attack": _parse_stored_mitre_data(news_article_record.mitre_attack),
                 }
             except json.JSONDecodeError:
@@ -339,8 +363,14 @@ async def analyze_article_with_llm(
     if run_analysis and run_mitre:
         system_prompt, user_prompt = build_analysis_prompts(newsfeed_item, cti_profile_text)
         analysis_result, mitre_result = await _run_concurrent_analysis(
-            models, model_id, system_prompt, user_prompt,
-            newsfeed_item, cti_profile_text, temperature, max_tokens,
+            models,
+            model_id,
+            system_prompt,
+            user_prompt,
+            newsfeed_item,
+            cti_profile_text,
+            temperature,
+            max_tokens,
         )
         if isinstance(analysis_result, Exception):
             raise analysis_result
@@ -350,29 +380,40 @@ async def analyze_article_with_llm(
     elif run_analysis:
         system_prompt, user_prompt = build_analysis_prompts(newsfeed_item, cti_profile_text)
         analysis_text = await execute_prompt(
-            models, model_id=model_id,
-            system_prompt=system_prompt, user_prompt=user_prompt,
-            temperature=temperature, max_tokens=max_tokens,
+            models,
+            model_id=model_id,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
         )
         analysis_json = _parse_llm_json_response(analysis_text)
         formatted_result = _build_formatted_result(analysis_json)
     elif run_mitre:
         mitre_outcome = await _run_mitre_only(
-            models, model_id, newsfeed_item, cti_profile_text, temperature, max_tokens,
+            models,
+            model_id,
+            newsfeed_item,
+            cti_profile_text,
+            temperature,
+            max_tokens,
         )
 
     update_kwargs = {}
     if formatted_result is not None:
         update_kwargs["analysis_result"] = json.dumps(formatted_result)
     if mitre_outcome is not None and mitre_outcome.succeeded:
-        update_kwargs["mitre_attack"] = json.dumps(mitre_outcome.data) if mitre_outcome.data else None
+        update_kwargs["mitre_attack"] = (
+            json.dumps(mitre_outcome.data) if mitre_outcome.data else None
+        )
 
     if update_kwargs:
         await update_news_article(db=db, article_id=article_id, **update_kwargs)
 
     response = {
         "message": "Analysis completed",
-        "analysis_result": formatted_result or (json.loads(news_article_record.analysis_result) if has_cached_analysis else None),
+        "analysis_result": formatted_result
+        or (json.loads(news_article_record.analysis_result) if has_cached_analysis else None),
         "mitre_attack": (
             mitre_outcome.data
             if mitre_outcome is not None and mitre_outcome.succeeded

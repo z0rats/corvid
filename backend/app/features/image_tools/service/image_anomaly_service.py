@@ -31,8 +31,18 @@ GPS_TIMESTAMP_DRIFT_THRESHOLD = timedelta(days=2)
 
 # Substrings matched case-insensitively against the EXIF Software tag.
 EDITING_SOFTWARE_SIGNATURES = [
-    "photoshop", "lightroom", "gimp", "snapseed", "picsart", "affinity photo",
-    "paint.net", "capture one", "luminar", "pixelmator", "canva", "vsco",
+    "photoshop",
+    "lightroom",
+    "gimp",
+    "snapseed",
+    "picsart",
+    "affinity photo",
+    "paint.net",
+    "capture one",
+    "luminar",
+    "pixelmator",
+    "canva",
+    "vsco",
 ]
 
 THUMBNAIL_MISMATCH_THRESHOLD = 10  # Hamming distance out of 64 bits
@@ -43,7 +53,7 @@ QUANTIZATION_QUALITY_SPREAD_THRESHOLD = 20  # percentage points between table es
 def _parse_exif_datetime(value) -> datetime | None:
     try:
         return datetime.strptime(str(value), "%Y:%m:%d %H:%M:%S")
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -95,7 +105,7 @@ def _parse_gps_datetime(tags: dict) -> datetime | None:
         year, month, day = (int(part) for part in str(date_tag).replace("-", ":").split(":"))
         hour, minute, second = (int(_ratio_to_float(v)) for v in time_tag.values)
         return datetime(year, month, day, hour, minute, second)
-    except (ValueError, TypeError, AttributeError):
+    except ValueError, TypeError, AttributeError:
         return None
 
 
@@ -119,7 +129,7 @@ def _check_gps_timestamp_consistency(tags: dict) -> AnomalyFinding | None:
         check="gps_timestamp_mismatch",
         severity="warning",
         message=f"GPS timestamp ({gps_dt.isoformat()} UTC) differs from the EXIF capture time "
-                f"({capture_dt.isoformat()}) by {spread} - more than a timezone offset alone would explain",
+        f"({capture_dt.isoformat()}) by {spread} - more than a timezone offset alone would explain",
     )
 
 
@@ -157,8 +167,8 @@ def _check_thumbnail_mismatch(main_image: Image.Image, tags: dict) -> AnomalyFin
     return AnomalyFinding(
         check="thumbnail_mismatch",
         severity="warning",
-        message=f"Embedded thumbnail differs significantly from the main image (hash distance {distance}/64) - "
-                "the image may have been edited after the thumbnail was generated",
+        message=f"Embedded thumbnail differs significantly from the main image (hash distance "
+        f"{distance}/64) - the image may have been edited after the thumbnail was generated",
     )
 
 
@@ -170,7 +180,7 @@ def _check_trailing_data(markers) -> AnomalyFinding | None:
         check="trailing_data",
         severity="warning",
         message=f"{trailing.length} bytes found after the JPEG end marker (EOI) - "
-                "could be an appended file, steganography, or file corruption",
+        "could be an appended file, steganography, or file corruption",
     )
 
 
@@ -204,8 +214,9 @@ def _check_quantization_consistency(data: bytes) -> AnomalyFinding | None:
     return AnomalyFinding(
         check="quantization_tables",
         severity="warning",
-        message=f"Quantization tables imply inconsistent quality across channels ({min(estimates)}-{max(estimates)}%) - "
-                "unusual for direct camera output, often seen after re-encoding/editing",
+        message=f"Quantization tables imply inconsistent quality across channels "
+        f"({min(estimates)}-{max(estimates)}%) - unusual for direct camera output, often seen "
+        "after re-encoding/editing",
     )
 
 
@@ -237,15 +248,22 @@ def analyze_image_anomalies(filename: str, data: bytes) -> ImageAnomalyResponse:
     is_jpeg = len(data) >= 2 and data[0] == 0xFF and data[1] == 0xD8
     if is_jpeg:
         markers = walk_markers(data)
-        checks.extend([
-            _check_trailing_data(markers),
-            _check_marker_order(markers),
-            _check_quantization_consistency(data),
-        ])
+        checks.extend(
+            [
+                _check_trailing_data(markers),
+                _check_marker_order(markers),
+                _check_quantization_consistency(data),
+            ]
+        )
 
     checks_run = len(checks)
     findings = [finding for finding in checks if finding is not None]
 
-    logger.info("Anomaly detection for '%s': %s/%s checks flagged something", filename, len(findings), checks_run)
+    logger.info(
+        "Anomaly detection for '%s': %s/%s checks flagged something",
+        filename,
+        len(findings),
+        checks_run,
+    )
 
     return ImageAnomalyResponse(filename=filename, findings=findings, checks_run=checks_run)

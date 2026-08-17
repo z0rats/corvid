@@ -7,8 +7,13 @@ from app.core.database import managed_session
 from app.core.scans.cancellable import ProcessCancellable
 from app.core.scans.run import ScanCancelled, ScanOutcome, ScanRun
 from app.core.scans.sse import queue_sink
-from app.core.settings.username_search.crud.social_analyzer_settings_crud import get_social_analyzer_config
-from app.features.username_search.config.social_analyzer_config import PROCESS_WATCHDOG_SECONDS, find_binary
+from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
+    get_social_analyzer_config,
+)
+from app.features.username_search.config.social_analyzer_config import (
+    PROCESS_WATCHDOG_SECONDS,
+    find_binary,
+)
 from app.features.username_search.crud.username_search_crud import SCAN_COLUMNS, add_site_results
 from app.features.username_search.models.username_search_models import MaigretSearch
 
@@ -30,12 +35,14 @@ def _extract_found_sites(detected: list[dict]) -> list[dict]:
     for item in detected:
         link = item.get("link", "")
         site_name = urlparse(link).netloc or link
-        found_sites.append({
-            "site_name": site_name,
-            "url_user": link,
-            "http_status": None,
-            "extra": {"title": item.get("title"), "rate": item.get("rate")},
-        })
+        found_sites.append(
+            {
+                "site_name": site_name,
+                "url_user": link,
+                "http_status": None,
+                "extra": {"title": item.get("title"), "rate": item.get("rate")},
+            }
+        )
     return found_sites
 
 
@@ -62,11 +69,15 @@ async def run_scan(
 
     binary = find_binary()
     if binary is None:
+
         async def run_work(search_id: int) -> ScanOutcome:
             raise RuntimeError("social-analyzer executable not found on PATH")
 
         await ScanRun.execute(
-            FEATURE_NAME, MaigretSearch, run_work, on_event,
+            FEATURE_NAME,
+            MaigretSearch,
+            run_work,
+            on_event,
             columns=SCAN_COLUMNS,
             create_fields={"username": username, "source": "social_analyzer"},
             started_fields={"username": username, "total_sites": top},
@@ -75,12 +86,18 @@ async def run_scan(
 
     process = await asyncio.create_subprocess_exec(
         binary,
-        "--username", username,
-        "--top", str(top),
-        "--timeout", str(timeout),
-        "--output", "json",
-        "--method", "find",
-        "--filter", "good",
+        "--username",
+        username,
+        "--top",
+        str(top),
+        "--timeout",
+        str(timeout),
+        "--output",
+        "json",
+        "--method",
+        "find",
+        "--filter",
+        "good",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
@@ -88,12 +105,15 @@ async def run_scan(
 
     async def run_work(search_id: int) -> ScanOutcome:
         try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=PROCESS_WATCHDOG_SECONDS)
-        except asyncio.TimeoutError:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), timeout=PROCESS_WATCHDOG_SECONDS
+            )
+        except TimeoutError:
             process.kill()
             await process.wait()
             raise RuntimeError(
-                f"social-analyzer scan exceeded the maximum runtime of {PROCESS_WATCHDOG_SECONDS}s and was terminated"
+                f"social-analyzer scan exceeded the maximum runtime of "
+                f"{PROCESS_WATCHDOG_SECONDS}s and was terminated"
             ) from None
 
         if cancellable.cancelled:
@@ -102,7 +122,10 @@ async def run_scan(
             raise ScanCancelled(ScanOutcome(fields={"total_sites_checked": 0, "found_count": 0}))
 
         if process.returncode != 0:
-            error = stderr.decode(errors="replace").strip()[:1000] or f"social-analyzer exited with code {process.returncode}"
+            error = (
+                stderr.decode(errors="replace").strip()[:1000]
+                or f"social-analyzer exited with code {process.returncode}"
+            )
             raise RuntimeError(error)
 
         try:
@@ -117,7 +140,10 @@ async def run_scan(
         return ScanOutcome(fields={"total_sites_checked": top, "found_count": len(found_sites)})
 
     await ScanRun.execute(
-        FEATURE_NAME, MaigretSearch, run_work, on_event,
+        FEATURE_NAME,
+        MaigretSearch,
+        run_work,
+        on_event,
         columns=SCAN_COLUMNS,
         create_fields={"username": username, "source": "social_analyzer"},
         started_fields={"username": username, "total_sites": top},

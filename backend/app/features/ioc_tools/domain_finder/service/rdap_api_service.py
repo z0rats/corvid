@@ -7,12 +7,14 @@ bootstrap service) resolves a domain to its authoritative registry RDAP server v
 an HTTP redirect, so a single fixed entrypoint covers every TLD without this app
 having to maintain its own IANA bootstrap-registry mapping.
 """
+
 import logging
 from typing import Any
 
 import httpx
-from app.core.exceptions import AppHTTPException
+
 from app.core.config.settings import settings
+from app.core.exceptions import AppHTTPException
 from app.core.security.ssrf_guard import safe_get
 
 logger = logging.getLogger(__name__)
@@ -73,25 +75,29 @@ async def fetch_rdap_domain_data(domain: str) -> tuple[dict[str, Any], str]:
             status_code=504,
             detail="Request timeout while connecting to RDAP service",
             error_code="RDAP_TIMEOUT",
-        )
+        ) from e
     except httpx.RequestError as e:
         logger.error("Request error while fetching RDAP data for domain %s: %s", domain, e)
         raise AppHTTPException(
             status_code=503,
             detail=f"Failed to connect to RDAP service: {str(e)}",
             error_code="RDAP_CONNECTION_ERROR",
-        )
+        ) from e
     except httpx.HTTPStatusError as e:
-        logger.error("HTTP status error from RDAP for domain %s: Status %s", domain, e.response.status_code)
+        logger.error(
+            "HTTP status error from RDAP for domain %s: Status %s", domain, e.response.status_code
+        )
         raise AppHTTPException(
             status_code=e.response.status_code,
             detail=f"RDAP service returned error: {e.response.status_code}",
             error_code="RDAP_API_ERROR",
-        )
+        ) from e
     except Exception as e:
-        logger.error("Unexpected error while fetching RDAP data for domain %s: %s", domain, e, exc_info=True)
+        logger.error(
+            "Unexpected error while fetching RDAP data for domain %s: %s", domain, e, exc_info=True
+        )
         raise AppHTTPException(
             status_code=500,
             detail="An unexpected error occurred while fetching RDAP data",
             error_code="RDAP_UNEXPECTED_ERROR",
-        )
+        ) from e

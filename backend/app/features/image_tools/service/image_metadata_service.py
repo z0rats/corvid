@@ -13,7 +13,7 @@ from ..utils.phash_utils import compute_phash, phash_to_bits, phash_to_hex
 logger = logging.getLogger(__name__)
 
 # exifread tags that hold raw embedded thumbnail bytes rather than readable values
-THUMBNAIL_TAGS = {'JPEGThumbnail', 'TIFFThumbnail'}
+THUMBNAIL_TAGS = {"JPEGThumbnail", "TIFFThumbnail"}
 
 
 def _ratio_to_float(value) -> float:
@@ -29,7 +29,7 @@ def _dms_to_decimal(dms_values, ref: str | None) -> float:
     """Convert EXIF GPS degrees/minutes/seconds values to decimal degrees."""
     degrees, minutes, seconds = (_ratio_to_float(v) for v in dms_values)
     decimal = degrees + minutes / 60 + seconds / 3600
-    if ref and ref.upper() in ('S', 'W'):
+    if ref and ref.upper() in ("S", "W"):
         decimal = -decimal
     return decimal
 
@@ -37,7 +37,7 @@ def _dms_to_decimal(dms_values, ref: str | None) -> float:
 def _extract_file_info(filename: str, data: bytes) -> ImageFileInfo:
     """Extract basic file properties using Pillow."""
     image = Image.open(BytesIO(data))
-    dpi = image.info.get('dpi')
+    dpi = image.info.get("dpi")
     dpi_x, dpi_y = dpi if dpi else (None, None)
     mime_type, _ = mimetypes.guess_type(filename)
 
@@ -65,19 +65,19 @@ def _extract_exif_tags(data: bytes) -> dict:
 
 def _extract_gps(tags: dict) -> GpsInfo | None:
     """Build a GpsInfo object from exifread GPS tags, if present."""
-    lat_tag = tags.get('GPS GPSLatitude')
-    lon_tag = tags.get('GPS GPSLongitude')
+    lat_tag = tags.get("GPS GPSLatitude")
+    lon_tag = tags.get("GPS GPSLongitude")
     if not lat_tag or not lon_tag:
         return None
 
     try:
-        lat_ref = str(tags.get('GPS GPSLatitudeRef')) if tags.get('GPS GPSLatitudeRef') else 'N'
-        lon_ref = str(tags.get('GPS GPSLongitudeRef')) if tags.get('GPS GPSLongitudeRef') else 'E'
+        lat_ref = str(tags.get("GPS GPSLatitudeRef")) if tags.get("GPS GPSLatitudeRef") else "N"
+        lon_ref = str(tags.get("GPS GPSLongitudeRef")) if tags.get("GPS GPSLongitudeRef") else "E"
         latitude = _dms_to_decimal(lat_tag.values, lat_ref)
         longitude = _dms_to_decimal(lon_tag.values, lon_ref)
 
         altitude = None
-        alt_tag = tags.get('GPS GPSAltitude')
+        alt_tag = tags.get("GPS GPSAltitude")
         if alt_tag and alt_tag.values:
             altitude = _ratio_to_float(alt_tag.values[0])
 
@@ -94,10 +94,10 @@ def _extract_gps(tags: dict) -> GpsInfo | None:
 
 def _extract_thumbnail(tags: dict) -> str | None:
     """Return a base64 data URI for the embedded EXIF thumbnail, if present."""
-    thumbnail_bytes = tags.get('JPEGThumbnail')
+    thumbnail_bytes = tags.get("JPEGThumbnail")
     if not thumbnail_bytes or not isinstance(thumbnail_bytes, bytes):
         return None
-    encoded = base64.b64encode(thumbnail_bytes).decode('ascii')
+    encoded = base64.b64encode(thumbnail_bytes).decode("ascii")
     return f"data:image/jpeg;base64,{encoded}"
 
 
@@ -139,7 +139,9 @@ def analyze_image_content(filename: str, data: bytes) -> ImageAnalysisResponse:
 
     logger.info(
         "Image analysis completed - %s EXIF tags, GPS: %s, thumbnail: %s",
-        len(exif), bool(gps), bool(thumbnail_base64)
+        len(exif),
+        bool(gps),
+        bool(thumbnail_base64),
     )
 
     return ImageAnalysisResponse(

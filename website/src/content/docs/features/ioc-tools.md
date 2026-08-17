@@ -8,11 +8,19 @@ sidebar:
 A set of tools for working with indicators of compromise:
 
 - **IOC Lookup** — analyze IPs, domains, URLs, hashes, emails, and crypto addresses against
-  services like VirusTotal, AlienVault, AbuseIPDB, Shodan, Reddit, and Twitter/X. The IOC type is
-  auto-detected. Crypto addresses (EVM and Bitcoin) are additionally screened against a
+  services like VirusTotal, AlienVault, AbuseIPDB, Shodan, Reddit, and Twitter/X (see
+  [External Services](/corvid/architecture/external-services/) for the full provider list, and
+  which need an API key). The IOC type is auto-detected. Crypto addresses (EVM and Bitcoin) are
+  additionally screened against a
   self-hosted reputation blacklist built from the OFAC SDN sanctions list and ScamSniffer's open
   phishing-address dataset, refreshed daily in the background — no API key or third-party call
   needed for that specific check. Lookups can be done one at a time or in bulk.
+- **Library of Leaks** — checks a domain or email against a public, keyless Aleph instance
+  (run by DDoSecrets/investigativedata.io) indexing tens of millions of records across dozens of
+  breach/leak collections. Only per-collection hit counts are shown — never the matching
+  documents' own content — with a link out to review the source material on Library of Leaks
+  itself. Bulk lookup isn't offered for it, to stay within the shared anonymous rate limit of
+  this free, non-profit service.
 - **History** — every single-IOC lookup is saved automatically once every queried service has
   responded, so past investigations stay reviewable. Any saved lookup can be exported as an HTML
   or PDF report — see [Reports & Exports](/corvid/architecture/reports/).

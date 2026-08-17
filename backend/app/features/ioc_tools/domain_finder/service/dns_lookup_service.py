@@ -8,6 +8,7 @@ is a normal outcome for a DNS lookup, not a failure of the request, so each
 record type degrades to an empty list independently instead of failing the
 whole lookup.
 """
+
 import asyncio
 import logging
 from typing import Any
@@ -38,7 +39,9 @@ def _build_resolver() -> dns.asyncresolver.Resolver:
     try:
         resolver = dns.asyncresolver.Resolver()
     except dns.resolver.NoResolverConfiguration:
-        logger.warning("No usable system resolver configuration found, falling back to public resolvers")
+        logger.warning(
+            "No usable system resolver configuration found, falling back to public resolvers"
+        )
         resolver = dns.asyncresolver.Resolver(configure=False)
         resolver.nameservers = FALLBACK_NAMESERVERS
 
@@ -66,23 +69,26 @@ async def perform_dns_lookup(dns_request: DnsLookupRequest) -> DnsLookupResponse
     resolved = await asyncio.gather(
         *(_resolve_record_type(resolver, domain, record_type) for record_type in RECORD_TYPES)
     )
-    records = DnsRecordSet(**dict(zip(RECORD_TYPES, resolved)))
+    records = DnsRecordSet(**dict(zip(RECORD_TYPES, resolved, strict=False)))
 
     ip_addresses = sorted(set(records.A) | set(records.AAAA))
-    reverse_results = await asyncio.gather(
-        *(_reverse_lookup(resolver, ip) for ip in ip_addresses)
-    )
-    reverse_dns = {ip: hosts for ip, hosts in zip(ip_addresses, reverse_results) if hosts}
+    reverse_results = await asyncio.gather(*(_reverse_lookup(resolver, ip) for ip in ip_addresses))
+    reverse_dns = {
+        ip: hosts for ip, hosts in zip(ip_addresses, reverse_results, strict=False) if hosts
+    }
 
     response = DnsLookupResponse(domain=domain, records=records, reverse_dns=reverse_dns)
     logger.info(
         "DNS lookup completed for %s - record counts: %s",
-        domain, {rtype: len(getattr(records, rtype)) for rtype in RECORD_TYPES},
+        domain,
+        {rtype: len(getattr(records, rtype)) for rtype in RECORD_TYPES},
     )
     return response
 
 
-async def _resolve_record_type(resolver: dns.asyncresolver.Resolver, domain: str, record_type: str) -> list[str]:
+async def _resolve_record_type(
+    resolver: dns.asyncresolver.Resolver, domain: str, record_type: str
+) -> list[str]:
     """Resolve a single DNS record type for a domain, degrading to an empty list on any failure"""
     try:
         answer = await resolver.resolve(domain, record_type)
@@ -106,7 +112,8 @@ async def _resolve_record_type(resolver: dns.asyncresolver.Resolver, domain: str
 
 
 async def _reverse_lookup(resolver: dns.asyncresolver.Resolver, ip: str) -> list[str]:
-    """Resolve the PTR hostname(s) for a single IP address, degrading to an empty list on any failure"""
+    """Resolve the PTR hostname(s) for a single IP address, degrading to an empty list on any
+    failure"""
     try:
         reverse_name = dns.reversename.from_address(ip)
         answer = await resolver.resolve(reverse_name, "PTR")

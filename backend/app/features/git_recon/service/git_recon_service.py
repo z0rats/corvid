@@ -99,7 +99,9 @@ def _get_public_repos_count(nickname: str, token: str | None) -> int:
     return int(data.get("public_repos", 0))
 
 
-def _get_github_repos(nickname: str, repos_count: int, include_forks: bool, token: str | None) -> set[str]:
+def _get_github_repos(
+    nickname: str, repos_count: int, include_forks: bool, token: str | None
+) -> set[str]:
     if repos_count <= 0:
         return set()
     per_page = gitcolombo.GITHUB_PER_PAGE
@@ -107,7 +109,8 @@ def _get_github_repos(nickname: str, repos_count: int, include_forks: bool, toke
     repos: set[str] = set()
     for page in range(1, last_page + 1):
         data = _authed_github_get_json(
-            gitcolombo.GITHUB_REPOS_URL.format(nickname=nickname, per_page=per_page, page=page), token,
+            gitcolombo.GITHUB_REPOS_URL.format(nickname=nickname, per_page=per_page, page=page),
+            token,
         )
         if not data:
             continue
@@ -118,7 +121,7 @@ def _get_github_repos(nickname: str, repos_count: int, include_forks: bool, toke
     return repos
 
 
-def _person_to_dict(person: "gitcolombo.Person", mentions: dict[str, dict] | None = None) -> dict:
+def _person_to_dict(person: gitcolombo.Person, mentions: dict[str, dict] | None = None) -> dict:
     return {
         "key": person.key,
         "name": person.name,
@@ -144,16 +147,22 @@ def _person_to_dict(person: "gitcolombo.Person", mentions: dict[str, dict] | Non
 
 
 def _record_mention(
-    mentions: dict[str, dict[str, dict]], person_key: str, repo_url: str, commit_hash: str, *, role: str,
+    mentions: dict[str, dict[str, dict]],
+    person_key: str,
+    repo_url: str,
+    commit_hash: str,
+    *,
+    role: str,
 ) -> None:
     entry = mentions[person_key].setdefault(
-        repo_url, {"repo_url": repo_url, "sample_commit": commit_hash, "as_author": 0, "as_committer": 0},
+        repo_url,
+        {"repo_url": repo_url, "sample_commit": commit_hash, "as_author": 0, "as_committer": 0},
     )
     entry[role] += 1
 
 
 def _analyst_to_result(
-    analyst: "gitcolombo.GitAnalyst",
+    analyst: gitcolombo.GitAnalyst,
     repo_outcomes: list[dict],
     notes: list[str],
     mentions: dict[str, dict[str, dict]] | None = None,
@@ -169,7 +178,9 @@ def _analyst_to_result(
     ]
     persons = [
         _person_to_dict(p, (mentions or {}).get(p.key))
-        for p in sorted(analyst.persons.values(), key=lambda p: p.as_author + p.as_committer, reverse=True)
+        for p in sorted(
+            analyst.persons.values(), key=lambda p: p.as_author + p.as_committer, reverse=True
+        )
     ]
     return {
         "stats": {
@@ -195,7 +206,11 @@ def _run_search_mode_sync(username: str, token: str | None, ignore_noreply: bool
         gpg_results = [r for r in gpg_results if not gitcolombo.is_system_email(r["email"])]
         commit_results = [r for r in commit_results if not gitcolombo.is_system_email(r["email"])]
 
-    notes = [] if (gpg_results or commit_results) else ["No emails found via /gpg_keys or /search/commits."]
+    notes = (
+        []
+        if (gpg_results or commit_results)
+        else ["No emails found via /gpg_keys or /search/commits."]
+    )
     return {
         "stats": {"repos": 0, "commits": 0, "persons": 0},
         "repos": [],
@@ -208,7 +223,9 @@ def _run_search_mode_sync(username: str, token: str | None, ignore_noreply: bool
     }
 
 
-def build_mentions(commits_by_repo: dict[str, list["gitcolombo.Commit"]]) -> dict[str, dict[str, dict]]:
+def build_mentions(
+    commits_by_repo: dict[str, list[gitcolombo.Commit]],
+) -> dict[str, dict[str, dict]]:
     """Pure: turn a per-repo commit mapping into the same person -> repo -> counts
     structure _record_mention has always built, without needing a real GitAnalyst."""
     mentions: dict[str, dict[str, dict]] = defaultdict(dict)
@@ -220,13 +237,14 @@ def build_mentions(commits_by_repo: dict[str, list["gitcolombo.Commit"]]) -> dic
 
 
 def _track_commits_per_repo(
-    analyst: "gitcolombo.GitAnalyst", cloned: dict[str, str | None],
-) -> dict[str, list["gitcolombo.Commit"]]:
+    analyst: gitcolombo.GitAnalyst,
+    cloned: dict[str, str | None],
+) -> dict[str, list[gitcolombo.Commit]]:
     """For each successfully cloned repo, append its commits to `analyst` and record
     which of analyst.commits came from that repo. gitcolombo.Person only tracks a
     single last-seen repo/commit, and Commit carries no repo reference of its own -
     this is the only place that association exists, so we slice it out here."""
-    commits_by_repo: dict[str, list["gitcolombo.Commit"]] = {}
+    commits_by_repo: dict[str, list[gitcolombo.Commit]] = {}
     for url, path in cloned.items():
         if not path:
             continue
@@ -236,7 +254,9 @@ def _track_commits_per_repo(
     return commits_by_repo
 
 
-def _run_clone_mode_sync(sources: list[str], repos_dir: str, *, resolve_github_logins: bool) -> dict:
+def _run_clone_mode_sync(
+    sources: list[str], repos_dir: str, *, resolve_github_logins: bool
+) -> dict:
     notes: list[str] = []
     cloned = gitcolombo.clone_many(sources, repos_dir, workers=CLONE_WORKERS)
     repo_outcomes = [{"url": url, "cloned": path is not None} for url, path in cloned.items()]
@@ -286,9 +306,12 @@ async def run_scan(
         count = await asyncio.to_thread(_get_public_repos_count, nickname, github_token)
         if not count:
             raise GitReconError(
-                f"No public repos found for '{nickname}' (or rate-limited - try adding a GitHub PAT in Settings)"
+                f"No public repos found for '{nickname}' (or rate-limited - try adding a "
+                "GitHub PAT in Settings)"
             )
-        repos = await asyncio.to_thread(_get_github_repos, nickname, count, include_forks, github_token)
+        repos = await asyncio.to_thread(
+            _get_github_repos, nickname, count, include_forks, github_token
+        )
         # _get_github_repos() returns html_url straight from GitHub's own API response
         # (not user input), but re-validate defensively before any of it reaches
         # git_clone()'s subprocess call.
@@ -376,11 +399,18 @@ async def run_scan_task(
 
         logger.info(
             "Git recon %s scan for '%s': %d person(s), %d repo(s) scanned",
-            mode, target, persons_found, repos_scanned,
+            mode,
+            target,
+            persons_found,
+            repos_scanned,
         )
 
         outcome = ScanOutcome(
-            fields={"repos_scanned": repos_scanned, "repos_failed": repos_failed, "persons_found": persons_found},
+            fields={
+                "repos_scanned": repos_scanned,
+                "repos_failed": repos_failed,
+                "persons_found": persons_found,
+            },
             db_only_fields={"result": result},
         )
         if cancellable.cancelled:
@@ -388,7 +418,10 @@ async def run_scan_task(
         return outcome
 
     await ScanRun.execute(
-        FEATURE_NAME, GitReconSearch, run_work, on_event,
+        FEATURE_NAME,
+        GitReconSearch,
+        run_work,
+        on_event,
         columns=SCAN_COLUMNS,
         create_fields={"mode": mode, "target": target},
         started_fields={"mode": mode, "target": target},

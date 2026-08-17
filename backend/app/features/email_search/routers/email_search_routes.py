@@ -63,13 +63,20 @@ async def start_scan(request: Request, scan_request: ScanRequest):
     "/runs/{search_id}/cancel",
     status_code=status.HTTP_202_ACCEPTED,
     summary="Cancel a running search",
-    description="Cancel a currently-running email search, keeping whatever providers were found before cancellation",
+    description=(
+        "Cancel a currently-running email search, keeping whatever providers "
+        "were found before cancellation"
+    ),
     responses={404: {"description": "No running search with that ID"}},
 )
 async def cancel_scan_endpoint(search_id: int) -> None:
     """Cancel a running scan"""
     if not await cancel_scan(search_id):
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="EMAIL_SEARCH_NOT_RUNNING")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No running search with that ID",
+            error_code="EMAIL_SEARCH_NOT_RUNNING",
+        )
     logger.info("Cancellation requested for email search run %s", search_id)
 
 
@@ -77,7 +84,10 @@ async def cancel_scan_endpoint(search_id: int) -> None:
     "/info",
     response_model=EmailSearchInfo,
     summary="Get search tool info",
-    description="Get the underlying mailcat tool's installed version, active provider count, and whether a newer version is available on PyPI",
+    description=(
+        "Get the underlying mailcat tool's installed version, active provider "
+        "count, and whether a newer version is available on PyPI"
+    ),
 )
 async def read_info(db: ReadSessionDep) -> EmailSearchInfo:
     """Get info about the mailcat tool and its installed/available version"""
@@ -97,8 +107,9 @@ async def read_info(db: ReadSessionDep) -> EmailSearchInfo:
     "/check-update",
     response_model=EmailSearchInfo,
     summary="Check PyPI for a mailcat-osint update",
-    description="Check PyPI for the latest published mailcat-osint version. Doesn't install anything - "
-    "a newer version still requires a container rebuild, this only checks what's available.",
+    description="Check PyPI for the latest published mailcat-osint version. Doesn't install "
+    "anything - a newer version still requires a container rebuild, this only checks what's "
+    "available.",
 )
 async def check_update(db: SessionDep) -> EmailSearchInfo:
     """Manually check PyPI for a newer mailcat-osint release"""
@@ -121,7 +132,9 @@ async def check_update(db: SessionDep) -> EmailSearchInfo:
     summary="List past searches",
     description="Retrieve past and in-progress email searches, most recent first",
 )
-async def read_search_runs(db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100) -> list[SearchRunSummary]:
+async def read_search_runs(
+    db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100
+) -> list[SearchRunSummary]:
     """List past search runs with pagination"""
     runs = await list_search_runs(db, skip=skip, limit=limit)
     return [SearchRunSummary.model_validate(r) for r in runs]
@@ -138,7 +151,11 @@ async def read_search_run(search_id: int, db: ReadSessionDep) -> SearchRunDetail
     """Get a specific search run with its found providers"""
     run = await get_search_run_with_results(db, search_id)
     if not run:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search run not found", error_code="EMAIL_SEARCH_RUN_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search run not found",
+            error_code="EMAIL_SEARCH_RUN_NOT_FOUND",
+        )
     return SearchRunDetail.model_validate(run)
 
 
@@ -153,5 +170,9 @@ async def delete_search_run_endpoint(search_id: int, db: SessionDep) -> None:
     """Delete a specific search run"""
     run = await delete_search_run(db, search_id)
     if not run:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search run not found", error_code="EMAIL_SEARCH_RUN_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search run not found",
+            error_code="EMAIL_SEARCH_RUN_NOT_FOUND",
+        )
     logger.info("Deleted email search run %s", search_id)

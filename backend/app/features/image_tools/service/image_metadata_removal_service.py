@@ -13,7 +13,12 @@ from typing import Literal
 
 from PIL import Image
 
-from ..utils.jpeg_markers import SCAN_DATA, TRAILING_DATA, RawMarker, serialize_markers, walk_markers
+from ..utils.jpeg_markers import (
+    TRAILING_DATA,
+    RawMarker,
+    serialize_markers,
+    walk_markers,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +32,8 @@ _TIFF_TYPE_SIZES = {1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8,
 
 
 def _zero_gps_ifd(app1_payload: bytes) -> bytes:
-    """Zero out the GPS IFD (pointer + its entries + any out-of-line data) within an EXIF APP1 payload.
+    """Zero out the GPS IFD (pointer + its entries + any out-of-line data) within an EXIF APP1
+    payload.
 
     In-place only: every write stays within the existing byte layout, so the
     payload's length never changes and no other IFD offset needs adjusting.
@@ -41,7 +47,7 @@ def _zero_gps_ifd(app1_payload: bytes) -> bytes:
     if len(buf) < tiff_start + 8:
         return bytes(buf)
 
-    byte_order = bytes(buf[tiff_start:tiff_start + 2])
+    byte_order = bytes(buf[tiff_start : tiff_start + 2])
     if byte_order == b"II":
         endian = "little"
     elif byte_order == b"MM":
@@ -50,13 +56,13 @@ def _zero_gps_ifd(app1_payload: bytes) -> bytes:
         return bytes(buf)  # not a valid TIFF header, leave untouched
 
     def u16(offset: int) -> int:
-        return int.from_bytes(buf[offset:offset + 2], endian)
+        return int.from_bytes(buf[offset : offset + 2], endian)
 
     def u32(offset: int) -> int:
-        return int.from_bytes(buf[offset:offset + 4], endian)
+        return int.from_bytes(buf[offset : offset + 4], endian)
 
     def set_u32(offset: int, value: int) -> None:
-        buf[offset:offset + 4] = value.to_bytes(4, endian)
+        buf[offset : offset + 4] = value.to_bytes(4, endian)
 
     ifd0_offset = tiff_start + u32(tiff_start + 4)
     if ifd0_offset + 2 > len(buf):
@@ -75,7 +81,7 @@ def _zero_gps_ifd(app1_payload: bytes) -> bytes:
         gps_ifd_offset = tiff_start + u32(entry_offset + 8)
 
         if gps_ifd_offset + 2 > len(buf):
-            buf[entry_offset:entry_offset + 12] = b"\x00" * 12
+            buf[entry_offset : entry_offset + 12] = b"\x00" * 12
             break
         gps_count = u16(gps_ifd_offset)
         gps_entries_start = gps_ifd_offset + 2
@@ -93,7 +99,7 @@ def _zero_gps_ifd(app1_payload: bytes) -> bytes:
             if size > 4:
                 data_offset = tiff_start + u32(gps_entry_offset + 8)
                 if data_offset + size <= len(buf):
-                    buf[data_offset:data_offset + size] = b"\x00" * size
+                    buf[data_offset : data_offset + size] = b"\x00" * size
 
         gps_ifd_total_len = 2 + gps_count * 12 + 4  # count + entries + next-IFD offset
         end = min(gps_ifd_offset + gps_ifd_total_len, len(buf))
@@ -103,7 +109,7 @@ def _zero_gps_ifd(app1_payload: bytes) -> bytes:
         # done reading its value - readers key lookups by tag id, so a zeroed
         # tag field makes this entry invisible to GPS-tag lookups entirely,
         # while the fixed 12-byte slot keeps IFD0's entry count/layout valid.
-        buf[entry_offset:entry_offset + 12] = b"\x00" * 12
+        buf[entry_offset : entry_offset + 12] = b"\x00" * 12
         break  # only one GPS IFD pointer expected in IFD0
 
     return bytes(buf)
@@ -121,12 +127,14 @@ def _strip_jpeg_markers(data: bytes, mode: Literal["all", "location_only"]) -> b
             if mode == "all":
                 continue
             if marker.payload.startswith(_EXIF_PREFIX):
-                kept.append(RawMarker(
-                    code=marker.code,
-                    offset=marker.offset,
-                    length=marker.length,
-                    payload=_zero_gps_ifd(marker.payload),
-                ))
+                kept.append(
+                    RawMarker(
+                        code=marker.code,
+                        offset=marker.offset,
+                        length=marker.length,
+                        payload=_zero_gps_ifd(marker.payload),
+                    )
+                )
             else:
                 kept.append(marker)  # XMP-only APP1: no EXIF GPS IFD to strip
             continue
@@ -159,7 +167,9 @@ def _strip_other_format(data: bytes) -> tuple[bytes, str]:
     return buf.getvalue(), f"image/{fmt.lower()}"
 
 
-def strip_metadata(filename: str, data: bytes, mode: Literal["all", "location_only"]) -> tuple[bytes, str, str]:
+def strip_metadata(
+    filename: str, data: bytes, mode: Literal["all", "location_only"]
+) -> tuple[bytes, str, str]:
     """Remove metadata from an image file.
 
     Returns (cleaned_bytes, media_type, output_filename). Raises ValueError
@@ -174,9 +184,17 @@ def strip_metadata(filename: str, data: bytes, mode: Literal["all", "location_on
     is_jpeg = len(data) >= 2 and data[0] == 0xFF and data[1] == 0xD8
     if is_jpeg:
         cleaned = _strip_jpeg_markers(data, mode)
-        logger.info("Stripped JPEG metadata (mode=%s) for '%s': %s -> %s bytes", mode, filename, len(data), len(cleaned))
+        logger.info(
+            "Stripped JPEG metadata (mode=%s) for '%s': %s -> %s bytes",
+            mode,
+            filename,
+            len(data),
+            len(cleaned),
+        )
         return cleaned, "image/jpeg", out_filename
 
     cleaned, media_type = _strip_other_format(data)
-    logger.info("Stripped non-JPEG metadata for '%s': %s -> %s bytes", filename, len(data), len(cleaned))
+    logger.info(
+        "Stripped non-JPEG metadata for '%s': %s -> %s bytes", filename, len(data), len(cleaned)
+    )
     return cleaned, media_type, out_filename

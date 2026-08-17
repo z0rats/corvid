@@ -1,19 +1,19 @@
 import logging
-from email.parser import BytesParser
+from datetime import UTC, datetime
 from email import policy
-from datetime import datetime, timezone
+from email.parser import BytesParser
 
 from ..schemas.email_schemas import EmailAnalysisResponse, WarningLevel
+from ..utils.parsing_utils import extract_message_text
 from .email_parsing_service import (
-    extract_basic_info,
-    extract_all_headers,
     calculate_email_hashes,
+    extract_all_headers,
     extract_attachments,
+    extract_basic_info,
     extract_email_hops,
-    extract_urls
+    extract_urls,
 )
 from .email_security_service import perform_security_analysis
-from ..utils.parsing_utils import extract_message_text
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,11 @@ def analyze_email_content(data: bytes) -> EmailAnalysisResponse:
     message_text = extract_message_text(msg)
 
     critical_warnings = [w for w in warnings if w.warning_tlp == WarningLevel.RED]
-    logger.info("Email analysis completed - Warnings: %s (Critical: %s)", len(warnings), len(critical_warnings))
+    logger.info(
+        "Email analysis completed - Warnings: %s (Critical: %s)",
+        len(warnings),
+        len(critical_warnings),
+    )
 
     return EmailAnalysisResponse(
         basic_info=basic_info,
@@ -48,6 +52,6 @@ def analyze_email_content(data: bytes) -> EmailAnalysisResponse:
         warnings=warnings,
         urls=urls,
         message_text=message_text,
-        analysis_timestamp=datetime.now(timezone.utc),
-        file_size=len(data)
+        analysis_timestamp=datetime.now(UTC),
+        file_size=len(data),
     )

@@ -1,26 +1,26 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, status
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, status
 
 from app.core.dependencies import ReadSessionDep, SessionDep
-from app.features.llm_templates.crud.template_category_crud import (
-    get_all_categories,
-    create_category,
-    update_category_name,
-    delete_category,
-    reorder_categories,
-)
+from app.core.exceptions import AppHTTPException
 from app.features.llm_templates.crud.llm_template_crud import move_templates_to_category
+from app.features.llm_templates.crud.template_category_crud import (
+    create_category,
+    delete_category,
+    get_all_categories,
+    reorder_categories,
+    update_category_name,
+)
 from app.features.llm_templates.schemas.llm_template_schemas import (
-    TemplateCategoryCreate,
-    TemplateCategoryUpdate,
-    TemplateCategoryResponse,
-    CategoryOrderUpdate,
     CategoryDeleteRequest,
+    CategoryOrderUpdate,
     MoveTemplatesRequest,
-    StatusMessageResponse,
     ReorderResponse,
+    StatusMessageResponse,
+    TemplateCategoryCreate,
+    TemplateCategoryResponse,
+    TemplateCategoryUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,9 @@ async def list_categories(db: ReadSessionDep) -> list[TemplateCategoryResponse]:
     summary="Create group",
     description="Create a new template group",
 )
-async def create_new_category(data: TemplateCategoryCreate, db: SessionDep) -> TemplateCategoryResponse:
+async def create_new_category(
+    data: TemplateCategoryCreate, db: SessionDep
+) -> TemplateCategoryResponse:
     """Create a new template group."""
     logger.info("Creating group: %s", data.name)
     result = await create_category(db, data.name)
@@ -61,15 +63,25 @@ async def create_new_category(data: TemplateCategoryCreate, db: SessionDep) -> T
     description="Rename a template group. System groups cannot be renamed.",
     responses={400: {"description": "System group"}, 404: {"description": "Group not found"}},
 )
-async def rename_category(category_id: str, data: TemplateCategoryUpdate, db: SessionDep) -> TemplateCategoryResponse:
+async def rename_category(
+    category_id: str, data: TemplateCategoryUpdate, db: SessionDep
+) -> TemplateCategoryResponse:
     """Rename a template group."""
     logger.info("Renaming group %s to: %s", category_id, data.name)
     try:
         result = await update_category_name(db, category_id, data.name)
     except ValueError as e:
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e), error_code="CATEGORY_RENAME_INVALID")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+            error_code="CATEGORY_RENAME_INVALID",
+        ) from e
     if not result:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found", error_code="CATEGORY_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found",
+            error_code="CATEGORY_NOT_FOUND",
+        )
     return result
 
 
@@ -80,15 +92,25 @@ async def rename_category(category_id: str, data: TemplateCategoryUpdate, db: Se
     description="Delete a group. Choose to move templates to Default or delete them.",
     responses={400: {"description": "System group"}, 404: {"description": "Group not found"}},
 )
-async def remove_category(category_id: str, data: CategoryDeleteRequest, db: SessionDep) -> StatusMessageResponse:
+async def remove_category(
+    category_id: str, data: CategoryDeleteRequest, db: SessionDep
+) -> StatusMessageResponse:
     """Delete a template group with specified action for its templates."""
     logger.info("Deleting group %s with action: %s", category_id, data.action)
     try:
         success = await delete_category(db, category_id, data.action)
     except ValueError as e:
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e), error_code="CATEGORY_DELETE_INVALID")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+            error_code="CATEGORY_DELETE_INVALID",
+        ) from e
     if not success:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found", error_code="CATEGORY_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found",
+            error_code="CATEGORY_NOT_FOUND",
+        )
     return StatusMessageResponse(status="success", message="Group deleted successfully")
 
 

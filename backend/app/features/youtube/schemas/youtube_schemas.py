@@ -8,7 +8,12 @@ CommentOrder = Literal["relevance", "time"]
 class YoutubeLookupRequest(BaseModel):
     """Request to look up metadata for a YouTube video URL."""
 
-    url: str = Field(..., min_length=1, max_length=2048, description="YouTube video URL (watch/shorts/embed/youtu.be)")
+    url: str = Field(
+        ...,
+        min_length=1,
+        max_length=2048,
+        description="YouTube video URL (watch/shorts/embed/youtu.be)",
+    )
 
     @field_validator("url")
     @classmethod
@@ -74,16 +79,27 @@ class YoutubeLookupResponse(BaseModel):
     page_metadata: YoutubePageMetadata | None = None
     thumbnails: dict[str, str] = Field(default_factory=dict)
     api_data: YoutubeApiData | None = None
-    api_configured: bool = Field(default=False, description="Whether a YouTube Data API key is configured")
+    api_configured: bool = Field(
+        default=False, description="Whether a YouTube Data API key is configured"
+    )
 
 
 class YoutubeCommentsRequest(BaseModel):
     """Request to list or search a YouTube video's top-level comments."""
 
-    url: str = Field(..., min_length=1, max_length=2048, description="YouTube video URL (watch/shorts/embed/youtu.be)")
+    url: str = Field(
+        ...,
+        min_length=1,
+        max_length=2048,
+        description="YouTube video URL (watch/shorts/embed/youtu.be)",
+    )
     query: str | None = Field(
-        default=None, max_length=200,
-        description="Optional keyword to filter comments by (author or text), scanned server-side across multiple pages",
+        default=None,
+        max_length=200,
+        description=(
+            "Optional keyword to filter comments by (author or text), scanned "
+            "server-side across multiple pages"
+        ),
     )
     order: CommentOrder = "relevance"
     page_token: str | None = Field(default=None, max_length=2048)
@@ -129,7 +145,9 @@ class YoutubeCommentsResponse(BaseModel):
     truncated: bool = Field(
         default=False,
         description="For a keyword search: true when the page/result-count cap was hit before "
-                     "the video's comments were exhausted, so there may be further matches on "
-                     "the next page (see next_page_token)",
+        "the video's comments were exhausted, so there may be further matches on "
+        "the next page (see next_page_token)",
     )
-    pages_scanned: int = Field(default=0, description="Upstream API pages fetched to build this response")
+    pages_scanned: int = Field(
+        default=0, description="Upstream API pages fetched to build this response"
+    )

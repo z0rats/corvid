@@ -1,19 +1,22 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.features.newsfeed.crud.news_articles_crud import (
     get_articles_after_cutoff,
-    get_paginated_articles,
-    get_recent_news_articles,
     get_news_article_by_id,
     get_news_articles_by_ids,
+    get_paginated_articles,
+    get_recent_news_articles,
     update_news_article,
 )
 from app.features.newsfeed.crud.newsfeed_config_crud import get_newsfeed_config
 from app.features.newsfeed.schemas.newsfeed_schemas import (
-    ArticleIocsResponse, NewsArticleSchema, PaginatedArticlesResponse, RecentArticleSchema,
+    ArticleIocsResponse,
+    NewsArticleSchema,
+    PaginatedArticlesResponse,
+    RecentArticleSchema,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,9 +27,9 @@ async def get_news_from_db(db: AsyncSession, limit: int = 500) -> list[NewsArtic
     config = await get_newsfeed_config(db)
 
     if config.retention_days == 0:
-        cutoff_date = datetime.min.replace(tzinfo=timezone.utc)
+        cutoff_date = datetime.min.replace(tzinfo=UTC)
     else:
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=config.retention_days)
+        cutoff_date = datetime.now(UTC) - timedelta(days=config.retention_days)
 
     articles = await get_articles_after_cutoff(db, cutoff_date, limit)
     logger.info("Retrieved %s news articles from database", len(articles))
@@ -97,7 +100,9 @@ async def update_article_details(
     return NewsArticleSchema.model_validate(article)
 
 
-async def get_recent_articles(db: AsyncSession, time_filter: str = "7d") -> list[RecentArticleSchema]:
+async def get_recent_articles(
+    db: AsyncSession, time_filter: str = "7d"
+) -> list[RecentArticleSchema]:
     """Retrieve recent articles filtered by a relative time range"""
     return await get_recent_news_articles(db, time_filter)
 
@@ -108,4 +113,6 @@ async def get_article_iocs(db: AsyncSession, article_id: int) -> ArticleIocsResp
     if not article:
         return None
     iocs = article.iocs or {}
-    return ArticleIocsResponse(**{key: iocs.get(key, []) for key in ArticleIocsResponse.model_fields})
+    return ArticleIocsResponse(
+        **{key: iocs.get(key, []) for key in ArticleIocsResponse.model_fields}
+    )

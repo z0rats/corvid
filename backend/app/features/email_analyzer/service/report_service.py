@@ -94,27 +94,42 @@ def build_sections(result: EmailAnalysisResponse, locale: str) -> list[ReportSec
     hops_section = ReportSection(
         title=t["hops"],
         rows=[
-            ReportRow(f"#{hop.number}", f"{hop.from_server or '-'} -> {hop.by_server or '-'} ({hop.with_protocol or '-'})")
+            ReportRow(
+                f"#{hop.number}",
+                f"{hop.from_server or '-'} -> {hop.by_server or '-'} ({hop.with_protocol or '-'})",
+            )
             for hop in result.hops
         ],
     )
 
     urls_section = ReportSection(
         title=t["urls"],
-        rows=[ReportRow(str(i + 1), url) for i, url in enumerate(result.urls)] or [ReportRow("-", t["no_urls"])],
+        rows=[ReportRow(str(i + 1), url) for i, url in enumerate(result.urls)]
+        or [ReportRow("-", t["no_urls"])],
     )
 
-    return [basic_section, hashes_section, warnings_section, attachments_section, hops_section, urls_section]
+    return [
+        basic_section,
+        hashes_section,
+        warnings_section,
+        attachments_section,
+        hops_section,
+        urls_section,
+    ]
 
 
-def generate_analysis_report(result: EmailAnalysisResponse, fmt: str, locale: str = "en") -> tuple[bytes, str, str]:
+def generate_analysis_report(
+    result: EmailAnalysisResponse, fmt: str, locale: str = "en"
+) -> tuple[bytes, str, str]:
     """Generate an HTML/PDF report for an email analysis result.
 
     Returns (content, media_type, filename).
     """
     t = _labels(locale)
     sections = build_sections(result, locale)
-    content, media_type = generate_report(t["report_title"], sections, fmt, locale, t["generated_at"])
+    content, media_type = generate_report(
+        t["report_title"], sections, fmt, locale, t["generated_at"]
+    )
     ext = EXPORT_FORMATS[fmt][1]
     filename = f"email-analysis{ext}"
     return content, media_type, filename

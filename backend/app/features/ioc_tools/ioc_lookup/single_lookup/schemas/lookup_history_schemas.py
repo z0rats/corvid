@@ -18,9 +18,13 @@ class LookupResultCreate(BaseModel):
 class SearchCreate(BaseModel):
     """Request to save a completed single-IOC lookup search"""
 
-    ioc: str = Field(..., description="The IOC value that was searched", min_length=1, max_length=2000)
+    ioc: str = Field(
+        ..., description="The IOC value that was searched", min_length=1, max_length=2000
+    )
     ioc_type: str = Field(..., description="The detected IOC type", min_length=1, max_length=20)
-    results: list[LookupResultCreate] = Field(..., description="Per-service results gathered for this search")
+    results: list[LookupResultCreate] = Field(
+        ..., description="Per-service results gathered for this search"
+    )
 
 
 class LookupResultSchema(BaseModel):
@@ -50,4 +54,6 @@ class SearchSummary(BaseModel):
 class SearchDetail(SearchSummary):
     """Full detail of a search run, including its per-service results"""
 
-    results: list[LookupResultSchema] = Field(default_factory=list, description="Per-service results")
+    results: list[LookupResultSchema] = Field(
+        default_factory=list, description="Per-service results"
+    )

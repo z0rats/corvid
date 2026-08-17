@@ -14,16 +14,16 @@ Revises: e541fd2b2817
 Create Date: 2026-08-04 22:48:20.414242
 
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 from alembic import op
 
-
 # revision identifiers, used by Alembic.
-revision: str = 'bf5e06e441df'
-down_revision: Union[str, None] = 'e541fd2b2817'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "bf5e06e441df"
+down_revision: str | None = "e541fd2b2817"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 _JSON_NULL_COLUMNS = ("matches", "iocs", "relevant_iocs")
 

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
@@ -11,13 +11,10 @@ class DomainLookupRequest(BaseModel):
     """Request model for domain lookup operations"""
 
     domain: str = Field(
-        ...,
-        description="Domain name to lookup (e.g., 'example.com')",
-        min_length=1,
-        max_length=255
+        ..., description="Domain name to lookup (e.g., 'example.com')", min_length=1, max_length=255
     )
 
-    @field_validator('domain')
+    @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
         """Validate domain format and perform basic sanitization"""
@@ -25,23 +22,25 @@ class DomainLookupRequest(BaseModel):
 
         if not v or not v.strip():
             logger.warning("Empty domain provided in schema validation")
-            raise ValueError('Domain cannot be empty')
+            raise ValueError("Domain cannot be empty")
 
         domain = v.strip().lower()
 
-        if domain.startswith(('http://', 'https://')):
-            domain = domain.split('://', 1)[1]
+        if domain.startswith(("http://", "https://")):
+            domain = domain.split("://", 1)[1]
 
-        if '/' in domain:
-            domain = domain.split('/', 1)[0]
+        if "/" in domain:
+            domain = domain.split("/", 1)[0]
 
         if len(domain) > 255:
-            logger.error("Domain too long in schema validation: '%s' (length: %s)", domain, len(domain))
-            raise ValueError('Domain name too long')
+            logger.error(
+                "Domain too long in schema validation: '%s' (length: %s)", domain, len(domain)
+            )
+            raise ValueError("Domain name too long")
 
-        if any(char in domain for char in [' ', '\t', '\n', '\r']):
+        if any(char in domain for char in [" ", "\t", "\n", "\r"]):
             logger.error("Invalid characters in domain: '%s'", domain)
-            raise ValueError('Domain contains invalid characters')
+            raise ValueError("Domain contains invalid characters")
 
         logger.debug("Schema validation successful: '%s' -> '%s'", v, domain)
         return domain
@@ -53,7 +52,9 @@ class UrlScanResult(BaseModel):
     task: dict[str, Any] | None = Field(default=None, description="Task information from the scan")
     stats: dict[str, Any] | None = Field(default=None, description="Statistics from the scan")
     page: dict[str, Any] | None = Field(default=None, description="Page information from the scan")
-    lists: dict[str, Any] | None = Field(default=None, description="Lists information from the scan")
+    lists: dict[str, Any] | None = Field(
+        default=None, description="Lists information from the scan"
+    )
     verdicts: dict[str, Any] | None = Field(default=None, description="Verdicts from the scan")
     meta: dict[str, Any] | None = Field(default=None, description="Metadata from the scan")
     expanded: bool = Field(default=False, description="Whether the result is expanded in the UI")
@@ -66,8 +67,8 @@ class DomainLookupResponse(BaseModel):
     results: list[UrlScanResult] = Field(..., description="List of scan results from urlscan.io")
     total_results: int = Field(..., description="Total number of results found", ge=0)
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        description="Timestamp when the lookup was performed"
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the lookup was performed",
     )
 
 
@@ -78,8 +79,7 @@ class DomainLookupError(BaseModel):
     error_type: str = Field(..., description="Type of error that occurred")
     error_message: str = Field(..., description="Detailed error message")
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        description="Timestamp when the error occurred"
+        default_factory=lambda: datetime.now(UTC), description="Timestamp when the error occurred"
     )
 
 
@@ -90,29 +90,29 @@ class WhoisLookupRequest(BaseModel):
         ...,
         description="Domain name to look up via RDAP (e.g., 'example.com')",
         min_length=1,
-        max_length=255
+        max_length=255,
     )
 
-    @field_validator('domain')
+    @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
         """Validate domain format, rejecting search patterns which RDAP doesn't support"""
         if not v or not v.strip():
-            raise ValueError('Domain cannot be empty')
+            raise ValueError("Domain cannot be empty")
 
         domain = v.strip().lower()
 
-        if domain.startswith(('http://', 'https://')):
-            domain = domain.split('://', 1)[1]
+        if domain.startswith(("http://", "https://")):
+            domain = domain.split("://", 1)[1]
 
-        if '/' in domain:
-            domain = domain.split('/', 1)[0]
+        if "/" in domain:
+            domain = domain.split("/", 1)[0]
 
         if len(domain) > 255:
-            raise ValueError('Domain name too long')
+            raise ValueError("Domain name too long")
 
-        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
-            raise ValueError('Domain contains invalid characters')
+        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
+            raise ValueError("Domain contains invalid characters")
 
         return domain
 
@@ -124,29 +124,29 @@ class CtSubdomainsRequest(BaseModel):
         ...,
         description="Domain name to enumerate subdomains for via crt.sh (e.g., 'example.com')",
         min_length=1,
-        max_length=255
+        max_length=255,
     )
 
-    @field_validator('domain')
+    @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
         """Validate domain format, rejecting search patterns which crt.sh already applies itself"""
         if not v or not v.strip():
-            raise ValueError('Domain cannot be empty')
+            raise ValueError("Domain cannot be empty")
 
         domain = v.strip().lower()
 
-        if domain.startswith(('http://', 'https://')):
-            domain = domain.split('://', 1)[1]
+        if domain.startswith(("http://", "https://")):
+            domain = domain.split("://", 1)[1]
 
-        if '/' in domain:
-            domain = domain.split('/', 1)[0]
+        if "/" in domain:
+            domain = domain.split("/", 1)[0]
 
         if len(domain) > 255:
-            raise ValueError('Domain name too long')
+            raise ValueError("Domain name too long")
 
-        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
-            raise ValueError('Domain contains invalid characters')
+        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
+            raise ValueError("Domain contains invalid characters")
 
         return domain
 
@@ -157,7 +157,9 @@ class CtCertificate(BaseModel):
     id: int | None = Field(default=None, description="crt.sh certificate/log entry ID")
     issuer_name: str | None = Field(default=None, description="Issuing CA name")
     common_name: str | None = Field(default=None, description="Certificate common name")
-    name_value: str | None = Field(default=None, description="Newline-separated SAN entries as returned by crt.sh")
+    name_value: str | None = Field(
+        default=None, description="Newline-separated SAN entries as returned by crt.sh"
+    )
     not_before: datetime | None = Field(default=None, description="Certificate validity start date")
     not_after: datetime | None = Field(default=None, description="Certificate validity end date")
 
@@ -172,10 +174,12 @@ class CtSubdomainsResponse(BaseModel):
     certificates: list[CtCertificate] = Field(
         default_factory=list, description="Certificate log entries backing the subdomain list"
     )
-    total_certificates: int = Field(..., description="Total number of certificate log entries found", ge=0)
+    total_certificates: int = Field(
+        ..., description="Total number of certificate log entries found", ge=0
+    )
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        description="Timestamp when the lookup was performed"
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the lookup was performed",
     )
 
 
@@ -186,29 +190,29 @@ class DnsLookupRequest(BaseModel):
         ...,
         description="Domain name to look up DNS records for (e.g., 'example.com')",
         min_length=1,
-        max_length=255
+        max_length=255,
     )
 
-    @field_validator('domain')
+    @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
         """Validate domain format, rejecting search patterns which DNS resolution doesn't support"""
         if not v or not v.strip():
-            raise ValueError('Domain cannot be empty')
+            raise ValueError("Domain cannot be empty")
 
         domain = v.strip().lower()
 
-        if domain.startswith(('http://', 'https://')):
-            domain = domain.split('://', 1)[1]
+        if domain.startswith(("http://", "https://")):
+            domain = domain.split("://", 1)[1]
 
-        if '/' in domain:
-            domain = domain.split('/', 1)[0]
+        if "/" in domain:
+            domain = domain.split("/", 1)[0]
 
         if len(domain) > 255:
-            raise ValueError('Domain name too long')
+            raise ValueError("Domain name too long")
 
-        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
-            raise ValueError('Domain contains invalid characters')
+        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
+            raise ValueError("Domain contains invalid characters")
 
         return domain
 
@@ -218,7 +222,9 @@ class DnsRecordSet(BaseModel):
 
     A: list[str] = Field(default_factory=list, description="IPv4 addresses")
     AAAA: list[str] = Field(default_factory=list, description="IPv6 addresses")
-    MX: list[str] = Field(default_factory=list, description="Mail exchange records, preference-ordered")
+    MX: list[str] = Field(
+        default_factory=list, description="Mail exchange records, preference-ordered"
+    )
     TXT: list[str] = Field(default_factory=list, description="Text records")
     NS: list[str] = Field(default_factory=list, description="Authoritative nameservers")
     CNAME: list[str] = Field(default_factory=list, description="Canonical name records")
@@ -233,8 +239,8 @@ class DnsLookupResponse(BaseModel):
         default_factory=dict, description="PTR hostnames for each resolved A/AAAA IP address"
     )
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        description="Timestamp when the lookup was performed"
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the lookup was performed",
     )
 
 
@@ -245,29 +251,29 @@ class DnsDumpsterRequest(BaseModel):
         ...,
         description="Domain name to look up via DNSDumpster (e.g., 'example.com')",
         min_length=1,
-        max_length=255
+        max_length=255,
     )
 
-    @field_validator('domain')
+    @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
         """Validate domain format, rejecting search patterns which DNSDumpster doesn't support"""
         if not v or not v.strip():
-            raise ValueError('Domain cannot be empty')
+            raise ValueError("Domain cannot be empty")
 
         domain = v.strip().lower()
 
-        if domain.startswith(('http://', 'https://')):
-            domain = domain.split('://', 1)[1]
+        if domain.startswith(("http://", "https://")):
+            domain = domain.split("://", 1)[1]
 
-        if '/' in domain:
-            domain = domain.split('/', 1)[0]
+        if "/" in domain:
+            domain = domain.split("/", 1)[0]
 
         if len(domain) > 255:
-            raise ValueError('Domain name too long')
+            raise ValueError("Domain name too long")
 
-        if any(char in domain for char in [' ', '\t', '\n', '\r', '*', '?']):
-            raise ValueError('Domain contains invalid characters')
+        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
+            raise ValueError("Domain contains invalid characters")
 
         return domain
 
@@ -278,7 +284,9 @@ class DnsDumpsterBanner(BaseModel):
     server: str | None = Field(default=None, description="Server header value")
     title: str | None = Field(default=None, description="Page title, if fetched")
     cn: str | None = Field(default=None, description="TLS certificate common name (HTTPS only)")
-    apps: list[str] = Field(default_factory=list, description="Detected application/technology fingerprints")
+    apps: list[str] = Field(
+        default_factory=list, description="Detected application/technology fingerprints"
+    )
 
 
 class DnsDumpsterIp(BaseModel):
@@ -289,10 +297,16 @@ class DnsDumpsterIp(BaseModel):
     asn_name: str | None = Field(default=None, description="ASN organization/ISP name")
     asn_range: str | None = Field(default=None, description="ASN's advertised IP range")
     country: str | None = Field(default=None, description="Country name")
-    country_code: str | None = Field(default=None, description="ISO country code, for flag rendering")
+    country_code: str | None = Field(
+        default=None, description="ISO country code, for flag rendering"
+    )
     ptr: str | None = Field(default=None, description="Reverse DNS (PTR) hostname")
-    banner_http: DnsDumpsterBanner | None = Field(default=None, description="HTTP banner fingerprint")
-    banner_https: DnsDumpsterBanner | None = Field(default=None, description="HTTPS banner fingerprint")
+    banner_http: DnsDumpsterBanner | None = Field(
+        default=None, description="HTTP banner fingerprint"
+    )
+    banner_https: DnsDumpsterBanner | None = Field(
+        default=None, description="HTTPS banner fingerprint"
+    )
 
 
 class DnsDumpsterHost(BaseModel):
@@ -311,17 +325,21 @@ class DnsDumpsterResponse(BaseModel):
     mx: list[DnsDumpsterHost] = Field(default_factory=list, description="Mail exchange records")
     cname: list[DnsDumpsterHost] = Field(default_factory=list, description="CNAME records")
     txt: list[str] = Field(default_factory=list, description="Text records")
-    total_a_records: int = Field(default=0, description="Total number of A records reported by DNSDumpster")
+    total_a_records: int = Field(
+        default=0, description="Total number of A records reported by DNSDumpster"
+    )
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        description="Timestamp when the lookup was performed"
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the lookup was performed",
     )
 
 
 class WhoisEntity(BaseModel):
     """A single entity (registrar, registrant, admin, tech, ...) from an RDAP response"""
 
-    role: str = Field(..., description="Entity role, e.g. 'registrar', 'registrant', 'admin', 'tech'")
+    role: str = Field(
+        ..., description="Entity role, e.g. 'registrar', 'registrant', 'admin', 'tech'"
+    )
     name: str | None = Field(default=None, description="Contact/organization full name")
     organization: str | None = Field(default=None, description="Organization name")
     email: str | None = Field(default=None, description="Contact email, if disclosed")
@@ -342,9 +360,13 @@ class WhoisLookupResponse(BaseModel):
     )
     statuses: list[str] = Field(default_factory=list, description="EPP domain status codes")
     nameservers: list[str] = Field(default_factory=list, description="Authoritative nameservers")
-    entities: list[WhoisEntity] = Field(default_factory=list, description="All disclosed entities from the RDAP record")
-    raw: dict[str, Any] = Field(default_factory=dict, description="Full raw RDAP response for advanced inspection")
+    entities: list[WhoisEntity] = Field(
+        default_factory=list, description="All disclosed entities from the RDAP record"
+    )
+    raw: dict[str, Any] = Field(
+        default_factory=dict, description="Full raw RDAP response for advanced inspection"
+    )
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        description="Timestamp when the lookup was performed"
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the lookup was performed",
     )

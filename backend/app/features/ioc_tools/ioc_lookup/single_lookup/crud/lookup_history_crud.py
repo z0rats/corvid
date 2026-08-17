@@ -6,7 +6,9 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.models.lookup_history_model
     SingleLookupResult,
     SingleLookupSearch,
 )
-from app.features.ioc_tools.ioc_lookup.single_lookup.schemas.lookup_history_schemas import LookupResultCreate
+from app.features.ioc_tools.ioc_lookup.single_lookup.schemas.lookup_history_schemas import (
+    LookupResultCreate,
+)
 
 
 async def create_search(
@@ -18,25 +20,32 @@ async def create_search(
     await db.flush()
 
     for result in results:
-        db.add(SingleLookupResult(
-            search_id=search.id,
-            service_key=result.service_key,
-            service_name=result.service_name,
-            status=result.status,
-            summary=result.summary[:500],
-            tlp=result.tlp,
-            data=result.data,
-        ))
+        db.add(
+            SingleLookupResult(
+                search_id=search.id,
+                service_key=result.service_key,
+                service_name=result.service_name,
+                status=result.status,
+                summary=result.summary[:500],
+                tlp=result.tlp,
+                data=result.data,
+            )
+        )
 
     await db.flush()
     await db.refresh(search)
     return search
 
 
-async def list_searches(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[SingleLookupSearch]:
+async def list_searches(
+    db: AsyncSession, skip: int = 0, limit: int = 100
+) -> list[SingleLookupSearch]:
     """List past search runs, most recent first"""
     result = await db.execute(
-        select(SingleLookupSearch).order_by(SingleLookupSearch.searched_at.desc()).offset(skip).limit(limit)
+        select(SingleLookupSearch)
+        .order_by(SingleLookupSearch.searched_at.desc())
+        .offset(skip)
+        .limit(limit)
     )
     return list(result.scalars().all())
 

@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.features.llm_templates.constants import DEFAULT_CATEGORY_ID
 from app.features.llm_templates.models.llm_template_models import AITemplate
-from app.features.llm_templates.schemas.llm_template_schemas import AITemplateCreate, AITemplateUpdate
+from app.features.llm_templates.schemas.llm_template_schemas import (
+    AITemplateCreate,
+    AITemplateUpdate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +56,7 @@ async def create_new_template(
 
 
 async def update_existing_template(
-    db: AsyncSession,
-    template_id: str,
-    template_update: AITemplateUpdate
+    db: AsyncSession, template_id: str, template_update: AITemplateUpdate
 ) -> AITemplate | None:
     """Update an existing AI template."""
     logger.info("Updating template: %s", template_id)
@@ -93,10 +94,7 @@ async def delete_template_by_id(db: AsyncSession, template_id: str) -> bool:
 
 
 async def reorder_templates_by_ids(
-    db: AsyncSession,
-    template_ids: list[str],
-    start_order: int = 10,
-    increment: int = 10
+    db: AsyncSession, template_ids: list[str], start_order: int = 10, increment: int = 10
 ) -> list[AITemplate]:
     """Reorder templates by assigning new order numbers using a single bulk query."""
     logger.info("Reordering %s templates", len(template_ids))
@@ -131,11 +129,7 @@ async def move_templates_to_category(
     """Move templates to a different category."""
     logger.info("Moving %s templates to category %s", len(template_ids), category_id)
 
-    stmt = (
-        update(AITemplate)
-        .where(AITemplate.id.in_(template_ids))
-        .values(category_id=category_id)
-    )
+    stmt = update(AITemplate).where(AITemplate.id.in_(template_ids)).values(category_id=category_id)
     result = await db.execute(stmt)
     await db.flush()
 

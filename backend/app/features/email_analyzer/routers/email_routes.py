@@ -8,6 +8,7 @@ from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep
 from app.core.exceptions import AppHTTPException
 from app.core.utils.file_upload import run_file_endpoint, validate_uploaded_file
+
 from ..config.email_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
 from ..schemas.email_schemas import EmailAnalysisResponse, EmailHealthResponse
 from ..service.email_ai_analysis_service import analyze_email_body
@@ -22,7 +23,10 @@ router = APIRouter(prefix="/api/email", tags=["Email Analyzer"])
 
 async def _validate_uploaded_email(file: UploadFile) -> bytes:
     return await validate_uploaded_file(
-        file, no_file_code="EMAIL_NO_FILE", read_error_code="EMAIL_FILE_READ_ERROR", validate_fn=validate_file_upload
+        file,
+        no_file_code="EMAIL_NO_FILE",
+        read_error_code="EMAIL_FILE_READ_ERROR",
+        validate_fn=validate_file_upload,
     )
 
 
@@ -31,7 +35,10 @@ async def _validate_uploaded_email(file: UploadFile) -> bytes:
     response_model=EmailAnalysisResponse,
     response_model_exclude_none=True,
     summary="Analyze email file for security threats",
-    description="Upload an .eml file for comprehensive security analysis including header validation, attachment scanning, and threat detection.",
+    description=(
+        "Upload an .eml file for comprehensive security analysis including "
+        "header validation, attachment scanning, and threat detection."
+    ),
     responses={
         400: {"description": "Invalid or missing file"},
         422: {"description": "Email analysis failed"},
@@ -40,7 +47,9 @@ async def _validate_uploaded_email(file: UploadFile) -> bytes:
 @limiter.limit("20/minute")
 async def analyze_email_file(
     request: Request,
-    file: UploadFile = File(..., description="Email file to analyze (.eml format)", media_type="message/rfc822"),
+    file: UploadFile = File(
+        ..., description="Email file to analyze (.eml format)", media_type="message/rfc822"
+    ),
 ) -> EmailAnalysisResponse:
     logger.info("Received email analysis request for file: %s", file.filename)
 
@@ -58,13 +67,18 @@ async def analyze_email_file(
 
 
 class EmailAiAnalysisRequest(BaseModel):
-    input: str = Field(..., min_length=1, max_length=500000, description="Email message body text to analyze")
+    input: str = Field(
+        ..., min_length=1, max_length=500000, description="Email message body text to analyze"
+    )
 
 
 @router.post(
     "/ai-analysis",
     summary="Analyze email body with AI",
-    description="Use an LLM to analyze the email message body for phishing, social engineering, and other security threats.",
+    description=(
+        "Use an LLM to analyze the email message body for phishing, social "
+        "engineering, and other security threats."
+    ),
 )
 @limiter.limit("10/minute")
 async def ai_analyze_email_body(
@@ -82,7 +96,7 @@ async def ai_analyze_email_body(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
             error_code="EMAIL_AI_ANALYSIS_FAILED",
-        )
+        ) from e
 
     return {"analysis_result": result}
 
@@ -90,7 +104,10 @@ async def ai_analyze_email_body(
 @router.post(
     "/report",
     summary="Export an email analysis result as a report",
-    description="Render a previously computed analysis result (as returned by /analyze) as an HTML or PDF report",
+    description=(
+        "Render a previously computed analysis result (as returned by /analyze) "
+        "as an HTML or PDF report"
+    ),
 )
 async def export_analysis_report(
     result: EmailAnalysisResponse,

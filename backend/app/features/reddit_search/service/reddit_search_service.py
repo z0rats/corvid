@@ -86,7 +86,7 @@ async def _safe_fetch(client: httpx.AsyncClient, url: str) -> list[dict] | None:
             return None
         body = response.json()
         return body.get("data") or []
-    except (httpx.HTTPError, ValueError):
+    except httpx.HTTPError, ValueError:
         return None
 
 

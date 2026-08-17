@@ -1,11 +1,13 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.features.newsfeed.models.newsfeed_models import NewsfeedConfig
-from app.features.newsfeed.schemas.newsfeed_schemas import NewsfeedConfigSchema, NewsfeedConfigUpdateSchema
+from app.features.newsfeed.schemas.newsfeed_schemas import (
+    NewsfeedConfigUpdateSchema,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,9 @@ async def get_newsfeed_config(db: AsyncSession) -> NewsfeedConfig:
     return config
 
 
-async def update_newsfeed_config(db: AsyncSession, config_data: NewsfeedConfigUpdateSchema) -> NewsfeedConfig:
+async def update_newsfeed_config(
+    db: AsyncSession, config_data: NewsfeedConfigUpdateSchema
+) -> NewsfeedConfig:
     """Update newsfeed configuration with only the provided fields"""
     config = await get_newsfeed_config(db)
     for field, value in config_data.model_dump(exclude_none=True).items():
@@ -48,7 +52,7 @@ async def set_retention_days(db: AsyncSession, new_retention_days: int) -> Newsf
 async def update_last_fetch_timestamp(db: AsyncSession) -> None:
     """Update the last fetch timestamp to current time"""
     config = await get_newsfeed_config(db)
-    config.last_fetch_timestamp = datetime.now(timezone.utc)
+    config.last_fetch_timestamp = datetime.now(UTC)
     await db.flush()
 
 

@@ -44,7 +44,9 @@ async def get_search_with_results(db: AsyncSession, search_id: int) -> RedditSea
     return result.scalar_one_or_none()
 
 
-async def list_searches(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[tuple[RedditSearch, int]]:
+async def list_searches(
+    db: AsyncSession, skip: int = 0, limit: int = 100
+) -> list[tuple[RedditSearch, int]]:
     """List past searches with their result count, most recent first"""
     result = await db.execute(
         select(RedditSearch, func.count(RedditSearchResult.id))
@@ -57,7 +59,9 @@ async def list_searches(db: AsyncSession, skip: int = 0, limit: int = 100) -> li
     return [(row[0], row[1]) for row in result.all()]
 
 
-async def add_results(db: AsyncSession, search_id: int, kind: str, rows: list[dict]) -> list[RedditSearchResult]:
+async def add_results(
+    db: AsyncSession, search_id: int, kind: str, rows: list[dict]
+) -> list[RedditSearchResult]:
     """Persist a page of results, skipping any (kind, reddit_id) pair already
     stored for this search - keeps re-fetching a page (e.g. paging back) idempotent."""
     if not rows:
@@ -71,7 +75,9 @@ async def add_results(db: AsyncSession, search_id: int, kind: str, rows: list[di
                     RedditSearchResult.kind == kind,
                 )
             )
-        ).scalars().all()
+        )
+        .scalars()
+        .all()
     )
 
     new_results = []

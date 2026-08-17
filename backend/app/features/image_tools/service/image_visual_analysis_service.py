@@ -50,8 +50,12 @@ def analyze_image_visuals(filename: str, data: bytes) -> ImageVisualAnalysisResp
     cr = np.clip(128 + 0.5 * r - 0.418688 * g - 0.081312 * b, 0, 255)
 
     histograms = Histograms(
-        red=_histogram(r), green=_histogram(g), blue=_histogram(b),
-        luminance=_histogram(y), cb=_histogram(cb), cr=_histogram(cr),
+        red=_histogram(r),
+        green=_histogram(g),
+        blue=_histogram(b),
+        luminance=_histogram(y),
+        cb=_histogram(cb),
+        cr=_histogram(cr),
     )
 
     counts_2d, _, _ = np.histogram2d(
@@ -67,7 +71,11 @@ def analyze_image_visuals(filename: str, data: bytes) -> ImageVisualAnalysisResp
 
     logger.info(
         "Visual analysis completed for '%s' (%sx%s after downsampling)",
-        filename, rgb.shape[1], rgb.shape[0],
+        filename,
+        rgb.shape[1],
+        rgb.shape[0],
     )
 
-    return ImageVisualAnalysisResponse(filename=filename, histograms=histograms, vectorscope=vectorscope)
+    return ImageVisualAnalysisResponse(
+        filename=filename, histograms=histograms, vectorscope=vectorscope
+    )

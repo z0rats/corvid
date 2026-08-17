@@ -32,12 +32,14 @@ def _extract_found_sites(results: list[dict]) -> list[dict]:
     """
     found_sites = []
     for item in results:
-        found_sites.append({
-            "site_name": item.get("forum", ""),
-            "url_user": "",
-            "http_status": None,
-            "extra": {"username": item.get("username"), "logo": item.get("logo")},
-        })
+        found_sites.append(
+            {
+                "site_name": item.get("forum", ""),
+                "url_user": "",
+                "http_status": None,
+                "extra": {"username": item.get("username"), "logo": item.get("logo")},
+            }
+        )
     return found_sites
 
 
@@ -59,10 +61,12 @@ async def run_scan(username: str, queue: asyncio.Queue) -> None:
                 response.raise_for_status()
                 data = response.json()
         except asyncio.CancelledError:
-            raise ScanCancelled(ScanOutcome(
-                fields={"total_sites_checked": 0, "found_count": 0},
-                persist_children=lambda db: add_site_results(db, search_id, []),
-            )) from None
+            raise ScanCancelled(
+                ScanOutcome(
+                    fields={"total_sites_checked": 0, "found_count": 0},
+                    persist_children=lambda db: add_site_results(db, search_id, []),
+                )
+            ) from None
         except (httpx.HTTPError, ValueError) as exc:
             # Not logged here - ScanRun.execute()'s own generic exception handler
             # already logs every run_work failure once, with feature/search_id context.
@@ -77,7 +81,10 @@ async def run_scan(username: str, queue: asyncio.Queue) -> None:
 
     cancellable = TaskCancellable(asyncio.current_task())
     await ScanRun.execute(
-        FEATURE_NAME, MaigretSearch, run_work, on_event,
+        FEATURE_NAME,
+        MaigretSearch,
+        run_work,
+        on_event,
         columns=SCAN_COLUMNS,
         create_fields={"username": username, "source": "threat_actor_usernames"},
         started_fields={"username": username, "total_sites": None},

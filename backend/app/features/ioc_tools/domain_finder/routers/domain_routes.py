@@ -19,9 +19,13 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     WhoisLookupRequest,
     WhoisLookupResponse,
 )
-from app.features.ioc_tools.domain_finder.service.ct_subdomains_service import perform_ct_subdomains_lookup
+from app.features.ioc_tools.domain_finder.service.ct_subdomains_service import (
+    perform_ct_subdomains_lookup,
+)
 from app.features.ioc_tools.domain_finder.service.dns_lookup_service import perform_dns_lookup
-from app.features.ioc_tools.domain_finder.service.dnsdumpster_service import perform_dnsdumpster_lookup
+from app.features.ioc_tools.domain_finder.service.dnsdumpster_service import (
+    perform_dnsdumpster_lookup,
+)
 from app.features.ioc_tools.domain_finder.service.domain_lookup_service import perform_domain_lookup
 from app.features.ioc_tools.domain_finder.service.whois_lookup_service import perform_whois_lookup
 
@@ -34,14 +38,23 @@ router = APIRouter(prefix="/api/domain", tags=["Domain Lookup"])
     response_model=DomainLookupResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform domain lookup using URLScan.io",
-    description="Lookup domain information using the URLScan.io API to find scan results and security information"
+    description=(
+        "Lookup domain information using the URLScan.io API to find scan "
+        "results and security information"
+    ),
 )
 @limiter.limit("30/minute")
-async def lookup_domain_post(request: Request, domain_request: DomainLookupRequest) -> DomainLookupResponse:
+async def lookup_domain_post(
+    request: Request, domain_request: DomainLookupRequest
+) -> DomainLookupResponse:
     """Perform comprehensive domain lookup using URLScan.io API via POST request"""
     logger.info("POST domain lookup request - Domain: %s", domain_request.domain)
     result = await perform_domain_lookup(domain_request)
-    logger.info("POST domain lookup completed - Domain: %s, Results: %s", domain_request.domain, result.total_results)
+    logger.info(
+        "POST domain lookup completed - Domain: %s, Results: %s",
+        domain_request.domain,
+        result.total_results,
+    )
     return result
 
 
@@ -50,7 +63,7 @@ async def lookup_domain_post(request: Request, domain_request: DomainLookupReque
     response_model=DomainLookupResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform domain lookup via URL parameter",
-    description="Lookup domain information using URL parameter for simple GET requests"
+    description="Lookup domain information using URL parameter for simple GET requests",
 )
 @limiter.limit("30/minute")
 async def lookup_domain_get(request: Request, domain: str) -> DomainLookupResponse:
@@ -58,7 +71,9 @@ async def lookup_domain_get(request: Request, domain: str) -> DomainLookupRespon
     logger.info("GET domain lookup request - Domain: %s", domain)
     domain_request = DomainLookupRequest(domain=domain)
     result = await perform_domain_lookup(domain_request)
-    logger.info("GET domain lookup completed - Domain: %s, Results: %s", domain, result.total_results)
+    logger.info(
+        "GET domain lookup completed - Domain: %s, Results: %s", domain, result.total_results
+    )
     return result
 
 
@@ -67,10 +82,15 @@ async def lookup_domain_get(request: Request, domain: str) -> DomainLookupRespon
     response_model=WhoisLookupResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform WHOIS lookup via RDAP",
-    description="Look up domain registration data (registrar, creation/expiry/updated dates, registrant org, nameservers) via RDAP"
+    description=(
+        "Look up domain registration data (registrar, creation/expiry/updated "
+        "dates, registrant org, nameservers) via RDAP"
+    ),
 )
 @limiter.limit("30/minute")
-async def whois_lookup_post(request: Request, whois_request: WhoisLookupRequest) -> WhoisLookupResponse:
+async def whois_lookup_post(
+    request: Request, whois_request: WhoisLookupRequest
+) -> WhoisLookupResponse:
     """Perform WHOIS/RDAP lookup for a domain via POST request"""
     logger.info("POST WHOIS lookup request - Domain: %s", whois_request.domain)
     result = await perform_whois_lookup(whois_request)
@@ -83,7 +103,7 @@ async def whois_lookup_post(request: Request, whois_request: WhoisLookupRequest)
     response_model=WhoisLookupResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform WHOIS lookup via URL parameter",
-    description="Look up domain registration data via RDAP using domain from URL path"
+    description="Look up domain registration data via RDAP using domain from URL path",
 )
 @limiter.limit("30/minute")
 async def whois_lookup_get(request: Request, domain: str) -> WhoisLookupResponse:
@@ -100,16 +120,22 @@ async def whois_lookup_get(request: Request, domain: str) -> WhoisLookupResponse
     response_model=CtSubdomainsResponse,
     status_code=status.HTTP_200_OK,
     summary="Enumerate subdomains via Certificate Transparency logs",
-    description="Query crt.sh's Certificate Transparency log mirror to enumerate subdomains and cert issuance history for a domain"
+    description=(
+        "Query crt.sh's Certificate Transparency log mirror to enumerate "
+        "subdomains and cert issuance history for a domain"
+    ),
 )
 @limiter.limit("30/minute")
-async def ct_subdomains_lookup_post(request: Request, ct_request: CtSubdomainsRequest) -> CtSubdomainsResponse:
+async def ct_subdomains_lookup_post(
+    request: Request, ct_request: CtSubdomainsRequest
+) -> CtSubdomainsResponse:
     """Perform a Certificate Transparency subdomain lookup via POST request"""
     logger.info("POST CT subdomains lookup request - Domain: %s", ct_request.domain)
     result = await perform_ct_subdomains_lookup(ct_request)
     logger.info(
         "POST CT subdomains lookup completed - Domain: %s, Subdomains: %s",
-        ct_request.domain, len(result.subdomains)
+        ct_request.domain,
+        len(result.subdomains),
     )
     return result
 
@@ -119,15 +145,20 @@ async def ct_subdomains_lookup_post(request: Request, ct_request: CtSubdomainsRe
     response_model=CtSubdomainsResponse,
     status_code=status.HTTP_200_OK,
     summary="Enumerate subdomains via Certificate Transparency logs via URL parameter",
-    description="Query crt.sh using domain from URL path for simple GET requests"
+    description="Query crt.sh using domain from URL path for simple GET requests",
 )
 @limiter.limit("30/minute")
 async def ct_subdomains_lookup_get(request: Request, domain: str) -> CtSubdomainsResponse:
-    """Perform a Certificate Transparency subdomain lookup using domain from URL path via GET request"""
+    """Perform a Certificate Transparency subdomain lookup using domain from URL path via GET
+    request"""
     logger.info("GET CT subdomains lookup request - Domain: %s", domain)
     ct_request = CtSubdomainsRequest(domain=domain)
     result = await perform_ct_subdomains_lookup(ct_request)
-    logger.info("GET CT subdomains lookup completed - Domain: %s, Subdomains: %s", domain, len(result.subdomains))
+    logger.info(
+        "GET CT subdomains lookup completed - Domain: %s, Subdomains: %s",
+        domain,
+        len(result.subdomains),
+    )
     return result
 
 
@@ -136,7 +167,10 @@ async def ct_subdomains_lookup_get(request: Request, domain: str) -> CtSubdomain
     response_model=DnsLookupResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform DNS record lookup",
-    description="Resolve A/AAAA/MX/TXT/NS/CNAME records for a domain, plus reverse DNS (PTR) for any resolved IPs"
+    description=(
+        "Resolve A/AAAA/MX/TXT/NS/CNAME records for a domain, plus reverse DNS "
+        "(PTR) for any resolved IPs"
+    ),
 )
 @limiter.limit("30/minute")
 async def dns_lookup_post(request: Request, dns_request: DnsLookupRequest) -> DnsLookupResponse:
@@ -152,7 +186,7 @@ async def dns_lookup_post(request: Request, dns_request: DnsLookupRequest) -> Dn
     response_model=DnsLookupResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform DNS record lookup via URL parameter",
-    description="Resolve DNS records for a domain from URL path via GET request"
+    description="Resolve DNS records for a domain from URL path via GET request",
 )
 @limiter.limit("30/minute")
 async def dns_lookup_get(request: Request, domain: str) -> DnsLookupResponse:
@@ -169,7 +203,11 @@ async def dns_lookup_get(request: Request, domain: str) -> DnsLookupResponse:
     response_model=DnsDumpsterResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform a DNSDumpster domain lookup",
-    description="Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a domain via the DNSDumpster API. Requires a DNSDumpster API key configured under Settings > API Keys."
+    description=(
+        "Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a "
+        "domain via the DNSDumpster API. Requires a DNSDumpster API key "
+        "configured under Settings > API Keys."
+    ),
 )
 @limiter.limit("30/minute")
 async def dnsdumpster_lookup_post(
@@ -187,10 +225,14 @@ async def dnsdumpster_lookup_post(
     response_model=DnsDumpsterResponse,
     status_code=status.HTTP_200_OK,
     summary="Perform a DNSDumpster domain lookup via URL parameter",
-    description="Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a domain via URL path"
+    description=(
+        "Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a domain via URL path"
+    ),
 )
 @limiter.limit("30/minute")
-async def dnsdumpster_lookup_get(request: Request, domain: str, db: ReadSessionDep) -> DnsDumpsterResponse:
+async def dnsdumpster_lookup_get(
+    request: Request, domain: str, db: ReadSessionDep
+) -> DnsDumpsterResponse:
     """Perform a DNSDumpster domain lookup using domain from URL path via GET request"""
     logger.info("GET DNSDumpster lookup request - Domain: %s", domain)
     dnsdumpster_request = DnsDumpsterRequest(domain=domain)
@@ -204,7 +246,7 @@ async def dnsdumpster_lookup_get(request: Request, domain: str, db: ReadSessionD
     response_model=dict[str, Any],
     status_code=status.HTTP_200_OK,
     summary="Check domain lookup service health",
-    description="Health check endpoint for the domain lookup service"
+    description="Health check endpoint for the domain lookup service",
 )
 async def check_domain_service_health() -> dict[str, Any]:
     """Check if the domain lookup service is operational"""
@@ -221,6 +263,6 @@ async def check_domain_service_health() -> dict[str, Any]:
             "/api/domain/dns",
             "/api/domain/dns/{domain}",
             "/api/domain/dnsdumpster",
-            "/api/domain/dnsdumpster/{domain}"
-        ]
+            "/api/domain/dnsdumpster/{domain}",
+        ],
     }

@@ -19,4 +19,7 @@ def build_thumbnail_urls(video_id: str) -> dict[str, str]:
     Constructed directly with no network call - `maxresdefault` 404s for videos
     never encoded at that resolution, so the frontend should tolerate a broken image.
     """
-    return {variant: f"https://i.ytimg.com/vi/{video_id}/{variant}.jpg" for variant in THUMBNAIL_VARIANTS}
+    return {
+        variant: f"https://i.ytimg.com/vi/{video_id}/{variant}.jpg"
+        for variant in THUMBNAIL_VARIANTS
+    }

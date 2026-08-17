@@ -70,7 +70,9 @@ def delete_scan_results(search_id: int) -> None:
         os.remove(path)
 
 
-def generate_export(search_id: int, username: str, results: dict, fmt: str) -> tuple[bytes, str, str]:
+def generate_export(
+    search_id: int, username: str, results: dict, fmt: str
+) -> tuple[bytes, str, str]:
     """Generate a report file in the given format, reusing Maigret's own report
     generators (maigret.report) directly rather than reimplementing export logic.
 

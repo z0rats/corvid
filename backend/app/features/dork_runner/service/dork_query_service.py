@@ -2,9 +2,19 @@ import asyncio
 import logging
 
 from app.core.exceptions import AppHTTPException
-from app.features.dork_runner.config.dork_templates import DorkTemplate, get_templates_for_target_type
-from app.features.dork_runner.config.search_engines_config import MAX_QUERIES_PER_RUN, REQUEST_DELAY_SECONDS
-from app.features.dork_runner.schemas.dork_schemas import DorkResult, DorkRunRequest, DorkRunResponse
+from app.features.dork_runner.config.dork_templates import (
+    DorkTemplate,
+    get_templates_for_target_type,
+)
+from app.features.dork_runner.config.search_engines_config import (
+    MAX_QUERIES_PER_RUN,
+    REQUEST_DELAY_SECONDS,
+)
+from app.features.dork_runner.schemas.dork_schemas import (
+    DorkResult,
+    DorkRunRequest,
+    DorkRunResponse,
+)
 from app.features.dork_runner.service.engines import bing_engine, duckduckgo_engine, google_engine
 
 logger = logging.getLogger(__name__)
@@ -26,7 +36,10 @@ def _resolve_templates(request: DorkRunRequest) -> list[DorkTemplate]:
         if unknown:
             raise AppHTTPException(
                 status_code=400,
-                detail=f"Unknown or inapplicable template key(s) for target type '{request.target_type}': {sorted(unknown)}",
+                detail=(
+                    f"Unknown or inapplicable template key(s) for target type "
+                    f"'{request.target_type}': {sorted(unknown)}"
+                ),
                 error_code="DORK_INVALID_TEMPLATE",
             )
     else:
@@ -54,15 +67,19 @@ async def perform_dork_run(request: DorkRunRequest) -> DorkRunResponse:
             try:
                 raw_results = await engine_module.search(query)
                 for raw in raw_results:
-                    results.append(DorkResult(
-                        template_key=template.key,
-                        query=query,
-                        title=raw.title,
-                        url=raw.url,
-                        snippet=raw.snippet,
-                    ))
+                    results.append(
+                        DorkResult(
+                            template_key=template.key,
+                            query=query,
+                            title=raw.title,
+                            url=raw.url,
+                            snippet=raw.snippet,
+                        )
+                    )
                 if not raw_results:
-                    logger.debug("Dork query '%s' via %s returned no results", query, request.engine)
+                    logger.debug(
+                        "Dork query '%s' via %s returned no results", query, request.engine
+                    )
             except Exception as e:
                 logger.warning("Dork query '%s' via %s failed: %s", query, request.engine, e)
                 errors.append(f"{template.key}: {e}")
@@ -70,12 +87,14 @@ async def perform_dork_run(request: DorkRunRequest) -> DorkRunResponse:
             if index < len(templates) - 1:
                 await asyncio.sleep(REQUEST_DELAY_SECONDS)
     except Exception as e:
-        logger.error("Unexpected error during dork run for '%s': %s", request.target, e, exc_info=True)
+        logger.error(
+            "Unexpected error during dork run for '%s': %s", request.target, e, exc_info=True
+        )
         raise AppHTTPException(
             status_code=500,
             detail="An unexpected error occurred during the dork run",
             error_code="DORK_RUN_ERROR",
-        )
+        ) from e
 
     return DorkRunResponse(
         target=request.target,

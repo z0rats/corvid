@@ -3,7 +3,8 @@ import logging
 import httpx
 
 from app.features.username_search.schemas.username_search_schemas import (
-    HudsonRockCheckResponse, HudsonRockStealerSummary,
+    HudsonRockCheckResponse,
+    HudsonRockStealerSummary,
 )
 
 logger = logging.getLogger(__name__)

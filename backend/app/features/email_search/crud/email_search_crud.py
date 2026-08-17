@@ -11,18 +11,22 @@ from app.features.email_search.models.email_search_models import MailSearch, Mai
 SCAN_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
 
 
-async def add_provider_results(db: AsyncSession, search_id: int, found_providers: list[dict]) -> None:
+async def add_provider_results(
+    db: AsyncSession, search_id: int, found_providers: list[dict]
+) -> None:
     """Persist found-provider child rows for a search run. Called by run_work
     once it has results (on both normal completion and mid-scan cancellation) -
     ScanRun's generic mark_completed/mark_cancelled only ever touch scalar
     columns on the parent row, never these child rows."""
     for provider in found_providers:
-        db.add(MailSearchResult(
-            search_id=search_id,
-            provider_name=provider["provider_name"],
-            emails=provider["emails"],
-            extra=provider.get("extra"),
-        ))
+        db.add(
+            MailSearchResult(
+                search_id=search_id,
+                provider_name=provider["provider_name"],
+                emails=provider["emails"],
+                extra=provider.get("extra"),
+            )
+        )
     await db.flush()
 
 
@@ -31,7 +35,8 @@ async def interrupt_running_search_runs(db: AsyncSession) -> int:
     docstring for why this is needed (an in-memory asyncio task doesn't survive
     a process restart)."""
     return await mark_stale_running_as_failed(
-        db, MailSearch,
+        db,
+        MailSearch,
         error_column=SCAN_COLUMNS.error_column,
         error_message="Interrupted by server restart",
         completed_at_column=SCAN_COLUMNS.completed_at_column,

@@ -6,10 +6,12 @@ DNSDumpster's official API (https://dnsdumpster.com/developer/) needs an API key
 fallback. Free tier caps a domain lookup at 50 records and rate-limits to
 1 request/2s.
 """
+
 import logging
 from typing import Any
 
 import httpx
+
 from app.core.exceptions import AppHTTPException
 
 logger = logging.getLogger(__name__)
@@ -45,7 +47,9 @@ async def fetch_dnsdumpster_data(domain: str, api_key: str) -> dict[str, Any]:
             response = await client.get(url)
 
             if response.status_code in (401, 403):
-                logger.warning("DNSDumpster rejected the configured API key (status %s)", response.status_code)
+                logger.warning(
+                    "DNSDumpster rejected the configured API key (status %s)", response.status_code
+                )
                 raise AppHTTPException(
                     status_code=401,
                     detail="DNSDumpster rejected the configured API key",
@@ -70,34 +74,43 @@ async def fetch_dnsdumpster_data(domain: str, api_key: str) -> dict[str, Any]:
             status_code=504,
             detail="Request timeout while connecting to DNSDumpster",
             error_code="DNSDUMPSTER_TIMEOUT",
-        )
+        ) from e
     except httpx.RequestError as e:
         logger.error("Request error while fetching DNSDumpster data for domain %s: %s", domain, e)
         raise AppHTTPException(
             status_code=503,
             detail=f"Failed to connect to DNSDumpster: {str(e)}",
             error_code="DNSDUMPSTER_CONNECTION_ERROR",
-        )
+        ) from e
     except httpx.HTTPStatusError as e:
-        logger.error("HTTP status error from DNSDumpster for domain %s: Status %s", domain, e.response.status_code)
+        logger.error(
+            "HTTP status error from DNSDumpster for domain %s: Status %s",
+            domain,
+            e.response.status_code,
+        )
         raise AppHTTPException(
             status_code=e.response.status_code,
             detail=f"DNSDumpster API returned error: {e.response.status_code}",
             error_code="DNSDUMPSTER_API_ERROR",
-        )
+        ) from e
     except ValueError as e:
         logger.error("Could not parse DNSDumpster JSON response for domain %s: %s", domain, e)
         raise AppHTTPException(
             status_code=502,
             detail="DNSDumpster returned an unexpected (non-JSON) response",
             error_code="DNSDUMPSTER_INVALID_RESPONSE",
-        )
+        ) from e
     except AppHTTPException:
         raise
     except Exception as e:
-        logger.error("Unexpected error while fetching DNSDumpster data for domain %s: %s", domain, e, exc_info=True)
+        logger.error(
+            "Unexpected error while fetching DNSDumpster data for domain %s: %s",
+            domain,
+            e,
+            exc_info=True,
+        )
         raise AppHTTPException(
             status_code=500,
             detail="An unexpected error occurred while fetching DNSDumpster data",
             error_code="DNSDUMPSTER_UNEXPECTED_ERROR",
-        )
+        ) from e

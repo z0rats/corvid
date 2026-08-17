@@ -15,5 +15,5 @@ DEFAULT_NEWSFEEDS = [
     {"name": "The Hacker News", "url": "https://feeds.feedburner.com/TheHackersNews"},
     {"name": "The Record", "url": "https://therecord.media/feed"},
     {"name": "The Register", "url": "https://www.theregister.co.uk/security/headlines.atom"},
-    {"name": "threatpost", "url": "https://threatpost.com/feed/"}
+    {"name": "threatpost", "url": "https://threatpost.com/feed/"},
 ]

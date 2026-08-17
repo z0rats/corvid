@@ -3,6 +3,7 @@ DNSDumpster domain lookup business logic: maps the raw DNSDumpster API response
 into DnsDumpsterResponse, layered on top of domain_finder's existing WHOIS/DNS/CT
 panels with ASN, geo, PTR, and HTTP(S) banner detail per resolved host.
 """
+
 import logging
 from typing import Any
 
@@ -17,12 +18,16 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     DnsDumpsterRequest,
     DnsDumpsterResponse,
 )
-from app.features.ioc_tools.domain_finder.service.dnsdumpster_api_service import fetch_dnsdumpster_data
+from app.features.ioc_tools.domain_finder.service.dnsdumpster_api_service import (
+    fetch_dnsdumpster_data,
+)
 
 logger = logging.getLogger(__name__)
 
 
-async def perform_dnsdumpster_lookup(request: DnsDumpsterRequest, db: AsyncSession) -> DnsDumpsterResponse:
+async def perform_dnsdumpster_lookup(
+    request: DnsDumpsterRequest, db: AsyncSession
+) -> DnsDumpsterResponse:
     """
     Perform a DNSDumpster domain lookup and map the response for the API.
 
@@ -73,10 +78,12 @@ def _parse_hosts(raw_hosts: list[dict[str, Any]] | None) -> list[DnsDumpsterHost
     hosts: list[DnsDumpsterHost] = []
     for raw_host in raw_hosts or []:
         try:
-            hosts.append(DnsDumpsterHost(
-                host=raw_host.get("host"),
-                ips=_parse_ips(raw_host.get("ips")),
-            ))
+            hosts.append(
+                DnsDumpsterHost(
+                    host=raw_host.get("host"),
+                    ips=_parse_ips(raw_host.get("ips")),
+                )
+            )
         except Exception as e:
             logger.warning("Failed to parse DNSDumpster host entry: %s", e)
             continue
@@ -89,17 +96,19 @@ def _parse_ips(raw_ips: list[dict[str, Any]] | None) -> list[DnsDumpsterIp]:
     for raw_ip in raw_ips or []:
         try:
             banners = raw_ip.get("banners") or {}
-            ips.append(DnsDumpsterIp(
-                ip=raw_ip.get("ip"),
-                asn=raw_ip.get("asn"),
-                asn_name=raw_ip.get("asn_name"),
-                asn_range=raw_ip.get("asn_range"),
-                country=raw_ip.get("country"),
-                country_code=raw_ip.get("country_code"),
-                ptr=raw_ip.get("ptr"),
-                banner_http=_parse_banner(banners.get("http")),
-                banner_https=_parse_banner(banners.get("https")),
-            ))
+            ips.append(
+                DnsDumpsterIp(
+                    ip=raw_ip.get("ip"),
+                    asn=raw_ip.get("asn"),
+                    asn_name=raw_ip.get("asn_name"),
+                    asn_range=raw_ip.get("asn_range"),
+                    country=raw_ip.get("country"),
+                    country_code=raw_ip.get("country_code"),
+                    ptr=raw_ip.get("ptr"),
+                    banner_http=_parse_banner(banners.get("http")),
+                    banner_https=_parse_banner(banners.get("https")),
+                )
+            )
         except Exception as e:
             logger.warning("Failed to parse DNSDumpster IP entry: %s", e)
             continue

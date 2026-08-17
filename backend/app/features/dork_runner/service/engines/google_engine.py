@@ -5,18 +5,22 @@ with no session cookies. Parsing here is intentionally defensive: a change in
 Google's markup or a block page just yields zero results rather than an error,
 since that's expected, not exceptional, behavior for this engine.
 """
+
 import logging
 
 from bs4 import BeautifulSoup
 
 from app.features.dork_runner.config.search_engines_config import GOOGLE_URL, MAX_RESULTS_PER_QUERY
+
 from .base import RawResult, fetch_html
 
 logger = logging.getLogger(__name__)
 
 
 async def search(query: str) -> list[RawResult]:
-    html = await fetch_html("GET", GOOGLE_URL, params={"q": query, "num": MAX_RESULTS_PER_QUERY, "hl": "en"})
+    html = await fetch_html(
+        "GET", GOOGLE_URL, params={"q": query, "num": MAX_RESULTS_PER_QUERY, "hl": "en"}
+    )
     if not html:
         return []
 
@@ -39,6 +43,8 @@ async def search(query: str) -> list[RawResult]:
             break
 
     if not results:
-        logger.debug("Google returned no parseable results for query (likely blocked/CAPTCHA'd): %s", query)
+        logger.debug(
+            "Google returned no parseable results for query (likely blocked/CAPTCHA'd): %s", query
+        )
 
     return results

@@ -2,25 +2,29 @@ import asyncio
 import logging
 import re
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import managed_session
-from app.features.newsfeed.schemas.newsfeed_schemas import NewsArticleSchema
+from app.core.settings.keywords.crud.keywords_settings_crud import get_keywords
 from app.features.newsfeed.crud.news_articles_crud import check_article_exists, create_news_article
 from app.features.newsfeed.crud.newsfeed_settings_crud import record_feed_fetch_result
-from app.features.newsfeed.utils.fetching import parse_feed, fetch_article_full_text, extract_and_categorize_iocs
-from app.core.settings.keywords.crud.keywords_settings_crud import get_keywords
+from app.features.newsfeed.schemas.newsfeed_schemas import NewsArticleSchema
+from app.features.newsfeed.utils.fetching import (
+    extract_and_categorize_iocs,
+    fetch_article_full_text,
+    parse_feed,
+)
 
 logger = logging.getLogger(__name__)
 
-SKIP_PROCESSING_DOMAINS = {'bsky.app', 'reddit.com', 'www.reddit.com'}
+SKIP_PROCESSING_DOMAINS = {"bsky.app", "reddit.com", "www.reddit.com"}
 MAX_CONCURRENT_REQUESTS = 10
 CHUNK_SIZE = 20
-HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
+HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 
 _semaphore: asyncio.Semaphore | None = None
 
@@ -68,10 +72,7 @@ async def extract_iocs_async(content: str, full_text: str) -> dict | None:
 
 
 async def gather_article_data(
-    link: str,
-    process_full_text: bool,
-    title: str,
-    summary: str
+    link: str, process_full_text: bool, title: str, summary: str
 ) -> tuple[str, dict | None]:
     """Gather article data concurrently"""
     if not process_full_text:
@@ -89,11 +90,11 @@ async def gather_article_data(
 def parse_published_date(post: Any) -> datetime:
     """Parse published date from a feedparser entry"""
     try:
-        if hasattr(post, 'published_parsed') and post.published_parsed:
-            return datetime.fromtimestamp(time.mktime(post.published_parsed), tz=timezone.utc)
+        if hasattr(post, "published_parsed") and post.published_parsed:
+            return datetime.fromtimestamp(time.mktime(post.published_parsed), tz=UTC)
     except Exception as e:
         logger.error("Error parsing published date: %s", e)
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 async def store_article_async(
@@ -102,12 +103,12 @@ async def store_article_async(
     full_text: str,
     iocs_dict: dict | None,
     keyword_matching_enabled: bool,
-    keywords: list[str]
+    keywords: list[str],
 ) -> None:
     """Store processed article in database using its own session"""
     try:
-        title = post.get('title', '')
-        summary = post.get('summary', post.get('description', ''))
+        title = post.get("title", "")
+        summary = post.get("summary", post.get("description", ""))
         all_content = f"{title} {summary} {full_text}" if full_text else f"{title} {summary}"
 
         matches = None
@@ -115,21 +116,21 @@ async def store_article_async(
             matches = [k for k in keywords if k.lower() in all_content.lower()]
 
         news_article = NewsArticleSchema(
-            feedname=entry['name'],
-            icon=entry['icon'],
+            feedname=entry["name"],
+            icon=entry["icon"],
             title=title,
-            summary=HTML_TAG_PATTERN.sub('', summary),
+            summary=HTML_TAG_PATTERN.sub("", summary),
             full_text=full_text if full_text else None,
             date=parse_published_date(post),
-            link=post.get('link', ''),
-            fetched_at=datetime.now(timezone.utc),
+            link=post.get("link", ""),
+            fetched_at=datetime.now(UTC),
             matches=matches if matches else None,
             iocs=iocs_dict,
             relevant_iocs=None,
             analysis_result=None,
             note=None,
             tlp="TLP:CLEAR",
-            read=False
+            read=False,
         )
 
         async with managed_session() as db:
@@ -141,25 +142,22 @@ async def store_article_async(
             logger.debug("Article already exists, skipped: %s", title)
 
     except Exception as e:
-        logger.error("Error storing article %s: %s", post.get('title', 'Unknown'), e)
+        logger.error("Error storing article %s: %s", post.get("title", "Unknown"), e)
 
 
 async def process_feed_entry(
-    entry: dict[str, Any],
-    post: dict[str, Any],
-    keyword_matching_enabled: bool,
-    keywords: list[str]
+    entry: dict[str, Any], post: dict[str, Any], keyword_matching_enabled: bool, keywords: list[str]
 ) -> None:
     """Process individual feed entry asynchronously with rate limiting"""
     try:
         async with _get_semaphore():
-            link = post.get('link', '')
+            link = post.get("link", "")
             if not link:
                 logger.warning("No link found in feed entry, skipping")
                 return
 
             if await check_article_exists_async(link):
-                logger.debug("Article already exists: %s", post.get('title', 'No title'))
+                logger.debug("Article already exists: %s", post.get("title", "No title"))
                 return
 
             domain = urlparse(link).netloc.lower()
@@ -168,17 +166,16 @@ async def process_feed_entry(
             full_text, iocs_dict = await gather_article_data(
                 link,
                 process_full_text,
-                post.get('title', ''),
-                post.get('summary', post.get('description', ''))
+                post.get("title", ""),
+                post.get("summary", post.get("description", "")),
             )
 
             await store_article_async(
-                entry, post, full_text, iocs_dict,
-                keyword_matching_enabled, keywords
+                entry, post, full_text, iocs_dict, keyword_matching_enabled, keywords
             )
 
     except Exception as e:
-        logger.warning("Failed to process feed entry %s: %s", post.get('title', 'Unknown'), e)
+        logger.warning("Failed to process feed entry %s: %s", post.get("title", "Unknown"), e)
 
 
 async def record_feed_status(feed_name: str, success: bool, error: str | None = None) -> None:
@@ -191,29 +188,31 @@ async def record_feed_status(feed_name: str, success: bool, error: str | None = 
 
 
 async def process_feed_chunk(
-    feeds: list[dict[str, Any]],
-    keyword_matching_enabled: bool,
-    keywords: list[str]
+    feeds: list[dict[str, Any]], keyword_matching_enabled: bool, keywords: list[str]
 ) -> None:
     """Process a chunk of feeds concurrently"""
     tasks = []
 
     for entry in feeds:
         try:
-            feed = await parse_feed(entry['url'])
+            feed = await parse_feed(entry["url"])
             if not feed or not feed.entries:
-                logger.warning("No entries found in feed: %s", entry['name'])
-                await record_feed_status(entry['name'], success=False, error="Feed unreachable or returned no entries")
+                logger.warning("No entries found in feed: %s", entry["name"])
+                await record_feed_status(
+                    entry["name"], success=False, error="Feed unreachable or returned no entries"
+                )
                 continue
 
-            await record_feed_status(entry['name'], success=True)
-            tasks.extend([
-                process_feed_entry(entry, post, keyword_matching_enabled, keywords)
-                for post in feed.entries
-            ])
+            await record_feed_status(entry["name"], success=True)
+            tasks.extend(
+                [
+                    process_feed_entry(entry, post, keyword_matching_enabled, keywords)
+                    for post in feed.entries
+                ]
+            )
         except Exception as e:
-            logger.error("Error processing feed %s: %s", entry['name'], e)
-            await record_feed_status(entry['name'], success=False, error=str(e))
+            logger.error("Error processing feed %s: %s", entry["name"], e)
+            await record_feed_status(entry["name"], success=False, error=str(e))
 
     if tasks:
         await asyncio.gather(*tasks)
@@ -226,7 +225,10 @@ async def fetch_and_store_news(db: AsyncSession) -> None:
     Each article write gets its own session via managed_session() to
     avoid sharing a session across concurrent tasks.
     """
-    from app.features.newsfeed.crud.newsfeed_config_crud import get_newsfeed_config, update_last_fetch_timestamp
+    from app.features.newsfeed.crud.newsfeed_config_crud import (
+        get_newsfeed_config,
+        update_last_fetch_timestamp,
+    )
     from app.features.newsfeed.crud.newsfeed_settings_crud import get_all_newsfeed_settings
 
     logger.info("Starting fetch_and_store_news")
@@ -237,11 +239,12 @@ async def fetch_and_store_news(db: AsyncSession) -> None:
 
         feeds = [
             {"name": feed.name, "url": str(feed.url), "icon": feed.icon}
-            for feed in await get_all_newsfeed_settings(db) if feed.enabled
+            for feed in await get_all_newsfeed_settings(db)
+            if feed.enabled
         ]
 
         for i in range(0, len(feeds), CHUNK_SIZE):
-            chunk = feeds[i:i + CHUNK_SIZE]
+            chunk = feeds[i : i + CHUNK_SIZE]
             await process_feed_chunk(chunk, keyword_matching_enabled, keywords)
 
         await update_last_fetch_timestamp(db)

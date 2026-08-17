@@ -41,6 +41,7 @@ class ServiceUnavailableError(ServiceError):
     def __init__(self, service_name: str, message: str) -> None:
         super().__init__(service_name, message, status_code=503)
 
+
 _shared_client: httpx.AsyncClient | None = None
 _client_lock = threading.Lock()
 
@@ -71,20 +72,20 @@ async def close_client() -> None:
 def _extract_error_detail(response: httpx.Response, default: str) -> str:
     """Extract a human-readable error message from an HTTP error response"""
     try:
-        content_type = response.headers.get('content-type', '')
-        if response.content and content_type.startswith('application/json'):
+        content_type = response.headers.get("content-type", "")
+        if response.content and content_type.startswith("application/json"):
             body = response.json()
-            if 'errors' in body and body['errors']:
-                return body['errors'][0].get('detail', str(body))
-            if 'message' in body:
-                return body['message']
-            if 'error' in body and isinstance(body['error'], str):
-                return body['error']
+            if "errors" in body and body["errors"]:
+                return body["errors"][0].get("detail", str(body))
+            if "message" in body:
+                return body["message"]
+            if "error" in body and isinstance(body["error"], str):
+                return body["error"]
         else:
             text = response.text.strip()
             if text:
                 return text
-    except (json.JSONDecodeError, ValueError, AttributeError):
+    except json.JSONDecodeError, ValueError, AttributeError:
         text = response.text.strip()
         if text:
             return text
@@ -103,26 +104,30 @@ async def handle_response(service_name: str, response: httpx.Response) -> dict[s
         status_code = http_err.response.status_code
 
         if status_code == 429:
-            retry_after = http_err.response.headers.get('Retry-After', 'unknown')
+            retry_after = http_err.response.headers.get("Retry-After", "unknown")
             logger.warning("Rate limit hit for %s (retry_after=%s)", service_name, retry_after)
             raise ServiceRateLimitError(
                 service_name,
                 f"{service_name} rate limit exceeded. Please try again later.",
                 retry_after=retry_after,
-            )
+            ) from http_err
 
-        error_detail = _extract_error_detail(
-            http_err.response, f"HTTP {status_code} Error"
-        )
+        error_detail = _extract_error_detail(http_err.response, f"HTTP {status_code} Error")
         logger.warning("HTTP error in %s: %s", service_name, error_detail)
-        raise ServiceError(service_name, f"{service_name} error: {error_detail}", status_code)
+        raise ServiceError(
+            service_name, f"{service_name} error: {error_detail}", status_code
+        ) from http_err
 
     except httpx.RequestError as req_err:
         logger.error("Request error in %s: %s", service_name, req_err)
-        raise ServiceUnavailableError(service_name, f"Could not connect to {service_name}: {req_err}")
+        raise ServiceUnavailableError(
+            service_name, f"Could not connect to {service_name}: {req_err}"
+        ) from req_err
     except json.JSONDecodeError as json_err:
         logger.error("JSON decode error in %s: %s", service_name, json_err)
-        raise ServiceError(service_name, f"Failed to parse response from {service_name}.")
+        raise ServiceError(
+            service_name, f"Failed to parse response from {service_name}."
+        ) from json_err
 
 
 def _require_apikey(service_name: str, apikey: str) -> None:
@@ -137,15 +142,13 @@ def _require_credentials(service_name: str, **credentials: str) -> None:
         raise ServiceAuthError(service_name, f"{service_name} credentials missing.")
 
 
-async def _authenticate_oauth(
-    service_name: str, token_url: str, **kwargs: Any
-) -> str:
+async def _authenticate_oauth(service_name: str, token_url: str, **kwargs: Any) -> str:
     """Perform OAuth token exchange, returning the access token"""
     client = get_client()
     token_res = await client.post(url=token_url, **kwargs)
     token_data = await handle_response(f"{service_name} Auth", token_res)
 
-    access_token = token_data.get('access_token')
+    access_token = token_data.get("access_token")
     if not access_token:
         raise ServiceError(service_name, f"Failed to retrieve {service_name} access token.")
     return access_token

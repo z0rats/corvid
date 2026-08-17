@@ -5,12 +5,12 @@ import logging
 import re
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, File, Query, UploadFile, status
 from fastapi.responses import FileResponse
 
 from app.core.config.settings import settings
 from app.core.dependencies import SessionDep
+from app.core.exceptions import AppHTTPException
 from app.features.newsfeed.crud.newsfeed_settings_crud import (
     create_custom_feed_with_favicon,
     delete_custom_feed,
@@ -18,24 +18,24 @@ from app.features.newsfeed.crud.newsfeed_settings_crud import (
     get_feeds_with_default_icon,
     update_feed_icon,
 )
+from app.features.newsfeed.schemas.newsfeed_schemas import (
+    BulkIconRefetchResponse,
+    FeedIconRefetchResult,
+    FeedValidationResponse,
+    IconRefetchResponse,
+    IconUploadResponse,
+    NewsfeedSettingsCreateSchema,
+    NewsfeedSettingsSchema,
+)
 from app.features.newsfeed.service.icon_management_service import (
-    sync_article_icons,
     delete_feed_icon_with_favicon_fallback,
     get_icon_path,
     refetch_feed_favicon,
     remove_existing_icon,
     save_icon,
+    sync_article_icons,
 )
-from app.features.newsfeed.schemas.newsfeed_schemas import (
-    BulkIconRefetchResponse,
-    FeedIconRefetchResult,
-    IconRefetchResponse,
-    NewsfeedSettingsSchema,
-    NewsfeedSettingsCreateSchema,
-    FeedValidationResponse,
-    IconUploadResponse,
-)
-from app.features.newsfeed.utils.validation import validate_feed, validate_and_process_icon
+from app.features.newsfeed.utils.validation import validate_and_process_icon, validate_feed
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,11 @@ def _decode_feed_name(encoded_name: str) -> str:
         return base64.b64decode(encoded_name).decode("utf-8")
     except Exception as e:
         logger.warning("Failed to decode feed name: %s", e)
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid feed name encoding", error_code="FEED_INVALID_NAME_ENCODING")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid feed name encoding",
+            error_code="FEED_INVALID_NAME_ENCODING",
+        ) from e
 
 
 @router.post(
@@ -59,14 +63,18 @@ def _decode_feed_name(encoded_name: str) -> str:
     response_model=FeedValidationResponse,
     response_model_exclude_none=True,
     summary="Validate feed URL",
-    description="Validate a feed URL to confirm it is reachable and returns a valid RSS or Atom feed",
+    description=(
+        "Validate a feed URL to confirm it is reachable and returns a valid RSS or Atom feed"
+    ),
     responses={400: {"description": "Invalid or unreachable feed URL"}},
 )
 async def validate_feed_url(feed_data: NewsfeedSettingsCreateSchema) -> FeedValidationResponse:
     """Validate a feed URL before adding it"""
     is_valid, error_msg, feed_info = validate_feed(str(feed_data.url))
     if not is_valid:
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg, error_code="FEED_INVALID_URL")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg, error_code="FEED_INVALID_URL"
+        )
     return FeedValidationResponse(valid=True, feed_info=feed_info)
 
 
@@ -76,26 +84,41 @@ async def validate_feed_url(feed_data: NewsfeedSettingsCreateSchema) -> FeedVali
     response_model=NewsfeedSettingsSchema,
     response_model_exclude_none=True,
     summary="Add feed",
-    description="Add a new custom RSS/Atom feed after validation. Automatically attempts to download the feed's favicon.",
+    description=(
+        "Add a new custom RSS/Atom feed after validation. Automatically "
+        "attempts to download the feed's favicon."
+    ),
     responses={400: {"description": "Invalid feed URL or duplicate feed name"}},
 )
-async def add_custom_feed(feed_data: NewsfeedSettingsCreateSchema, db: SessionDep) -> NewsfeedSettingsSchema:
+async def add_custom_feed(
+    feed_data: NewsfeedSettingsCreateSchema, db: SessionDep
+) -> NewsfeedSettingsSchema:
     """Add a new custom feed after validation with automatic favicon download"""
     is_valid, error_msg, _ = validate_feed(str(feed_data.url))
     if not is_valid:
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg, error_code="FEED_INVALID_URL")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg, error_code="FEED_INVALID_URL"
+        )
 
     if await get_feed_by_name(db, feed_data.name):
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Feed name already exists", error_code="FEED_NAME_EXISTS")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Feed name already exists",
+            error_code="FEED_NAME_EXISTS",
+        )
 
-    return await create_custom_feed_with_favicon(db, NewsfeedSettingsSchema(**feed_data.model_dump()))
+    return await create_custom_feed_with_favicon(
+        db, NewsfeedSettingsSchema(**feed_data.model_dump())
+    )
 
 
 @router.put(
     "/settings/modules/newsfeed/{feed_name}/icon",
     response_model=IconUploadResponse,
     summary="Upload feed icon",
-    description="Upload and process a custom icon for a feed. The image is resized and stored server-side.",
+    description=(
+        "Upload and process a custom icon for a feed. The image is resized and stored server-side."
+    ),
     responses={
         400: {"description": "Invalid icon file or feed name encoding"},
         404: {"description": "Feed not found"},
@@ -113,17 +136,29 @@ async def upload_feed_icon(
 
     is_valid, error_msg, processed_data = validate_and_process_icon(file_content, file.filename)
     if not is_valid:
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg, error_code="FEED_ICON_INVALID")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_msg,
+            error_code="FEED_ICON_INVALID",
+        )
 
     processed_image, icon_id = processed_data
 
     save_success, save_error = await save_icon(processed_image, icon_id)
     if not save_success:
-        raise AppHTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=save_error, error_code="FEED_ICON_SAVE_FAILED")
+        raise AppHTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=save_error,
+            error_code="FEED_ICON_SAVE_FAILED",
+        )
 
     feed = await update_feed_icon(db, decoded_name, icon_id)
     if not feed:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feed not found", error_code="FEED_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Feed not found",
+            error_code="FEED_NOT_FOUND",
+        )
 
     await sync_article_icons(db, decoded_name, icon_id)
     return IconUploadResponse(message="Icon uploaded successfully", icon_id=icon_id)
@@ -142,7 +177,9 @@ async def delete_feed_icon(feed_name: str, db: SessionDep) -> dict[str, str]:
     success, message = await delete_feed_icon_with_favicon_fallback(db, decoded_name)
 
     if not success:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message, error_code="FEED_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=message, error_code="FEED_NOT_FOUND"
+        )
     return {"message": message}
 
 
@@ -162,7 +199,9 @@ async def refetch_feed_favicon_route(feed_name: str, db: SessionDep) -> IconRefe
     success, message, icon_id = await refetch_feed_favicon(db, decoded_name)
 
     if not success and message == "Feed not found":
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message, error_code="FEED_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=message, error_code="FEED_NOT_FOUND"
+        )
 
     return IconRefetchResponse(
         success=success,
@@ -186,12 +225,14 @@ async def refetch_all_missing_favicons(db: SessionDep) -> BulkIconRefetchRespons
     succeeded = 0
     for feed in feeds:
         success, message, icon_id = await refetch_feed_favicon(db, feed.name)
-        results.append(FeedIconRefetchResult(
-            feed_name=feed.name,
-            success=success,
-            icon_id=icon_id,
-            error=None if success else message,
-        ))
+        results.append(
+            FeedIconRefetchResult(
+                feed_name=feed.name,
+                success=success,
+                icon_id=icon_id,
+                error=None if success else message,
+            )
+        )
         if success:
             succeeded += 1
 
@@ -217,13 +258,21 @@ async def delete_custom_feed_route(db: SessionDep, feed_name: str = Query(...)) 
     """Delete a custom feed and its icon"""
     feed = await get_feed_by_name(db, feed_name)
     if not feed:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feed not found", error_code="FEED_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Feed not found",
+            error_code="FEED_NOT_FOUND",
+        )
 
     if feed.icon_id and feed.icon != "default.png":
         remove_existing_icon(get_icon_path(feed.icon_id))
 
     if not await delete_custom_feed(db, feed_name):
-        raise AppHTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete feed", error_code="FEED_DELETE_FAILED")
+        raise AppHTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete feed",
+            error_code="FEED_DELETE_FAILED",
+        )
 
     return {"message": "Feed deleted successfully"}
 
@@ -240,11 +289,19 @@ async def get_feed_icon(icon_name: str) -> FileResponse:
     icon_name_base = icon_name.rsplit(".png", 1)[0]
 
     if not _SAFE_ICON_NAME.fullmatch(icon_name_base):
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid icon name", error_code="FEED_ICON_INVALID_NAME")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid icon name",
+            error_code="FEED_ICON_INVALID_NAME",
+        )
 
     target = (FEED_ICONS_DIR / f"{icon_name_base}.png").resolve()
 
     if not target.is_relative_to(icons_base):
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid icon name", error_code="FEED_ICON_INVALID_NAME")
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid icon name",
+            error_code="FEED_ICON_INVALID_NAME",
+        )
 
     return FileResponse(target if target.exists() else FEED_ICONS_DIR / "default.png")

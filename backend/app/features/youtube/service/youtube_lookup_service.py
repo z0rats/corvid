@@ -2,6 +2,7 @@
 enrichment (best-effort) + an optional YouTube Data API tier (best-effort, only if
 a key is configured under Settings > API Keys).
 """
+
 import logging
 from typing import Any
 
@@ -25,7 +26,9 @@ from app.features.youtube.utils.youtube_url_utils import canonical_video_url, ex
 logger = logging.getLogger(__name__)
 
 
-async def perform_youtube_lookup(request: YoutubeLookupRequest, db: AsyncSession) -> YoutubeLookupResponse:
+async def perform_youtube_lookup(
+    request: YoutubeLookupRequest, db: AsyncSession
+) -> YoutubeLookupResponse:
     """Look up metadata for a YouTube video URL.
 
     Raises:

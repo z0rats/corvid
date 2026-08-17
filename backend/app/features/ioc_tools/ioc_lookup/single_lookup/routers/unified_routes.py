@@ -1,23 +1,28 @@
 import logging
 
-from fastapi import APIRouter, Path, Query, HTTPException, Request, status
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, Path, Query, Request, status
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep
-from app.features.ioc_tools.ioc_lookup.single_lookup.service.ioc_lookup_engine import (
-    lookup_ioc, get_all_service_configs, build_service_definitions,
-)
-from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
-from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import determine_ioc_type, IOC_TYPES
+from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.ioc_lookup.schemas.lookup_schemas import (
+    IOCTypesResponse,
     LookupResult,
     LookupStatus,
-    ServicesResponse,
-    ServiceDefinitionsResponse,
-    IOCTypesResponse,
-    NewsfeedMentionsResponse,
     NewsfeedMention,
+    NewsfeedMentionsResponse,
+    ServiceDefinitionsResponse,
+    ServicesResponse,
+)
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.ioc_lookup_engine import (
+    build_service_definitions,
+    get_all_service_configs,
+    lookup_ioc,
+)
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.service_registry import get_service
+from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import (
+    IOC_TYPES,
+    determine_ioc_type,
 )
 from app.features.newsfeed.crud.news_articles_crud import get_articles_mentioning_ioc
 
@@ -32,7 +37,11 @@ router = APIRouter(prefix="/api/ioc", tags=["IOC Lookup"])
     summary="Lookup a single IOC",
     description="Perform a lookup for a single IOC against a specified service",
     responses={
-        400: {"description": "Invalid or unsupported IOC format, or service does not support this IOC type"},
+        400: {
+            "description": (
+                "Invalid or unsupported IOC format, or service does not support this IOC type"
+            )
+        },
         401: {"description": "Required API key is missing or inactive"},
         404: {"description": "Service not found"},
     },
@@ -46,12 +55,20 @@ async def unified_lookup(
     ioc_type: str | None = Query(None, description="The IOC type (e.g., IPv4, Domain, MD5)"),
 ) -> LookupResult:
     detected_ioc_type = ioc_type or determine_ioc_type(ioc)
-    if detected_ioc_type == IOC_TYPES['UNKNOWN']:
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or unsupported IOC format", error_code="IOC_INVALID_FORMAT")
+    if detected_ioc_type == IOC_TYPES["UNKNOWN"]:
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or unsupported IOC format",
+            error_code="IOC_INVALID_FORMAT",
+        )
 
     service_config = get_service(service)
     if service_config is None:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Service '{service}' not found.", error_code="IOC_SERVICE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Service '{service}' not found.",
+            error_code="IOC_SERVICE_NOT_FOUND",
+        )
 
     if detected_ioc_type not in service_config.supported_ioc_types:
         raise AppHTTPException(
@@ -63,7 +80,11 @@ async def unified_lookup(
     result = await lookup_ioc(service, ioc, detected_ioc_type, db)
 
     if result is None:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Service '{service}' not found.", error_code="IOC_SERVICE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Service '{service}' not found.",
+            error_code="IOC_SERVICE_NOT_FOUND",
+        )
 
     if result.status == LookupStatus.UNAUTHORIZED:
         raise AppHTTPException(
@@ -79,7 +100,9 @@ async def unified_lookup(
     "/newsfeed-mentions",
     response_model=NewsfeedMentionsResponse,
     summary="Check newsfeed for mentions of an IOC",
-    description="Cross-reference an IOC against IOCs already extracted from recent newsfeed articles",
+    description=(
+        "Cross-reference an IOC against IOCs already extracted from recent newsfeed articles"
+    ),
 )
 @limiter.limit("30/minute")
 async def get_newsfeed_mentions(
@@ -119,10 +142,7 @@ async def get_available_services(
     if not ioc_type:
         return ServicesResponse(services=all_services)
 
-    filtered_services = [
-        s for s in all_services
-        if ioc_type in s.supported_ioc_types
-    ]
+    filtered_services = [s for s in all_services if ioc_type in s.supported_ioc_types]
 
     return ServicesResponse(services=filtered_services)
 

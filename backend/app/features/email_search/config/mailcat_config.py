@@ -5,11 +5,8 @@ from mailcat import CHECKERS, fastmail, gmail, intpl, mailDe, onet, yandex
 
 PACKAGE_NAME = "mailcat-osint"
 
-TIMEOUT_SECONDS_DEFAULT = 10
-MAX_CONCURRENCY_DEFAULT = 10
-USE_TOR_DEFAULT = False
-ENABLE_SMTP_CHECKS_DEFAULT = False
-ENABLE_HEADLESS_CHECKS_DEFAULT = False
+# The five *_DEFAULT config values live in ./defaults.py, not here - see that module's
+# docstring for why.
 
 # gmail/yandex/mailDe use SMTP RCPT probing on TCP/25, which most cloud/Docker
 # egress blocks by default - only worth enabling with Tor or a proxy with open port 25.

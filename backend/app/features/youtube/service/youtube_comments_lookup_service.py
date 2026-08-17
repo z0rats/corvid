@@ -7,6 +7,7 @@ comments have no keyless tier to fall back to, unlike /lookup:
   pages server-side (capped by COMMENTS_SEARCH_MAX_PAGES/COMMENTS_SEARCH_MAX_RESULTS),
   filtering by author/text substring match.
 """
+
 import logging
 from typing import Any
 
@@ -31,7 +32,9 @@ from app.features.youtube.utils.youtube_url_utils import extract_video_id
 logger = logging.getLogger(__name__)
 
 
-async def perform_youtube_comments_lookup(request: YoutubeCommentsRequest, db: AsyncSession) -> YoutubeCommentsResponse:
+async def perform_youtube_comments_lookup(
+    request: YoutubeCommentsRequest, db: AsyncSession
+) -> YoutubeCommentsResponse:
     """List or search a YouTube video's top-level comments.
 
     Raises:
@@ -41,14 +44,19 @@ async def perform_youtube_comments_lookup(request: YoutubeCommentsRequest, db: A
     video_id = extract_video_id(request.url)
     if not video_id:
         raise AppHTTPException(
-            status_code=400, detail="Not a recognized YouTube video URL", error_code="YOUTUBE_INVALID_URL",
+            status_code=400,
+            detail="Not a recognized YouTube video URL",
+            error_code="YOUTUBE_INVALID_URL",
         )
 
     api_key = await get_youtube_api_key(db)
     if not api_key:
         raise AppHTTPException(
             status_code=400,
-            detail="A YouTube Data API key is required for comments. Add one under Settings > API Keys.",
+            detail=(
+                "A YouTube Data API key is required for comments. Add one under "
+                "Settings > API Keys."
+            ),
             error_code="YOUTUBE_COMMENTS_NOT_CONFIGURED",
         )
 
@@ -57,17 +65,28 @@ async def perform_youtube_comments_lookup(request: YoutubeCommentsRequest, db: A
     return await _list_comments(video_id, api_key, request)
 
 
-async def _list_comments(video_id: str, api_key: str, request: YoutubeCommentsRequest) -> YoutubeCommentsResponse:
+async def _list_comments(
+    video_id: str, api_key: str, request: YoutubeCommentsRequest
+) -> YoutubeCommentsResponse:
     raw = await fetch_comment_threads(
-        video_id, api_key, order=request.order, page_token=request.page_token, max_results=COMMENTS_LISTING_PAGE_SIZE,
+        video_id,
+        api_key,
+        order=request.order,
+        page_token=request.page_token,
+        max_results=COMMENTS_LISTING_PAGE_SIZE,
     )
     comments = [_map_comment_thread(item) for item in raw.get("items", [])]
     return YoutubeCommentsResponse(
-        video_id=video_id, comments=comments, next_page_token=raw.get("nextPageToken"), pages_scanned=1,
+        video_id=video_id,
+        comments=comments,
+        next_page_token=raw.get("nextPageToken"),
+        pages_scanned=1,
     )
 
 
-async def _search_comments(video_id: str, api_key: str, request: YoutubeCommentsRequest) -> YoutubeCommentsResponse:
+async def _search_comments(
+    video_id: str, api_key: str, request: YoutubeCommentsRequest
+) -> YoutubeCommentsResponse:
     query = request.query.lower()
     matches: list[YoutubeComment] = []
     page_token = request.page_token
@@ -76,7 +95,11 @@ async def _search_comments(video_id: str, api_key: str, request: YoutubeComments
 
     while pages_scanned < COMMENTS_SEARCH_MAX_PAGES and len(matches) < COMMENTS_SEARCH_MAX_RESULTS:
         raw = await fetch_comment_threads(
-            video_id, api_key, order=request.order, page_token=page_token, max_results=COMMENTS_SEARCH_PAGE_SIZE,
+            video_id,
+            api_key,
+            order=request.order,
+            page_token=page_token,
+            max_results=COMMENTS_SEARCH_PAGE_SIZE,
         )
         pages_scanned += 1
 

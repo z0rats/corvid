@@ -1,9 +1,11 @@
 """Bing web scraping - best-effort only (see google_engine.py's docstring; same caveats apply)."""
+
 import logging
 
 from bs4 import BeautifulSoup
 
 from app.features.dork_runner.config.search_engines_config import BING_URL, MAX_RESULTS_PER_QUERY
+
 from .base import RawResult, fetch_html
 
 logger = logging.getLogger(__name__)
@@ -32,6 +34,8 @@ async def search(query: str) -> list[RawResult]:
             break
 
     if not results:
-        logger.debug("Bing returned no parseable results for query (likely blocked/CAPTCHA'd): %s", query)
+        logger.debug(
+            "Bing returned no parseable results for query (likely blocked/CAPTCHA'd): %s", query
+        )
 
     return results

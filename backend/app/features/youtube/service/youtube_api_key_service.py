@@ -2,6 +2,7 @@
 by youtube_lookup_service.py (extended stats tier) and youtube_comments_lookup_service.py
 (comments have no keyless tier at all, so this key is mandatory there).
 """
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey

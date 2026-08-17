@@ -2,10 +2,10 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Query
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, Query
 
 from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.exceptions import AppHTTPException
 from app.features.newsfeed.crud.trends_blacklist_crud import (
     blacklist_entry_exists,
     create_blacklist_entry,
@@ -51,7 +51,11 @@ async def add_blacklist_entry(
 ) -> BlacklistEntryResponse:
     """Create a new blacklist entry"""
     if await blacklist_entry_exists(db, entry_data.value, entry_data.type):
-        raise AppHTTPException(status_code=400, detail="Entry already exists in blacklist", error_code="BLACKLIST_ENTRY_EXISTS")
+        raise AppHTTPException(
+            status_code=400,
+            detail="Entry already exists in blacklist",
+            error_code="BLACKLIST_ENTRY_EXISTS",
+        )
 
     entry = await create_blacklist_entry(db, entry_data.value, entry_data.type)
     logger.info("Added blacklist entry: type=%s, value=%s", entry_data.type, entry_data.value)
@@ -71,7 +75,11 @@ async def remove_blacklist_entry(
     """Delete a blacklist entry by ID"""
     deleted = await delete_blacklist_entry(db, entry_id)
     if not deleted:
-        raise AppHTTPException(status_code=404, detail="Blacklist entry not found", error_code="BLACKLIST_ENTRY_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=404,
+            detail="Blacklist entry not found",
+            error_code="BLACKLIST_ENTRY_NOT_FOUND",
+        )
 
     logger.info("Removed blacklist entry: id=%s", entry_id)
     return BlacklistDeleteResponse(detail="Blacklist entry deleted successfully")

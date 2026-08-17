@@ -12,7 +12,7 @@ from dataclasses import dataclass
 # still need to be represented in the ordered marker list so callers can
 # locate/preserve them. Outside the 0x00-0xFF marker byte range so they can
 # never collide with a real marker code.
-SCAN_DATA = 0x100      # entropy-coded scan data following an SOS segment
+SCAN_DATA = 0x100  # entropy-coded scan data following an SOS segment
 TRAILING_DATA = 0x101  # any bytes found after EOI
 
 # Marker codes with no length field / payload (standalone).
@@ -34,7 +34,8 @@ for _n in range(0xD0, 0xD8):
     MARKER_NAMES[_n] = f"RST{_n - 0xD0}"
 for _n in range(0xE0, 0xF0):
     MARKER_NAMES[_n] = f"APP{_n - 0xE0}"
-# SOF0-SOF15, excluding DHT(0xC4), JPG(0xC8), DAC(0xC4 dup/0xCC) which reuse the range for other purposes.
+# SOF0-SOF15, excluding DHT(0xC4), JPG(0xC8), DAC(0xC4 dup/0xCC) which reuse the range for
+# other purposes.
 for _n in range(0xC0, 0xD0):
     if _n not in (0xC4, 0xC8, 0xCC):
         MARKER_NAMES[_n] = f"SOF{_n - 0xC0}"
@@ -122,10 +123,19 @@ def walk_markers(data: bytes) -> list[RawMarker]:
                     continue
                 break  # a real marker follows - the scan has ended
 
-            markers.append(RawMarker(code=SCAN_DATA, offset=scan_start, length=pos - scan_start, payload=data[scan_start:pos]))
+            markers.append(
+                RawMarker(
+                    code=SCAN_DATA,
+                    offset=scan_start,
+                    length=pos - scan_start,
+                    payload=data[scan_start:pos],
+                )
+            )
 
     if pos < n:
-        markers.append(RawMarker(code=TRAILING_DATA, offset=pos, length=n - pos, payload=data[pos:]))
+        markers.append(
+            RawMarker(code=TRAILING_DATA, offset=pos, length=n - pos, payload=data[pos:])
+        )
 
     return markers
 
@@ -144,5 +154,7 @@ def serialize_markers(markers: list[RawMarker]) -> bytes:
         elif marker.length is None:
             chunks.append(bytes([0xFF, marker.code]))
         else:
-            chunks.append(bytes([0xFF, marker.code]) + marker.length.to_bytes(2, "big") + marker.payload)
+            chunks.append(
+                bytes([0xFF, marker.code]) + marker.length.to_bytes(2, "big") + marker.payload
+            )
     return b"".join(chunks)

@@ -3,12 +3,17 @@
 https://html.duckduckgo.com/html/ requires no JS and no API key, and is far
 less aggressive about blocking scripted queries than Google/Bing.
 """
+
 import logging
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
 
-from app.features.dork_runner.config.search_engines_config import DUCKDUCKGO_URL, MAX_RESULTS_PER_QUERY
+from app.features.dork_runner.config.search_engines_config import (
+    DUCKDUCKGO_URL,
+    MAX_RESULTS_PER_QUERY,
+)
+
 from .base import RawResult, fetch_html
 
 logger = logging.getLogger(__name__)

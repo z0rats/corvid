@@ -1,9 +1,9 @@
 import logging
 
-from sqlalchemy import select, func, delete, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.llm_templates.constants import DEFAULT_CATEGORY_ID, SYSTEM_CATEGORY_IDS
+from app.features.llm_templates.constants import DEFAULT_CATEGORY_ID
 from app.features.llm_templates.models.llm_template_models import AITemplate
 from app.features.llm_templates.models.template_category_models import TemplateCategory
 
@@ -43,7 +43,9 @@ async def create_category(db: AsyncSession, name: str) -> TemplateCategory:
     return category
 
 
-async def update_category_name(db: AsyncSession, category_id: str, new_name: str) -> TemplateCategory | None:
+async def update_category_name(
+    db: AsyncSession, category_id: str, new_name: str
+) -> TemplateCategory | None:
     """Rename a category. System categories cannot be renamed."""
     logger.info("Updating category %s name to: %s", category_id, new_name)
 

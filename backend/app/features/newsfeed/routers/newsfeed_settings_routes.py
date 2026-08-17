@@ -2,31 +2,37 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException, status
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, status
 
 from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.exceptions import AppHTTPException
 from app.core.settings.settings_router_factory import build_singleton_settings_router
-from app.features.newsfeed.service.newsfeed_scheduler_service import configure_news_scheduler
-from app.features.newsfeed.crud.newsfeed_settings_crud import (
-    get_all_newsfeed_settings,
-    update_newsfeed_setting,
-    toggle_feed_status,
-)
 from app.features.newsfeed.crud.newsfeed_config_crud import (
     get_newsfeed_config as crud_get_config,
-    update_newsfeed_config as crud_update_config,
+)
+from app.features.newsfeed.crud.newsfeed_config_crud import (
     get_retention_days as crud_get_retention,
+)
+from app.features.newsfeed.crud.newsfeed_config_crud import (
     set_retention_days as crud_set_retention,
 )
+from app.features.newsfeed.crud.newsfeed_config_crud import (
+    update_newsfeed_config as crud_update_config,
+)
+from app.features.newsfeed.crud.newsfeed_settings_crud import (
+    get_all_newsfeed_settings,
+    toggle_feed_status,
+    update_newsfeed_setting,
+)
 from app.features.newsfeed.schemas.newsfeed_schemas import (
-    NewsfeedSettingsSchema,
+    FeedStatusUpdate,
     NewsfeedConfigSchema,
     NewsfeedConfigUpdateSchema,
-    FeedStatusUpdate,
-    RetentionDaysUpdate,
+    NewsfeedSettingsSchema,
     RetentionDaysResponse,
+    RetentionDaysUpdate,
 )
+from app.features.newsfeed.service.newsfeed_scheduler_service import configure_news_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +51,11 @@ async def read_newsfeed_settings(db: ReadSessionDep) -> list[NewsfeedSettingsSch
     """Get all newsfeed settings"""
     settings = await get_all_newsfeed_settings(db)
     if not settings:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No settings found", error_code="NEWSFEED_SETTINGS_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No settings found",
+            error_code="NEWSFEED_SETTINGS_NOT_FOUND",
+        )
     return [NewsfeedSettingsSchema.model_validate(s) for s in settings]
 
 
@@ -56,7 +66,9 @@ async def read_newsfeed_settings(db: ReadSessionDep) -> list[NewsfeedSettingsSch
     summary="Update newsfeed",
     description="Update settings for a specific newsfeed",
 )
-async def update_settings(settings: NewsfeedSettingsSchema, db: SessionDep) -> NewsfeedSettingsSchema:
+async def update_settings(
+    settings: NewsfeedSettingsSchema, db: SessionDep
+) -> NewsfeedSettingsSchema:
     """Update newsfeed settings by name"""
     updated = await update_newsfeed_setting(db, settings.name, settings)
     logger.info("Updated newsfeed settings for %s.", settings.name)
@@ -79,7 +91,11 @@ async def update_feed_status(
     """Enable or disable a newsfeed"""
     feed = await toggle_feed_status(db, feed_name, update.enabled)
     if not feed:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Newsfeed not found", error_code="NEWSFEED_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Newsfeed not found",
+            error_code="NEWSFEED_NOT_FOUND",
+        )
     action = "Enabled" if update.enabled else "Disabled"
     logger.info("%s newsfeed %s.", action, feed_name)
     return NewsfeedSettingsSchema.model_validate(feed)
@@ -102,10 +118,14 @@ async def get_retention_days(db: ReadSessionDep) -> int:
     summary="Update retention period",
     description="Update the number of days articles are retained before deletion",
 )
-async def update_retention_days(update: RetentionDaysUpdate, db: SessionDep) -> RetentionDaysResponse:
+async def update_retention_days(
+    update: RetentionDaysUpdate, db: SessionDep
+) -> RetentionDaysResponse:
     """Update the article retention period"""
     await crud_set_retention(db, update.retention_days)
-    return RetentionDaysResponse(message="Retention days updated successfully", retention_days=update.retention_days)
+    return RetentionDaysResponse(
+        message="Retention days updated successfully", retention_days=update.retention_days
+    )
 
 
 config_router = build_singleton_settings_router(
@@ -116,7 +136,8 @@ config_router = build_singleton_settings_router(
     get_service=crud_get_config,
     update_service=crud_update_config,
     on_after_update=lambda _payload, updated: configure_news_scheduler(
-        updated.background_fetch_enabled, updated.fetch_interval_minutes,
+        updated.background_fetch_enabled,
+        updated.fetch_interval_minutes,
     ),
     exclude_none=True,
 )

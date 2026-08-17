@@ -1,8 +1,8 @@
+import logging
+import re
 from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
-import logging
-import re
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,22 +70,141 @@ async def get_title_word_frequency(
 def get_stop_words() -> set:
     """Return the set of common stop words filtered from word frequency analysis"""
     return {
-        "the", "and", "for", "with", "from", "that", "this", "have", "been", "has", "are",
-        "was", "not", "but", "all", "its", "new", "more", "also", "into", "they", "their",
-        "which", "could", "would", "should", "can", "will", "a", "an", "is", "of", "to", "in",
-        "on", "at", "by", "be", "as", "or", "from", "it", "he", "she", "we", "you", "my",
-        "your", "our", "us", "him", "her", "them", "his", "her", "its", "up", "down", "out",
-        "about", "then", "there", "when", "where", "why", "how", "what", "who", "whom",
-        "whose", "if", "than", "through", "before", "after", "while", "though", "even",
-        "because", "until", "unless", "since", "about", "above", "across", "after", "against",
-        "along", "among", "around", "at", "before", "behind", "below", "beneath", "beside",
-        "between", "beyond", "but", "by", "concerning", "considering", "despite", "down",
-        "during", "except", "for", "from", "in", "inside", "into", "like", "near", "of",
-        "off", "on", "onto", "out", "outside", "over", "past", "regarding", "respecting",
-        "round", "save", "since", "through", "throughout", "to", "toward", "towards", "under",
-        "underneath", "until", "unto", "up", "upon", "with", "within", "without", "via", "re",
-        "hackers", "cyber", "attack", "attacks", "data", "security", "says", "cybersecurity",
-        "cve", "threat", "unveils", "group", "spread", "globe", "threats", "four",
+        "the",
+        "and",
+        "for",
+        "with",
+        "from",
+        "that",
+        "this",
+        "have",
+        "been",
+        "has",
+        "are",
+        "was",
+        "not",
+        "but",
+        "all",
+        "its",
+        "new",
+        "more",
+        "also",
+        "into",
+        "they",
+        "their",
+        "which",
+        "could",
+        "would",
+        "should",
+        "can",
+        "will",
+        "a",
+        "an",
+        "is",
+        "of",
+        "to",
+        "in",
+        "on",
+        "at",
+        "by",
+        "be",
+        "as",
+        "or",
+        "it",
+        "he",
+        "she",
+        "we",
+        "you",
+        "my",
+        "your",
+        "our",
+        "us",
+        "him",
+        "her",
+        "them",
+        "his",
+        "up",
+        "down",
+        "out",
+        "about",
+        "then",
+        "there",
+        "when",
+        "where",
+        "why",
+        "how",
+        "what",
+        "who",
+        "whom",
+        "whose",
+        "if",
+        "than",
+        "through",
+        "before",
+        "after",
+        "while",
+        "though",
+        "even",
+        "because",
+        "until",
+        "unless",
+        "since",
+        "above",
+        "across",
+        "against",
+        "along",
+        "among",
+        "around",
+        "behind",
+        "below",
+        "beneath",
+        "beside",
+        "between",
+        "beyond",
+        "concerning",
+        "considering",
+        "despite",
+        "during",
+        "except",
+        "inside",
+        "like",
+        "near",
+        "off",
+        "onto",
+        "outside",
+        "over",
+        "past",
+        "regarding",
+        "respecting",
+        "round",
+        "save",
+        "throughout",
+        "toward",
+        "towards",
+        "under",
+        "underneath",
+        "unto",
+        "upon",
+        "within",
+        "without",
+        "via",
+        "re",
+        "hackers",
+        "cyber",
+        "attack",
+        "attacks",
+        "data",
+        "security",
+        "says",
+        "cybersecurity",
+        "cve",
+        "threat",
+        "unveils",
+        "group",
+        "spread",
+        "globe",
+        "threats",
+        "four",
     }
 
 
@@ -96,10 +215,14 @@ _IOC_KEY_MAP = {
 }
 
 
-async def get_top_iocs(db: AsyncSession, ioc_type: str, limit: int = 10, time_range: str | None = None) -> list[dict[str, Any]]:
+async def get_top_iocs(
+    db: AsyncSession, ioc_type: str, limit: int = 10, time_range: str | None = None
+) -> list[dict[str, Any]]:
     """Retrieve the most frequent IOCs of a specific type from the iocs JSON column"""
     db_key = _IOC_KEY_MAP.get(ioc_type, ioc_type)
-    result = await _query_articles_by_time(db, [NewsArticle.id, NewsArticle.date, NewsArticle.iocs], time_range)
+    result = await _query_articles_by_time(
+        db, [NewsArticle.id, NewsArticle.date, NewsArticle.iocs], time_range
+    )
     blacklisted_iocs = await get_blacklist_values(db, "ioc")
 
     ioc_articles: dict[str, set] = defaultdict(set)
@@ -111,7 +234,11 @@ async def get_top_iocs(db: AsyncSession, ioc_type: str, limit: int = 10, time_ra
             if not iocs_data or db_key not in iocs_data or not isinstance(iocs_data[db_key], list):
                 continue
             for value in iocs_data[db_key]:
-                if isinstance(value, str) and value.strip() and value.strip().lower() not in blacklisted_iocs:
+                if (
+                    isinstance(value, str)
+                    and value.strip()
+                    and value.strip().lower() not in blacklisted_iocs
+                ):
                     ioc_articles[value].add(article.id)
                     ioc_counts[value] += 1
 
@@ -121,9 +248,13 @@ async def get_top_iocs(db: AsyncSession, ioc_type: str, limit: int = 10, time_ra
     ]
 
 
-async def get_top_cves(db: AsyncSession, limit: int = 10, time_range: str | None = None) -> list[dict[str, Any]]:
+async def get_top_cves(
+    db: AsyncSession, limit: int = 10, time_range: str | None = None
+) -> list[dict[str, Any]]:
     """Retrieve the most frequent CVEs from the iocs JSON column"""
-    result = await _query_articles_by_time(db, [NewsArticle.id, NewsArticle.date, NewsArticle.iocs], time_range)
+    result = await _query_articles_by_time(
+        db, [NewsArticle.id, NewsArticle.date, NewsArticle.iocs], time_range
+    )
 
     cve_articles: dict[str, set] = defaultdict(set)
     cve_counts: Counter = Counter()
@@ -144,9 +275,13 @@ async def get_top_cves(db: AsyncSession, limit: int = 10, time_range: str | None
     ]
 
 
-async def get_ioc_type_distribution(db: AsyncSession, time_range: str | None = None) -> list[dict[str, Any]]:
+async def get_ioc_type_distribution(
+    db: AsyncSession, time_range: str | None = None
+) -> list[dict[str, Any]]:
     """Retrieve the total count of each IOC type within a specified time range"""
-    result = await _query_articles_by_time(db, [NewsArticle.id, NewsArticle.date, NewsArticle.iocs], time_range)
+    result = await _query_articles_by_time(
+        db, [NewsArticle.id, NewsArticle.date, NewsArticle.iocs], time_range
+    )
 
     valid_ioc_types = ["ips", "md5", "sha1", "sha256", "urls", "domains", "emails", "cves"]
     ioc_type_counts: Counter = Counter()

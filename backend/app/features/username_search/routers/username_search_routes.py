@@ -9,17 +9,27 @@ from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
 from app.core.scans.sse import sse_response
-from app.core.settings.username_search.crud.social_analyzer_settings_crud import get_social_analyzer_config
-from app.core.settings.username_search.crud.username_search_settings_crud import get_username_search_config
+from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
+    get_social_analyzer_config,
+)
+from app.core.settings.username_search.crud.username_search_settings_crud import (
+    get_username_search_config,
+)
 from app.core.utils.pypi_version_check import check_for_update, compute_update_available
 from app.features.username_search.config.maigret_config import (
     PACKAGE_NAME as MAIGRET_PACKAGE_NAME,
+)
+from app.features.username_search.config.maigret_config import (
     get_available_tags,
     get_maigret_database,
 )
 from app.features.username_search.config.social_analyzer_config import (
     PACKAGE_NAME as SOCIAL_ANALYZER_PACKAGE_NAME,
+)
+from app.features.username_search.config.social_analyzer_config import (
     get_bundled_site_count,
+)
+from app.features.username_search.config.social_analyzer_config import (
     get_installed_version as get_social_analyzer_version,
 )
 from app.features.username_search.crud.username_search_crud import (
@@ -35,7 +45,9 @@ from app.features.username_search.schemas.username_search_schemas import (
     UsernameSearchInfo,
 )
 from app.features.username_search.service.db_refresh_service import refresh_database
-from app.features.username_search.service.hudson_rock_service import check_username as check_hudson_rock_username
+from app.features.username_search.service.hudson_rock_service import (
+    check_username as check_hudson_rock_username,
+)
 from app.features.username_search.service.report_service import (
     delete_scan_results,
     generate_export,
@@ -44,13 +56,22 @@ from app.features.username_search.service.report_service import (
 )
 from app.features.username_search.service.social_analyzer_service import (
     cancel_scan as cancel_social_analyzer_scan,
+)
+from app.features.username_search.service.social_analyzer_service import (
     run_scan as run_social_analyzer_scan,
 )
 from app.features.username_search.service.threat_actor_usernames_service import (
     cancel_scan as cancel_threat_actor_usernames_scan,
+)
+from app.features.username_search.service.threat_actor_usernames_service import (
     run_scan as run_threat_actor_usernames_scan,
 )
-from app.features.username_search.service.username_search_service import cancel_scan as cancel_maigret_scan, run_scan as run_maigret_scan
+from app.features.username_search.service.username_search_service import (
+    cancel_scan as cancel_maigret_scan,
+)
+from app.features.username_search.service.username_search_service import (
+    run_scan as run_maigret_scan,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +81,8 @@ router = APIRouter(prefix="/api/username-search", tags=["Username Search"])
 @router.post(
     "/scan",
     summary="Start a username search",
-    description="Start a username search (Maigret, social-analyzer, or Threat Actor Username Search), "
-    "streaming progress as Server-Sent Events",
+    description="Start a username search (Maigret, social-analyzer, or Threat Actor Username "
+    "Search), streaming progress as Server-Sent Events",
 )
 @limiter.limit("3/minute")
 async def start_scan(request: Request, scan_request: ScanRequest):
@@ -74,12 +95,14 @@ async def start_scan(request: Request, scan_request: ScanRequest):
     elif scan_request.source == "threat_actor_usernames":
         asyncio.create_task(run_threat_actor_usernames_scan(scan_request.username, queue))
     else:
-        asyncio.create_task(run_maigret_scan(
-            scan_request.username,
-            queue,
-            tags=scan_request.tags,
-            excluded_tags=scan_request.excluded_tags,
-        ))
+        asyncio.create_task(
+            run_maigret_scan(
+                scan_request.username,
+                queue,
+                tags=scan_request.tags,
+                excluded_tags=scan_request.excluded_tags,
+            )
+        )
 
     return sse_response(queue)
 
@@ -88,7 +111,10 @@ async def start_scan(request: Request, scan_request: ScanRequest):
     "/hudson-rock",
     response_model=HudsonRockCheckResponse,
     summary="Check Hudson Rock for infostealer exposure",
-    description="Check Hudson Rock's free, keyless public API for infostealer/malware-log exposure associated with a username",
+    description=(
+        "Check Hudson Rock's free, keyless public API for "
+        "infostealer/malware-log exposure associated with a username"
+    ),
 )
 @limiter.limit("20/minute")
 async def get_hudson_rock_check(
@@ -111,7 +137,10 @@ async def get_hudson_rock_check(
     "/runs/{search_id}/cancel",
     status_code=status.HTTP_202_ACCEPTED,
     summary="Cancel a running search",
-    description="Cancel a currently-running username search, keeping whatever sites were found before cancellation",
+    description=(
+        "Cancel a currently-running username search, keeping whatever sites "
+        "were found before cancellation"
+    ),
     responses={404: {"description": "No running search with that ID"}},
 )
 async def cancel_scan_endpoint(search_id: int) -> None:
@@ -122,7 +151,11 @@ async def cancel_scan_endpoint(search_id: int) -> None:
         or await cancel_threat_actor_usernames_scan(search_id)
     )
     if not cancelled:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="USERNAME_SEARCH_NOT_RUNNING")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No running search with that ID",
+            error_code="USERNAME_SEARCH_NOT_RUNNING",
+        )
     logger.info("Cancellation requested for username search run %s", search_id)
 
 
@@ -157,14 +190,18 @@ async def read_info(db: ReadSessionDep) -> list[UsernameSearchInfo]:
             site_count=maigret_site_count,
             db_last_updated_at=maigret_config.db_last_updated_at,
             latest_version=maigret_config.latest_pypi_version,
-            update_available=compute_update_available(maigret_config.latest_pypi_version, maigret.__version__),
+            update_available=compute_update_available(
+                maigret_config.latest_pypi_version, maigret.__version__
+            ),
         ),
         UsernameSearchInfo(
             tool="social_analyzer",
             version=get_social_analyzer_version(),
             site_count=get_bundled_site_count(),
             latest_version=sa_config.latest_pypi_version,
-            update_available=compute_update_available(sa_config.latest_pypi_version, get_social_analyzer_version()),
+            update_available=compute_update_available(
+                sa_config.latest_pypi_version, get_social_analyzer_version()
+            ),
         ),
     ]
 
@@ -173,7 +210,10 @@ async def read_info(db: ReadSessionDep) -> list[UsernameSearchInfo]:
     "/refresh-db",
     response_model=UsernameSearchInfo,
     summary="Refresh the Maigret site database now",
-    description="Force-check for and download a Maigret site database update, bypassing the scheduled interval",
+    description=(
+        "Force-check for and download a Maigret site database update, bypassing "
+        "the scheduled interval"
+    ),
 )
 async def refresh_db_endpoint(db: SessionDep) -> UsernameSearchInfo:
     """Manually trigger a Maigret site database refresh"""
@@ -191,8 +231,9 @@ async def refresh_db_endpoint(db: SessionDep) -> UsernameSearchInfo:
     "/social-analyzer/check-update",
     response_model=UsernameSearchInfo,
     summary="Check PyPI for a social-analyzer update",
-    description="Check PyPI for the latest published social-analyzer version. Doesn't install anything - "
-    "a newer version still requires a container rebuild, since site data ships inside the pip package.",
+    description="Check PyPI for the latest published social-analyzer version. Doesn't install "
+    "anything - a newer version still requires a container rebuild, since site data ships "
+    "inside the pip package.",
 )
 async def check_social_analyzer_update(db: SessionDep) -> UsernameSearchInfo:
     """Manually check PyPI for a newer social-analyzer release"""
@@ -212,8 +253,9 @@ async def check_social_analyzer_update(db: SessionDep) -> UsernameSearchInfo:
     "/maigret/check-update",
     response_model=UsernameSearchInfo,
     summary="Check PyPI for a maigret update",
-    description="Check PyPI for the latest published maigret version. Doesn't install anything - "
-    "a newer version still requires a container rebuild, since maigret is installed at image-build time.",
+    description="Check PyPI for the latest published maigret version. Doesn't install anything "
+    "- a newer version still requires a container rebuild, since maigret is installed at "
+    "image-build time.",
 )
 async def check_maigret_update(db: SessionDep) -> UsernameSearchInfo:
     """Manually check PyPI for a newer maigret release"""
@@ -236,7 +278,9 @@ async def check_maigret_update(db: SessionDep) -> UsernameSearchInfo:
     summary="List past searches",
     description="Retrieve past and in-progress username searches, most recent first",
 )
-async def read_search_runs(db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100) -> list[SearchRunSummary]:
+async def read_search_runs(
+    db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100
+) -> list[SearchRunSummary]:
     """List past search runs with pagination"""
     runs = await list_search_runs(db, skip=skip, limit=limit)
     return [SearchRunSummary.model_validate(r) for r in runs]
@@ -253,7 +297,11 @@ async def read_search_run(search_id: int, db: ReadSessionDep) -> SearchRunDetail
     """Get a specific search run with its found sites"""
     run = await get_search_run_with_results(db, search_id)
     if not run:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search run not found", error_code="USERNAME_SEARCH_RUN_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search run not found",
+            error_code="USERNAME_SEARCH_RUN_NOT_FOUND",
+        )
     detail = SearchRunDetail.model_validate(run)
     detail.has_export = has_scan_results(search_id)
     return detail
@@ -262,23 +310,43 @@ async def read_search_run(search_id: int, db: ReadSessionDep) -> SearchRunDetail
 @router.get(
     "/runs/{search_id}/export/{export_format}",
     summary="Export a search run's report",
-    description="Download the full per-site report (found and not-found) in the given format, generated by Maigret's own report writers",
-    responses={404: {"description": "Search run or report not found"}, 400: {"description": "Unsupported export format"}},
+    description=(
+        "Download the full per-site report (found and not-found) in the given "
+        "format, generated by Maigret's own report writers"
+    ),
+    responses={
+        404: {"description": "Search run or report not found"},
+        400: {"description": "Unsupported export format"},
+    },
 )
 async def export_search_run(search_id: int, export_format: str, db: ReadSessionDep) -> Response:
     """Export a search run's full report in the given format"""
     run = await get_search_run_with_results(db, search_id)
     if not run:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search run not found", error_code="USERNAME_SEARCH_RUN_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search run not found",
+            error_code="USERNAME_SEARCH_RUN_NOT_FOUND",
+        )
 
     results = load_scan_results(search_id)
     if results is None:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No report available for this search run", error_code="USERNAME_SEARCH_REPORT_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No report available for this search run",
+            error_code="USERNAME_SEARCH_REPORT_NOT_FOUND",
+        )
 
     try:
-        content, media_type, filename = generate_export(search_id, run.username, results, export_format)
+        content, media_type, filename = generate_export(
+            search_id, run.username, results, export_format
+        )
     except ValueError as exc:
-        raise AppHTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc), error_code="USERNAME_SEARCH_UNSUPPORTED_FORMAT") from exc
+        raise AppHTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+            error_code="USERNAME_SEARCH_UNSUPPORTED_FORMAT",
+        ) from exc
 
     return Response(
         content=content,
@@ -298,6 +366,10 @@ async def delete_search_run_endpoint(search_id: int, db: SessionDep) -> None:
     """Delete a specific search run"""
     run = await delete_search_run(db, search_id)
     if not run:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search run not found", error_code="USERNAME_SEARCH_RUN_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search run not found",
+            error_code="USERNAME_SEARCH_RUN_NOT_FOUND",
+        )
     delete_scan_results(search_id)
     logger.info("Deleted username search run %s", search_id)

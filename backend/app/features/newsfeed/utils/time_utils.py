@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta, timezone
 import logging
+from datetime import UTC, datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -12,16 +12,16 @@ def parse_time_range(time_range: str) -> datetime | None:
     """
     if not time_range:
         return None
-        
+
     time_range = time_range.lower()
-    
+
     try:
-        if time_range.endswith('h'):
+        if time_range.endswith("h"):
             hours = int(time_range[:-1])
-            return datetime.now(timezone.utc) - timedelta(hours=hours)
-        elif time_range.endswith('d'):
+            return datetime.now(UTC) - timedelta(hours=hours)
+        elif time_range.endswith("d"):
             days = int(time_range[:-1])
-            return datetime.now(timezone.utc) - timedelta(days=days)
+            return datetime.now(UTC) - timedelta(days=days)
         else:
             return None
     except ValueError:
@@ -30,7 +30,7 @@ def parse_time_range(time_range: str) -> datetime | None:
 
 def get_cutoff_date_for_retention(retention_days: int) -> datetime:
     """Calculate cutoff date based on retention period"""
-    return datetime.now(timezone.utc) - timedelta(days=retention_days)
+    return datetime.now(UTC) - timedelta(days=retention_days)
 
 
 def is_within_retention_period(article_date: datetime, retention_days: int) -> bool:
@@ -46,4 +46,4 @@ def format_datetime_for_api(dt: datetime) -> str:
 
 def get_current_utc_timestamp() -> datetime:
     """Get current UTC timestamp"""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

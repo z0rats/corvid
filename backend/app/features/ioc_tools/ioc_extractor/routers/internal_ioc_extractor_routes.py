@@ -1,20 +1,20 @@
 import logging
-from fastapi import APIRouter, File, UploadFile, HTTPException, status
+
+from fastapi import APIRouter, File, UploadFile, status
+
 from app.core.exceptions import AppHTTPException
+from app.features.ioc_tools.ioc_extractor.schemas.extractor_schemas import (
+    ExtractionErrorResponse,
+    ExtractionResponse,
+    TextExtractionRequest,
+)
 from app.features.ioc_tools.ioc_extractor.service.ioc_extractor_service import (
     extract_iocs,
-    extract_iocs_from_file_content
+    extract_iocs_from_file_content,
 )
 from app.features.ioc_tools.ioc_extractor.utils.validation_utils import (
-    validate_file_upload,
     decode_file_content,
-    get_file_extension
-)
-from app.features.ioc_tools.ioc_extractor.schemas.extractor_schemas import (
-    TextExtractionRequest,
-    ExtractionResponse,
-    ExtractionErrorResponse,
-    FileUploadInfo
+    validate_file_upload,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,27 +29,27 @@ router = APIRouter()
         400: {"model": ExtractionErrorResponse, "description": "Invalid file or processing error"},
         413: {"model": ExtractionErrorResponse, "description": "File too large"},
         422: {"model": ExtractionErrorResponse, "description": "Validation error"},
-        500: {"model": ExtractionErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ExtractionErrorResponse, "description": "Internal server error"},
+    },
 )
 async def extract_iocs_from_file(file: UploadFile = File(...)) -> ExtractionResponse:
     """
     Extract IOCs from uploaded file content
-    
+
     This endpoint accepts file uploads and extracts IOCs from the file content.
     Supports various text-based file formats and handles multiple character encodings.
-    
+
     Args:
         file: Uploaded file containing text with potential IOCs
-        
+
     Returns:
         ExtractionResponse with extracted IOCs and statistics
-        
+
     Raises:
         HTTPException: For file validation errors or processing failures
     """
     logger.info("Received file upload for IOC extraction: %s", file.filename)
-    
+
     is_valid, error_message = validate_file_upload(file)
     if not is_valid:
         logger.warning("File validation failed: %s", error_message)
@@ -58,10 +58,10 @@ async def extract_iocs_from_file(file: UploadFile = File(...)) -> ExtractionResp
             detail=f"File validation error: {error_message}",
             error_code="EXTRACTOR_FILE_VALIDATION_ERROR",
         )
-    
+
     try:
         file_contents = await file.read()
-        
+
         # Decode file content
         try:
             file_contents_str, encoding_used = decode_file_content(file_contents)
@@ -70,22 +70,25 @@ async def extract_iocs_from_file(file: UploadFile = File(...)) -> ExtractionResp
             logger.error("Failed to decode file %s: %s", file.filename, str(e))
             raise AppHTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unable to decode file content. Supported encodings: utf-8, latin-1, ascii, iso-8859-1, cp1252",
+                detail=(
+                    "Unable to decode file content. Supported encodings: utf-8, latin-1, "
+                    "ascii, iso-8859-1, cp1252"
+                ),
                 error_code="EXTRACTOR_DECODE_ERROR",
-            )
-        
+            ) from e
+
         result = extract_iocs_from_file_content(file_contents_str, file.filename)
-        
+
         logger.info("Successfully extracted IOCs from file: %s", file.filename)
         return result
-        
+
     except ValueError as e:
         logger.warning("Validation error processing file %s: %s", file.filename, str(e))
         raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"File processing error: {str(e)}",
             error_code="EXTRACTOR_FILE_PROCESSING_ERROR",
-        )
+        ) from e
 
     except RuntimeError as e:
         logger.error("Runtime error processing file %s: %s", file.filename, str(e))
@@ -93,15 +96,17 @@ async def extract_iocs_from_file(file: UploadFile = File(...)) -> ExtractionResp
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Processing failed: {str(e)}",
             error_code="EXTRACTOR_PROCESSING_FAILED",
-        )
+        ) from e
 
     except Exception as e:
-        logger.error("Unexpected error processing file %s: %s", file.filename, str(e), exc_info=True)
+        logger.error(
+            "Unexpected error processing file %s: %s", file.filename, str(e), exc_info=True
+        )
         raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during file processing",
             error_code="EXTRACTOR_UNEXPECTED_ERROR",
-        )
+        ) from e
 
 
 @router.post(
@@ -111,40 +116,40 @@ async def extract_iocs_from_file(file: UploadFile = File(...)) -> ExtractionResp
     responses={
         400: {"model": ExtractionErrorResponse, "description": "Invalid text or processing error"},
         422: {"model": ExtractionErrorResponse, "description": "Validation error"},
-        500: {"model": ExtractionErrorResponse, "description": "Internal server error"}
-    }
+        500: {"model": ExtractionErrorResponse, "description": "Internal server error"},
+    },
 )
 async def extract_iocs_from_text(request: TextExtractionRequest) -> ExtractionResponse:
     """
     Extract IOCs from plain text input
-    
+
     This endpoint accepts plain text and extracts IOCs from it. It's used by other
     components like the defang tool and provides comprehensive IOC recognition.
-    
+
     Args:
         request: TextExtractionRequest containing text to process
-        
+
     Returns:
         ExtractionResponse with extracted IOCs and statistics
-        
+
     Raises:
         HTTPException: For validation errors or processing failures
     """
     logger.info("Received text-based IOC extraction request")
-    
+
     try:
         result = extract_iocs(request.text)
-        
+
         logger.info("Successfully extracted IOCs from text input")
         return result
-        
+
     except ValueError as e:
         logger.warning("Validation error in text extraction: %s", str(e))
         raise AppHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Text validation error: {str(e)}",
             error_code="EXTRACTOR_TEXT_VALIDATION_ERROR",
-        )
+        ) from e
 
     except RuntimeError as e:
         logger.error("Runtime error in text extraction: %s", str(e))
@@ -152,7 +157,7 @@ async def extract_iocs_from_text(request: TextExtractionRequest) -> ExtractionRe
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Processing failed: {str(e)}",
             error_code="EXTRACTOR_TEXT_PROCESSING_FAILED",
-        )
+        ) from e
 
     except Exception as e:
         logger.error("Unexpected error in text extraction: %s", str(e), exc_info=True)
@@ -160,4 +165,4 @@ async def extract_iocs_from_text(request: TextExtractionRequest) -> ExtractionRe
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during text processing",
             error_code="EXTRACTOR_TEXT_UNEXPECTED_ERROR",
-        )
+        ) from e

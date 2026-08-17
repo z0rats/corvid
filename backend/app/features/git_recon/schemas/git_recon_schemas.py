@@ -15,17 +15,30 @@ class ScanRequest(BaseModel):
         "GitHub user/org.",
     )
     target: str = Field(
-        ..., min_length=1, max_length=300,
-        description="GitHub username (search/nickname modes) or a https://github.com/<owner>/<repo> URL (url mode)",
+        ...,
+        min_length=1,
+        max_length=300,
+        description=(
+            "GitHub username (search/nickname modes) or a "
+            "https://github.com/<owner>/<repo> URL (url mode)"
+        ),
     )
-    include_forks: bool = Field(default=False, description="nickname mode only: include forked repositories")
+    include_forks: bool = Field(
+        default=False, description="nickname mode only: include forked repositories"
+    )
     resolve_github_logins: bool = Field(
         default=True,
-        description="url/nickname mode only: resolve each identity's GitHub login by scraping its last commit's page",
+        description=(
+            "url/nickname mode only: resolve each identity's GitHub login by "
+            "scraping its last commit's page"
+        ),
     )
     ignore_noreply: bool = Field(
         default=True,
-        description="Filter service noreply addresses (github noreply, users.noreply.github.com, etc.) out of search-mode results",
+        description=(
+            "Filter service noreply addresses (github noreply, "
+            "users.noreply.github.com, etc.) out of search-mode results"
+        ),
     )
 
 

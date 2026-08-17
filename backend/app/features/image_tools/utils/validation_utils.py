@@ -2,12 +2,14 @@
 
 import logging
 
-from ..config.image_config import MAX_FILE_SIZE_BYTES, ALLOWED_FILE_EXTENSIONS
+from ..config.image_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
 
 logger = logging.getLogger(__name__)
 
 
-def validate_file_upload(filename: str | None, file_size: int) -> tuple[bool, str | None, str | None]:
+def validate_file_upload(
+    filename: str | None, file_size: int
+) -> tuple[bool, str | None, str | None]:
     """
     Validate uploaded image file.
 

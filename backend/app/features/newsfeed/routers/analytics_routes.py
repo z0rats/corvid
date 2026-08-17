@@ -6,10 +6,10 @@ from fastapi import APIRouter, Query
 
 from app.core.dependencies import ReadSessionDep
 from app.features.newsfeed.crud.analytics_crud import (
-    get_top_iocs,
-    get_top_cves,
     get_ioc_type_distribution,
     get_title_word_frequency,
+    get_top_cves,
+    get_top_iocs,
 )
 from app.features.newsfeed.schemas.newsfeed_schemas import (
     CveEntry,

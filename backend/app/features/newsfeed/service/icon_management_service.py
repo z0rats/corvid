@@ -87,11 +87,11 @@ async def sync_article_icons(db, feed_name: str, new_icon: str) -> None:
     from app.features.newsfeed.models.newsfeed_models import NewsArticle
 
     result = await db.execute(
-        update(NewsArticle)
-        .where(NewsArticle.feedname == feed_name)
-        .values(icon=new_icon)
+        update(NewsArticle).where(NewsArticle.feedname == feed_name).values(icon=new_icon)
     )
-    logger.info("Updated icon to '%s' for %d articles of feed '%s'", new_icon, result.rowcount, feed_name)
+    logger.info(
+        "Updated icon to '%s' for %d articles of feed '%s'", new_icon, result.rowcount, feed_name
+    )
 
 
 async def delete_feed_icon_with_favicon_fallback(db, feed_name: str) -> tuple[bool, str]:

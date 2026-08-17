@@ -11,7 +11,9 @@ from app.features.username_search.config.maigret_config import reload_maigret_da
 logger = logging.getLogger(__name__)
 
 
-async def refresh_database(db: AsyncSession | None = None, *, force: bool = False, check_interval_hours: int = 24) -> int:
+async def refresh_database(
+    db: AsyncSession | None = None, *, force: bool = False, check_interval_hours: int = 24
+) -> int:
     """Check for (or force) a Maigret site-database update and reload the in-process cache.
 
     Maigret's updater (`db_updater.resolve_db_path`/`force_update`) uses the
@@ -26,7 +28,12 @@ async def refresh_database(db: AsyncSession | None = None, *, force: bool = Fals
         await asyncio.to_thread(force_update, DEFAULT_META_URL, False)
     else:
         await asyncio.to_thread(
-            resolve_db_path, "resources/data.json", False, DEFAULT_META_URL, check_interval_hours, False
+            resolve_db_path,
+            "resources/data.json",
+            False,
+            DEFAULT_META_URL,
+            check_interval_hours,
+            False,
         )
 
     reloaded_db = reload_maigret_database()

@@ -3,5 +3,5 @@
 from . import image_metadata_service
 
 __all__ = [
-    'image_metadata_service',
+    "image_metadata_service",
 ]

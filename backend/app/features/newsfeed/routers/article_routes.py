@@ -1,9 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, status
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, Path, status
 
 from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.exceptions import AppHTTPException
 from app.features.newsfeed.schemas.newsfeed_schemas import (
     ArticleIocsResponse,
     BulkArticleRequest,
@@ -12,9 +12,15 @@ from app.features.newsfeed.schemas.newsfeed_schemas import (
 )
 from app.features.newsfeed.service.article_retrieval_service import (
     get_article as get_article_service,
-    get_articles_bulk as get_articles_bulk_service,
-    update_article_details as update_article_service,
+)
+from app.features.newsfeed.service.article_retrieval_service import (
     get_article_iocs as get_article_iocs_service,
+)
+from app.features.newsfeed.service.article_retrieval_service import (
+    get_articles_bulk as get_articles_bulk_service,
+)
+from app.features.newsfeed.service.article_retrieval_service import (
+    update_article_details as update_article_service,
 )
 
 router = APIRouter(prefix="/api/newsfeed", tags=["Newsfeed"])
@@ -33,7 +39,11 @@ ArticleId = Annotated[int, Path(ge=1, description="Article ID")]
 async def get_article(article_id: ArticleId, db: ReadSessionDep) -> NewsArticleSchema:
     article = await get_article_service(db, article_id)
     if not article:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found", error_code="ARTICLE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Article not found",
+            error_code="ARTICLE_NOT_FOUND",
+        )
     return article
 
 
@@ -44,7 +54,9 @@ async def get_article(article_id: ArticleId, db: ReadSessionDep) -> NewsArticleS
     summary="Bulk fetch articles",
     description="Retrieve multiple news articles by their IDs in a single request (max 200)",
 )
-async def get_articles_bulk(request: BulkArticleRequest, db: ReadSessionDep) -> list[NewsArticleSchema]:
+async def get_articles_bulk(
+    request: BulkArticleRequest, db: ReadSessionDep
+) -> list[NewsArticleSchema]:
     return await get_articles_bulk_service(db, request.article_ids)
 
 
@@ -65,7 +77,11 @@ async def update_article_endpoint(
         db, article_id, note=update_data.note, tlp=update_data.tlp, read=update_data.read
     )
     if not article:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found", error_code="ARTICLE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Article not found",
+            error_code="ARTICLE_NOT_FOUND",
+        )
     return article
 
 
@@ -79,5 +95,9 @@ async def update_article_endpoint(
 async def get_article_iocs(article_id: ArticleId, db: ReadSessionDep) -> ArticleIocsResponse:
     result = await get_article_iocs_service(db, article_id)
     if not result:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not found", error_code="ARTICLE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Article not found",
+            error_code="ARTICLE_NOT_FOUND",
+        )
     return result

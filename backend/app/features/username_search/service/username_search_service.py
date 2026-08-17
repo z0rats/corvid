@@ -7,7 +7,9 @@ from app.core.database import managed_session
 from app.core.scans.cancellable import TaskCancellable
 from app.core.scans.run import OnEvent, ScanCancelled, ScanEvent, ScanOutcome, ScanRun
 from app.core.scans.sse import queue_sink
-from app.core.settings.username_search.crud.username_search_settings_crud import get_username_search_config
+from app.core.settings.username_search.crud.username_search_settings_crud import (
+    get_username_search_config,
+)
 from app.features.username_search.config.maigret_config import get_site_dict
 from app.features.username_search.crud.username_search_crud import SCAN_COLUMNS, add_site_results
 from app.features.username_search.models.username_search_models import MaigretSearch
@@ -72,11 +74,13 @@ def _extract_found_sites(results: dict) -> list[dict]:
         if status is None or not status.is_found():
             continue
         http_status = site_result.get("http_status")
-        found_sites.append({
-            "site_name": site_name,
-            "url_user": site_result.get("url_user", ""),
-            "http_status": http_status if isinstance(http_status, int) else None,
-        })
+        found_sites.append(
+            {
+                "site_name": site_name,
+                "url_user": site_result.get("url_user", ""),
+                "http_status": http_status if isinstance(http_status, int) else None,
+            }
+        )
     return found_sites
 
 
@@ -127,10 +131,15 @@ async def run_scan(
             found_sites = _extract_found_sites(partial_results)
             if partial_results:
                 save_scan_results(search_id, partial_results)
-            raise ScanCancelled(ScanOutcome(
-                fields={"total_sites_checked": len(partial_results), "found_count": len(found_sites)},
-                persist_children=lambda db: add_site_results(db, search_id, found_sites),
-            )) from None
+            raise ScanCancelled(
+                ScanOutcome(
+                    fields={
+                        "total_sites_checked": len(partial_results),
+                        "found_count": len(found_sites),
+                    },
+                    persist_children=lambda db: add_site_results(db, search_id, found_sites),
+                )
+            ) from None
 
         found_sites = _extract_found_sites(results)
         save_scan_results(search_id, results)
@@ -142,7 +151,10 @@ async def run_scan(
 
     cancellable = TaskCancellable(asyncio.current_task())
     await ScanRun.execute(
-        FEATURE_NAME, MaigretSearch, run_work, on_event,
+        FEATURE_NAME,
+        MaigretSearch,
+        run_work,
+        on_event,
         columns=SCAN_COLUMNS,
         create_fields={"username": username, "tags": tags, "source": "maigret"},
         started_fields={"username": username, "total_sites": len(site_dict)},

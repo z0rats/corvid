@@ -6,6 +6,7 @@ the user-supplied domain/username/email before being sent to a search engine.
 frontend only offers relevant dorks (e.g. `site:linkedin.com/in/{target}` only
 makes sense for a username).
 """
+
 from dataclasses import dataclass
 
 
@@ -62,31 +63,31 @@ DORK_TEMPLATES: list[DorkTemplate] = [
     ),
     DorkTemplate(
         key="pastebin_mentions",
-        pattern="site:pastebin.com \"{target}\"",
+        pattern='site:pastebin.com "{target}"',
         target_types=("domain", "username", "email"),
         description="Pastebin mentions",
     ),
     DorkTemplate(
         key="github_mentions",
-        pattern="site:github.com \"{target}\"",
+        pattern='site:github.com "{target}"',
         target_types=("domain", "username", "email"),
         description="GitHub mentions (code, issues, gists)",
     ),
     DorkTemplate(
         key="linkedin_profile",
-        pattern="site:linkedin.com/in \"{target}\"",
+        pattern='site:linkedin.com/in "{target}"',
         target_types=("username",),
         description="LinkedIn profile mentions",
     ),
     DorkTemplate(
         key="social_mentions",
-        pattern="\"{target}\" site:twitter.com OR site:reddit.com OR site:facebook.com",
+        pattern='"{target}" site:twitter.com OR site:reddit.com OR site:facebook.com',
         target_types=("username", "email"),
         description="Social media mentions",
     ),
     DorkTemplate(
         key="generic_mentions",
-        pattern="\"{target}\"",
+        pattern='"{target}"',
         target_types=("domain", "username", "email"),
         description="Any indexed mention",
     ),

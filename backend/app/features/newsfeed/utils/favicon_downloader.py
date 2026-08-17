@@ -1,4 +1,5 @@
 import asyncio
+import io
 import logging
 import os
 import uuid
@@ -6,26 +7,26 @@ import uuid
 import httpx
 from bs4 import BeautifulSoup
 from PIL import Image, ImageStat
-import io
 
 from app.core.config.settings import settings
 from app.core.security.ssrf_guard import safe_get
 
 logger = logging.getLogger(__name__)
 
+
 class FaviconDownloader:
     """Utility to fetch, process, and save website favicons robustly."""
 
     COMMON_PATHS = [
-        '/favicon.ico',
-        '/favicon.png',
-        '/apple-touch-icon.png',
-        '/apple-touch-icon-precomposed.png',
-        '/android-chrome-192x192.png',
-        '/android-chrome-512x512.png',
-        '/icon-192x192.png',
-        '/icon-512x512.png',
-        '/site.webmanifest'
+        "/favicon.ico",
+        "/favicon.png",
+        "/apple-touch-icon.png",
+        "/apple-touch-icon-precomposed.png",
+        "/android-chrome-192x192.png",
+        "/android-chrome-512x512.png",
+        "/icon-192x192.png",
+        "/icon-512x512.png",
+        "/site.webmanifest",
     ]
     TARGET_SIZE = (512, 512)
     MAX_BYTES = 2 * 1024 * 1024
@@ -36,9 +37,9 @@ class FaviconDownloader:
         self._client = httpx.AsyncClient(
             timeout=self.TIMEOUT,
             headers={
-                'User-Agent': 'FaviconDownloader/1.0',
-                'Accept': 'image/*,application/json;q=0.8,text/html;q=0.5,*/*;q=0.3'
-            }
+                "User-Agent": "FaviconDownloader/1.0",
+                "Accept": "image/*,application/json;q=0.8,text/html;q=0.5,*/*;q=0.3",
+            },
         )
 
     async def close(self) -> None:
@@ -47,9 +48,7 @@ class FaviconDownloader:
 
     @classmethod
     async def download_and_save_favicon(
-        cls,
-        site_url: str,
-        save_dir: str = 'app/static/feedicons'
+        cls, site_url: str, save_dir: str = "app/static/feedicons"
     ) -> tuple[bool, str | None, str | None]:
         """
         Convenience method: instantiate downloader, fetch & save favicon, then close.
@@ -61,9 +60,7 @@ class FaviconDownloader:
             await downloader.close()
 
     async def download_and_save(
-        self,
-        site_url: str,
-        save_dir: str = 'app/static/feedicons'
+        self, site_url: str, save_dir: str = "app/static/feedicons"
     ) -> tuple[bool, str | None, str | None]:
         """Fetch best favicon and save it as a PNG file."""
         try:
@@ -73,7 +70,7 @@ class FaviconDownloader:
             os.makedirs(save_dir, exist_ok=True)
             filename = f"{uuid.uuid4().hex}.png"
             path = os.path.join(save_dir, filename)
-            await asyncio.to_thread(lambda: open(path, 'wb').write(raw))
+            await asyncio.to_thread(lambda: open(path, "wb").write(raw))
             logger.info("Saved favicon: %s", filename)
             return True, filename, None
         except Exception as e:
@@ -94,7 +91,7 @@ class FaviconDownloader:
         """Try several strategies to locate and download favicon image data."""
         parsed = httpx.URL(site_url)
         base = f"{parsed.scheme}://{parsed.host}"
-        home = base + '/'
+        home = base + "/"
 
         # 1. HTML link rel="icon" on homepage
         html_icon = await self._fetch_from_html(home)
@@ -124,17 +121,17 @@ class FaviconDownloader:
             if ok:
                 return True, data, None
 
-        return False, None, 'No icon found'
+        return False, None, "No icon found"
 
     async def _fetch_from_html(self, url: str) -> str | None:
         """Parse HTML to find <link rel="icon"> href."""
         try:
             resp = await self._safe_get(url)
-            if resp.status_code != 200 or 'html' not in resp.headers.get('Content-Type', ''):
+            if resp.status_code != 200 or "html" not in resp.headers.get("Content-Type", ""):
                 return None
-            soup = BeautifulSoup(resp.text, 'lxml')
-            for tag in soup.find_all('link', rel=lambda v: v and 'icon' in v.lower()):
-                href = tag.get('href')
+            soup = BeautifulSoup(resp.text, "lxml")
+            for tag in soup.find_all("link", rel=lambda v: v and "icon" in v.lower()):
+                href = tag.get("href")
                 if href:
                     return self._normalize_url(href, url)
         except Exception as e:
@@ -145,24 +142,22 @@ class FaviconDownloader:
         """Parse HTML to find <link rel="manifest"> href and return its JSON 'src'."""
         try:
             resp = await self._safe_get(url)
-            if resp.status_code != 200 or 'html' not in resp.headers.get('Content-Type', ''):
+            if resp.status_code != 200 or "html" not in resp.headers.get("Content-Type", ""):
                 return None
-            soup = BeautifulSoup(resp.text, 'lxml')
-            tag = soup.find('link', rel=lambda v: v and 'manifest' in v.lower())
-            if tag and tag.get('href'):
-                manifest_url = self._normalize_url(tag['href'], url)
+            soup = BeautifulSoup(resp.text, "lxml")
+            tag = soup.find("link", rel=lambda v: v and "manifest" in v.lower())
+            if tag and tag.get("href"):
+                manifest_url = self._normalize_url(tag["href"], url)
                 # fetch manifest and pick largest icon
                 resp2 = await self._safe_get(manifest_url)
-                if resp2.status_code == 200 and 'json' in resp2.headers.get('Content-Type', ''):
+                if resp2.status_code == 200 and "json" in resp2.headers.get("Content-Type", ""):
                     doc = resp2.json()
-                    icons = doc.get('icons', [])
+                    icons = doc.get("icons", [])
                     icons = sorted(
-                        icons,
-                        key=lambda i: int(i.get('sizes', '0x0').split('x')[0]),
-                        reverse=True
+                        icons, key=lambda i: int(i.get("sizes", "0x0").split("x")[0]), reverse=True
                     )
-                    if icons and icons[0].get('src'):
-                        return self._normalize_url(icons[0]['src'], manifest_url)
+                    if icons and icons[0].get("src"):
+                        return self._normalize_url(icons[0]["src"], manifest_url)
         except Exception as e:
             logger.debug("Manifest HTML parse error at %s: %s", url, e)
         return None
@@ -172,25 +167,23 @@ class FaviconDownloader:
         manifest_url = f"{parsed_url.scheme}://{parsed_url.host}/site.webmanifest"
         try:
             resp = await self._safe_get(manifest_url)
-            if resp.status_code == 200 and 'json' in resp.headers.get('Content-Type', ''):
+            if resp.status_code == 200 and "json" in resp.headers.get("Content-Type", ""):
                 doc = resp.json()
-                icons = doc.get('icons', [])
+                icons = doc.get("icons", [])
                 icons = sorted(
-                    icons,
-                    key=lambda i: int(i.get('sizes', '0x0').split('x')[0]),
-                    reverse=True
+                    icons, key=lambda i: int(i.get("sizes", "0x0").split("x")[0]), reverse=True
                 )
-                if icons and icons[0].get('src'):
-                    return self._normalize_url(icons[0]['src'], manifest_url)
+                if icons and icons[0].get("src"):
+                    return self._normalize_url(icons[0]["src"], manifest_url)
         except Exception as e:
             logger.debug("Default manifest error at %s: %s", manifest_url, e)
         return None
 
     def _normalize_url(self, href: str, base: str) -> str:
         """Convert href to absolute URL based on base."""
-        if href.startswith('//'):
+        if href.startswith("//"):
             return f"{httpx.URL(base).scheme}:{href}"
-        if href.startswith('http'):
+        if href.startswith("http"):
             return href
         return httpx.URL(base).join(href)
 
@@ -217,19 +210,19 @@ class FaviconDownloader:
         """Load image, reject blank, resize, and return PNG bytes."""
         try:
             img = Image.open(io.BytesIO(data))
-            img = img.convert('RGBA')
-            bg = Image.new('RGBA', img.size, (255, 255, 255, 255))
+            img = img.convert("RGBA")
+            bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
             bg.paste(img, mask=img)
-            img = bg.convert('RGB')
+            img = bg.convert("RGB")
             # reject nearly blank icons
-            gray = img.convert('L')
+            gray = img.convert("L")
             stat = ImageStat.Stat(gray)
             if stat.stddev[0] < self.BLANK_STDDEV_THRESHOLD:
                 logger.debug("Rejected blank icon")
                 return None
             img.thumbnail(self.TARGET_SIZE, Image.LANCZOS)
             buf = io.BytesIO()
-            img.save(buf, format='PNG', optimize=True)
+            img.save(buf, format="PNG", optimize=True)
             return buf.getvalue()
         except Exception as e:
             logger.debug("Image processing error: %s", e)

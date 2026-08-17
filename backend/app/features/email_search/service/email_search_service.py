@@ -43,7 +43,9 @@ def _kill_orphaned_chromium(before_pids: set[int]) -> None:
             try:
                 if child.name().lower() in _CHROMIUM_PROCESS_NAMES:
                     child.kill()
-                    logger.warning("Killed orphaned Chromium process (pid=%s) after checker timeout", child.pid)
+                    logger.warning(
+                        "Killed orphaned Chromium process (pid=%s) after checker timeout", child.pid
+                    )
             except psutil.NoSuchProcess:
                 pass
     except psutil.Error:
@@ -56,7 +58,9 @@ def _normalize_emails(value) -> list[str]:
     return list(value)
 
 
-async def _run_checker(checker, username: str, req_session_fun, timeout: int, semaphore: asyncio.Semaphore) -> dict:
+async def _run_checker(
+    checker, username: str, req_session_fun, timeout: int, semaphore: asyncio.Semaphore
+) -> dict:
     """Run a single mailcat checker, bounded by the concurrency semaphore.
 
     mailcat checkers either return a plain result dict, or a (result, error)
@@ -71,7 +75,9 @@ async def _run_checker(checker, username: str, req_session_fun, timeout: int, se
             before_pids = set()
 
         try:
-            res = await asyncio.wait_for(checker(username, req_session_fun, timeout), timeout=timeout + 0.5)
+            res = await asyncio.wait_for(
+                checker(username, req_session_fun, timeout), timeout=timeout + 0.5
+            )
         except Exception as exc:
             logger.debug("Checker %s failed for '%s': %s", checker_name, username, exc)
             return {"checker_name": checker_name, "found": False, "error": str(exc)}
@@ -129,7 +135,9 @@ async def run_scan(username: str, queue: asyncio.Queue) -> None:
         checked = 0
         found_providers: list[dict] = []
         tasks = [
-            asyncio.ensure_future(_run_checker(checker, username, req_session_fun, timeout_seconds, semaphore))
+            asyncio.ensure_future(
+                _run_checker(checker, username, req_session_fun, timeout_seconds, semaphore)
+            )
             for checker in checkers
         ]
         try:
@@ -137,24 +145,45 @@ async def run_scan(username: str, queue: asyncio.Queue) -> None:
                 result = await task
                 checked += 1
                 if result["found"]:
-                    found_providers.append({
-                        "provider_name": result["provider_name"],
-                        "emails": result["emails"],
-                    })
-                on_event(ScanEvent("progress", {
-                    "checked": checked,
-                    "total_providers": len(checkers),
-                    "checker_name": result["checker_name"],
-                    "found": result["found"],
-                    **({"provider_name": result["provider_name"], "emails": result["emails"]} if result["found"] else {}),
-                }))
+                    found_providers.append(
+                        {
+                            "provider_name": result["provider_name"],
+                            "emails": result["emails"],
+                        }
+                    )
+                on_event(
+                    ScanEvent(
+                        "progress",
+                        {
+                            "checked": checked,
+                            "total_providers": len(checkers),
+                            "checker_name": result["checker_name"],
+                            "found": result["found"],
+                            **(
+                                {
+                                    "provider_name": result["provider_name"],
+                                    "emails": result["emails"],
+                                }
+                                if result["found"]
+                                else {}
+                            ),
+                        },
+                    )
+                )
         except asyncio.CancelledError:
             for task in tasks:
                 task.cancel()
-            raise ScanCancelled(ScanOutcome(
-                fields={"total_providers_checked": checked, "found_count": len(found_providers)},
-                persist_children=lambda db: add_provider_results(db, search_id, found_providers),
-            )) from None
+            raise ScanCancelled(
+                ScanOutcome(
+                    fields={
+                        "total_providers_checked": checked,
+                        "found_count": len(found_providers),
+                    },
+                    persist_children=lambda db: add_provider_results(
+                        db, search_id, found_providers
+                    ),
+                )
+            ) from None
 
         return ScanOutcome(
             fields={"total_providers_checked": len(checkers), "found_count": len(found_providers)},
@@ -163,7 +192,10 @@ async def run_scan(username: str, queue: asyncio.Queue) -> None:
 
     cancellable = TaskCancellable(asyncio.current_task())
     await ScanRun.execute(
-        FEATURE_NAME, MailSearch, run_work, on_event,
+        FEATURE_NAME,
+        MailSearch,
+        run_work,
+        on_event,
         columns=SCAN_COLUMNS,
         create_fields={"username": username},
         started_fields={"username": username, "total_providers": len(checkers)},

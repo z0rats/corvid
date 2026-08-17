@@ -20,7 +20,11 @@ from app.features.reddit_search.schemas.reddit_search_schemas import (
     SearchDetail,
     SearchSummary,
 )
-from app.features.reddit_search.service.reddit_search_service import LIMIT, fetch_both, to_result_row
+from app.features.reddit_search.service.reddit_search_service import (
+    LIMIT,
+    fetch_both,
+    to_result_row,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +44,11 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest) -> S
     if scan_request.search_id is not None:
         search = await get_search(db, scan_request.search_id)
         if not search:
-            raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search not found", error_code="REDDIT_SEARCH_NOT_FOUND")
+            raise AppHTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Search not found",
+                error_code="REDDIT_SEARCH_NOT_FOUND",
+            )
     else:
         search = await create_search(
             db,
@@ -69,7 +77,14 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest) -> S
     has_more = len(items) >= LIMIT
     next_cursor = RedditCursor(before=rows[-1]["created_utc"]) if has_more and rows else None
 
-    logger.info("Reddit search %s: fetched %d %s for '%s' from %s", search.id, len(items), scan_request.kind, scan_request.username, sources)
+    logger.info(
+        "Reddit search %s: fetched %d %s for '%s' from %s",
+        search.id,
+        len(items),
+        scan_request.kind,
+        scan_request.username,
+        sources,
+    )
 
     return ScanResponse(
         search_id=search.id,
@@ -86,7 +101,9 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest) -> S
     summary="List past Reddit searches",
     description="List past Reddit history searches, most recent first",
 )
-async def read_searches(db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100) -> list[SearchSummary]:
+async def read_searches(
+    db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100
+) -> list[SearchSummary]:
     rows = await list_searches(db, skip=skip, limit=limit)
     summaries = []
     for search, count in rows:
@@ -106,7 +123,11 @@ async def read_searches(db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQue
 async def read_search(search_id: int, db: ReadSessionDep) -> SearchDetail:
     search = await get_search_with_results(db, search_id)
     if not search:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search not found", error_code="REDDIT_SEARCH_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+            error_code="REDDIT_SEARCH_NOT_FOUND",
+        )
     detail = SearchDetail.model_validate(search)
     detail.result_count = len(detail.results)
     return detail
@@ -122,5 +143,9 @@ async def read_search(search_id: int, db: ReadSessionDep) -> SearchDetail:
 async def delete_search_endpoint(search_id: int, db: SessionDep) -> None:
     search = await delete_search(db, search_id)
     if not search:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search not found", error_code="REDDIT_SEARCH_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+            error_code="REDDIT_SEARCH_NOT_FOUND",
+        )
     logger.info("Deleted reddit search %s", search_id)

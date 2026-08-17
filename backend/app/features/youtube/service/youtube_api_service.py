@@ -6,6 +6,7 @@ available" rather than failing the whole /lookup, since the keyless tiers alread
 baseline response); `fetch_comment_threads` raises instead, since comments have no keyless tier
 to fall back to - a failure there means the request itself has nothing to return.
 """
+
 import logging
 from typing import Any
 
@@ -34,7 +35,11 @@ async def fetch_video_api_data(video_id: str, api_key: str) -> dict[str, Any] | 
         async with httpx.AsyncClient(timeout=YOUTUBE_API_TIMEOUT) as client:
             response = await client.get(YOUTUBE_API_URL, params=params)
             if response.status_code != 200:
-                logger.warning("YouTube Data API returned status %s for video %s", response.status_code, video_id)
+                logger.warning(
+                    "YouTube Data API returned status %s for video %s",
+                    response.status_code,
+                    video_id,
+                )
                 return None
 
             data = response.json()
@@ -73,7 +78,8 @@ async def fetch_comment_threads(
             if response.status_code == 403:
                 if _error_reason(response) == "commentsDisabled":
                     raise AppHTTPException(
-                        status_code=403, detail="Comments are disabled for this video",
+                        status_code=403,
+                        detail="Comments are disabled for this video",
                         error_code="YOUTUBE_COMMENTS_DISABLED",
                     )
                 raise AppHTTPException(
@@ -82,7 +88,9 @@ async def fetch_comment_threads(
                     error_code="YOUTUBE_API_FORBIDDEN",
                 )
             if response.status_code == 404:
-                raise AppHTTPException(status_code=404, detail="Video not found", error_code="YOUTUBE_VIDEO_NOT_FOUND")
+                raise AppHTTPException(
+                    status_code=404, detail="Video not found", error_code="YOUTUBE_VIDEO_NOT_FOUND"
+                )
 
             response.raise_for_status()
             return response.json()
@@ -92,32 +100,47 @@ async def fetch_comment_threads(
     except httpx.TimeoutException as e:
         logger.error("Timeout fetching YouTube comments for video %s: %s", video_id, e)
         raise AppHTTPException(
-            status_code=504, detail="Request timeout while connecting to YouTube", error_code="YOUTUBE_TIMEOUT",
-        )
+            status_code=504,
+            detail="Request timeout while connecting to YouTube",
+            error_code="YOUTUBE_TIMEOUT",
+        ) from e
     except httpx.RequestError as e:
         logger.error("Request error fetching YouTube comments for video %s: %s", video_id, e)
         raise AppHTTPException(
-            status_code=503, detail=f"Failed to connect to YouTube: {e}", error_code="YOUTUBE_CONNECTION_ERROR",
-        )
+            status_code=503,
+            detail=f"Failed to connect to YouTube: {e}",
+            error_code="YOUTUBE_CONNECTION_ERROR",
+        ) from e
     except httpx.HTTPStatusError as e:
-        logger.error("HTTP status error fetching YouTube comments for video %s: %s", video_id, e.response.status_code)
+        logger.error(
+            "HTTP status error fetching YouTube comments for video %s: %s",
+            video_id,
+            e.response.status_code,
+        )
         raise AppHTTPException(
             status_code=e.response.status_code,
             detail=f"YouTube Data API returned error: {e.response.status_code}",
             error_code="YOUTUBE_API_ERROR",
-        )
+        ) from e
     except ValueError as e:
         logger.error("Could not parse YouTube comments JSON response for video %s: %s", video_id, e)
         raise AppHTTPException(
-            status_code=502, detail="YouTube returned an unexpected (non-JSON) response",
+            status_code=502,
+            detail="YouTube returned an unexpected (non-JSON) response",
             error_code="YOUTUBE_INVALID_RESPONSE",
-        )
+        ) from e
     except Exception as e:
-        logger.error("Unexpected error fetching YouTube comments for video %s: %s", video_id, e, exc_info=True)
-        raise AppHTTPException(
-            status_code=500, detail="An unexpected error occurred while fetching YouTube comments",
-            error_code="YOUTUBE_UNEXPECTED_ERROR",
+        logger.error(
+            "Unexpected error fetching YouTube comments for video %s: %s",
+            video_id,
+            e,
+            exc_info=True,
         )
+        raise AppHTTPException(
+            status_code=500,
+            detail="An unexpected error occurred while fetching YouTube comments",
+            error_code="YOUTUBE_UNEXPECTED_ERROR",
+        ) from e
 
 
 def _error_reason(response: httpx.Response) -> str | None:

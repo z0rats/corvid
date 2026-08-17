@@ -8,6 +8,7 @@ browser gets, so an upstream markup change can silently drop fields here. Every
 extracted field is optional and failures return an empty dict rather than
 raising, since fetch_oembed_data already covers the guaranteed baseline.
 """
+
 import logging
 
 import httpx

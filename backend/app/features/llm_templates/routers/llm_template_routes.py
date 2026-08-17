@@ -1,22 +1,29 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Query, Request, status
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, Query, Request, status
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.exceptions import AppHTTPException
 from app.features.llm_templates.crud.llm_template_crud import (
-    get_templates_with_pagination,
     create_new_template,
-    update_existing_template,
     delete_template_by_id,
     get_template_by_id,
+    get_templates_with_pagination,
     reorder_templates_by_ids,
+    update_existing_template,
 )
 from app.features.llm_templates.schemas.llm_template_schemas import (
-    AITemplate, AITemplateCreate, AITemplateUpdate, AITemplateExecute,
-    TemplateOrderUpdate, PromptEngineerRequest, PromptEngineerResponse,
-    StatusMessageResponse, TemplateExecutionResponse, ReorderResponse,
+    AITemplate,
+    AITemplateCreate,
+    AITemplateExecute,
+    AITemplateUpdate,
+    PromptEngineerRequest,
+    PromptEngineerResponse,
+    ReorderResponse,
+    StatusMessageResponse,
+    TemplateExecutionResponse,
+    TemplateOrderUpdate,
 )
 from app.features.llm_templates.service.template_management_service import (
     run_engineer_prompt,
@@ -33,7 +40,9 @@ router = APIRouter(prefix="/api/ai-templates", tags=["AI Templates"])
     response_model_exclude_none=True,
     status_code=status.HTTP_201_CREATED,
     summary="Create template",
-    description="Create a new AI template with role, task, payload fields, and context configuration",
+    description=(
+        "Create a new AI template with role, task, payload fields, and context configuration"
+    ),
 )
 async def create_template(template: AITemplateCreate, db: SessionDep) -> AITemplate:
     """Create a new AI template"""
@@ -53,7 +62,9 @@ async def create_template(template: AITemplateCreate, db: SessionDep) -> AITempl
 async def get_templates(
     db: ReadSessionDep,
     skip: int = Query(default=0, ge=0, description="Number of templates to skip"),
-    limit: int = Query(default=100, ge=1, le=500, description="Maximum number of templates to return"),
+    limit: int = Query(
+        default=100, ge=1, le=500, description="Maximum number of templates to return"
+    ),
 ) -> list[AITemplate]:
     """Get all templates with pagination"""
     logger.debug("Retrieving templates: skip=%d, limit=%d", skip, limit)
@@ -75,7 +86,11 @@ async def get_template(template_id: str, db: ReadSessionDep) -> AITemplate:
     logger.debug("Retrieving template: %s", template_id)
     template = await get_template_by_id(db, template_id)
     if not template:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Template not found",
+            error_code="TEMPLATE_NOT_FOUND",
+        )
     return template
 
 
@@ -87,12 +102,18 @@ async def get_template(template_id: str, db: ReadSessionDep) -> AITemplate:
     description="Update an existing AI template by its ID",
     responses={404: {"description": "Template not found"}},
 )
-async def update_template(template_id: str, template_update: AITemplateUpdate, db: SessionDep) -> AITemplate:
+async def update_template(
+    template_id: str, template_update: AITemplateUpdate, db: SessionDep
+) -> AITemplate:
     """Update an existing template"""
     logger.info("Updating template: %s", template_id)
     template = await update_existing_template(db, template_id, template_update)
     if not template:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Template not found",
+            error_code="TEMPLATE_NOT_FOUND",
+        )
     logger.info("Template updated successfully: %s", template_id)
     return template
 
@@ -109,7 +130,11 @@ async def delete_template(template_id: str, db: SessionDep) -> StatusMessageResp
     logger.info("Deleting template: %s", template_id)
     success = await delete_template_by_id(db, template_id)
     if not success:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Template not found",
+            error_code="TEMPLATE_NOT_FOUND",
+        )
     logger.info("Template deleted successfully: %s", template_id)
     return StatusMessageResponse(status="success", message="Template deleted successfully")
 
@@ -118,17 +143,27 @@ async def delete_template(template_id: str, db: SessionDep) -> StatusMessageResp
     "/prompt-engineer",
     response_model=PromptEngineerResponse,
     summary="Engineer prompt",
-    description="Generate an optimized prompt configuration from a title and description using an LLM",
+    description=(
+        "Generate an optimized prompt configuration from a title and description using an LLM"
+    ),
     responses={422: {"description": "Prompt engineering failed"}},
 )
 @limiter.limit("10/minute")
-async def engineer_prompt(request: Request, prompt_request: PromptEngineerRequest, db: SessionDep) -> PromptEngineerResponse:
+async def engineer_prompt(
+    request: Request, prompt_request: PromptEngineerRequest, db: SessionDep
+) -> PromptEngineerResponse:
     """Generate prompt configuration based on title and description"""
     logger.info("Engineering prompt for: %s", prompt_request.title)
     try:
-        result = await run_engineer_prompt(prompt_request.title, prompt_request.description, prompt_request.model_id, db)
+        result = await run_engineer_prompt(
+            prompt_request.title, prompt_request.description, prompt_request.model_id, db
+        )
     except ValueError as e:
-        raise AppHTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e), error_code="TEMPLATE_ENGINEER_FAILED")
+        raise AppHTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+            error_code="TEMPLATE_ENGINEER_FAILED",
+        ) from e
     logger.info("Prompt engineering completed successfully")
     return result
 
@@ -137,7 +172,9 @@ async def engineer_prompt(request: Request, prompt_request: PromptEngineerReques
     "/reorder",
     response_model=ReorderResponse,
     summary="Reorder templates",
-    description="Update the display order of templates by providing an ordered list of template IDs",
+    description=(
+        "Update the display order of templates by providing an ordered list of template IDs"
+    ),
 )
 async def reorder_templates(order_update: TemplateOrderUpdate, db: SessionDep) -> ReorderResponse:
     """Update the display order of templates"""
@@ -162,15 +199,25 @@ async def reorder_templates(order_update: TemplateOrderUpdate, db: SessionDep) -
     },
 )
 @limiter.limit("10/minute")
-async def execute_template(request: Request, template_id: str, execution_data: AITemplateExecute, db: SessionDep) -> TemplateExecutionResponse:
+async def execute_template(
+    request: Request, template_id: str, execution_data: AITemplateExecute, db: SessionDep
+) -> TemplateExecutionResponse:
     """Execute an AI template with provided payload data"""
     logger.info("Executing template: %s", template_id)
     template = await get_template_by_id(db, template_id)
     if not template:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found", error_code="TEMPLATE_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Template not found",
+            error_code="TEMPLATE_NOT_FOUND",
+        )
     try:
         result = await run_execute_template(template, execution_data, db)
     except ValueError as e:
-        raise AppHTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e), error_code="TEMPLATE_EXECUTE_FAILED")
+        raise AppHTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+            error_code="TEMPLATE_EXECUTE_FAILED",
+        ) from e
     logger.info("Template executed successfully: %s", template_id)
     return TemplateExecutionResponse(result=result)

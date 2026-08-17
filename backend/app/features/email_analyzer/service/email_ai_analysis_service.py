@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
     "You are an expert cybersecurity analyst specializing in email security, phishing detection, "
-    "and social engineering analysis. Analyze the provided email message body and identify potential "
-    "security threats, suspicious patterns, and indicators of compromise. "
+    "and social engineering analysis. Analyze the provided email message body and identify "
+    "potential security threats, suspicious patterns, and indicators of compromise. "
     "Provide clear, actionable insights."
 )
 
@@ -39,7 +39,9 @@ async def analyze_email_body(
     if not model_id:
         model_id = await get_default_model_id(db, "email_analyzer")
 
-    logger.info("Starting AI analysis of email body (%d chars) with model %s", len(email_body), model_id)
+    logger.info(
+        "Starting AI analysis of email body (%d chars) with model %s", len(email_body), model_id
+    )
 
     models = await build_model_registry(db)
     user_prompt = USER_PROMPT_TEMPLATE.format(email_body=email_body)

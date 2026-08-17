@@ -3,5 +3,5 @@
 from . import image_schemas
 
 __all__ = [
-    'image_schemas',
+    "image_schemas",
 ]

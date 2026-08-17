@@ -1,14 +1,14 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, status
-from app.core.exceptions import AppHTTPException
+from fastapi import APIRouter, status
 
-from app.features.ioc_tools.ioc_defanger.service.defang_service import batch_process_iocs
+from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.ioc_defanger.schemas.defang_schemas import (
+    DefangErrorResponse,
     DefangRequest,
     DefangResponse,
-    DefangErrorResponse
 )
+from app.features.ioc_tools.ioc_defanger.service.defang_service import batch_process_iocs
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/defang", tags=["IOC Defanger"])
@@ -18,11 +18,13 @@ router = APIRouter(prefix="/api/defang", tags=["IOC Defanger"])
     "/",
     response_model=DefangResponse,
     summary="Process IOCs for defanging or fanging",
-    description="Accepts text containing IOCs and processes them according to the specified operation",
+    description=(
+        "Accepts text containing IOCs and processes them according to the specified operation"
+    ),
     responses={
         400: {"model": DefangErrorResponse, "description": "Invalid request"},
         422: {"model": DefangErrorResponse, "description": "Validation error"},
-    }
+    },
 )
 async def process_iocs(request: DefangRequest) -> DefangResponse:
     logger.info("Received defang request with operation: %s", request.operation)
@@ -38,4 +40,4 @@ async def process_iocs(request: DefangRequest) -> DefangResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid request: {str(e)}",
             error_code="DEFANG_INVALID_REQUEST",
-        )
+        ) from e

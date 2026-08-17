@@ -10,7 +10,11 @@ from app.core.exceptions import AppHTTPException
 from app.core.scans.sse import sse_response
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
 from app.features.git_recon.crud.git_recon_crud import delete_search, get_search, list_searches
-from app.features.git_recon.schemas.git_recon_schemas import ScanRequest, SearchDetail, SearchSummary
+from app.features.git_recon.schemas.git_recon_schemas import (
+    ScanRequest,
+    SearchDetail,
+    SearchSummary,
+)
 from app.features.git_recon.service.git_recon_service import cancel_scan, run_scan_task
 
 logger = logging.getLogger(__name__)
@@ -41,15 +45,17 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest):
     github_token = await _get_github_token(db)
 
     queue: asyncio.Queue = asyncio.Queue()
-    asyncio.create_task(run_scan_task(
-        mode=scan_request.mode,
-        target=scan_request.target,
-        include_forks=scan_request.include_forks,
-        resolve_github_logins=scan_request.resolve_github_logins,
-        ignore_noreply=scan_request.ignore_noreply,
-        github_token=github_token,
-        queue=queue,
-    ))
+    asyncio.create_task(
+        run_scan_task(
+            mode=scan_request.mode,
+            target=scan_request.target,
+            include_forks=scan_request.include_forks,
+            resolve_github_logins=scan_request.resolve_github_logins,
+            ignore_noreply=scan_request.ignore_noreply,
+            github_token=github_token,
+            queue=queue,
+        )
+    )
 
     return sse_response(queue)
 
@@ -58,12 +64,19 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest):
     "/history/{search_id}/cancel",
     status_code=status.HTTP_202_ACCEPTED,
     summary="Cancel a running search",
-    description="Cancel a currently-running git recon scan, keeping whatever repos were cloned/analyzed before cancellation",
+    description=(
+        "Cancel a currently-running git recon scan, keeping whatever repos were "
+        "cloned/analyzed before cancellation"
+    ),
     responses={404: {"description": "No running search with that ID"}},
 )
 async def cancel_scan_endpoint(search_id: int) -> None:
     if not await cancel_scan(search_id):
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No running search with that ID", error_code="GIT_RECON_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No running search with that ID",
+            error_code="GIT_RECON_NOT_FOUND",
+        )
     logger.info("Cancellation requested for git recon search %s", search_id)
 
 
@@ -73,7 +86,9 @@ async def cancel_scan_endpoint(search_id: int) -> None:
     summary="List past git recon searches",
     description="List past git/GitHub identity-correlation searches, most recent first",
 )
-async def read_searches(db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100) -> list[SearchSummary]:
+async def read_searches(
+    db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100
+) -> list[SearchSummary]:
     searches = await list_searches(db, skip=skip, limit=limit)
     return [SearchSummary.model_validate(s) for s in searches]
 
@@ -88,7 +103,11 @@ async def read_searches(db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQue
 async def read_search(search_id: int, db: ReadSessionDep) -> SearchDetail:
     search = await get_search(db, search_id)
     if not search:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search not found", error_code="GIT_RECON_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+            error_code="GIT_RECON_NOT_FOUND",
+        )
     return SearchDetail.model_validate(search)
 
 
@@ -102,5 +121,9 @@ async def read_search(search_id: int, db: ReadSessionDep) -> SearchDetail:
 async def delete_search_endpoint(search_id: int, db: SessionDep) -> None:
     search = await delete_search(db, search_id)
     if not search:
-        raise AppHTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Search not found", error_code="GIT_RECON_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Search not found",
+            error_code="GIT_RECON_NOT_FOUND",
+        )
     logger.info("Deleted git recon search %s", search_id)

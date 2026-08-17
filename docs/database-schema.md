@@ -248,7 +248,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 |---|---|---|---|---|---|
 | `id` | int | no | — | PK | Surrogate primary key |
 | `address` | string(128) | no | — | — | Blockchain address or IOC value |
-| `source` | string(20) | no | — | — | Feed this entry came from: 'OFAC' or 'SCAMSNIFFER' |
+| `source` | string(20) | no | — | — | Feed this entry came from: 'OFAC', 'SCAMSNIFFER', or 'OPENSANCTIONS' |
 | `chain` | string(20) | yes | — | — | Blockchain the address belongs to, if known |
 | `label` | string(255) | yes | — | — | Short human-readable label for the entry |
 | `entity_name` | string(255) | yes | — | — | Sanctioned/flagged entity name, if known |
@@ -257,7 +257,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `first_seen_at` | datetime | no | server: now() | — | When this entry was first ingested |
 | `last_seen_at` | datetime | no | server: now() | — | When this entry was last seen in a feed refresh |
 
-- CHECK `ck_blacklisted_addresses_source`: `source IN ('OFAC', 'SCAMSNIFFER')`
+- CHECK `ck_blacklisted_addresses_source`: `source IN ('OFAC', 'SCAMSNIFFER', 'OPENSANCTIONS')`
 
 ### `cti_profile_settings`
 

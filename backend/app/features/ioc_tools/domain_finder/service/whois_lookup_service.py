@@ -2,11 +2,10 @@
 WHOIS/RDAP lookup business logic: fetches raw RDAP data and parses it into a
 flat, UI-friendly shape (registrar, key dates, registrant org, nameservers).
 """
+
 import logging
 from datetime import datetime
 from typing import Any
-
-from app.core.exceptions import AppHTTPException
 
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     WhoisEntity,
@@ -84,19 +83,23 @@ def _parse_vcard(vcard_array: Any) -> dict[str, str]:
     return parsed
 
 
-def _extract_entities(raw: dict[str, Any], _entities: list[dict[str, Any]] | None = None) -> list[WhoisEntity]:
+def _extract_entities(
+    raw: dict[str, Any], _entities: list[dict[str, Any]] | None = None
+) -> list[WhoisEntity]:
     """Flatten RDAP entities (including nested ones, e.g. an abuse contact under a registrar)"""
     entities: list[WhoisEntity] = []
     for entity in _entities if _entities is not None else (raw.get("entities") or []):
         roles = entity.get("roles") or ["unknown"]
         vcard = _parse_vcard(entity.get("vcardArray"))
         for role in roles:
-            entities.append(WhoisEntity(
-                role=role,
-                name=vcard.get("name"),
-                organization=vcard.get("organization"),
-                email=vcard.get("email"),
-            ))
+            entities.append(
+                WhoisEntity(
+                    role=role,
+                    name=vcard.get("name"),
+                    organization=vcard.get("organization"),
+                    email=vcard.get("email"),
+                )
+            )
         nested = entity.get("entities")
         if nested:
             entities.extend(_extract_entities(raw, nested))

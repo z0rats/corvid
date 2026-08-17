@@ -29,7 +29,7 @@ def _best_local_db_path() -> str:
             with open(CACHED_DB_PATH, encoding="utf-8") as f:
                 if "sites" in json.load(f):
                     return CACHED_DB_PATH
-        except (json.JSONDecodeError, OSError):
+        except json.JSONDecodeError, OSError:
             pass
     return BUNDLED_DB_PATH
 

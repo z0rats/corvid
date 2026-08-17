@@ -3,7 +3,12 @@ import mimetypes
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.utils.llm_service import build_model_registry, execute_structured_prompt, get_default_model_id
+from app.utils.llm_service import (
+    build_model_registry,
+    execute_structured_prompt,
+    get_default_model_id,
+)
+
 from ..schemas.image_schemas import ImageGeolocationAIResult, ImageGeolocationResponse
 
 logger = logging.getLogger(__name__)
@@ -15,15 +20,16 @@ SYSTEM_PROMPT = (
     "clues that hint at where it was taken - road markings and signage, license plates, driving "
     "side, architecture style, vegetation and climate, terrain, language on signs, utility poles "
     "and power infrastructure, and similar details. Rank your best-guess locations by confidence "
-    "(a country or region, not a precise address unless something in the photo makes it unambiguous), "
-    "and always explain which observed clues support each candidate. Never present a guess as "
-    "certain fact - state this is a hypothesis based on visual cues only, and note when the photo "
-    "lacks enough distinguishing detail to narrow things down."
+    "(a country or region, not a precise address unless something in the photo makes it "
+    "unambiguous), and always explain which observed clues support each candidate. Never present "
+    "a guess as certain fact - state this is a hypothesis based on visual cues only, and note "
+    "when the photo lacks enough distinguishing detail to narrow things down."
 )
 
 USER_PROMPT = (
-    "Analyze this photo for geolocation clues. List the specific visual details you observed and "
-    "what each one suggests, then give your ranked location candidates with your reasoning for each."
+    "Analyze this photo for geolocation clues. List the specific visual details you observed "
+    "and what each one suggests, then give your ranked location candidates with your reasoning "
+    "for each."
 )
 
 DEFAULT_MEDIA_TYPE = "image/jpeg"
@@ -44,7 +50,12 @@ async def analyze_image_location(
     if not model_id:
         model_id = await get_default_model_id(db, MODULE_KEY)
 
-    logger.info("Starting AI geolocation analysis of '%s' (%d bytes) with model %s", filename, len(image_data), model_id)
+    logger.info(
+        "Starting AI geolocation analysis of '%s' (%d bytes) with model %s",
+        filename,
+        len(image_data),
+        model_id,
+    )
 
     models = await build_model_registry(db)
     media_type = _guess_media_type(filename)

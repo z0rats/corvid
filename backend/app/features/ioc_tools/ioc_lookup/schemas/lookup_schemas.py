@@ -1,12 +1,13 @@
 from datetime import datetime
+from enum import StrEnum
 from typing import Any
-from enum import Enum
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class IOCType(str, Enum):
+class IOCType(StrEnum):
     """Supported IOC types for lookup"""
+
     IPV4 = "ipv4"
     IPV6 = "ipv6"
     DOMAIN = "domain"
@@ -21,8 +22,9 @@ class IOCType(str, Enum):
     UNKNOWN = "unknown"
 
 
-class LookupStatus(str, Enum):
+class LookupStatus(StrEnum):
     """Status of a lookup operation"""
+
     SUCCESS = "success"
     ERROR = "error"
     RATE_LIMITED = "rate_limited"
@@ -32,6 +34,7 @@ class LookupStatus(str, Enum):
 
 class ServiceInfo(BaseModel):
     """Information about a lookup service"""
+
     key: str = Field(..., description="Unique service identifier")
     name: str = Field(..., description="Human-readable service name")
     supported_ioc_types: list[str] = Field(..., description="List of supported IOC types")
@@ -44,6 +47,7 @@ class ServiceInfo(BaseModel):
 
 class LookupResult(BaseModel):
     """Result of a single IOC lookup"""
+
     ioc: str = Field(..., description="The IOC that was looked up")
     service: str = Field(..., description="Service that performed the lookup")
     status: LookupStatus = Field(..., description="Status of the lookup")
@@ -54,11 +58,12 @@ class LookupResult(BaseModel):
 
 class SingleLookupRequest(BaseModel):
     """Request for single IOC lookup"""
+
     ioc: str = Field(..., description="IOC value to lookup", min_length=1)
     ioc_type: IOCType | None = Field(None, description="IOC type (auto-detected if not provided)")
     service: str = Field(..., description="Service to use for lookup")
 
-    @field_validator('ioc')
+    @field_validator("ioc")
     @classmethod
     def validate_ioc_not_empty(cls, v: str) -> str:
         """Ensure IOC is not just whitespace"""
@@ -69,10 +74,13 @@ class SingleLookupRequest(BaseModel):
 
 class BulkLookupRequest(BaseModel):
     """Request for bulk IOC lookup"""
-    iocs: list[str] = Field(..., description="List of IOCs to lookup", min_length=1, max_length=1000)
+
+    iocs: list[str] = Field(
+        ..., description="List of IOCs to lookup", min_length=1, max_length=1000
+    )
     services: list[str] = Field(..., description="List of services to use", min_length=1)
 
-    @field_validator('iocs')
+    @field_validator("iocs")
     @classmethod
     def validate_iocs_not_empty(cls, v: list[str]) -> list[str]:
         """Ensure IOCs are not empty"""
@@ -89,21 +97,25 @@ class BulkLookupRequest(BaseModel):
 
 class ServicesResponse(BaseModel):
     """Response containing available services"""
+
     services: list[ServiceInfo] = Field(..., description="List of available services")
 
 
 class ServiceDefinitionsResponse(BaseModel):
     """Response containing service definitions"""
+
     serviceDefinitions: dict[str, dict[str, Any]] = Field(..., description="Service definitions")
 
 
 class IOCTypesResponse(BaseModel):
     """Response containing supported IOC types"""
+
     types: dict[str, str] = Field(..., description="Supported IOC types")
 
 
 class NewsfeedMention(BaseModel):
     """A newsfeed article whose extracted IOCs include the looked-up IOC"""
+
     article_id: int = Field(..., description="ID of the matching news article")
     title: str = Field(..., description="Article title")
     link: str = Field(..., description="Article URL")
@@ -113,12 +125,14 @@ class NewsfeedMention(BaseModel):
 
 class NewsfeedMentionsResponse(BaseModel):
     """Newsfeed articles that mention a given IOC, most recent first"""
+
     ioc: str = Field(..., description="The IOC that was checked")
     mentions: list[NewsfeedMention] = Field(default_factory=list, description="Matching articles")
 
 
 class LookupErrorResponse(BaseModel):
     """Error response for lookup operations"""
+
     error: str | int = Field(..., description="Error code or message")
     message: str = Field(..., description="Error description")
     details: str | None = Field(None, description="Additional error details")

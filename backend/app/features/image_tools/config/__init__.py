@@ -3,5 +3,5 @@
 from . import image_config
 
 __all__ = [
-    'image_config',
+    "image_config",
 ]
