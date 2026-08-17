@@ -3,7 +3,23 @@ import { createLogger } from '../utils/logger';
 
 const logger = createLogger('ResumableScan');
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+export interface ScanEvent {
+  type: 'started' | 'progress' | 'completed' | 'cancelled' | 'failed' | string;
+  data: Record<string, unknown>;
+}
+
+// The state shape a `phase`/`searchId`-based feature (username-search, email-search) uses -
+// git-recon uses a different `loading`/`error` shape instead (see the module docstring below), so
+// this is a common subset, not the only shape `useResumableScan` accepts.
+export interface PhaseScanState {
+  phase?: string;
+  loading?: boolean;
+  searchId?: string | number | null;
+  error?: string | null;
+  [key: string]: unknown;
+}
 
 /**
  * The `failed`-event branch every `phase`/`searchId`-shaped feature's `reduce` needs, byte-for-
@@ -14,12 +30,12 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * this - forcing every shape through one function would make the function itself as complex as
  * what it replaces.
  */
-export function failedReduce(prev, event) {
+export function failedReduce<S extends PhaseScanState>(prev: S, event: ScanEvent): S {
   return { ...prev, phase: 'failed', error: event.data.error, searchId: event.data.search_id ?? prev.searchId };
 }
 
 /** The `{...initialState, phase: 'running', ...extra}` seed every `startScan` wrapper builds. */
-export function buildRunningSeed(initialState, extra) {
+export function buildRunningSeed<S extends object, E extends object>(initialState: S, extra: E): S & E & { phase: 'running' } {
   return { ...initialState, phase: 'running', ...extra };
 }
 
@@ -35,7 +51,24 @@ const RECONCILE_POLL_TIMEOUT_MS = 5 * 60 * 1000; // give up waiting after ~5 min
 // keeps running - and the abort controller stays reachable to cancel/reset it -
 // even after the component that started it unmounts (e.g. the user switches to
 // another feature tab and back).
-const activeControllers = new Map();
+const activeControllers = new Map<string, AbortController>();
+
+export interface ResumableScanApi {
+  startScan: (payload: unknown, options: { signal: AbortSignal }) => Promise<ReadableStream<Uint8Array>>;
+  fetchPersisted: (searchId: string | number) => Promise<{ status: string; [key: string]: unknown }>;
+  cancelScan?: (searchId: string | number) => Promise<unknown>;
+}
+
+export interface UseResumableScanOptions<S extends PhaseScanState> {
+  scopeKey: string;
+  state: S;
+  setState: (state: S) => void;
+  initialState: S;
+  terminalStatuses: string[];
+  api: ResumableScanApi;
+  reduce: (prev: S, event: ScanEvent) => S | Promise<S>;
+  reconcile: (prev: S, record: { status: string; [key: string]: unknown }) => S | Promise<S>;
+}
 
 /**
  * Drives a "start an SSE scan, persist a run server-side, survive a dropped
@@ -67,8 +100,15 @@ const activeControllers = new Map();
  * "is a scan actually running right now" check below falls back to `loading`
  * when `phase` isn't present, so the gate works for both shapes.
  */
-export function useResumableScan({ scopeKey, state, setState, initialState, terminalStatuses, api, reduce, reconcile }) {
-  const processStream = useCallback(async (stream, signal, searchIdRef, stateRef) => {
+export function useResumableScan<S extends PhaseScanState>({
+  scopeKey, state, setState, initialState, terminalStatuses, api, reduce, reconcile,
+}: UseResumableScanOptions<S>) {
+  const processStream = useCallback(async (
+    stream: ReadableStream<Uint8Array>,
+    signal: AbortSignal | undefined,
+    searchIdRef: { current: string | number | null },
+    stateRef: { current: S },
+  ) => {
     const reader = stream.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
@@ -81,12 +121,12 @@ export function useResumableScan({ scopeKey, state, setState, initialState, term
 
         buffer += decoder.decode(value, { stream: true });
         const chunks = buffer.split('\n\n');
-        buffer = chunks.pop();
+        buffer = chunks.pop() ?? '';
 
         for (const chunk of chunks) {
           if (!chunk.startsWith('data: ')) continue;
 
-          let event;
+          let event: ScanEvent;
           try {
             event = JSON.parse(chunk.substring(6));
           } catch (err) {
@@ -95,7 +135,7 @@ export function useResumableScan({ scopeKey, state, setState, initialState, term
           }
 
           if (event.type === 'started' && event.data?.search_id != null) {
-            searchIdRef.current = event.data.search_id;
+            searchIdRef.current = event.data.search_id as string | number;
           }
 
           stateRef.current = await reduce(stateRef.current, event);
@@ -112,7 +152,7 @@ export function useResumableScan({ scopeKey, state, setState, initialState, term
   // or may have already finished server-side. Poll the persisted record instead
   // of assuming failure, so the UI doesn't show "failed" for a scan that actually
   // succeeded.
-  const reconcileAfterStreamError = useCallback(async (searchId, signal, seedState) => {
+  const reconcileAfterStreamError = useCallback(async (searchId: string | number, signal: AbortSignal, seedState: S) => {
     const startedAt = Date.now();
     let delay = RECONCILE_POLL_INITIAL_MS;
 
@@ -139,15 +179,15 @@ export function useResumableScan({ scopeKey, state, setState, initialState, term
     setState(await reduce(seedState, { type: 'failed', data: { error: 'Lost connection to the server', search_id: searchId } }));
   }, [api, reconcile, reduce, setState, terminalStatuses]);
 
-  const startScan = useCallback(async (payload, seedState) => {
+  const startScan = useCallback(async (payload: unknown, seedState: S) => {
     const prevController = activeControllers.get(scopeKey);
     if (prevController) prevController.abort();
     const controller = new AbortController();
     activeControllers.set(scopeKey, controller);
     const { signal } = controller;
 
-    const searchIdRef = { current: null };
-    const stateRef = { current: seedState };
+    const searchIdRef: { current: string | number | null } = { current: null };
+    const stateRef: { current: S } = { current: seedState };
 
     setState(seedState);
 
@@ -160,7 +200,8 @@ export function useResumableScan({ scopeKey, state, setState, initialState, term
       if (searchIdRef.current != null) {
         await reconcileAfterStreamError(searchIdRef.current, signal, stateRef.current);
       } else {
-        setState(await reduce(stateRef.current, { type: 'failed', data: { error: err.message } }));
+        const message = err instanceof Error ? err.message : String(err);
+        setState(await reduce(stateRef.current, { type: 'failed', data: { error: message } }));
       }
     }
   }, [api, processStream, reconcileAfterStreamError, reduce, scopeKey, setState]);
@@ -172,7 +213,7 @@ export function useResumableScan({ scopeKey, state, setState, initialState, term
     if (!api.cancelScan) return;
     const isRunning = state.phase != null ? state.phase === 'running' : Boolean(state.loading);
     if (!isRunning || state.searchId == null) return;
-    api.cancelScan(state.searchId).catch((err) => logger.error('Cancel request failed:', err));
+    api.cancelScan(state.searchId).catch((err: unknown) => logger.error('Cancel request failed:', err));
   }, [api, state.phase, state.loading, state.searchId]);
   const cancelScan = api.cancelScan ? cancelScanCallback : undefined;
 

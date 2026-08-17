@@ -19,7 +19,7 @@ export default function NewSearch() {
   const { t } = useTranslation('redditSearch');
   const [kind, setKind] = useState('posts');
   const { username, posts, comments, search, goNext, goPrev } = useRedditSearch();
-  // Hand-off from a command-palette pivot (e.g. "john_doe reddit") — see crossFeatureNav.js.
+  // Hand-off from a command-palette pivot (e.g. "john_doe reddit") — see crossFeatureNav.ts.
   const prefillValue = usePrefillFromQuery(useCallback((value) => search(value), [search]));
 
   const active = kind === 'posts' ? posts : comments;

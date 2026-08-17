@@ -10,7 +10,7 @@ import { PREFILL_QUERY_PARAM } from '../utils/crossFeatureNav';
  * [prefillValue])`). Always returns the raw value too, since most callers also feed it to a form
  * field's initial value regardless of whether they also act on it via `onValue`.
  */
-export function usePrefillFromQuery(onValue) {
+export function usePrefillFromQuery(onValue?: (value: string) => void): string | null {
   const [searchParams, setSearchParams] = useSearchParams();
   const prefillValue = searchParams.get(PREFILL_QUERY_PARAM);
 
@@ -36,7 +36,7 @@ export function usePrefillFromQuery(onValue) {
  * identity-style feature's root route (username/email/reddit-search, git-recon) uses this instead
  * of hand-rolling `useLocation()` + `<Navigate>` itself.
  */
-export function IdentityRedirect({ to }) {
+export function IdentityRedirect({ to }: { to: string }) {
   const location = useLocation();
   return <Navigate to={{ pathname: to, search: location.search }} replace />;
 }

@@ -37,9 +37,9 @@ Pulls pre-built images and starts the app at http://localhost:4000 — no auto-u
 IOC lookups auto-route to the right services based on the type you paste in:
 
 - **IPs** — AbuseIPDB, AlienVault, CheckPhish.ai, CrowdSec, GitHub, IPQualityScore, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, VirusTotal
-- **Domains** — AlienVault, CheckPhish.ai, GitHub, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
+- **Domains** — AlienVault, CheckPhish.ai, GitHub, Library of Leaks, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
 - **URLs** — AlienVault, CheckPhish.ai, GitHub, Google Safe Browsing, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
-- **Emails** — Emailrep.io, GitHub, Have I Been Pwned, Hunter.io, Reddit, Twitter/X
+- **Emails** — Emailrep.io, GitHub, Have I Been Pwned, Hunter.io, Library of Leaks, Reddit, Twitter/X
 - **Hashes** — AlienVault, GitHub, Maltiverse, Pulsedive, Reddit, ThreatFox, Twitter/X, VirusTotal
 - **CVEs** — GitHub, NIST NVD
 - **Crypto addresses** (EVM & Bitcoin) — screened against a self-hosted blacklist built from the OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset, refreshed daily in the background; no API key or third-party calls required
@@ -101,6 +101,11 @@ Correlate names, emails, and GitHub logins from commit history via
 Run parameterized search-engine dorks against a domain, username, or email. →
 [Docs](https://z0rats.github.io/corvid/features/dork-runner/)
 
+### RU Business Check
+Due-diligence check on a Russian legal entity or sole proprietor by ИНН/name — ЕГРЮЛ/ЕГРИП
+extract, disqualified-persons registry check, and arbitration case history, no API key required.
+Russian-only UI. → [Docs](https://z0rats.github.io/corvid/features/ru-business-check/)
+
 ### Browser Extension
 A minimal Chrome extension ("Corvid Quick Send") lets you select text on any page and send it
 straight to IOC Tools lookup, with no build step — load it unpacked from the
@@ -150,17 +155,18 @@ lets you review the Dockerfiles before anything runs:
    - `make rebuild` — rebuild images (e.g. after dependency or Dockerfile changes) and start
    - `make up-backend` / `make up-frontend` — start a single service without rebuilding
    - `make rebuild-backend` / `make rebuild-frontend` — rebuild and start a single service
+   - `make help` — list all available targets, including `down`/`logs`/`ps`/`migrate`
 4. Once the container is running, you can access the application in your browser at http://localhost:4000
 
 Database migrations run automatically on container startup — no manual step needed after
 `make rebuild`. If you need to run one by hand (e.g. to check for pending migrations without
-starting the app), you can still run: `docker compose run --rm backend alembic upgrade head`
+starting the app), you can still run: `make migrate`
 
 ### Access token
 
 The app has no user accounts, so it's protected by a single access token instead of a login form.
 On first startup, a token is generated automatically and printed to the backend logs
-(`docker compose logs backend`) and saved to `data/.access_token` on the host. Open
+(`make logs`) and saved to `data/.access_token` on the host. Open
 http://localhost:4000, and you'll be asked to paste that token once — it's then remembered in
 the browser.
 

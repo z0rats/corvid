@@ -28,6 +28,8 @@ import MarkEmailReadIcon from "@mui/icons-material/MarkEmailReadOutlined";
 import RedditIcon from "@mui/icons-material/Reddit";
 import TroubleshootIcon from "@mui/icons-material/TroubleshootOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import ApartmentIcon from "@mui/icons-material/ApartmentOutlined";
+import LinkIcon from "@mui/icons-material/LinkOutlined";
 import KeyboardCommandKeyIcon from "@mui/icons-material/KeyboardCommandKeyOutlined";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
@@ -55,7 +57,10 @@ const MAIN_MENU_ITEMS_CONFIG = [
     accepts: [
       IOC_TYPES.IPV4, IOC_TYPES.IPV6, IOC_TYPES.DOMAIN, IOC_TYPES.URL, IOC_TYPES.EMAIL,
       IOC_TYPES.MD5, IOC_TYPES.SHA1, IOC_TYPES.SHA256, IOC_TYPES.CVE,
-      IOC_TYPES.EVM_ADDRESS, IOC_TYPES.BITCOIN_ADDRESS,
+      IOC_TYPES.EVM_ADDRESS, IOC_TYPES.BITCOIN_ADDRESS, IOC_TYPES.TRON_ADDRESS,
+      IOC_TYPES.XRP_ADDRESS, IOC_TYPES.DOGECOIN_ADDRESS, IOC_TYPES.LITECOIN_ADDRESS,
+      IOC_TYPES.STELLAR_ADDRESS, IOC_TYPES.BINANCE_CHAIN_ADDRESS, IOC_TYPES.LISK_ADDRESS,
+      IOC_TYPES.CARDANO_ADDRESS,
     ],
     // `path` stays the bare "/ioc-tools" root (needed so the left panel's active-tab
     // highlighting matches every ioc-tools sub-route via startsWith) — but a prefilled value
@@ -74,6 +79,14 @@ const MAIN_MENU_ITEMS_CONFIG = [
       [IOC_TYPES.CVE]: "/ioc-tools/lookup",
       [IOC_TYPES.EVM_ADDRESS]: "/ioc-tools/lookup",
       [IOC_TYPES.BITCOIN_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.TRON_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.XRP_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.DOGECOIN_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.LITECOIN_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.STELLAR_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.BINANCE_CHAIN_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.LISK_ADDRESS]: "/ioc-tools/lookup",
+      [IOC_TYPES.CARDANO_ADDRESS]: "/ioc-tools/lookup",
     },
   },
   {
@@ -167,6 +180,15 @@ const MAIN_MENU_ITEMS_CONFIG = [
     accepts: [],
   },
   {
+    i18nKey: "nav.ruBusinessCheck",
+    icon: <ApartmentIcon />,
+    path: "/ru-business-check",
+    moduleId: "ru_business_check",
+    aliases: ["бизнес чек", "инн", "егрюл", "контрагент", "due diligence", "юрлицо", "проверка контрагента"],
+    tags: ["compliance", "identity"],
+    accepts: [],
+  },
+  {
     i18nKey: "nav.youtube",
     icon: <YouTubeIcon />,
     path: "/youtube",
@@ -174,8 +196,8 @@ const MAIN_MENU_ITEMS_CONFIG = [
     aliases: ["youtube", "yt", "video metadata", "youtube metadata"],
     tags: ["recon", "osint"],
     // Not reachable via detectIocType's own priority chain (a YouTube link is still typed as
-    // plain URL there) - commandParser.js's parseQuery injects this match itself when
-    // isYoutubeVideoUrl(input) is true, see iocTypeDetection.js's YOUTUBE_VIDEO_URL comment.
+    // plain URL there) - commandParser.ts's parseQuery injects this match itself when
+    // isYoutubeVideoUrl(input) is true, see iocTypeDetection.ts's YOUTUBE_VIDEO_URL comment.
     accepts: [IOC_TYPES.YOUTUBE_VIDEO_URL],
   },
 ];
@@ -322,6 +344,13 @@ const GIT_RECON_TABS_CONFIG = [
   { i18nKey: "nav.gitReconTabs.history", path: "/git-recon/history", icon: <HistoryIcon /> },
 ];
 
+const RU_BUSINESS_CHECK_TABS_CONFIG = [
+  { i18nKey: "nav.ruBusinessCheckTabs.newSearch", path: "/ru-business-check/new", icon: <ApartmentIcon /> },
+  { i18nKey: "nav.ruBusinessCheckTabs.history", path: "/ru-business-check/history", icon: <HistoryIcon /> },
+  { i18nKey: "nav.ruBusinessCheckTabs.sources", path: "/ru-business-check/sources", icon: <LinkIcon /> },
+  { i18nKey: "nav.ruBusinessCheckTabs.settings", path: "/ru-business-check/settings", icon: <SettingsIcon /> },
+];
+
 const translateItem = (t, { i18nKey, children, ...rest }) => ({
   ...rest,
   label: t(i18nKey),
@@ -340,3 +369,4 @@ export const getUsernameSearchTabs = (t) => USERNAME_SEARCH_TABS_CONFIG.map(item
 export const getEmailSearchTabs = (t) => EMAIL_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getRedditSearchTabs = (t) => REDDIT_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getGitReconTabs = (t) => GIT_RECON_TABS_CONFIG.map(item => translateItem(t, item));
+export const getRuBusinessCheckTabs = (t) => RU_BUSINESS_CHECK_TABS_CONFIG.map(item => translateItem(t, item));

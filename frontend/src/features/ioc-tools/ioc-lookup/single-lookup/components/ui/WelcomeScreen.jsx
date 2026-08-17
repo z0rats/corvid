@@ -18,6 +18,7 @@ const SUPPORTED_IOC_TYPE_KEYS = [
 const ADDRESS_REPUTATION_CHECK_KEYS = [
   'ofacSdn',
   'scamSniffer',
+  'opensanctions',
 ];
 
 const FeatureCard = ({ title, description }) => (

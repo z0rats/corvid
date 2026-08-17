@@ -22,6 +22,7 @@ const EmailSearch = lazy(() => import("../../features/email-search/EmailSearch")
 const RedditSearch = lazy(() => import("../../features/reddit-search/RedditSearch"));
 const DorkRunner = lazy(() => import("../../features/dork-runner/DorkRunner"));
 const GitRecon = lazy(() => import("../../features/git-recon/GitRecon"));
+const RuBusinessCheck = lazy(() => import("../../features/ru-business-check/RuBusinessCheck"));
 const YoutubeLookup = lazy(() => import("../../features/youtube/YoutubeLookup"));
 
 const LoadingFallback = () => (
@@ -56,6 +57,7 @@ export const AppRoutes = () => {
           <Route path="reddit-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RedditSearch /></Suspense></ErrorBoundary>} />
           <Route path="dork-runner/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><DorkRunner /></Suspense></ErrorBoundary>} />
           <Route path="git-recon/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><GitRecon /></Suspense></ErrorBoundary>} />
+          <Route path="ru-business-check/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RuBusinessCheck /></Suspense></ErrorBoundary>} />
           <Route path="youtube/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><YoutubeLookup /></Suspense></ErrorBoundary>} />
           <Route path="*" element={<NotFound />} />
         </Route>

@@ -38,6 +38,7 @@ import {
   getEmailSearchTabs,
   getRedditSearchTabs,
   getGitReconTabs,
+  getRuBusinessCheckTabs,
 } from '../../config/sidebarConfig';
 import { useTheme, alpha } from '@mui/material/styles';
 
@@ -136,6 +137,7 @@ function Layout() {
     if (location.pathname.startsWith('/email-search')) return getEmailSearchTabs(t);
     if (location.pathname.startsWith('/reddit-search')) return getRedditSearchTabs(t);
     if (location.pathname.startsWith('/git-recon')) return getGitReconTabs(t);
+    if (location.pathname.startsWith('/ru-business-check')) return getRuBusinessCheckTabs(t);
     return null;
   }, [location.pathname, hasLlmKey, t]);
 

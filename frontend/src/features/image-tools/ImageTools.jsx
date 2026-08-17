@@ -33,8 +33,8 @@ export default function ImageTools() {
   };
 
   useEffect(() => {
-    // Hand-off from the command palette's ⌘V paste (core/hooks/useCommandPalette.js) — a File
-    // can't travel through the ?q= prefill query param crossFeatureNav.js uses for strings, so
+    // Hand-off from the command palette's ⌘V paste (core/hooks/useCommandPalette.ts) — a File
+    // can't travel through the ?q= prefill query param crossFeatureNav.ts uses for strings, so
     // it's passed via router state instead.
     const handoffFile = location.state?.file;
     if (handoffFile) {

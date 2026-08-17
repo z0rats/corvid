@@ -11,9 +11,9 @@ Settings are reached from the app's **Settings** section and are stored in the d
 ## API Keys
 
 Per-service credentials for the integrated OSINT/threat-intel providers (VirusTotal, Shodan,
-Hunter.io, GitHub, etc.) — see [Integrated services](/corvid/features/ioc-tools/) for the full
-list. Keys are encrypted at rest before being written to the database; see
-[Security → Secrets at rest](/corvid/architecture/security/#secrets-at-rest). Three providers
+Hunter.io, GitHub, etc.) — see [External Services](/corvid/architecture/external-services/) for
+the full list across every feature. Keys are encrypted at rest before being written to the
+database; see [Security → Secrets at rest](/corvid/architecture/security/#secrets-at-rest). Three providers
 (VirusTotal, Shodan, Hunter.io) additionally expose a live quota panel here, since those are the
 only three whose APIs report remaining quota.
 

@@ -15,7 +15,7 @@ export default function NewSearch() {
   const { t } = useTranslation('gitRecon');
   const { result, loading, error, scan, cancelScan } = useGitRecon();
 
-  // Hand-off from a command-palette pivot (e.g. "octocat github recon") — see crossFeatureNav.js.
+  // Hand-off from a command-palette pivot (e.g. "octocat github recon") — see crossFeatureNav.ts.
   // Defaults to 'nickname' mode, the closest match to a bare pivot value (a single GitHub
   // username) among the tool's three modes.
   const prefillValue = usePrefillFromQuery(useCallback((value) => scan({

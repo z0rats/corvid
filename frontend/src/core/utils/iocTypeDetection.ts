@@ -17,17 +17,27 @@ export const IOC_TYPES = {
   CVE: 'CVE',
   EVM_ADDRESS: 'EVMAddress',
   BITCOIN_ADDRESS: 'BitcoinAddress',
+  TRON_ADDRESS: 'TronAddress',
+  XRP_ADDRESS: 'XRPAddress',
+  DOGECOIN_ADDRESS: 'DogecoinAddress',
+  LITECOIN_ADDRESS: 'LitecoinAddress',
+  STELLAR_ADDRESS: 'StellarAddress',
+  BINANCE_CHAIN_ADDRESS: 'BinanceChainAddress',
+  LISK_ADDRESS: 'LiskAddress',
+  CARDANO_ADDRESS: 'CardanoAddress',
   // Deliberately NOT part of IOC_TYPE_PATTERNS/detectIocType's priority chain below, and not
   // mirrored in the backend's ioc_utils.py/testdata fixture - detectIocType still classifies a
   // YouTube link as plain URL (so ioc_lookup's provider routing for it is unaffected). This exists
-  // only so commandParser.js can tag the youtube sidebar entry's `accepts` array with a value from
+  // only so commandParser.ts can tag the youtube sidebar entry's `accepts` array with a value from
   // this shared enum (required by commandRegistry.test.js's "no garbage accepts values" guard) and
-  // inject it into the palette's match list via isYoutubeVideoUrl() - see commandParser.js.
+  // inject it into the palette's match list via isYoutubeVideoUrl() - see commandParser.ts.
   YOUTUBE_VIDEO_URL: 'YouTubeVideoURL',
   UNKNOWN: 'unknown',
-};
+} as const;
 
-const IOC_TYPE_PATTERNS = {
+export type IocType = (typeof IOC_TYPES)[keyof typeof IOC_TYPES];
+
+const IOC_TYPE_PATTERNS: Partial<Record<IocType, RegExp>> = {
   [IOC_TYPES.MD5]: /^[a-f0-9]{32}$/i,
   [IOC_TYPES.SHA1]: /^[a-f0-9]{40}$/i,
   [IOC_TYPES.SHA256]: /^[a-f0-9]{64}$/i,
@@ -39,13 +49,21 @@ const IOC_TYPE_PATTERNS = {
   [IOC_TYPES.CVE]: /^CVE-[0-9]{4}-[0-9]{4,}$/i,
   [IOC_TYPES.EVM_ADDRESS]: /^0x[a-f0-9]{40}$/i,
   [IOC_TYPES.BITCOIN_ADDRESS]: /^(1[a-zA-Z0-9]{25,34}|3[a-zA-Z0-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{25,90})$/,
+  [IOC_TYPES.TRON_ADDRESS]: /^T[a-zA-Z0-9]{33}$/,
+  [IOC_TYPES.XRP_ADDRESS]: /^r[a-zA-Z0-9]{24,34}$/,
+  [IOC_TYPES.DOGECOIN_ADDRESS]: /^D[a-zA-Z0-9]{25,33}$/,
+  [IOC_TYPES.LITECOIN_ADDRESS]: /^L[a-zA-Z0-9]{25,34}$/,
+  [IOC_TYPES.STELLAR_ADDRESS]: /^[GS][A-Z2-7]{54,58}$/,
+  [IOC_TYPES.BINANCE_CHAIN_ADDRESS]: /^bnb1[a-z0-9]{38}$/,
+  [IOC_TYPES.LISK_ADDRESS]: /^[0-9]{1,20}L$/,
+  [IOC_TYPES.CARDANO_ADDRESS]: /^Ddz[a-zA-Z0-9]{90,110}$/,
 };
 
 /**
  * Determines the type of an Indicator of Compromise (IOC).
  * The order of checks is important to prevent misclassification (e.g., URL before Domain).
  */
-export function detectIocType(rawValue) {
+export function detectIocType(rawValue?: string | null): IocType {
   const value = (rawValue ?? '').trim();
 
   if (IOC_TYPE_PATTERNS[IOC_TYPES.MD5].test(value)) return IOC_TYPES.MD5;
@@ -54,6 +72,14 @@ export function detectIocType(rawValue) {
 
   if (IOC_TYPE_PATTERNS[IOC_TYPES.EVM_ADDRESS].test(value)) return IOC_TYPES.EVM_ADDRESS;
   if (IOC_TYPE_PATTERNS[IOC_TYPES.BITCOIN_ADDRESS].test(value)) return IOC_TYPES.BITCOIN_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.TRON_ADDRESS].test(value)) return IOC_TYPES.TRON_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.XRP_ADDRESS].test(value)) return IOC_TYPES.XRP_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.DOGECOIN_ADDRESS].test(value)) return IOC_TYPES.DOGECOIN_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.CARDANO_ADDRESS].test(value)) return IOC_TYPES.CARDANO_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.LITECOIN_ADDRESS].test(value)) return IOC_TYPES.LITECOIN_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.STELLAR_ADDRESS].test(value)) return IOC_TYPES.STELLAR_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.BINANCE_CHAIN_ADDRESS].test(value)) return IOC_TYPES.BINANCE_CHAIN_ADDRESS;
+  if (IOC_TYPE_PATTERNS[IOC_TYPES.LISK_ADDRESS].test(value)) return IOC_TYPES.LISK_ADDRESS;
 
   if (IOC_TYPE_PATTERNS[IOC_TYPES.IPV4].test(value)) return IOC_TYPES.IPV4;
   if (IOC_TYPE_PATTERNS[IOC_TYPES.IPV6].test(value)) return IOC_TYPES.IPV6;
@@ -76,8 +102,8 @@ const YOUTUBE_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
  * backend/app/features/youtube/utils/youtube_url_utils.py's extract_video_id, kept separate from
  * detectIocType (see the YOUTUBE_VIDEO_URL comment above for why).
  */
-export function isYoutubeVideoUrl(value) {
-  let parsed;
+export function isYoutubeVideoUrl(value?: string | null): boolean {
+  let parsed: URL;
   try {
     parsed = new URL((value ?? '').trim());
   } catch {

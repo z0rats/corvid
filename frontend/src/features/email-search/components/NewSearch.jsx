@@ -12,7 +12,7 @@ import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 export default function NewSearch() {
   const { t } = useTranslation('emailSearch');
   const scan = useEmailSearchScan();
-  // Hand-off from a command-palette pivot (e.g. "john_doe email") — see crossFeatureNav.js.
+  // Hand-off from a command-palette pivot (e.g. "john_doe email") — see crossFeatureNav.ts.
   const prefillValue = usePrefillFromQuery(useCallback((value) => scan.startScan(value), [scan]));
 
   return (

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
+import Link from '@mui/material/Link';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -27,12 +28,11 @@ function DetailItem({ label, value }) {
 export default function BlacklistDetails({ result }) {
   const { t } = useTranslation('iocTools');
 
-  if (!result || !result.data) {
+  if (!result) {
     return <NoDetails message={t('providers.blacklist.unavailable')} />;
   }
 
-  const { data } = result;
-  const { matched, sources = [], ofac, scamsniffer } = data;
+  const { matched, sources = [], ofac, scamsniffer, opensanctions } = result;
 
   if (!matched) {
     return (
@@ -74,6 +74,30 @@ export default function BlacklistDetails({ result }) {
             <DetailItem label={t('providers.blacklist.chain')} value={scamsniffer.chain} />
             <DetailItem label={t('providers.blacklist.phishingDomain')} value={scamsniffer.phishing_domain} />
           </List>
+        </Card>
+      )}
+
+      {sources.includes('OPENSANCTIONS') && opensanctions && (
+        <Card sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <GavelIcon color="error" />
+            <Typography variant="h6">{t('providers.blacklist.opensanctionsSanctioned')}</Typography>
+            <Chip label="OpenSanctions" color="error" size="small" />
+          </Box>
+          <List dense disablePadding>
+            <DetailItem label={t('providers.blacklist.topics')} value={opensanctions.topics} />
+            <DetailItem label={t('providers.blacklist.holder')} value={opensanctions.holder_name} />
+            <DetailItem label={t('providers.blacklist.chain')} value={opensanctions.chain} />
+            <DetailItem label={t('providers.blacklist.dataset')} value={opensanctions.dataset} />
+          </List>
+          {opensanctions.profile_url && (
+            <Link
+              href={opensanctions.profile_url} target="_blank" rel="noopener noreferrer"
+              sx={{ display: 'inline-block', mt: 1 }}
+            >
+              {t('providers.blacklist.viewOnOpenSanctions')}
+            </Link>
+          )}
         </Card>
       )}
     </Box>

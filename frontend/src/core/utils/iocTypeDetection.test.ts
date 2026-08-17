@@ -71,7 +71,7 @@ describe('isYoutubeVideoUrl', () => {
   ])('accepts %s', (url) => {
     expect(isYoutubeVideoUrl(url)).toBe(true);
     // still plain URL for ioc_lookup's own routing/provider selection - see the
-    // YOUTUBE_VIDEO_URL comment in iocTypeDetection.js for why this stays true
+    // YOUTUBE_VIDEO_URL comment in iocTypeDetection.ts for why this stays true
     expect(detectIocType(url)).toBe(IOC_TYPES.URL);
   });
 

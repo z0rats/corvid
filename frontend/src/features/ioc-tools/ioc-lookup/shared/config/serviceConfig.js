@@ -12,6 +12,7 @@ import HaveibeenpwndDetails from '../components/service-details/HIBP/Haveibeenpw
 import HudsonRockDetails from '../components/service-details/HudsonRock/HudsonRockDetails';
 import HunterioDetails from '../components/service-details/HunterIO/HunterioDetails';
 import IpQualityscoreDetails from '../components/service-details/IpQualityScore/IpqualityscoreDetails';
+import LibraryOfLeaksDetails from '../components/service-details/LibraryOfLeaks/LibraryOfLeaksDetails';
 import MandiantDetails from '../components/service-details/Mandiant/MandiantDetails';
 import MaltiverseDetails from '../components/service-details/Maltiverse/MaltiverseDetails';
 import MalwarebazaarDetails from '../components/service-details/Malwarebazaar/MalwarebazaarDetails';
@@ -86,16 +87,22 @@ export const SERVICE_DEFINITIONS = {
     })),
   },
   blacklist: {
-    name: 'Address Blacklist (OFAC + ScamSniffer)',
+    name: 'Address Blacklist (OFAC + ScamSniffer + OpenSanctions)',
     icon: 'blacklist_logo_small',
     detailComponent: BlacklistDetails,
     requiredKeys: [],
-    supportedIocTypes: ['EVMAddress', 'BitcoinAddress'],
+    supportedIocTypes: [
+      'EVMAddress', 'BitcoinAddress', 'TronAddress', 'XRPAddress', 'DogecoinAddress',
+      'LitecoinAddress', 'StellarAddress', 'BinanceChainAddress', 'LiskAddress', 'CardanoAddress',
+    ],
     lookupEndpoint: createSingleEndpoint('blacklist'),
     getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
         if (!responseData?.matched) return { summary: 'No match — not listed', tlp: 'GREEN' };
         if (responseData.sources?.includes('OFAC')) {
             return { summary: `OFAC SANCTIONED: ${responseData.ofac?.entity_name || 'designated entity'}`, tlp: 'RED', keyMetric: 'OFAC' };
+        }
+        if (responseData.sources?.includes('OPENSANCTIONS')) {
+            return { summary: `OpenSanctions match: ${responseData.opensanctions?.topics || 'flagged entity'}`, tlp: 'RED', keyMetric: 'OpenSanctions' };
         }
         const domain = responseData.scamsniffer?.phishing_domain;
         return { summary: `Phishing-associated address (ScamSniffer)${domain ? `: ${domain}` : ''}`, tlp: 'RED', keyMetric: 'ScamSniffer' };
@@ -266,6 +273,24 @@ export const SERVICE_DEFINITIONS = {
         const tlp = scoreTlpMapper(score, { red: 90, amber: 75 });
         return { summary: `Fraud Score: ${score}`, tlp, keyMetric: score };
     }),
+  },
+  libraryofleaks: {
+    name: 'Library of Leaks',
+    icon: 'default_icon',
+    detailComponent: LibraryOfLeaksDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['Domain', 'Email'],
+    lookupEndpoint: createSingleEndpoint('libraryofleaks'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      const total = responseData.total_hits || 0;
+      if (total === 0) return { summary: 'No breach/leak mentions found', tlp: 'GREEN' };
+      const collectionCount = responseData.collections?.length || 0;
+      return {
+        summary: `${total} mention(s) across ${collectionCount} collection(s)`,
+        tlp: 'AMBER',
+        keyMetric: total,
+      };
+    })),
   },
   maltiverse: {
     name: 'Maltiverse',

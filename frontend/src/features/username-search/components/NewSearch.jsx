@@ -26,7 +26,18 @@ export default function NewSearch() {
   };
   const anyScanRunning = Object.values(scansByModule).some((scan) => scan.phase === 'running');
 
+  // Tracks panel display order: whichever module(s) were most recently launched move to the
+  // front, so a scan started after earlier ones already have results appears above them
+  // instead of always rendering in the fixed maigret/social_analyzer/threat_actor order.
+  const [sourceOrder, setSourceOrder] = useState([
+    'maigret', 'social_analyzer', 'threat_actor_usernames', 'hudson_rock',
+  ]);
+  const bringToFront = useCallback((keys) => {
+    setSourceOrder((prev) => [...keys, ...prev.filter((key) => !keys.includes(key))]);
+  }, []);
+
   const handleSearch = (username, { modules, tags }) => {
+    bringToFront(modules);
     modules.forEach((moduleKey) => {
       if (moduleKey === 'hudson_rock') {
         setHudsonRockUsername(username);
@@ -36,20 +47,30 @@ export default function NewSearch() {
     });
   };
 
-  // Hand-off from a command-palette pivot (e.g. "john_doe username") — see crossFeatureNav.js.
+  // Hand-off from a command-palette pivot (e.g. "john_doe username") — see crossFeatureNav.ts.
   // Deliberately only starts Maigret, not every module, so a quick pivot click doesn't surprise
   // the user with several parallel scans.
-  const prefillValue = usePrefillFromQuery(useCallback((value) => maigretScan.startScan(value), [maigretScan]));
+  const prefillValue = usePrefillFromQuery(useCallback((value) => {
+    bringToFront(['maigret']);
+    maigretScan.startScan(value);
+  }, [maigretScan, bringToFront]));
+
+  const panelsBySource = {
+    maigret: () => maigretScan.phase !== 'idle'
+      && <LiveScanView key="maigret" scan={maigretScan} title={t('form.sourceMaigret')} />,
+    social_analyzer: () => socialAnalyzerScan.phase !== 'idle'
+      && <LiveScanView key="social_analyzer" scan={socialAnalyzerScan} title={t('form.sourceSocialAnalyzer')} />,
+    threat_actor_usernames: () => threatActorScan.phase !== 'idle'
+      && <LiveScanView key="threat_actor_usernames" scan={threatActorScan} title={t('form.sourceThreatActorUsernames')} />,
+    hudson_rock: () => hudsonRockUsername && <HudsonRockSection key="hudson_rock" result={hudsonRockResult} />,
+  };
 
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 1 }}>{t('page.title')}</Typography>
       <ToolInfoBanner />
       <SearchForm onSearch={handleSearch} disabled={anyScanRunning} initialUsername={prefillValue} />
-      {maigretScan.phase !== 'idle' && <LiveScanView scan={maigretScan} title={t('form.sourceMaigret')} />}
-      {socialAnalyzerScan.phase !== 'idle' && <LiveScanView scan={socialAnalyzerScan} title={t('form.sourceSocialAnalyzer')} />}
-      {threatActorScan.phase !== 'idle' && <LiveScanView scan={threatActorScan} title={t('form.sourceThreatActorUsernames')} />}
-      {hudsonRockUsername && <HudsonRockSection result={hudsonRockResult} />}
+      {sourceOrder.map((key) => panelsBySource[key]())}
     </Box>
   );
 }

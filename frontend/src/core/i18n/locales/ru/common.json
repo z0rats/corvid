@@ -79,6 +79,14 @@
     "gitReconTabs": {
       "newSearch": "Новый поиск",
       "history": "История"
+    },
+
+    "ruBusinessCheck": "RU Business Check",
+    "ruBusinessCheckTabs": {
+      "newSearch": "Новая проверка",
+      "history": "История",
+      "sources": "Источники",
+      "settings": "Настройки"
     }
   },
 

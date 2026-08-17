@@ -1,15 +1,41 @@
-import { detectIocType, IOC_TYPES, isYoutubeVideoUrl } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
 
 /**
  * Pure, framework-free parsing of the command palette's input grammar (see
  * docs/command-palette-plan.md's "Interaction grammar" table). Every function here takes plain
  * data in and returns plain data out — no DOM, no storage, no network — so it's fully covered by
  * Vitest without rendering anything. The stateful pieces (recording sessions, storage,
- * navigation, clipboard, network) live in core/hooks/useCommandPalette.js instead.
+ * navigation, clipboard, network) live in core/hooks/useCommandPalette.ts instead.
  */
 
-// Friendly `type:kind` tokens -> one or more iocTypeDetection.js type strings.
-export const TYPE_TOKEN_ALIASES = {
+// Registry entries are built by commandRegistry.js (plain JS, derived from sidebarConfig.jsx) and
+// passed in by each palette host - modeled here rather than imported, so this file's types don't
+// force those still-JS/JSX modules to convert first.
+export interface RegistryEntry {
+  id: string;
+  label: string;
+  icon?: unknown;
+  path: string;
+  moduleId: string;
+  aliases: string[];
+  tags: string[];
+  accepts: IocType[];
+  acceptsRouting: Record<string, string>;
+}
+
+export interface Playbook {
+  name: string;
+  [key: string]: unknown;
+}
+
+export interface ParserContext {
+  registry: RegistryEntry[];
+  playbooks: Playbook[];
+  isRecording: boolean;
+}
+
+// Friendly `type:kind` tokens -> one or more iocTypeDetection.ts type strings.
+export const TYPE_TOKEN_ALIASES: Record<string, IocType[]> = {
   ip: [IOC_TYPES.IPV4, IOC_TYPES.IPV6],
   ipv4: [IOC_TYPES.IPV4],
   ipv6: [IOC_TYPES.IPV6],
@@ -22,9 +48,22 @@ export const TYPE_TOKEN_ALIASES = {
   sha1: [IOC_TYPES.SHA1],
   sha256: [IOC_TYPES.SHA256],
   cve: [IOC_TYPES.CVE],
-  crypto: [IOC_TYPES.EVM_ADDRESS, IOC_TYPES.BITCOIN_ADDRESS],
+  crypto: [
+    IOC_TYPES.EVM_ADDRESS, IOC_TYPES.BITCOIN_ADDRESS, IOC_TYPES.TRON_ADDRESS,
+    IOC_TYPES.XRP_ADDRESS, IOC_TYPES.DOGECOIN_ADDRESS, IOC_TYPES.LITECOIN_ADDRESS,
+    IOC_TYPES.STELLAR_ADDRESS, IOC_TYPES.BINANCE_CHAIN_ADDRESS, IOC_TYPES.LISK_ADDRESS,
+    IOC_TYPES.CARDANO_ADDRESS,
+  ],
   btc: [IOC_TYPES.BITCOIN_ADDRESS],
   eth: [IOC_TYPES.EVM_ADDRESS],
+  tron: [IOC_TYPES.TRON_ADDRESS],
+  xrp: [IOC_TYPES.XRP_ADDRESS],
+  doge: [IOC_TYPES.DOGECOIN_ADDRESS],
+  ltc: [IOC_TYPES.LITECOIN_ADDRESS],
+  xlm: [IOC_TYPES.STELLAR_ADDRESS],
+  bnb: [IOC_TYPES.BINANCE_CHAIN_ADDRESS],
+  lsk: [IOC_TYPES.LISK_ADDRESS],
+  ada: [IOC_TYPES.CARDANO_ADDRESS],
 };
 
 // `>` quick actions that don't depend on saved playbooks/recording state.
@@ -34,12 +73,12 @@ export const BUILTIN_ACTIONS = ['settings', 'theme', 'record', 'playbook:manage'
 // consumed anywhere a focused row's value can be copied, bulk-added, or handed off as a pivot.
 export const VALUE_KINDS = ['value', 'pivot', 'fallback'];
 
-function normalize(value) {
+function normalize(value?: string | null): string {
   return (value ?? '').toLowerCase().trim();
 }
 
 /** Case-insensitive substring/prefix scoring against a registry entry's label/aliases/tags. */
-function scoreMatch(query, entry) {
+function scoreMatch(query: string, entry: RegistryEntry): number {
   const q = normalize(query);
   if (!q) return 0;
 
@@ -54,7 +93,7 @@ function scoreMatch(query, entry) {
 }
 
 /** Fuzzy-matches a query against registry entries' name/aliases/tags, best match first. */
-export function matchTools(query, registry) {
+export function matchTools(query: string, registry: RegistryEntry[]): RegistryEntry[] {
   return registry
     .map((entry) => ({ entry, score: scoreMatch(query, entry) }))
     .filter((m) => m.score > 0)
@@ -63,21 +102,26 @@ export function matchTools(query, registry) {
 }
 
 /** Registry entries whose `accepts` includes the given detected IOC type. */
-export function rankToolsForValue(iocType, registry) {
+export function rankToolsForValue(iocType: IocType, registry: RegistryEntry[]): RegistryEntry[] {
   return registry.filter((entry) => entry.accepts.includes(iocType));
 }
 
-export function resolvePlaybook(name, playbooks) {
+export function resolvePlaybook(name: string, playbooks: Playbook[]): Playbook | null {
   return playbooks.find((p) => p.name === name) ?? null;
 }
+
+export type WhichKeyOperator = '#' | 'type:' | '>';
 
 /**
  * Empty-operator "which-key" completions: typing a bare `#`, `type:`, or `>` always lists
  * everything valid to type next (see docs/command-palette-plan.md's which-key rule).
  */
-export function getWhichKeySuggestions(operator, { registry = [], playbooks = [], isRecording = false } = {}) {
+export function getWhichKeySuggestions(
+  operator: WhichKeyOperator,
+  { registry = [], playbooks = [], isRecording = false }: Partial<ParserContext> = {},
+): string[] {
   if (operator === '#') {
-    const tags = new Set();
+    const tags = new Set<string>();
     registry.forEach((entry) => entry.tags.forEach((tag) => tags.add(tag)));
     return [...tags].sort();
   }
@@ -93,7 +137,83 @@ export function getWhichKeySuggestions(operator, { registry = [], playbooks = []
   return [];
 }
 
-function parseHashTag(input, ctx) {
+export interface WhichKeyParsed {
+  kind: 'which-key';
+  operator: WhichKeyOperator;
+  suggestions: string[];
+}
+
+export interface TagParsed {
+  kind: 'tag';
+  tag: string;
+  matches: RegistryEntry[];
+}
+
+export interface TypeParsed {
+  kind: 'type';
+  typeToken: string;
+  iocTypes: IocType[];
+  matches: RegistryEntry[];
+}
+
+export interface ActionParsed {
+  kind: 'action';
+  action: 'settings' | 'theme' | 'record-start' | 'record-stop' | 'playbook-manage' | 'playbook-run' | 'unknown';
+  name?: string | null;
+  raw?: string;
+  playbookName?: string;
+  value?: string | null;
+}
+
+export interface InstantParsed {
+  kind: 'instant';
+  op: string;
+  value: string;
+}
+
+export interface ValueParsed {
+  kind: 'value';
+  value: string;
+  iocType: IocType;
+  matches: RegistryEntry[];
+}
+
+export interface PivotParsed {
+  kind: 'pivot';
+  value: string;
+  tool: RegistryEntry;
+  matches: RegistryEntry[];
+}
+
+export interface FallbackParsed {
+  kind: 'fallback';
+  value: string;
+  matches: RegistryEntry[];
+}
+
+export interface TextParsed {
+  kind: 'text';
+  query: string;
+  matches: RegistryEntry[];
+}
+
+export interface EmptyParsed {
+  kind: 'empty';
+}
+
+export type ParsedQuery =
+  | EmptyParsed
+  | WhichKeyParsed
+  | TagParsed
+  | TypeParsed
+  | ActionParsed
+  | InstantParsed
+  | ValueParsed
+  | PivotParsed
+  | FallbackParsed
+  | TextParsed;
+
+function parseHashTag(input: string, ctx: ParserContext): WhichKeyParsed | TagParsed {
   const tagText = input.slice(1).trim();
   if (!tagText) {
     return { kind: 'which-key', operator: '#', suggestions: getWhichKeySuggestions('#', ctx) };
@@ -103,7 +223,7 @@ function parseHashTag(input, ctx) {
   return { kind: 'tag', tag, matches };
 }
 
-function parseTypeFilter(input, ctx) {
+function parseTypeFilter(input: string, ctx: ParserContext): WhichKeyParsed | TypeParsed {
   const token = input.slice('type:'.length).trim();
   if (!token) {
     return { kind: 'which-key', operator: 'type:', suggestions: getWhichKeySuggestions('type:', ctx) };
@@ -114,7 +234,7 @@ function parseTypeFilter(input, ctx) {
   return { kind: 'type', typeToken, iocTypes, matches };
 }
 
-function parseAction(input, ctx) {
+function parseAction(input: string, ctx: ParserContext): WhichKeyParsed | ActionParsed {
   const rest = input.slice(1).trim();
   if (!rest) {
     return { kind: 'which-key', operator: '>', suggestions: getWhichKeySuggestions('>', ctx) };
@@ -150,7 +270,7 @@ function parseAction(input, ctx) {
   return { kind: 'action', action: 'unknown', raw: rest };
 }
 
-function parseInstantAnswer(input) {
+function parseInstantAnswer(input: string): InstantParsed | null {
   const tokens = input.trim().split(/\s+/);
   const op = tokens[0]?.toLowerCase();
   if ((op === 'defang' || op === 'fang') && tokens.length > 1) {
@@ -165,7 +285,7 @@ function parseInstantAnswer(input) {
  * argument) — so `john_doe reddit` and `reddit john_doe` both pivot the same way. "value tool" is
  * tried first for backward compatibility where a query happens to parse both ways.
  */
-function parsePivot(input, ctx) {
+function parsePivot(input: string, ctx: ParserContext): PivotParsed | null {
   const tokens = input.trim().split(/\s+/);
   if (tokens.length < 2) return null;
 
@@ -191,30 +311,33 @@ function parsePivot(input, ctx) {
  * username-like token (e.g. a Reddit vs. GitHub handle) is equally plausible for every remaining
  * candidate, so there's nothing left to rank on and registry order stands.
  */
-function rankIdentityFallback(value, registry) {
+function rankIdentityFallback(value: string, registry: RegistryEntry[]): RegistryEntry[] {
   const candidates = registry.filter((entry) => entry.tags.includes('identity'));
   if (candidates.length === 0) return [];
   if (!value.includes('@')) return candidates;
   return [...candidates].sort((a, b) => Number(b.tags.includes('email')) - Number(a.tags.includes('email')));
 }
 
+export type SelectableResult = { type: 'suggestion'; value: string } | { type: 'entry'; entry: RegistryEntry };
+
 /**
  * Parses raw palette input into a discriminated result. `ctx` carries the data the pure parser
  * needs but shouldn't own itself: { registry, playbooks, isRecording }.
  */
 /** Everything the currently parsed query can offer as a keyboard-selectable row. */
-export function getSelectableResults(parsed) {
+export function getSelectableResults(parsed: ParsedQuery): SelectableResult[] {
   if (parsed.kind === 'which-key') {
-    return parsed.suggestions.map((s) => ({ type: 'suggestion', value: s }));
+    return parsed.suggestions.map((s) => ({ type: 'suggestion' as const, value: s }));
   }
-  if (['text', 'tag', 'type', 'value', 'pivot', 'fallback'].includes(parsed.kind)) {
-    return parsed.matches.map((entry) => ({ type: 'entry', entry }));
+  if (parsed.kind === 'text' || parsed.kind === 'tag' || parsed.kind === 'type'
+    || parsed.kind === 'value' || parsed.kind === 'pivot' || parsed.kind === 'fallback') {
+    return parsed.matches.map((entry) => ({ type: 'entry' as const, entry }));
   }
   return [];
 }
 
-export function parseQuery(rawInput, ctx = {}) {
-  const context = { registry: [], playbooks: [], isRecording: false, ...ctx };
+export function parseQuery(rawInput?: string | null, ctx: Partial<ParserContext> = {}): ParsedQuery {
+  const context: ParserContext = { registry: [], playbooks: [], isRecording: false, ...ctx };
   const input = (rawInput ?? '').trim();
 
   if (!input) return { kind: 'empty' };
@@ -229,7 +352,7 @@ export function parseQuery(rawInput, ctx = {}) {
   const iocType = detectIocType(input);
   if (iocType !== IOC_TYPES.UNKNOWN) {
     const matches = rankToolsForValue(iocType, context.registry);
-    // detectIocType classifies a YouTube link as plain URL (see iocTypeDetection.js's
+    // detectIocType classifies a YouTube link as plain URL (see iocTypeDetection.ts's
     // YOUTUBE_VIDEO_URL comment for why that stays true rather than adding a real pattern for
     // it) - so a more specific YouTube-module match, when one is registered, is surfaced here as
     // an addition on top of the generic URL matches rather than instead of them.
@@ -262,17 +385,32 @@ export function parseQuery(rawInput, ctx = {}) {
  * two hosts exist at all rather than being collapsed into one.
  */
 
+export interface Recent {
+  toolId: string;
+  [key: string]: unknown;
+}
+
 /**
  * Merges pinned tools, recently-used tools, and the full registry into the empty-query result
  * list, deduped by entry id (pinned first, then recent, then the rest of the registry).
  */
-export function mergeEmptyStateResults({ pinnedIds, recents, registry }) {
-  const pinnedEntries = pinnedIds.map((id) => registry.find((e) => e.id === id)).filter(Boolean);
-  const recentEntries = recents.map((r) => registry.find((e) => e.id === r.toolId)).filter(Boolean);
-  const seen = new Set();
+export function mergeEmptyStateResults({ pinnedIds, recents, registry }: {
+  pinnedIds: string[];
+  recents: Recent[];
+  registry: RegistryEntry[];
+}): SelectableResult[] {
+  const pinnedEntries = pinnedIds.map((id) => registry.find((e) => e.id === id)).filter((e): e is RegistryEntry => Boolean(e));
+  const recentEntries = recents.map((r) => registry.find((e) => e.id === r.toolId)).filter((e): e is RegistryEntry => Boolean(e));
+  const seen = new Set<string>();
   return [...pinnedEntries, ...recentEntries, ...registry]
     .filter((entry) => (seen.has(entry.id) ? false : seen.add(entry.id)))
-    .map((entry) => ({ type: 'entry', entry }));
+    .map((entry) => ({ type: 'entry' as const, entry }));
+}
+
+export interface BannerDescriptor {
+  severity: 'info' | 'warning';
+  i18nKey: string;
+  params: Record<string, unknown>;
 }
 
 /**
@@ -280,7 +418,7 @@ export function mergeEmptyStateResults({ pinnedIds, recents, registry }) {
  * render it with its own Alert styling/spacing via its own i18n `t()`. Returns null when the
  * current `parsed.kind` has no banner.
  */
-export function getBannerDescriptor(parsed) {
+export function getBannerDescriptor(parsed: ParsedQuery): BannerDescriptor | null {
   if (parsed.kind === 'value') {
     return { severity: 'info', i18nKey: 'banners.detectedType', params: { type: parsed.iocType, value: parsed.value } };
   }
@@ -299,6 +437,13 @@ export function getBannerDescriptor(parsed) {
   return null;
 }
 
+export type SelectionDecision =
+  | { type: 'complete-suggestion'; operator: WhichKeyOperator; suggestion: string }
+  | { type: 'instant'; op: string; value: string }
+  | { type: 'action'; action: ActionParsed }
+  | { type: 'open'; entry: RegistryEntry; value: string | null }
+  | null;
+
 /**
  * Decides what selecting (click, Enter, digit-jump) row `index` of `visibleResults` means for
  * the current `parsed` query — a plain decision object, not an effect. `visibleResults` must be
@@ -306,9 +451,10 @@ export function getBannerDescriptor(parsed) {
  * just `getSelectableResults(parsed)`) so an empty-state pinned/recent row resolves to `open`
  * like every other entry row, instead of falling through unhandled.
  */
-export function resolveSelection(parsed, visibleResults, index) {
+export function resolveSelection(parsed: ParsedQuery, visibleResults: SelectableResult[], index: number): SelectionDecision {
   if (parsed.kind === 'which-key') {
-    const suggestion = visibleResults[index]?.value;
+    const row = visibleResults[index];
+    const suggestion = row?.type === 'suggestion' ? row.value : undefined;
     return suggestion ? { type: 'complete-suggestion', operator: parsed.operator, suggestion } : null;
   }
   if (parsed.kind === 'instant') {
@@ -318,22 +464,30 @@ export function resolveSelection(parsed, visibleResults, index) {
     return { type: 'action', action: parsed };
   }
   if (parsed.kind === 'pivot') {
-    const entry = visibleResults[index]?.entry ?? parsed.tool;
+    const row = visibleResults[index];
+    const entry = (row?.type === 'entry' ? row.entry : undefined) ?? parsed.tool;
     return { type: 'open', entry, value: parsed.value };
   }
   if (parsed.kind === 'value' || parsed.kind === 'fallback') {
-    const entry = visibleResults[index]?.entry;
+    const row = visibleResults[index];
+    const entry = row?.type === 'entry' ? row.entry : undefined;
     return entry ? { type: 'open', entry, value: parsed.value } : null;
   }
   // 'empty' rows are always { type: 'entry' }, same shape as 'text'/'tag'/'type' matches - none
   // of these kinds carry a typed value, so the opened entry gets none either.
-  const entry = visibleResults[index]?.entry;
+  const row = visibleResults[index];
+  const entry = row?.type === 'entry' ? row.entry : undefined;
   return entry ? { type: 'open', entry, value: null } : null;
 }
 
 /** Turns a `resolveSelection` decision into a call against the host's own effect functions. */
-export function createGrammarDispatch({ onQueryChange, onInstantAnswer, onAction, onOpenEntry }) {
-  return (decision) => {
+export function createGrammarDispatch({ onQueryChange, onInstantAnswer, onAction, onOpenEntry }: {
+  onQueryChange: (query: string) => void;
+  onInstantAnswer: (op: string, value: string) => void;
+  onAction: (action: ActionParsed) => void;
+  onOpenEntry: (entry: RegistryEntry, value: string | null) => void;
+}) {
+  return (decision: SelectionDecision) => {
     if (!decision) return;
     if (decision.type === 'complete-suggestion') {
       onQueryChange(`${decision.operator}${decision.suggestion}`);
@@ -352,7 +506,13 @@ export function createGrammarDispatch({ onQueryChange, onInstantAnswer, onAction
  * copy, ...) on top by checking this first. Escape is deliberately excluded - closing vs. merely
  * clearing the query is host UI lifecycle, not grammar.
  */
-export function handleGrammarNavKey(event, { parsed, visibleResults, selectedIndex, setSelectedIndex, dispatch }) {
+export function handleGrammarNavKey(event: KeyboardEvent, { parsed, visibleResults, selectedIndex, setSelectedIndex, dispatch }: {
+  parsed: ParsedQuery;
+  visibleResults: SelectableResult[] | null | undefined;
+  selectedIndex: number;
+  setSelectedIndex: (updater: (prev: number) => number) => void;
+  dispatch: (decision: SelectionDecision) => void;
+}): boolean {
   const results = visibleResults ?? [];
 
   if (event.key === 'ArrowDown') {

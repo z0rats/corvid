@@ -11,6 +11,7 @@ import { buildCommandRegistry, resolveEntryPath } from '../config/commandRegistr
 import {
   parseQuery, VALUE_KINDS, getSelectableResults,
   mergeEmptyStateResults, resolveSelection, createGrammarDispatch, handleGrammarNavKey,
+  type RegistryEntry, type ActionParsed, type SelectableResult,
 } from '../utils/commandParser';
 import { detectIocType } from '../utils/iocTypeDetection';
 import { copyToClipboard } from '../utils/clipboard';
@@ -21,7 +22,13 @@ import {
   getQueryHistory, addQueryToHistory,
 } from '../utils/commandPaletteStorage';
 
-async function defangOrFang(value, op) {
+type NoticeSeverity = 'success' | 'error' | 'info';
+interface Notice {
+  message: string;
+  severity: NoticeSeverity;
+}
+
+async function defangOrFang(value: string, op: string): Promise<string> {
   const response = await api.post('/api/defang/', { text: value, operation: op });
   return response.data?.results?.[0]?.processed ?? value;
 }
@@ -33,24 +40,29 @@ export function useCommandPalette() {
   const { t: tCommon } = useTranslation();
   const navigate = useNavigate();
   const { toggleColorMode } = useThemeManager();
-  const generalSettings = useAtomValue(generalSettingsState);
+  // generalSettingsState's atom() initial value is untyped ({}) in the still-JS atoms.js - narrowed
+  // here to the two fields this hook actually reads, once the real settings payload has loaded.
+  const generalSettings = useAtomValue(generalSettingsState) as {
+    auto_open_on_single_match?: boolean;
+    always_tiles?: boolean;
+  };
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [actionPanelIndex, setActionPanelIndex] = useState(null);
+  const [actionPanelIndex, setActionPanelIndex] = useState<number | null>(null);
   const [showShortcutSheet, setShowShortcutSheet] = useState(false);
-  const [view, setView] = useState('search'); // 'search' | 'playbook-manage'
-  const [notice, setNotice] = useState(null); // { message, severity }
+  const [view, setView] = useState<'search' | 'playbook-manage'>('search');
+  const [notice, setNotice] = useState<Notice | null>(null);
 
-  const [breadcrumbs, setBreadcrumbs] = useState([]);
-  const [pinnedIds, setPinnedIds] = useState(getPinnedToolIds);
+  const [breadcrumbs, setBreadcrumbs] = useState<Array<{ label: string; toolId: string; value: string | null }>>([]);
+  const [pinnedIds, setPinnedIds] = useState<string[]>(getPinnedToolIds);
   const [recents, setRecents] = useState(getRecents);
   const historyPointer = useRef(-1);
 
-  const registry = useMemo(() => buildCommandRegistry(tCommon), [tCommon]);
+  const registry: RegistryEntry[] = useMemo(() => buildCommandRegistry(tCommon), [tCommon]);
 
-  const showNotice = useCallback((message, severity = 'success') => {
+  const showNotice = useCallback((message: string, severity: NoticeSeverity = 'success') => {
     setNotice({ message, severity });
   }, []);
 
@@ -81,7 +93,7 @@ export function useCommandPalette() {
   // The non-recording-aware open path — everything but feeding an active recording session.
   // Handed to usePlaybooks as onOpenEntry (see its docstring); everywhere else uses the
   // recording-aware `openEntry` below.
-  const openEntryRaw = useCallback((entry, value) => {
+  const openEntryRaw = useCallback((entry: RegistryEntry, value: string | null) => {
     const iocType = value ? detectIocType(value) : undefined;
     const path = resolveEntryPath(entry, iocType);
     navigate(value ? buildPrefillUrl(path, value) : path);
@@ -99,7 +111,7 @@ export function useCommandPalette() {
     showNotice,
   });
 
-  const openEntry = useCallback((entry, value) => {
+  const openEntry = useCallback((entry: RegistryEntry, value: string | null) => {
     openEntryRaw(entry, value);
     if (playbookApi.isRecording) playbookApi.recordStep(entry.id);
     // Deps list the specific fields used, not `playbookApi` itself — usePlaybooks returns a new
@@ -113,19 +125,19 @@ export function useCommandPalette() {
     [query, registry, playbookApi.playbooks, playbookApi.isRecording],
   );
 
-  const results = useMemo(() => getSelectableResults(parsed), [parsed]);
+  const results: SelectableResult[] = useMemo(() => getSelectableResults(parsed), [parsed]);
 
   // The actually-displayed list: for an empty query this is the pinned/recent/registry merge,
   // not `results` (which `getSelectableResults` leaves empty for `kind: 'empty'`). Computed here
   // rather than in CommandPalette.jsx so `runSelected`/`handlePaletteKeyDown` below resolve
   // against the same rows the user sees - selecting a pinned/recent row used to silently no-op
   // in the list view (only the tile-grid view opened it, via its own direct `openEntry` call).
-  const visibleResults = useMemo(
+  const visibleResults: SelectableResult[] = useMemo(
     () => (parsed.kind === 'empty' ? mergeEmptyStateResults({ pinnedIds, recents, registry }) : results),
     [parsed.kind, pinnedIds, recents, registry, results],
   );
 
-  const runInstantAnswer = useCallback(async (op, value) => {
+  const runInstantAnswer = useCallback(async (op: string, value: string) => {
     try {
       const processed = await defangOrFang(value, op);
       const copied = await copyToClipboard(processed);
@@ -137,7 +149,7 @@ export function useCommandPalette() {
     close();
   }, [query, showNotice, t, close]);
 
-  const runAction = useCallback((parsedAction) => {
+  const runAction = useCallback((parsedAction: ActionParsed) => {
     switch (parsedAction.action) {
       case 'settings':
         navigate('/settings');
@@ -184,12 +196,12 @@ export function useCommandPalette() {
     onOpenEntry: openEntry,
   }), [runInstantAnswer, runAction, openEntry]);
 
-  const runSelected = useCallback((explicitIndex) => {
+  const runSelected = useCallback((explicitIndex?: number) => {
     const index = explicitIndex ?? selectedIndex;
     dispatch(resolveSelection(parsed, visibleResults, index));
   }, [dispatch, parsed, visibleResults, selectedIndex]);
 
-  const cycleQueryHistory = useCallback((direction) => {
+  const cycleQueryHistory = useCallback((direction: number) => {
     const history = getQueryHistory();
     if (history.length === 0) return;
     const next = Math.min(Math.max(historyPointer.current + direction, -1), history.length - 1);
@@ -197,12 +209,12 @@ export function useCommandPalette() {
     setQuery(next === -1 ? '' : history[next]);
   }, []);
 
-  const togglePin = useCallback((toolId) => {
+  const togglePin = useCallback((toolId: string) => {
     setPinnedIds(togglePinnedToolId(toolId));
   }, []);
 
-  const copyFocusedValue = useCallback(async (defanged) => {
-    const value = VALUE_KINDS.includes(parsed.kind) ? parsed.value : null;
+  const copyFocusedValue = useCallback(async (defanged: boolean) => {
+    const value = VALUE_KINDS.includes(parsed.kind) ? (parsed as { value: string }).value : null;
     if (!value) return;
     const text = defanged ? await defangOrFang(value, 'defang') : value;
     const copied = await copyToClipboard(text);
@@ -210,18 +222,18 @@ export function useCommandPalette() {
   }, [parsed, showNotice, t]);
 
   const addFocusedValueToBulk = useCallback(() => {
-    const value = VALUE_KINDS.includes(parsed.kind) ? parsed.value : null;
+    const value = VALUE_KINDS.includes(parsed.kind) ? (parsed as { value: string }).value : null;
     if (!value) return;
     navigate(buildPrefillUrl('/ioc-tools/bulk', value));
     close();
   }, [parsed, navigate, close]);
 
-  const toggleActionPanel = useCallback((index) => {
+  const toggleActionPanel = useCallback((index: number) => {
     setActionPanelIndex((prev) => (prev === index ? null : index));
   }, []);
 
   // Palette-local keyboard grammar, active only while open.
-  const handlePaletteKeyDown = useCallback((event) => {
+  const handlePaletteKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       event.preventDefault();
       if (query) setQuery('');
@@ -261,7 +273,8 @@ export function useCommandPalette() {
     }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'p') {
       event.preventDefault();
-      const entry = visibleResults[selectedIndex]?.entry;
+      const row = visibleResults[selectedIndex];
+      const entry = row?.type === 'entry' ? row.entry : undefined;
       if (entry) togglePin(entry.id);
     }
   }, [
@@ -269,7 +282,7 @@ export function useCommandPalette() {
     toggleActionPanel, selectedIndex, copyFocusedValue, addFocusedValueToBulk, togglePin,
   ]);
 
-  const handleQueryChange = useCallback((value) => {
+  const handleQueryChange = useCallback((value: string) => {
     setQuery(value);
     setSelectedIndex(0);
     setActionPanelIndex(null);

@@ -31,7 +31,7 @@ import api from '../../services/baseApi';
 import ResultList from './CommandPalette/ResultList';
 import TileGrid from './CommandPalette/TileGrid';
 
-// Illustrative example queries — literal grammar tokens (see commandParser.js), not translated
+// Illustrative example queries — literal grammar tokens (see commandParser.ts), not translated
 // prose, same reasoning as BUILTIN_ACTIONS/type: aliases staying English in both locales.
 const EXAMPLE_CHIPS = [
   { label: 'reddit', query: 'reddit' },
@@ -82,7 +82,7 @@ export default function StartScreen() {
   const results = useMemo(() => getSelectableResults(parsed), [parsed]);
 
   // The actually-displayed list — same grammar as the modal palette (see
-  // core/hooks/useCommandPalette.js's identical computation), just fed from a local read of
+  // core/hooks/useCommandPalette.ts's identical computation), just fed from a local read of
   // pinned/recents instead of hook state, since this page has no palette-open lifecycle to key
   // that state off of.
   const visibleResults = useMemo(() => {
@@ -96,9 +96,9 @@ export default function StartScreen() {
   );
 
   // Host-specific effects — no close()/breadcrumb/recording here, unlike the modal palette's
-  // own openEntry/runInstantAnswer/runAction (core/hooks/useCommandPalette.js): this is a page,
+  // own openEntry/runInstantAnswer/runAction (core/hooks/useCommandPalette.ts): this is a page,
   // not something with an open/closed lifecycle. What each kind of parsed input *means* is
-  // shared grammar (commandParser.js); only what happens next differs per host.
+  // shared grammar (commandParser.ts); only what happens next differs per host.
   const openEntry = (entry, value) => {
     const iocType = value ? detectIocType(value) : undefined;
     const path = resolveEntryPath(entry, iocType);
@@ -107,7 +107,7 @@ export default function StartScreen() {
     if (query.trim()) addQueryToHistory(query);
   };
 
-  // Drag-and-drop counterpart to useCommandPalette.js's global ⌘V/Ctrl+V image paste — an image
+  // Drag-and-drop counterpart to useCommandPalette.ts's global ⌘V/Ctrl+V image paste — an image
   // gets the same Image Tools hand-off, any other file is hashed client-side (no file ever
   // leaves the browser for this) and pivoted through the same SHA-256 IOC route a pasted/typed
   // hash already takes, which lands on /ioc-tools/bulk and queries VirusTotal among other
@@ -178,7 +178,7 @@ export default function StartScreen() {
     setQuery('');
   };
 
-  // Not memoized, unlike useCommandPalette.js's version — openEntry/runInstantAnswer/runAction
+  // Not memoized, unlike useCommandPalette.ts's version — openEntry/runInstantAnswer/runAction
   // here are plain closures re-created every render (not useCallback), so memoizing this against
   // a narrower dep list would risk capturing a stale one.
   const dispatch = createGrammarDispatch({

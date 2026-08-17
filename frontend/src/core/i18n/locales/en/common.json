@@ -81,6 +81,14 @@
       "history": "History"
     },
 
+    "ruBusinessCheck": "RU Business Check",
+    "ruBusinessCheckTabs": {
+      "newSearch": "Новая проверка",
+      "history": "История",
+      "sources": "Источники",
+      "settings": "Настройки"
+    },
+
     "youtube": "YouTube"
   },
 
