@@ -1,6 +1,6 @@
 FROM ghcr.io/astral-sh/uv:0.12.2@sha256:069a51314a7bb6031777a9273205fe1b0b19e914ef418207d1338b268df641dd AS uv
 
-FROM python:3.14-slim@sha256:a7fb1e634c4a578f9e0bd6327f11a3cde11b7a9395f48e24360c0988bcc5c2bc AS builder
+FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4 AS builder
 WORKDIR /backend
 
 COPY --from=uv /uv /usr/local/bin/uv
@@ -31,7 +31,7 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
     uv pip install --upgrade -r /backend/requirements.txt --override /backend/lxml-override.txt
 
 
-FROM python:3.14-slim@sha256:a7fb1e634c4a578f9e0bd6327f11a3cde11b7a9395f48e24360c0988bcc5c2bc
+FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4
 WORKDIR /backend
 
 # Stamped from the release tag by CI (see .github/workflows/release.yml); falls
