@@ -2,18 +2,18 @@
 
 from app.core.dependencies import SessionDep
 from app.core.settings.general.schemas.general_settings_schemas import (
+    CommandPaletteSettingsUpdate,
+    DarkmodeUpdate,
     GeneralSettingsResponse,
     GeneralSettingsUpdate,
-    DarkmodeUpdate,
     LanguageUpdate,
-    CommandPaletteSettingsUpdate
 )
 from app.core.settings.general.service.general_settings_service import (
     get_general_settings,
-    update_general_settings,
+    update_command_palette_settings,
     update_darkmode_setting,
+    update_general_settings,
     update_language_setting,
-    update_command_palette_settings
 )
 from app.core.settings.settings_router_factory import build_singleton_settings_router
 
@@ -31,11 +31,10 @@ router = build_singleton_settings_router(
     "/darkmode",
     response_model=GeneralSettingsResponse,
     summary="Update darkmode setting",
-    description="Update only the darkmode preference setting"
+    description="Update only the darkmode preference setting",
 )
 async def update_darkmode_endpoint(
-    darkmode_update: DarkmodeUpdate,
-    db: SessionDep
+    darkmode_update: DarkmodeUpdate, db: SessionDep
 ) -> GeneralSettingsResponse:
     return await update_darkmode_setting(db, darkmode_update)
 
@@ -44,11 +43,10 @@ async def update_darkmode_endpoint(
     "/language",
     response_model=GeneralSettingsResponse,
     summary="Update language setting",
-    description="Update only the UI language preference setting"
+    description="Update only the UI language preference setting",
 )
 async def update_language_endpoint(
-    language_update: LanguageUpdate,
-    db: SessionDep
+    language_update: LanguageUpdate, db: SessionDep
 ) -> GeneralSettingsResponse:
     return await update_language_setting(db, language_update)
 
@@ -57,10 +55,11 @@ async def update_language_endpoint(
     "/command-palette",
     response_model=GeneralSettingsResponse,
     summary="Update command palette settings",
-    description="Update the command palette's own settings group (auto-open, start screen, always-tiles)"
+    description=(
+        "Update the command palette's own settings group (auto-open, start screen, always-tiles)"
+    ),
 )
 async def update_command_palette_endpoint(
-    command_palette_update: CommandPaletteSettingsUpdate,
-    db: SessionDep
+    command_palette_update: CommandPaletteSettingsUpdate, db: SessionDep
 ) -> GeneralSettingsResponse:
     return await update_command_palette_settings(db, command_palette_update)

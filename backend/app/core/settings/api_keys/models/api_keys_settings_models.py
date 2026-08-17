@@ -4,7 +4,7 @@ from sqlalchemy.types import TypeDecorator
 
 from app.core.database import Base
 from app.core.models.mixins import TimestampMixin
-from app.core.security.secrets_crypto import encrypt_value, decrypt_value
+from app.core.security.secrets_crypto import decrypt_value, encrypt_value
 
 
 class EncryptedString(TypeDecorator):
@@ -30,23 +30,19 @@ class Apikey(Base, TimestampMixin):
     __tablename__ = "apikeys"
 
     name: Mapped[str] = mapped_column(
-        String(100), primary_key=True,
-        comment="Unique name of the API key provider"
+        String(100), primary_key=True, comment="Unique name of the API key provider"
     )
     key: Mapped[str] = mapped_column(
-        EncryptedString, default="",
-        comment="The API key value (encrypted at rest)"
+        EncryptedString, default="", comment="The API key value (encrypted at rest)"
     )
     is_active: Mapped[bool] = mapped_column(
-        default=False,
-        comment="Whether the key is active for use"
+        default=False, comment="Whether the key is active for use"
     )
     bulk_ioc_lookup: Mapped[bool] = mapped_column(
-        default=False,
-        comment="Whether bulk lookup is enabled"
+        default=False, comment="Whether bulk lookup is enabled"
     )
 
-    @validates('name')
+    @validates("name")
     def validate_name(self, key: str, name: str) -> str:
         if not name or not name.strip():
             raise ValueError("API key name cannot be empty")
@@ -55,7 +51,7 @@ class Apikey(Base, TimestampMixin):
             raise ValueError("API key name cannot exceed 100 characters")
         return normalized_name
 
-    @validates('key')
+    @validates("key")
     def validate_key(self, key: str, api_key: str) -> str:
         if api_key is None:
             return ""

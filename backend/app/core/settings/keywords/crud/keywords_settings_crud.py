@@ -63,15 +63,12 @@ async def keyword_exists(db: AsyncSession, keyword_value: str) -> bool:
     return result.scalar_one_or_none() is not None
 
 
-async def search_keywords(db: AsyncSession, search_term: str, skip: int = 0, limit: int = 100) -> list[Keyword]:
+async def search_keywords(
+    db: AsyncSession, search_term: str, skip: int = 0, limit: int = 100
+) -> list[Keyword]:
     """Search keywords by partial match"""
     search_pattern = f"%{search_term.lower()}%"
-    stmt = (
-        select(Keyword)
-        .where(Keyword.keyword.like(search_pattern))
-        .offset(skip)
-        .limit(limit)
-    )
+    stmt = select(Keyword).where(Keyword.keyword.like(search_pattern)).offset(skip).limit(limit)
     result = await db.execute(stmt)
     return list(result.scalars().all())
 

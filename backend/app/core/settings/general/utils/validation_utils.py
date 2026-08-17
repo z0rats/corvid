@@ -6,7 +6,7 @@ Pure functions for validating general settings data.
 
 from app.core.settings.general.config.default_settings import (
     get_supported_languages,
-    get_supported_start_screens
+    get_supported_start_screens,
 )
 
 

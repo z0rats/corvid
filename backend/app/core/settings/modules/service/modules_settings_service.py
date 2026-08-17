@@ -5,27 +5,24 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ApplicationError
-from app.core.settings.modules.schemas.modules_settings_schemas import (
-    ModuleSettingsResponse,
-    ModuleSettingsCreate,
-    ModuleSettingsUpdate,
-    ModuleStatusUpdate
-)
 from app.core.settings.modules.crud.modules_settings_crud import (
+    create_module_setting,
+    delete_module_setting,
     get_all_module_settings,
     get_module_setting_by_name,
-    create_module_setting,
+    module_setting_exists,
     update_module_setting_status,
-    delete_module_setting,
-    module_setting_exists
+)
+from app.core.settings.modules.schemas.modules_settings_schemas import (
+    ModuleSettingsCreate,
+    ModuleSettingsResponse,
+    ModuleSettingsUpdate,
+    ModuleStatusUpdate,
 )
 from app.core.settings.modules.utils.validation_utils import (
-    validate_module_name,
     normalize_module_name,
     validate_enabled_status,
-    is_supported_module
 )
-from app.core.settings.modules.config.default_settings import get_default_enabled_status
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +47,7 @@ async def get_module_setting(db: AsyncSession, module_name: str) -> ModuleSettin
 
 
 async def create_new_module_setting(
-    db: AsyncSession,
-    module_data: ModuleSettingsCreate
+    db: AsyncSession, module_data: ModuleSettingsCreate
 ) -> ModuleSettingsResponse:
     """Create new module setting"""
     normalized_name = normalize_module_name(module_data.name)
@@ -73,9 +69,7 @@ async def create_new_module_setting(
 
 
 async def update_module_setting(
-    db: AsyncSession,
-    module_name: str,
-    update_data: ModuleSettingsUpdate
+    db: AsyncSession, module_name: str, update_data: ModuleSettingsUpdate
 ) -> ModuleSettingsResponse:
     """Update existing module setting"""
     normalized_name = normalize_module_name(module_name)
@@ -99,9 +93,7 @@ async def update_module_setting(
 
 
 async def update_module_status(
-    db: AsyncSession,
-    module_name: str,
-    status_data: ModuleStatusUpdate
+    db: AsyncSession, module_name: str, status_data: ModuleStatusUpdate
 ) -> ModuleSettingsResponse:
     """Update only module enabled status"""
     normalized_name = normalize_module_name(module_name)

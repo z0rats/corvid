@@ -5,11 +5,11 @@ from fastapi import APIRouter, Path, status
 from app.core.dependencies import ReadSessionDep, SessionDep
 from app.core.exceptions import AppHTTPException
 from app.core.settings.api_keys.schemas.api_keys_settings_schemas import (
-    ApikeySchema,
-    ApikeyCreateRequest,
-    ApikeyUpdateRequest,
-    ApikeyStateResponse,
     ApikeyBulkLookupStateResponse,
+    ApikeyCreateRequest,
+    ApikeySchema,
+    ApikeyStateResponse,
+    ApikeyUpdateRequest,
     DeleteApikeyResponse,
     UpdateActiveStatusRequest,
     UpdateBulkLookupStatusRequest,
@@ -18,20 +18,19 @@ from app.core.settings.api_keys.service.api_keys_service import (
     create_apikey_service,
     delete_apikey_service,
     get_all_apikeys_active_status,
-    get_apikey_active_status,
-    update_apikey_active_status,
     get_all_apikeys_bulk_lookup_status,
-    get_apikey_bulk_lookup_status,
-    update_apikey_bulk_lookup_status,
-    upsert_apikey_bulk_lookup_status,
-    update_apikey_service,
     get_all_apikeys_configured_status,
+    get_apikey_active_status,
+    get_apikey_bulk_lookup_status,
+    update_apikey_active_status,
+    update_apikey_bulk_lookup_status,
+    update_apikey_service,
+    upsert_apikey_bulk_lookup_status,
 )
 from app.core.settings.api_keys.service.keyless_providers import (
     get_keyless_provider_names,
     is_keyless_provider,
 )
-
 
 router = APIRouter(prefix="/api/apikeys", tags=["Settings"])
 
@@ -39,6 +38,7 @@ ApiKeyName = Annotated[str, Path(min_length=1, max_length=100, description="API 
 
 
 # --- Collection routes (no path parameters) ---
+
 
 @router.post(
     "",
@@ -73,7 +73,9 @@ async def get_all_apikeys_is_active(db: ReadSessionDep) -> dict[str, bool]:
     "/bulk_ioc_lookup",
     response_model=dict[str, bool],
     summary="Get all API keys bulk lookup status",
-    description="Get the bulk lookup enabled/disabled status for all API keys, including keyless services",
+    description=(
+        "Get the bulk lookup enabled/disabled status for all API keys, including keyless services"
+    ),
 )
 async def get_all_apikeys_bulk_lookup(db: ReadSessionDep) -> dict[str, bool]:
     result = await get_all_apikeys_bulk_lookup_status(db)
@@ -93,6 +95,7 @@ async def get_all_apikeys_configured(db: ReadSessionDep) -> dict[str, bool]:
 
 
 # --- Item routes (with {name} path parameter) ---
+
 
 @router.get(
     "/{name}/is_active",
@@ -119,7 +122,9 @@ async def get_apikey_is_active(name: ApiKeyName, db: ReadSessionDep) -> ApikeySt
     description="Update the active/inactive status for a specific API key",
     responses={404: {"description": "API key not found"}},
 )
-async def update_apikey_is_active(name: ApiKeyName, data: UpdateActiveStatusRequest, db: SessionDep) -> ApikeySchema:
+async def update_apikey_is_active(
+    name: ApiKeyName, data: UpdateActiveStatusRequest, db: SessionDep
+) -> ApikeySchema:
     result = await update_apikey_active_status(db, name, data.is_active)
     if result is None:
         raise AppHTTPException(
@@ -137,7 +142,9 @@ async def update_apikey_is_active(name: ApiKeyName, data: UpdateActiveStatusRequ
     description="Get the bulk lookup status for a specific API key",
     responses={404: {"description": "API key not found"}},
 )
-async def get_apikey_bulk_lookup(name: ApiKeyName, db: ReadSessionDep) -> ApikeyBulkLookupStateResponse:
+async def get_apikey_bulk_lookup(
+    name: ApiKeyName, db: ReadSessionDep
+) -> ApikeyBulkLookupStateResponse:
     bulk_ioc_lookup = await get_apikey_bulk_lookup_status(db, name)
     if bulk_ioc_lookup is None:
         raise AppHTTPException(
@@ -152,9 +159,14 @@ async def get_apikey_bulk_lookup(name: ApiKeyName, db: ReadSessionDep) -> Apikey
     "/{name}/bulk_ioc_lookup",
     response_model=ApikeySchema,
     summary="Update API key bulk lookup status",
-    description="Update the bulk lookup enabled/disabled status for a specific API key. Creates a record for keyless services if none exists.",
+    description=(
+        "Update the bulk lookup enabled/disabled status for a specific API key. "
+        "Creates a record for keyless services if none exists."
+    ),
 )
-async def update_apikey_bulk_lookup(name: ApiKeyName, data: UpdateBulkLookupStatusRequest, db: SessionDep) -> ApikeySchema:
+async def update_apikey_bulk_lookup(
+    name: ApiKeyName, data: UpdateBulkLookupStatusRequest, db: SessionDep
+) -> ApikeySchema:
     result = await update_apikey_bulk_lookup_status(db, name, data.bulk_ioc_lookup)
     if result is not None:
         return result
@@ -171,10 +183,14 @@ async def update_apikey_bulk_lookup(name: ApiKeyName, data: UpdateBulkLookupStat
     "/{name}",
     response_model=ApikeySchema,
     summary="Update API key",
-    description="Partially update an existing API key's value, active status, and bulk lookup setting",
+    description=(
+        "Partially update an existing API key's value, active status, and bulk lookup setting"
+    ),
     responses={404: {"description": "API key not found"}},
 )
-async def update_apikey(name: ApiKeyName, apikey: ApikeyUpdateRequest, db: SessionDep) -> ApikeySchema:
+async def update_apikey(
+    name: ApiKeyName, apikey: ApikeyUpdateRequest, db: SessionDep
+) -> ApikeySchema:
     result = await update_apikey_service(db, name, apikey)
     if result is None:
         raise AppHTTPException(

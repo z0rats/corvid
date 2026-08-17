@@ -1,7 +1,8 @@
-from typing import Any, Awaitable, Callable, Literal, NoReturn, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Any, Literal, NoReturn, TypeVar
 
-from pydantic import BaseModel
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from app.core.dependencies import ReadSessionDep, SessionDep
 
@@ -9,7 +10,7 @@ ResponseT = TypeVar("ResponseT", bound=BaseModel)
 UpdateT = TypeVar("UpdateT", bound=BaseModel)
 
 
-def build_singleton_settings_router(
+def build_singleton_settings_router[ResponseT: BaseModel, UpdateT: BaseModel](
     *,
     prefix: str,
     tags: list[str],

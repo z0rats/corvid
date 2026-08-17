@@ -5,28 +5,30 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ApplicationError
-from app.core.settings.keywords.schemas.keywords_settings_schemas import (
-    KeywordResponse,
-    KeywordCreate,
-    KeywordUpdate
-)
 from app.core.settings.keywords.crud.keywords_settings_crud import (
-    get_keywords_list,
+    create_keyword_record,
+    delete_keyword_record,
     get_keyword_by_id,
     get_keyword_by_value,
-    create_keyword_record,
+    get_keywords_list,
     update_keyword_record,
-    delete_keyword_record
+)
+from app.core.settings.keywords.schemas.keywords_settings_schemas import (
+    KeywordCreate,
+    KeywordResponse,
+    KeywordUpdate,
 )
 from app.core.settings.keywords.utils.validation_utils import (
+    normalize_keyword,
     validate_keyword_format,
-    normalize_keyword
 )
 
 logger = logging.getLogger(__name__)
 
 
-async def get_all_keywords(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[KeywordResponse]:
+async def get_all_keywords(
+    db: AsyncSession, skip: int = 0, limit: int = 100
+) -> list[KeywordResponse]:
     """Retrieve all keywords with pagination"""
     keywords = await get_keywords_list(db, skip=skip, limit=limit)
     return [KeywordResponse.model_validate(keyword) for keyword in keywords]
@@ -62,9 +64,7 @@ async def create_keyword_service(db: AsyncSession, keyword_data: KeywordCreate) 
 
 
 async def update_keyword_service(
-    db: AsyncSession,
-    keyword_id: int,
-    keyword_data: KeywordUpdate
+    db: AsyncSession, keyword_id: int, keyword_data: KeywordUpdate
 ) -> KeywordResponse:
     """Update an existing keyword"""
     existing_keyword = await get_keyword_by_id(db, keyword_id)

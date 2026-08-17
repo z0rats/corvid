@@ -2,8 +2,9 @@
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.settings.modules.models.modules_settings_models import ModuleSettings
+
 from app.core.settings.modules.config.default_settings import get_default_enabled_status
+from app.core.settings.modules.models.modules_settings_models import ModuleSettings
 
 
 async def get_all_module_settings(db: AsyncSession) -> list[ModuleSettings]:
@@ -30,7 +31,9 @@ def create_module_setting(db: AsyncSession, name: str, enabled: bool = None) -> 
     return setting
 
 
-def update_module_setting_status(db: AsyncSession, setting: ModuleSettings, enabled: bool) -> ModuleSettings:
+def update_module_setting_status(
+    db: AsyncSession, setting: ModuleSettings, enabled: bool
+) -> ModuleSettings:
     """Update module setting enabled status"""
     setting.enabled = enabled
     return setting

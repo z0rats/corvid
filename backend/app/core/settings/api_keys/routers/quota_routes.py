@@ -17,8 +17,9 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     tags=["Service Configuration"],
     summary="Check remaining API quota for configured providers",
-    description="Live quota/usage check against VirusTotal, Shodan, and Hunter.io using their configured API keys. "
-                 "Other providers don't expose a comparable quota endpoint and are omitted.",
+    description="Live quota/usage check against VirusTotal, Shodan, and Hunter.io using their "
+    "configured API keys. Other providers don't expose a comparable quota endpoint and are "
+    "omitted.",
 )
 @limiter.limit("10/minute")
 async def get_quota_status_endpoint(request: Request, db: ReadSessionDep) -> list[QuotaStatus]:

@@ -2,13 +2,13 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings.ai_settings.schemas.ai_settings_schemas import (
-    AISettingsResponse,
-    AISettingsUpdate,
-)
 from app.core.settings.ai_settings.crud.ai_settings_crud import (
     get_ai_settings,
     update_ai_settings,
+)
+from app.core.settings.ai_settings.schemas.ai_settings_schemas import (
+    AISettingsResponse,
+    AISettingsUpdate,
 )
 
 logger = logging.getLogger(__name__)

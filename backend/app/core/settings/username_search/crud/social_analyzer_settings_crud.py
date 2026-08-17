@@ -1,8 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings.username_search.models.social_analyzer_settings_models import SocialAnalyzerConfig
-from app.core.settings.username_search.schemas.social_analyzer_settings_schemas import SocialAnalyzerConfigUpdateSchema
 from app.core.settings.singleton import get_or_create_singleton
+from app.core.settings.username_search.models.social_analyzer_settings_models import (
+    SocialAnalyzerConfig,
+)
+from app.core.settings.username_search.schemas.social_analyzer_settings_schemas import (
+    SocialAnalyzerConfigUpdateSchema,
+)
 
 
 async def get_social_analyzer_config(db: AsyncSession) -> SocialAnalyzerConfig:

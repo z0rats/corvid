@@ -4,27 +4,27 @@ API routes for keywords settings
 Contains FastAPI route definitions for keyword management endpoints.
 """
 
-from fastapi import APIRouter, HTTPException, Query
 import logging
 
+from fastapi import APIRouter, Query
+
 from app.core.dependencies import ReadSessionDep, SessionDep
-from app.core.settings.keywords.schemas.keywords_settings_schemas import (
-    KeywordResponse,
-    KeywordCreate,
-    KeywordUpdate,
-    KeywordListResponse,
-    KeywordDeleteResponse,
-)
-from app.core.settings.keywords.service.keywords_settings_service import (
-    get_all_keywords,
-    get_keyword_by_id_service,
-    create_keyword_service,
-    update_keyword_service,
-    delete_keyword_service
-)
 from app.core.settings.keywords.config.default_settings import (
     get_default_pagination_limit,
-    validate_pagination_limit
+    validate_pagination_limit,
+)
+from app.core.settings.keywords.schemas.keywords_settings_schemas import (
+    KeywordCreate,
+    KeywordDeleteResponse,
+    KeywordResponse,
+    KeywordUpdate,
+)
+from app.core.settings.keywords.service.keywords_settings_service import (
+    create_keyword_service,
+    delete_keyword_service,
+    get_all_keywords,
+    get_keyword_by_id_service,
+    update_keyword_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,10 +57,7 @@ async def get_keywords_endpoint(
     response_model_exclude_none=True,
     responses={404: {"description": "Keyword not found"}},
 )
-async def get_keyword_endpoint(
-    keyword_id: int,
-    db: ReadSessionDep
-) -> KeywordResponse:
+async def get_keyword_endpoint(keyword_id: int, db: ReadSessionDep) -> KeywordResponse:
     """
     Retrieve a specific keyword by ID
 
@@ -76,10 +73,7 @@ async def get_keyword_endpoint(
     status_code=201,
     responses={400: {"description": "Invalid keyword format or duplicate keyword"}},
 )
-async def create_keyword_endpoint(
-    keyword_data: KeywordCreate,
-    db: SessionDep
-) -> KeywordResponse:
+async def create_keyword_endpoint(keyword_data: KeywordCreate, db: SessionDep) -> KeywordResponse:
     """
     Create a new keyword
 
@@ -98,9 +92,7 @@ async def create_keyword_endpoint(
     },
 )
 async def update_keyword_endpoint(
-    keyword_id: int,
-    keyword_data: KeywordUpdate,
-    db: SessionDep
+    keyword_id: int, keyword_data: KeywordUpdate, db: SessionDep
 ) -> KeywordResponse:
     """
     Update an existing keyword
@@ -116,8 +108,5 @@ async def update_keyword_endpoint(
     response_model=KeywordDeleteResponse,
     responses={404: {"description": "Keyword not found"}},
 )
-async def delete_keyword_endpoint(
-    keyword_id: int,
-    db: SessionDep
-) -> KeywordDeleteResponse:
+async def delete_keyword_endpoint(keyword_id: int, db: SessionDep) -> KeywordDeleteResponse:
     return await delete_keyword_service(db, keyword_id)

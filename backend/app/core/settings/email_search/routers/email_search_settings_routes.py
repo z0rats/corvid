@@ -2,6 +2,8 @@
 
 from app.core.settings.email_search.crud.email_search_settings_crud import (
     get_email_search_config as crud_get_config,
+)
+from app.core.settings.email_search.crud.email_search_settings_crud import (
     update_email_search_config as crud_update_config,
 )
 from app.core.settings.email_search.schemas.email_search_settings_schemas import (

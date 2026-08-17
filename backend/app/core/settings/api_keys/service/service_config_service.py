@@ -7,18 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppHTTPException
 from app.core.settings.api_keys.config.service_config import (
-    ServiceDefinition,
     ServiceCategory,
+    ServiceDefinition,
     ServiceTier,
-    get_service_definition,
     get_all_service_definitions,
+    get_service_definition,
     get_services_by_category,
     get_services_by_tier,
     get_services_for_ioc_type,
-    get_required_keys_for_service
 )
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikeys
-from app.core.settings.api_keys.config.create_defaults import get_service_status_summary
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ async def get_services_configuration(
     db: AsyncSession,
     category: ServiceCategory | None = None,
     tier: ServiceTier | None = None,
-    ioc_type: str | None = None
+    ioc_type: str | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Get service configuration data with optional filters."""
     try:
@@ -59,14 +57,14 @@ async def get_services_configuration(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve service configuration",
             error_code="SERVICE_CONFIG_DB_ERROR",
-        )
+        ) from e
     except Exception as e:
         logger.error("Unexpected error retrieving service configuration: %s", e)
         raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
             error_code="SERVICE_CONFIG_ERROR",
-        )
+        ) from e
 
 
 async def get_single_service_configuration(db: AsyncSession, service_key: str) -> dict[str, Any]:
@@ -99,14 +97,14 @@ async def get_single_service_configuration(db: AsyncSession, service_key: str) -
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve service configuration",
             error_code="SERVICE_CONFIG_DB_ERROR",
-        )
+        ) from e
     except Exception as e:
         logger.error("Unexpected error retrieving service configuration for %s: %s", service_key, e)
         raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
             error_code="SERVICE_CONFIG_ERROR",
-        )
+        ) from e
 
 
 def get_service_categories() -> list[str]:
@@ -121,7 +119,7 @@ def get_service_categories() -> list[str]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve service categories",
             error_code="SERVICE_CATEGORIES_ERROR",
-        )
+        ) from e
 
 
 def get_service_tiers() -> list[str]:
@@ -136,7 +134,7 @@ def get_service_tiers() -> list[str]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve service tiers",
             error_code="SERVICE_TIERS_ERROR",
-        )
+        ) from e
 
 
 def get_supported_ioc_types() -> list[str]:
@@ -154,10 +152,12 @@ def get_supported_ioc_types() -> list[str]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve supported IOC types",
             error_code="IOC_TYPES_ERROR",
-        )
+        ) from e
 
 
-async def get_services_for_ioc_type_service(db: AsyncSession, ioc_type: str) -> dict[str, dict[str, Any]]:
+async def get_services_for_ioc_type_service(
+    db: AsyncSession, ioc_type: str
+) -> dict[str, dict[str, Any]]:
     """Get all services that support a specific IOC type."""
     try:
         services = get_services_for_ioc_type(ioc_type)
@@ -184,28 +184,32 @@ async def get_services_for_ioc_type_service(db: AsyncSession, ioc_type: str) -> 
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve services for IOC type",
             error_code="SERVICE_CONFIG_DB_ERROR",
-        )
+        ) from e
     except Exception as e:
         logger.error("Unexpected error retrieving services for IOC type %s: %s", ioc_type, e)
         raise AppHTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
             error_code="SERVICE_CONFIG_ERROR",
-        )
+        ) from e
 
 
-def _build_api_key_status(service: ServiceDefinition, api_key_states: dict[str, bool]) -> dict[str, dict[str, bool]]:
+def _build_api_key_status(
+    service: ServiceDefinition, api_key_states: dict[str, bool]
+) -> dict[str, dict[str, bool]]:
     """Build API key status information for a service."""
     return {
         required_key: {
             "configured": required_key in api_key_states,
-            "active": api_key_states.get(required_key, False)
+            "active": api_key_states.get(required_key, False),
         }
         for required_key in service.required_keys
     }
 
 
-def _calculate_service_availability(service: ServiceDefinition, api_key_states: dict[str, bool]) -> bool:
+def _calculate_service_availability(
+    service: ServiceDefinition, api_key_states: dict[str, bool]
+) -> bool:
     """Calculate overall service availability based on required keys."""
     if not service.required_keys:
         return True

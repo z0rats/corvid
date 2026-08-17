@@ -122,12 +122,14 @@ def _create_api_key_entry(
     bulk_ioc_lookup: bool,
 ) -> None:
     """Add a new API key entry to the session."""
-    db.add(Apikey(
-        name=name,
-        key=key,
-        is_active=is_active,
-        bulk_ioc_lookup=bulk_ioc_lookup,
-    ))
+    db.add(
+        Apikey(
+            name=name,
+            key=key,
+            is_active=is_active,
+            bulk_ioc_lookup=bulk_ioc_lookup,
+        )
+    )
 
 
 def _build_key_status_map(existing_keys: list[Apikey]) -> dict[str, dict[str, bool]]:
@@ -152,7 +154,9 @@ def _initialize_summary(services: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _calculate_service_status(service_config: Any, key_status: dict[str, dict[str, bool]]) -> dict[str, Any]:
+def _calculate_service_status(
+    service_config: Any, key_status: dict[str, dict[str, bool]]
+) -> dict[str, Any]:
     """Calculate status for a single service."""
     service_status = {
         "name": service_config.name,

@@ -20,7 +20,7 @@ def get_default_cti_profile_settings() -> dict[str, Any]:
         "auto_enrichment": False,
         "notification_preferences": get_default_notification_preferences(),
         "analysis_settings": get_default_analysis_settings(),
-        "retention_settings": get_default_retention_settings()
+        "retention_settings": get_default_retention_settings(),
     }
 
 
@@ -28,12 +28,7 @@ def get_default_threat_sources() -> list[str]:
     """
     Get default threat intelligence sources
     """
-    return [
-        "mitre_attack",
-        "cve_database",
-        "threat_feeds",
-        "osint_sources"
-    ]
+    return ["mitre_attack", "cve_database", "threat_feeds", "osint_sources"]
 
 
 def get_default_indicators() -> list[str]:
@@ -46,7 +41,7 @@ def get_default_indicators() -> list[str]:
         "file_hashes",
         "email_addresses",
         "urls",
-        "registry_keys"
+        "registry_keys",
     ]
 
 
@@ -55,21 +50,9 @@ def get_default_notification_preferences() -> dict[str, Any]:
     Get default notification preferences
     """
     return {
-        "email": {
-            "enabled": False,
-            "recipients": [],
-            "severity_filter": "high"
-        },
-        "webhook": {
-            "enabled": False,
-            "url": "",
-            "headers": {},
-            "severity_filter": "medium"
-        },
-        "dashboard": {
-            "enabled": True,
-            "real_time_updates": True
-        }
+        "email": {"enabled": False, "recipients": [], "severity_filter": "high"},
+        "webhook": {"enabled": False, "url": "", "headers": {}, "severity_filter": "medium"},
+        "dashboard": {"enabled": True, "real_time_updates": True},
     }
 
 
@@ -81,14 +64,8 @@ def get_default_analysis_settings() -> dict[str, Any]:
         "correlation_enabled": True,
         "false_positive_reduction": True,
         "confidence_threshold": 0.7,
-        "temporal_analysis": {
-            "enabled": True,
-            "time_window_hours": 24
-        },
-        "geolocation_analysis": {
-            "enabled": True,
-            "suspicious_countries": []
-        }
+        "temporal_analysis": {"enabled": True, "time_window_hours": 24},
+        "geolocation_analysis": {"enabled": True, "suspicious_countries": []},
     }
 
 
@@ -100,7 +77,7 @@ def get_default_retention_settings() -> dict[str, Any]:
         "raw_data_retention_days": 90,
         "processed_data_retention_days": 365,
         "archive_old_data": True,
-        "cleanup_frequency": "weekly"
+        "cleanup_frequency": "weekly",
     }
 
 
@@ -125,5 +102,5 @@ def get_supported_ioc_types() -> list[str]:
         "file_paths",
         "mutex_names",
         "user_agents",
-        "certificates"
+        "certificates",
     ]

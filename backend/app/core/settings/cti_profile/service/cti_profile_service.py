@@ -4,20 +4,23 @@ CTI Profile Settings Service
 Handles business logic for CTI (Cyber Threat Intelligence) profile settings management.
 """
 
+import logging
 from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.settings.cti_profile.crud.cti_profile_crud import (
-    update_cti_settings
-)
-from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings
-from app.core.settings.cti_profile.schemas.cti_profile_schemas import CTISettingsResponse, CTISettingsUpdate
+
 from app.core.settings.cti_profile.config.default_settings import (
     get_default_cti_profile_settings,
     get_severity_levels,
-    get_supported_ioc_types
+    get_supported_ioc_types,
+)
+from app.core.settings.cti_profile.crud.cti_profile_crud import update_cti_settings
+from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings
+from app.core.settings.cti_profile.schemas.cti_profile_schemas import (
+    CTISettingsResponse,
+    CTISettingsUpdate,
 )
 from app.core.settings.singleton import get_or_create_singleton
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +31,11 @@ async def get_cti_profile_settings(db: AsyncSession) -> CTISettingsResponse:
         db, CTIProfileSettings, {"settings_data": get_default_cti_profile_settings()}
     )
 
-    return CTISettingsResponse(
-        id=settings.id,
-        settings=settings.settings_data
-    )
+    return CTISettingsResponse(id=settings.id, settings=settings.settings_data)
 
 
 async def update_cti_profile_settings(
-    db: AsyncSession,
-    settings_update: CTISettingsUpdate
+    db: AsyncSession, settings_update: CTISettingsUpdate
 ) -> CTISettingsResponse:
     """Update CTI profile settings with validation"""
     validated_settings = _validate_cti_settings(settings_update.settings)
@@ -47,10 +46,7 @@ async def update_cti_profile_settings(
 
     logger.info("CTI settings updated successfully for ID: %s", settings.id)
 
-    return CTISettingsResponse(
-        id=settings.id,
-        settings=settings.settings_data
-    )
+    return CTISettingsResponse(id=settings.id, settings=settings.settings_data)
 
 
 def _validate_cti_settings(settings: dict[str, Any]) -> dict[str, Any]:
@@ -61,7 +57,10 @@ def _validate_cti_settings(settings: dict[str, Any]) -> dict[str, Any]:
         if field not in settings:
             raise ValueError(f"Missing required field: {field}")
 
-    if not isinstance(settings.get("profile_name"), str) or len(settings["profile_name"].strip()) == 0:
+    if (
+        not isinstance(settings.get("profile_name"), str)
+        or len(settings["profile_name"].strip()) == 0
+    ):
         raise ValueError("Profile name must be a non-empty string")
 
     if "severity_threshold" in settings:

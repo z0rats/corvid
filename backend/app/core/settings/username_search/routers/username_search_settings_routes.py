@@ -1,20 +1,26 @@
 """Username Search (Maigret) settings routes - timeout, concurrency, proxy"""
 
-from app.features.username_search.service.db_refresh_scheduler_service import configure_maigret_db_scheduler
+from app.core.settings.settings_router_factory import build_singleton_settings_router
 from app.core.settings.username_search.crud.username_search_settings_crud import (
     get_username_search_config as crud_get_config,
+)
+from app.core.settings.username_search.crud.username_search_settings_crud import (
     update_username_search_config as crud_update_config,
 )
 from app.core.settings.username_search.schemas.username_search_settings_schemas import (
     UsernameSearchConfigSchema,
     UsernameSearchConfigUpdateSchema,
 )
-from app.core.settings.settings_router_factory import build_singleton_settings_router
+from app.features.username_search.service.db_refresh_scheduler_service import (
+    configure_maigret_db_scheduler,
+)
 
 
 def _maybe_reconfigure_scheduler(payload: UsernameSearchConfigUpdateSchema, updated) -> None:
     if payload.auto_update_db_enabled is not None or payload.auto_update_interval_hours is not None:
-        configure_maigret_db_scheduler(updated.auto_update_db_enabled, updated.auto_update_interval_hours)
+        configure_maigret_db_scheduler(
+            updated.auto_update_db_enabled, updated.auto_update_interval_hours
+        )
 
 
 router = build_singleton_settings_router(

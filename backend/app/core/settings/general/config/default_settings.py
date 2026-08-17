@@ -6,7 +6,6 @@ Contains default values and configuration constants for general settings.
 
 from typing import Any
 
-
 # Default values for general settings
 DEFAULT_GENERAL_SETTINGS: dict[str, Any] = {
     "darkmode": False,

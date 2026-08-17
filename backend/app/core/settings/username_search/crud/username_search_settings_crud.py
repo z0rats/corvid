@@ -2,9 +2,13 @@ import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.settings.username_search.models.username_search_settings_models import UsernameSearchConfig
-from app.core.settings.username_search.schemas.username_search_settings_schemas import UsernameSearchConfigUpdateSchema
 from app.core.settings.singleton import get_or_create_singleton
+from app.core.settings.username_search.models.username_search_settings_models import (
+    UsernameSearchConfig,
+)
+from app.core.settings.username_search.schemas.username_search_settings_schemas import (
+    UsernameSearchConfigUpdateSchema,
+)
 
 
 async def get_username_search_config(db: AsyncSession) -> UsernameSearchConfig:
@@ -32,7 +36,7 @@ async def record_db_refresh(db: AsyncSession, site_count: int) -> UsernameSearch
     """
     config = await get_username_search_config(db)
     config.db_site_count = site_count
-    config.db_last_updated_at = datetime.datetime.now(datetime.timezone.utc)
+    config.db_last_updated_at = datetime.datetime.now(datetime.UTC)
     await db.flush()
     await db.refresh(config)
     return config

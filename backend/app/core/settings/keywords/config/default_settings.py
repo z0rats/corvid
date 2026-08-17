@@ -6,7 +6,6 @@ Contains default values and configuration constants for keyword management.
 
 from typing import Any
 
-
 # Default keywords for initial setup
 DEFAULT_KEYWORDS: list[str] = [
     "malware",
@@ -18,7 +17,7 @@ DEFAULT_KEYWORDS: list[str] = [
     "attack",
     "threat",
     "security",
-    "cybersecurity"
+    "cybersecurity",
 ]
 
 KEYWORD_CONFIG: dict[str, Any] = {
@@ -26,29 +25,23 @@ KEYWORD_CONFIG: dict[str, Any] = {
     "default_pagination_limit": 100,
     "max_pagination_limit": 500,
     "enable_auto_normalization": True,
-    "case_sensitive": False
+    "case_sensitive": False,
 }
 
 KEYWORD_CATEGORIES: dict[str, list[str]] = {
     "threats": ["malware", "phishing", "ransomware", "trojan", "virus"],
     "vulnerabilities": ["cve", "exploit", "vulnerability", "zero-day", "patch"],
     "incidents": ["breach", "attack", "compromise", "incident", "leak"],
-    "general": ["security", "cybersecurity", "infosec", "threat", "risk"]
+    "general": ["security", "cybersecurity", "infosec", "threat", "risk"],
 }
 
-KEYWORD_PRIORITIES: dict[str, int] = {
-    "critical": 1,
-    "high": 2,
-    "medium": 3,
-    "low": 4,
-    "info": 5
-}
+KEYWORD_PRIORITIES: dict[str, int] = {"critical": 1, "high": 2, "medium": 3, "low": 4, "info": 5}
 
 
 def get_default_keywords() -> list[str]:
     """
     Get list of default keywords for initial setup
-    
+
     Returns:
         List[str]: List of default keywords
     """
@@ -58,7 +51,7 @@ def get_default_keywords() -> list[str]:
 def get_max_keywords() -> int:
     """
     Get maximum number of keywords allowed
-    
+
     Returns:
         int: Maximum keyword count
     """
@@ -68,7 +61,7 @@ def get_max_keywords() -> int:
 def get_default_pagination_limit() -> int:
     """
     Get default pagination limit for keyword lists
-    
+
     Returns:
         int: Default pagination limit
     """
@@ -78,7 +71,7 @@ def get_default_pagination_limit() -> int:
 def get_max_pagination_limit() -> int:
     """
     Get maximum pagination limit for keyword lists
-    
+
     Returns:
         int: Maximum pagination limit
     """
@@ -88,7 +81,7 @@ def get_max_pagination_limit() -> int:
 def is_auto_normalization_enabled() -> bool:
     """
     Check if automatic keyword normalization is enabled
-    
+
     Returns:
         bool: True if auto-normalization is enabled
     """
@@ -98,7 +91,7 @@ def is_auto_normalization_enabled() -> bool:
 def is_case_sensitive() -> bool:
     """
     Check if keyword matching is case sensitive
-    
+
     Returns:
         bool: True if case sensitive matching is enabled
     """
@@ -108,7 +101,7 @@ def is_case_sensitive() -> bool:
 def get_keyword_categories() -> dict[str, list[str]]:
     """
     Get keyword categories mapping
-    
+
     Returns:
         Dict[str, List[str]]: Dictionary of categories and their keywords
     """
@@ -118,7 +111,7 @@ def get_keyword_categories() -> dict[str, list[str]]:
 def get_keyword_priorities() -> dict[str, int]:
     """
     Get keyword priority levels
-    
+
     Returns:
         Dict[str, int]: Dictionary of priority names and levels
     """
@@ -128,7 +121,7 @@ def get_keyword_priorities() -> dict[str, int]:
 def get_keyword_config() -> dict[str, Any]:
     """
     Get complete keyword configuration
-    
+
     Returns:
         Dict[str, Any]: Complete configuration dictionary
     """
@@ -138,17 +131,17 @@ def get_keyword_config() -> dict[str, Any]:
 def validate_pagination_limit(limit: int) -> int:
     """
     Validate and adjust pagination limit within allowed bounds
-    
+
     Args:
         limit: Requested pagination limit
-        
+
     Returns:
         int: Validated pagination limit
     """
     max_limit = get_max_pagination_limit()
     default_limit = get_default_pagination_limit()
-    
+
     if limit <= 0:
         return default_limit
-    
+
     return min(limit, max_limit)

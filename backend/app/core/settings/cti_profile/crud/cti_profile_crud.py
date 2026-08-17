@@ -4,8 +4,8 @@ import logging
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings
 
@@ -34,7 +34,9 @@ async def get_cti_settings_by_id(db: AsyncSession, settings_id: int) -> CTIProfi
         raise
 
 
-async def create_cti_settings(db: AsyncSession, settings_data: dict[str, Any]) -> CTIProfileSettings:
+async def create_cti_settings(
+    db: AsyncSession, settings_data: dict[str, Any]
+) -> CTIProfileSettings:
     """Create new CTI profile settings"""
     try:
         cti_settings = CTIProfileSettings(settings_data=settings_data)
@@ -49,7 +51,9 @@ async def create_cti_settings(db: AsyncSession, settings_data: dict[str, Any]) -
         raise
 
 
-async def update_cti_settings(db: AsyncSession, settings_data: dict[str, Any]) -> CTIProfileSettings:
+async def update_cti_settings(
+    db: AsyncSession, settings_data: dict[str, Any]
+) -> CTIProfileSettings:
     """Update existing CTI profile settings or create if not exists"""
     try:
         cti_settings = await get_cti_settings(db)

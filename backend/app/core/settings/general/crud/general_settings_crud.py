@@ -3,14 +3,15 @@
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.settings.general.models.general_settings_models import GeneralSettings
+
 from app.core.settings.general.config.default_settings import (
+    get_default_always_tiles,
+    get_default_auto_open_on_single_match,
     get_default_darkmode,
     get_default_language,
-    get_default_auto_open_on_single_match,
     get_default_start_screen,
-    get_default_always_tiles
 )
+from app.core.settings.general.models.general_settings_models import GeneralSettings
 
 
 async def get_general_settings_by_id(db: AsyncSession, settings_id: int) -> GeneralSettings | None:
@@ -33,7 +34,7 @@ async def create_general_settings(
     language: str | None = None,
     auto_open_on_single_match: bool | None = None,
     start_screen: str | None = None,
-    always_tiles: bool | None = None
+    always_tiles: bool | None = None,
 ) -> GeneralSettings:
     """Create the singleton general settings record (fixed id=1).
 
@@ -48,11 +49,12 @@ async def create_general_settings(
         darkmode=darkmode if darkmode is not None else get_default_darkmode(),
         language=language if language is not None else get_default_language(),
         auto_open_on_single_match=(
-            auto_open_on_single_match if auto_open_on_single_match is not None
+            auto_open_on_single_match
+            if auto_open_on_single_match is not None
             else get_default_auto_open_on_single_match()
         ),
         start_screen=start_screen if start_screen is not None else get_default_start_screen(),
-        always_tiles=always_tiles if always_tiles is not None else get_default_always_tiles()
+        always_tiles=always_tiles if always_tiles is not None else get_default_always_tiles(),
     )
     try:
         async with db.begin_nested():
@@ -64,9 +66,7 @@ async def create_general_settings(
 
 
 async def update_general_settings_darkmode(
-    db: AsyncSession,
-    settings: GeneralSettings,
-    darkmode: bool
+    db: AsyncSession, settings: GeneralSettings, darkmode: bool
 ) -> GeneralSettings:
     """Update darkmode setting for existing record"""
     settings.darkmode = darkmode
@@ -75,9 +75,7 @@ async def update_general_settings_darkmode(
 
 
 async def update_general_settings_language(
-    db: AsyncSession,
-    settings: GeneralSettings,
-    language: str
+    db: AsyncSession, settings: GeneralSettings, language: str
 ) -> GeneralSettings:
     """Update language setting for existing record"""
     settings.language = language
@@ -89,7 +87,7 @@ async def update_general_settings_all(
     db: AsyncSession,
     settings: GeneralSettings,
     darkmode: bool | None = None,
-    language: str | None = None
+    language: str | None = None,
 ) -> GeneralSettings:
     """Update multiple settings fields for existing record"""
     if darkmode is not None:
@@ -105,7 +103,7 @@ async def update_general_settings_command_palette(
     settings: GeneralSettings,
     auto_open_on_single_match: bool | None = None,
     start_screen: str | None = None,
-    always_tiles: bool | None = None
+    always_tiles: bool | None = None,
 ) -> GeneralSettings:
     """Update command palette settings fields for existing record"""
     if auto_open_on_single_match is not None:

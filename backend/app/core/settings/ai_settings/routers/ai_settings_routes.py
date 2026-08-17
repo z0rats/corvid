@@ -2,8 +2,8 @@ from app.core.dependencies import SessionDep
 from app.core.settings.ai_settings.schemas.ai_settings_schemas import (
     AISettingsResponse,
     AISettingsUpdate,
-    AvailableModelsResponse,
     AvailableModel,
+    AvailableModelsResponse,
 )
 from app.core.settings.ai_settings.service.ai_settings_service import (
     get_or_create_ai_settings,
@@ -30,6 +30,4 @@ router = build_singleton_settings_router(
 )
 async def get_available_models_endpoint(db: SessionDep) -> AvailableModelsResponse:
     models = await get_available_models(db)
-    return AvailableModelsResponse(
-        models=[AvailableModel(**m) for m in models]
-    )
+    return AvailableModelsResponse(models=[AvailableModel(**m) for m in models])

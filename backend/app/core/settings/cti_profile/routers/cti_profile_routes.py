@@ -16,7 +16,7 @@ from app.core.settings.cti_profile.schemas.cti_profile_schemas import (
 )
 from app.core.settings.cti_profile.service.cti_profile_service import (
     get_cti_profile_settings,
-    update_cti_profile_settings
+    update_cti_profile_settings,
 )
 from app.core.settings.settings_router_factory import build_singleton_settings_router
 

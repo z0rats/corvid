@@ -5,33 +5,33 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ApplicationError
-from app.core.settings.general.schemas.general_settings_schemas import (
-    GeneralSettingsResponse,
-    GeneralSettingsUpdate,
-    DarkmodeUpdate,
-    LanguageUpdate,
-    CommandPaletteSettingsUpdate
+from app.core.settings.general.config.default_settings import (
+    get_default_always_tiles,
+    get_default_auto_open_on_single_match,
+    get_default_darkmode,
+    get_default_language,
+    get_default_start_screen,
 )
 from app.core.settings.general.crud.general_settings_crud import (
-    get_first_general_settings,
     create_general_settings,
+    get_first_general_settings,
     update_general_settings_all,
+    update_general_settings_command_palette,
     update_general_settings_darkmode,
     update_general_settings_language,
-    update_general_settings_command_palette
+)
+from app.core.settings.general.models.general_settings_models import GeneralSettings
+from app.core.settings.general.schemas.general_settings_schemas import (
+    CommandPaletteSettingsUpdate,
+    DarkmodeUpdate,
+    GeneralSettingsResponse,
+    GeneralSettingsUpdate,
+    LanguageUpdate,
 )
 from app.core.settings.general.utils.validation_utils import (
     validate_language_code,
-    validate_start_screen
+    validate_start_screen,
 )
-from app.core.settings.general.config.default_settings import (
-    get_default_darkmode,
-    get_default_language,
-    get_default_auto_open_on_single_match,
-    get_default_start_screen,
-    get_default_always_tiles
-)
-from app.core.settings.general.models.general_settings_models import GeneralSettings
 from app.core.settings.singleton import get_or_create_singleton
 
 logger = logging.getLogger(__name__)
@@ -39,20 +39,23 @@ logger = logging.getLogger(__name__)
 
 async def get_general_settings(db: AsyncSession) -> GeneralSettingsResponse:
     """Retrieve current general settings, creating defaults if none exist"""
-    settings = await get_or_create_singleton(db, GeneralSettings, {
-        "darkmode": get_default_darkmode(),
-        "language": get_default_language(),
-        "auto_open_on_single_match": get_default_auto_open_on_single_match(),
-        "start_screen": get_default_start_screen(),
-        "always_tiles": get_default_always_tiles(),
-    })
+    settings = await get_or_create_singleton(
+        db,
+        GeneralSettings,
+        {
+            "darkmode": get_default_darkmode(),
+            "language": get_default_language(),
+            "auto_open_on_single_match": get_default_auto_open_on_single_match(),
+            "start_screen": get_default_start_screen(),
+            "always_tiles": get_default_always_tiles(),
+        },
+    )
 
     return GeneralSettingsResponse.model_validate(settings)
 
 
 async def update_general_settings(
-    db: AsyncSession,
-    settings_update: GeneralSettingsUpdate
+    db: AsyncSession, settings_update: GeneralSettingsUpdate
 ) -> GeneralSettingsResponse:
     """Update general settings with provided values"""
     normalized_language = None
@@ -67,29 +70,24 @@ async def update_general_settings(
         settings = await create_general_settings(
             db,
             darkmode=settings_update.darkmode or get_default_darkmode(),
-            language=normalized_language or get_default_language()
+            language=normalized_language or get_default_language(),
         )
     else:
         settings = await update_general_settings_all(
-            db,
-            settings,
-            darkmode=settings_update.darkmode,
-            language=normalized_language
+            db, settings, darkmode=settings_update.darkmode, language=normalized_language
         )
 
     await db.flush()
     await db.refresh(settings)
 
     logger.info(
-        "Updated general settings: darkmode=%s, language=%s",
-        settings.darkmode, settings.language
+        "Updated general settings: darkmode=%s, language=%s", settings.darkmode, settings.language
     )
     return GeneralSettingsResponse.model_validate(settings)
 
 
 async def update_darkmode_setting(
-    db: AsyncSession,
-    darkmode_update: DarkmodeUpdate
+    db: AsyncSession, darkmode_update: DarkmodeUpdate
 ) -> GeneralSettingsResponse:
     """Update only the darkmode setting"""
     settings = await get_first_general_settings(db)
@@ -107,8 +105,7 @@ async def update_darkmode_setting(
 
 
 async def update_language_setting(
-    db: AsyncSession,
-    language_update: LanguageUpdate
+    db: AsyncSession, language_update: LanguageUpdate
 ) -> GeneralSettingsResponse:
     """Update only the language setting"""
     if not validate_language_code(language_update.language):
@@ -130,8 +127,7 @@ async def update_language_setting(
 
 
 async def update_command_palette_settings(
-    db: AsyncSession,
-    command_palette_update: CommandPaletteSettingsUpdate
+    db: AsyncSession, command_palette_update: CommandPaletteSettingsUpdate
 ) -> GeneralSettingsResponse:
     """Update the command palette settings group"""
     normalized_start_screen = None
@@ -147,7 +143,7 @@ async def update_command_palette_settings(
             db,
             auto_open_on_single_match=command_palette_update.auto_open_on_single_match,
             start_screen=normalized_start_screen,
-            always_tiles=command_palette_update.always_tiles
+            always_tiles=command_palette_update.always_tiles,
         )
     else:
         settings = await update_general_settings_command_palette(
@@ -155,14 +151,19 @@ async def update_command_palette_settings(
             settings,
             auto_open_on_single_match=command_palette_update.auto_open_on_single_match,
             start_screen=normalized_start_screen,
-            always_tiles=command_palette_update.always_tiles
+            always_tiles=command_palette_update.always_tiles,
         )
 
     await db.flush()
     await db.refresh(settings)
 
     logger.info(
-        "Updated command palette settings: auto_open_on_single_match=%s, start_screen=%s, always_tiles=%s",
-        settings.auto_open_on_single_match, settings.start_screen, settings.always_tiles
+        (
+            "Updated command palette settings: auto_open_on_single_match=%s, "
+            "start_screen=%s, always_tiles=%s"
+        ),
+        settings.auto_open_on_single_match,
+        settings.start_screen,
+        settings.always_tiles,
     )
     return GeneralSettingsResponse.model_validate(settings)

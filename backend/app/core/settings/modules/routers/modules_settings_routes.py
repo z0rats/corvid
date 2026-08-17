@@ -4,18 +4,18 @@ from fastapi import APIRouter, status
 
 from app.core.dependencies import ReadSessionDep, SessionDep
 from app.core.settings.modules.schemas.modules_settings_schemas import (
-    ModuleSettingsResponse,
     ModuleSettingsCreate,
+    ModuleSettingsResponse,
     ModuleSettingsUpdate,
-    ModuleStatusUpdate
+    ModuleStatusUpdate,
 )
 from app.core.settings.modules.service.modules_settings_service import (
+    create_new_module_setting,
+    delete_module_setting_by_name,
     get_all_modules_settings,
     get_module_setting,
-    create_new_module_setting,
     update_module_setting,
     update_module_status,
-    delete_module_setting_by_name
 )
 
 router = APIRouter(prefix="/api/settings/modules", tags=["Settings"])
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/api/settings/modules", tags=["Settings"])
     "",
     response_model=list[ModuleSettingsResponse],
     summary="Get all module settings",
-    description="Retrieve all module settings from the database"
+    description="Retrieve all module settings from the database",
 )
 async def read_all_module_settings(db: ReadSessionDep) -> list[ModuleSettingsResponse]:
     return await get_all_modules_settings(db)
@@ -57,8 +57,7 @@ async def read_module_setting(module_name: str, db: ReadSessionDep) -> ModuleSet
     },
 )
 async def create_module_setting_endpoint(
-    module_data: ModuleSettingsCreate,
-    db: SessionDep
+    module_data: ModuleSettingsCreate, db: SessionDep
 ) -> ModuleSettingsResponse:
     return await create_new_module_setting(db, module_data)
 
@@ -74,9 +73,7 @@ async def create_module_setting_endpoint(
     },
 )
 async def update_module_setting_endpoint(
-    module_name: str,
-    update_data: ModuleSettingsUpdate,
-    db: SessionDep
+    module_name: str, update_data: ModuleSettingsUpdate, db: SessionDep
 ) -> ModuleSettingsResponse:
     return await update_module_setting(db, module_name, update_data)
 
@@ -89,9 +86,7 @@ async def update_module_setting_endpoint(
     responses={400: {"description": "Invalid module name format"}},
 )
 async def update_module_status_endpoint(
-    module_name: str,
-    status_data: ModuleStatusUpdate,
-    db: SessionDep
+    module_name: str, status_data: ModuleStatusUpdate, db: SessionDep
 ) -> ModuleSettingsResponse:
     return await update_module_status(db, module_name, status_data)
 
@@ -106,8 +101,5 @@ async def update_module_status_endpoint(
         404: {"description": "Module setting not found"},
     },
 )
-async def delete_module_setting_endpoint(
-    module_name: str,
-    db: SessionDep
-) -> None:
+async def delete_module_setting_endpoint(module_name: str, db: SessionDep) -> None:
     await delete_module_setting_by_name(db, module_name)

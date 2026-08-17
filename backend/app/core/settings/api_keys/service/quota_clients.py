@@ -5,6 +5,7 @@ never user-controlled - so these calls intentionally do not go through
 app.core.security.ssrf_guard.safe_get. See
 backend/tests/core/test_ssrf_guard_coverage.py's ALLOWLISTED_FIXED_HOST_FILES.
 """
+
 import logging
 from typing import Any
 
@@ -19,7 +20,9 @@ class QuotaCheckError(Exception):
     """Raised when a provider's quota endpoint can't be reached or parsed."""
 
 
-async def _get_json(url: str, *, headers: dict[str, str] | None = None, params: dict[str, Any] | None = None) -> dict[str, Any]:
+async def _get_json(
+    url: str, *, headers: dict[str, str] | None = None, params: dict[str, Any] | None = None
+) -> dict[str, Any]:
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             response = await client.get(url, headers=headers, params=params)

@@ -14,39 +14,33 @@ Module Structure:
 - utils/: Utility functions for CTI operations
 """
 
-from .routers.cti_profile_routes import router as cti_profile_router
-from .schemas.cti_profile_schemas import (
-    CTISettingsResponse,
-    CTISettingsUpdate,
-    CTISettingsData,
-    NotificationPreferences
-)
-from .service.cti_profile_service import (
-    get_cti_profile_settings,
-    update_cti_profile_settings
-)
 from .config.default_settings import (
     get_default_cti_profile_settings,
     get_severity_levels,
-    get_supported_ioc_types
+    get_supported_ioc_types,
 )
+from .routers.cti_profile_routes import router as cti_profile_router
+from .schemas.cti_profile_schemas import (
+    CTISettingsData,
+    CTISettingsResponse,
+    CTISettingsUpdate,
+    NotificationPreferences,
+)
+from .service.cti_profile_service import get_cti_profile_settings, update_cti_profile_settings
 
 __all__ = [
     # Router
     "cti_profile_router",
-    
     # Schemas
     "CTISettingsResponse",
     "CTISettingsUpdate",
     "CTISettingsData",
     "NotificationPreferences",
-    
     # Services
     "get_cti_profile_settings",
     "update_cti_profile_settings",
-    
     # Configuration
     "get_default_cti_profile_settings",
     "get_severity_levels",
-    "get_supported_ioc_types"
+    "get_supported_ioc_types",
 ]

@@ -6,11 +6,8 @@ Contains default values and configuration constants for module settings.
 
 from typing import Any
 
-
 # Default values for module settings
-DEFAULT_MODULE_SETTINGS: dict[str, Any] = {
-    "enabled": True
-}
+DEFAULT_MODULE_SETTINGS: dict[str, Any] = {"enabled": True}
 
 # Available modules in the system
 AVAILABLE_MODULES = [
@@ -24,7 +21,7 @@ AVAILABLE_MODULES = [
     "llm_templates",
     "newsfeed",
     "rule_creator",
-    "username_search"
+    "username_search",
 ]
 
 # Module name validation constraints

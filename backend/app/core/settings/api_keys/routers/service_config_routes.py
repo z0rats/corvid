@@ -1,22 +1,24 @@
 from typing import Any
+
 from fastapi import APIRouter, Query
 
 from app.core.dependencies import ReadSessionDep
 from app.core.settings.api_keys.config.service_config import ServiceCategory, ServiceTier
 from app.core.settings.api_keys.service.service_config_service import (
-    get_services_configuration,
-    get_single_service_configuration,
     get_service_categories,
     get_service_tiers,
+    get_services_configuration,
+    get_services_for_ioc_type_service,
+    get_single_service_configuration,
     get_supported_ioc_types,
-    get_services_for_ioc_type_service
 )
-
 
 router = APIRouter()
 
 
-@router.get("/api/services/config", response_model=dict[str, dict[str, Any]], tags=["Service Configuration"])
+@router.get(
+    "/api/services/config", response_model=dict[str, dict[str, Any]], tags=["Service Configuration"]
+)
 async def get_services_config(
     db: ReadSessionDep,
     category: ServiceCategory | None = Query(None, description="Filter by service category"),
@@ -33,7 +35,11 @@ async def get_services_config(
     return await get_services_configuration(db, category, tier, ioc_type)
 
 
-@router.get("/api/services/config/{service_key}", response_model=dict[str, Any], tags=["Service Configuration"])
+@router.get(
+    "/api/services/config/{service_key}",
+    response_model=dict[str, Any],
+    tags=["Service Configuration"],
+)
 async def get_service_config(service_key: str, db: ReadSessionDep) -> dict[str, Any]:
     """
     Get configuration for a specific service.
@@ -61,7 +67,11 @@ async def get_supported_ioc_types_endpoint() -> list[str]:
     return await get_supported_ioc_types()
 
 
-@router.get("/api/services/for-ioc/{ioc_type}", response_model=dict[str, dict[str, Any]], tags=["Service Configuration"])
+@router.get(
+    "/api/services/for-ioc/{ioc_type}",
+    response_model=dict[str, dict[str, Any]],
+    tags=["Service Configuration"],
+)
 async def get_services_for_ioc(ioc_type: str, db: ReadSessionDep) -> dict[str, dict[str, Any]]:
     """
     Get all services that support a specific IOC type.

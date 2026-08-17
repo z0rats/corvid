@@ -1,14 +1,16 @@
 """Social-analyzer settings API routes - timeout, top-sites count"""
 
+from app.core.settings.settings_router_factory import build_singleton_settings_router
 from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
     get_social_analyzer_config as crud_get_config,
+)
+from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
     update_social_analyzer_config as crud_update_config,
 )
 from app.core.settings.username_search.schemas.social_analyzer_settings_schemas import (
     SocialAnalyzerConfigSchema,
     SocialAnalyzerConfigUpdateSchema,
 )
-from app.core.settings.settings_router_factory import build_singleton_settings_router
 
 router = build_singleton_settings_router(
     prefix="/api/settings/social-analyzer",

@@ -5,6 +5,19 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's parameter-marker functions are meant to be called in a default
+# value - B008 doesn't know that and flags every route handler using them.
+extend-immutable-calls = [
+    "fastapi.Query",
+    "fastapi.File",
+    "fastapi.Body",
+    "fastapi.Path",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Form",
+]
+
 [tool.mypy]
 python_version = "3.14"
 plugins = ["pydantic.mypy"]
