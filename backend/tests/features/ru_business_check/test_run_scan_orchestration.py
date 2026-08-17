@@ -1089,6 +1089,21 @@ class TestRunWorkFedsfm:
             "registration_date": None,
         }
         monkeypatch.setattr(svc, "fetch_egrul_extract", _async(lambda query: (egrul_data, "raw")))
+        monkeypatch.setattr(
+            svc,
+            "check_disqualified",
+            _async(
+                lambda name: (
+                    {
+                        "checked": True,
+                        "matched": False,
+                        "requires_manual_review": False,
+                        "matches": [],
+                    },
+                    "",
+                )
+            ),
+        )
 
         captured_name = {}
 
@@ -1144,6 +1159,21 @@ class TestRunWorkFedsfm:
             "registration_date": None,
         }
         monkeypatch.setattr(svc, "fetch_egrul_extract", _async(lambda query: (egrul_data, "raw")))
+        monkeypatch.setattr(
+            svc,
+            "check_disqualified",
+            _async(
+                lambda name: (
+                    {
+                        "checked": True,
+                        "matched": False,
+                        "requires_manual_review": False,
+                        "matches": [],
+                    },
+                    "",
+                )
+            ),
+        )
 
         async def fake_fedsfm(name):
             return {
