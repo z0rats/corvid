@@ -1,6 +1,7 @@
 """Tests use a fixed in-memory Fernet key (monkeypatching the private
 _get_fernet accessor) rather than exercising the real file-backed key, so
 they never touch this developer's actual <data_dir>/.encryption_key."""
+
 from cryptography.fernet import Fernet
 
 from app.core.security import secrets_crypto

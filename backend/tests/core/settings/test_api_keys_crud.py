@@ -25,7 +25,9 @@ def _run(coro):
 @pytest.fixture
 def engine():
     return create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
 
@@ -50,7 +52,8 @@ class TestCreateNewApikey:
         async def _scenario():
             async with session_factory() as db:
                 created = await create_new_apikey(
-                    db, ApikeyCreateRequest(name="virustotal", key="abc123"),
+                    db,
+                    ApikeyCreateRequest(name="virustotal", key="abc123"),
                 )
                 await db.commit()
                 return created

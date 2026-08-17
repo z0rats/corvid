@@ -57,6 +57,7 @@ class TestReverseGeocode:
 
     def test_never_raises(self, monkeypatch):
         """A geocoder outage must not fail the whole image analysis."""
+
         async def fake_fetch(latitude, longitude):
             raise httpx.RequestError("connection refused")
 

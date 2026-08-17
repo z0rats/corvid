@@ -4,6 +4,7 @@ run_work coroutines and Cancellable adapters - the counterpart to
 test_scan_crud.py (which only covers the bare create_running/mark_* helpers
 ScanRun itself calls).
 """
+
 import asyncio
 import contextlib
 
@@ -29,12 +30,16 @@ def _run(coro):
 @pytest.fixture
 def session_factory(monkeypatch):
     engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
     async def _create_tables():
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, tables=[MaigretSearch.__table__, MailSearch.__table__])
+            await conn.run_sync(
+                Base.metadata.create_all, tables=[MaigretSearch.__table__, MailSearch.__table__]
+            )
 
     _run(_create_tables())
     factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -76,7 +81,10 @@ class TestExecuteSuccessPath:
 
         async def _scenario():
             await ScanRun.execute(
-                "username_search", MaigretSearch, run_work, events.append,
+                "username_search",
+                MaigretSearch,
+                run_work,
+                events.append,
                 columns=MAIGRET_COLUMNS,
                 create_fields={"username": "alice", "source": "maigret"},
                 started_fields={"username": "alice", "total_sites": 5},
@@ -95,13 +103,18 @@ class TestExecuteSuccessPath:
 
     def test_db_only_fields_persist_without_appearing_on_the_wire(self, session_factory):
         async def run_work(search_id):
-            return ScanOutcome(fields={"total_sites_checked": 1, "found_count": 0}, db_only_fields={"tags": ["x"]})
+            return ScanOutcome(
+                fields={"total_sites_checked": 1, "found_count": 0}, db_only_fields={"tags": ["x"]}
+            )
 
         events = []
 
         async def _scenario():
             await ScanRun.execute(
-                "username_search", MaigretSearch, run_work, events.append,
+                "username_search",
+                MaigretSearch,
+                run_work,
+                events.append,
                 columns=MAIGRET_COLUMNS,
                 create_fields={"username": "bob", "source": "maigret"},
             )
@@ -118,7 +131,10 @@ class TestExecuteSuccessPath:
 
         async def _scenario():
             await ScanRun.execute(
-                "username_search", MaigretSearch, run_work, lambda e: None,
+                "username_search",
+                MaigretSearch,
+                run_work,
+                lambda e: None,
                 columns=MAIGRET_COLUMNS,
                 create_fields={"username": "carol", "source": "maigret"},
                 cancellable=FakeCancellable(),
@@ -137,7 +153,10 @@ class TestExecuteFailurePath:
 
         async def _scenario():
             await ScanRun.execute(
-                "email_search", MailSearch, run_work, events.append,
+                "email_search",
+                MailSearch,
+                run_work,
+                events.append,
                 columns=MAIGRET_COLUMNS,
                 create_fields={"username": "dave"},
             )
@@ -160,7 +179,10 @@ class TestExecuteCancellation:
 
         async def _scenario():
             await ScanRun.execute(
-                "username_search", MaigretSearch, run_work, events.append,
+                "username_search",
+                MaigretSearch,
+                run_work,
+                events.append,
                 columns=MAIGRET_COLUMNS,
                 create_fields={"username": "erin", "source": "maigret"},
             )
@@ -182,7 +204,10 @@ class TestExecuteCancellation:
         async def _scenario():
             with pytest.raises(asyncio.CancelledError):
                 await ScanRun.execute(
-                    "email_search", MailSearch, run_work, events.append,
+                    "email_search",
+                    MailSearch,
+                    run_work,
+                    events.append,
                     columns=MAIGRET_COLUMNS,
                     create_fields={"username": "frank"},
                 )
@@ -215,9 +240,13 @@ class TestExecuteCancellation:
 
         async def _runner():
             from app.core.scans.cancellable import TaskCancellable
+
             cancellable = TaskCancellable(asyncio.current_task())
             await ScanRun.execute(
-                "username_search", MaigretSearch, run_work, events.append,
+                "username_search",
+                MaigretSearch,
+                run_work,
+                events.append,
                 columns=MAIGRET_COLUMNS,
                 create_fields={"username": "grace", "source": "maigret"},
                 cancellable=cancellable,
@@ -260,12 +289,17 @@ class TestExecuteCancellation:
         events = []
 
         async def _scenario():
-            task = asyncio.create_task(ScanRun.execute(
-                "email_search", MailSearch, run_work, events.append,
-                columns=MAIGRET_COLUMNS,
-                create_fields={"username": "heidi"},
-                cancellable=fake,
-            ))
+            task = asyncio.create_task(
+                ScanRun.execute(
+                    "email_search",
+                    MailSearch,
+                    run_work,
+                    events.append,
+                    columns=MAIGRET_COLUMNS,
+                    create_fields={"username": "heidi"},
+                    cancellable=fake,
+                )
+            )
             while not events:
                 await asyncio.sleep(0)
 
@@ -306,16 +340,28 @@ class TestFeatureNamespacing:
         cancellable_b = FakeCancellable()
 
         async def _scenario():
-            task_a = asyncio.create_task(ScanRun.execute(
-                "username_search", MaigretSearch, run_work_a, events_a.append,
-                columns=MAIGRET_COLUMNS, create_fields={"username": "ivan", "source": "maigret"},
-                cancellable=cancellable_a,
-            ))
-            task_b = asyncio.create_task(ScanRun.execute(
-                "email_search", MailSearch, run_work_b, events_b.append,
-                columns=MAIGRET_COLUMNS, create_fields={"username": "ivan"},
-                cancellable=cancellable_b,
-            ))
+            task_a = asyncio.create_task(
+                ScanRun.execute(
+                    "username_search",
+                    MaigretSearch,
+                    run_work_a,
+                    events_a.append,
+                    columns=MAIGRET_COLUMNS,
+                    create_fields={"username": "ivan", "source": "maigret"},
+                    cancellable=cancellable_a,
+                )
+            )
+            task_b = asyncio.create_task(
+                ScanRun.execute(
+                    "email_search",
+                    MailSearch,
+                    run_work_b,
+                    events_b.append,
+                    columns=MAIGRET_COLUMNS,
+                    create_fields={"username": "ivan"},
+                    cancellable=cancellable_b,
+                )
+            )
             while not events_a or not events_b:
                 await asyncio.sleep(0)
 

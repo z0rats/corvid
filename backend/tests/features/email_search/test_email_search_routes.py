@@ -3,6 +3,7 @@ PyPI-update-check endpoints (`/info`, `/check-update`) - the actual fetch/record
 compute logic they delegate to now lives in `core/utils/pypi_version_check.py`
 and is covered there (`test_pypi_version_check.py`).
 """
+
 from types import SimpleNamespace
 
 import pytest
@@ -24,7 +25,9 @@ def client():
 
 
 def _fake_config(**overrides):
-    defaults = dict(latest_pypi_version=None, enable_smtp_checks=False, enable_headless_checks=False)
+    defaults = dict(
+        latest_pypi_version=None, enable_smtp_checks=False, enable_headless_checks=False
+    )
     return SimpleNamespace(**{**defaults, **overrides})
 
 
@@ -65,7 +68,9 @@ class TestReadInfo:
 
 
 class TestCheckUpdate:
-    def test_delegates_to_check_for_update_with_package_name_config_and_installed_version(self, client, monkeypatch):
+    def test_delegates_to_check_for_update_with_package_name_config_and_installed_version(
+        self, client, monkeypatch
+    ):
         config = _fake_config()
         captured = {}
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.features.email_analyzer.utils.validation_utils import (
     sanitize_filename,
@@ -54,21 +54,21 @@ def test_validate_email_date_accepts_missing_header():
 
 
 def test_validate_email_date_accepts_recent_date():
-    recent = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%a, %d %b %Y %H:%M:%S %z")
+    recent = (datetime.now(UTC) - timedelta(days=1)).strftime("%a, %d %b %Y %H:%M:%S %z")
     is_valid, message = validate_email_date(recent)
     assert is_valid is True
     assert message is None
 
 
 def test_validate_email_date_rejects_future_date():
-    future = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%a, %d %b %Y %H:%M:%S %z")
+    future = (datetime.now(UTC) + timedelta(days=1)).strftime("%a, %d %b %Y %H:%M:%S %z")
     is_valid, message = validate_email_date(future)
     assert is_valid is False
     assert "future date" in message
 
 
 def test_validate_email_date_rejects_date_older_than_max_age():
-    old = (datetime.now(timezone.utc) - timedelta(days=60)).strftime("%a, %d %b %Y %H:%M:%S %z")
+    old = (datetime.now(UTC) - timedelta(days=60)).strftime("%a, %d %b %Y %H:%M:%S %z")
     is_valid, message = validate_email_date(old)
     assert is_valid is False
     assert "days old" in message

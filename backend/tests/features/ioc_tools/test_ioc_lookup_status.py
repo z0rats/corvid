@@ -3,13 +3,21 @@ import asyncio
 import httpx
 import pytest
 
+from app.features.ioc_tools.ioc_lookup.bulk_lookup.service import (
+    bulk_ioc_lookup_service as bulk_service,
+)
 from app.features.ioc_tools.ioc_lookup.schemas.lookup_schemas import LookupResult, LookupStatus
 from app.features.ioc_tools.ioc_lookup.single_lookup.service import ioc_lookup_engine as engine
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import (
-    ServiceAuthError, ServiceError, ServiceRateLimitError, ServiceUnavailableError,
+    ServiceAuthError,
+    ServiceError,
+    ServiceRateLimitError,
+    ServiceUnavailableError,
 )
-from app.features.ioc_tools.ioc_lookup.single_lookup.service.provider_spec import ApiKeySpec, ProviderSpec
-from app.features.ioc_tools.ioc_lookup.bulk_lookup.service import bulk_ioc_lookup_service as bulk_service
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.provider_spec import (
+    ApiKeySpec,
+    ProviderSpec,
+)
 
 
 def _run(coro):
@@ -19,6 +27,7 @@ def _run(coro):
 def _async_return(value):
     async def _inner(*args, **kwargs):
         return value
+
     return _inner
 
 
@@ -60,7 +69,9 @@ class TestLookupIocNeverRaisesForExpectedConditions:
         assert result.error
 
     def test_unsupported_ioc_type_returns_error_not_raise(self, monkeypatch):
-        monkeypatch.setattr(engine, "get_service", lambda name: _service_config(ioc_types=("domain",)))
+        monkeypatch.setattr(
+            engine, "get_service", lambda name: _service_config(ioc_types=("domain",))
+        )
 
         result = _run(engine.lookup_ioc("testsvc", "1.2.3.4", "ipv4", db=None))
 
@@ -83,7 +94,8 @@ class TestLookupIocNeverRaisesForExpectedConditions:
             raise raised
 
         monkeypatch.setattr(
-            engine, "get_service",
+            engine,
+            "get_service",
             lambda name: _service_config(func=failing_func, requires_key=False),
         )
         monkeypatch.setattr(engine, "_get_api_keys", _async_return({}))
@@ -98,7 +110,8 @@ class TestLookupIocNeverRaisesForExpectedConditions:
             return {"foo": "bar"}
 
         monkeypatch.setattr(
-            engine, "get_service",
+            engine,
+            "get_service",
             lambda name: _service_config(func=ok_func, requires_key=False),
         )
         monkeypatch.setattr(engine, "_get_api_keys", _async_return({}))
@@ -206,7 +219,11 @@ class TestCallServiceWithRetryBacksOffOnRateLimit:
             raise ServiceRateLimitError("svc", "rate limited")
 
         with pytest.raises(ServiceRateLimitError):
-            _run(engine._call_service_with_retry(_service_config(func=always_rate_limited), {}, "svc"))
+            _run(
+                engine._call_service_with_retry(
+                    _service_config(func=always_rate_limited), {}, "svc"
+                )
+            )
 
         assert attempts["n"] == 3  # initial attempt + 2 retries
 
@@ -235,19 +252,33 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
     def test_service_not_configured_is_error_status(self, monkeypatch, semaphore):
         monkeypatch.setattr(bulk_service, "get_service", lambda name: None)
 
-        result = _run(bulk_service.run_single_lookup_with_rate_limit(
-            "unknown", "1.2.3.4", "ipv4", db=None, semaphore=semaphore,
-        ))
+        result = _run(
+            bulk_service.run_single_lookup_with_rate_limit(
+                "unknown",
+                "1.2.3.4",
+                "ipv4",
+                db=None,
+                semaphore=semaphore,
+            )
+        )
 
         assert result["status"] == LookupStatus.ERROR.value
         assert "error" in result
 
     def test_unsupported_ioc_type_is_error_status(self, monkeypatch, semaphore):
-        monkeypatch.setattr(bulk_service, "get_service", lambda name: _service_config(ioc_types=("domain",)))
+        monkeypatch.setattr(
+            bulk_service, "get_service", lambda name: _service_config(ioc_types=("domain",))
+        )
 
-        result = _run(bulk_service.run_single_lookup_with_rate_limit(
-            "svc", "1.2.3.4", "ipv4", db=None, semaphore=semaphore,
-        ))
+        result = _run(
+            bulk_service.run_single_lookup_with_rate_limit(
+                "svc",
+                "1.2.3.4",
+                "ipv4",
+                db=None,
+                semaphore=semaphore,
+            )
+        )
 
         assert result["status"] == LookupStatus.ERROR.value
 
@@ -268,9 +299,15 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
 
         monkeypatch.setattr(bulk_service, "lookup_ioc", fake_lookup_ioc)
 
-        result = _run(bulk_service.run_single_lookup_with_rate_limit(
-            "svc", "1.2.3.4", "ipv4", db=None, semaphore=semaphore,
-        ))
+        result = _run(
+            bulk_service.run_single_lookup_with_rate_limit(
+                "svc",
+                "1.2.3.4",
+                "ipv4",
+                db=None,
+                semaphore=semaphore,
+            )
+        )
 
         assert result["status"] == lookup_status.value
         assert result["error"] == "boom"
@@ -283,9 +320,15 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
 
         monkeypatch.setattr(bulk_service, "lookup_ioc", boom)
 
-        result = _run(bulk_service.run_single_lookup_with_rate_limit(
-            "svc", "1.2.3.4", "ipv4", db=None, semaphore=semaphore,
-        ))
+        result = _run(
+            bulk_service.run_single_lookup_with_rate_limit(
+                "svc",
+                "1.2.3.4",
+                "ipv4",
+                db=None,
+                semaphore=semaphore,
+            )
+        )
 
         assert result["status"] == LookupStatus.ERROR.value
         assert result["error"] == "kaboom"
@@ -294,13 +337,21 @@ class TestRunSingleLookupWithRateLimitStatusIsUniform:
         monkeypatch.setattr(bulk_service, "get_service", lambda name: _service_config())
 
         async def fake_lookup_ioc(*args, **kwargs):
-            return LookupResult(ioc="1.2.3.4", service="svc", status=LookupStatus.SUCCESS, data={"x": 1})
+            return LookupResult(
+                ioc="1.2.3.4", service="svc", status=LookupStatus.SUCCESS, data={"x": 1}
+            )
 
         monkeypatch.setattr(bulk_service, "lookup_ioc", fake_lookup_ioc)
 
-        result = _run(bulk_service.run_single_lookup_with_rate_limit(
-            "svc", "1.2.3.4", "ipv4", db=None, semaphore=semaphore,
-        ))
+        result = _run(
+            bulk_service.run_single_lookup_with_rate_limit(
+                "svc",
+                "1.2.3.4",
+                "ipv4",
+                db=None,
+                semaphore=semaphore,
+            )
+        )
 
         assert result["status"] == LookupStatus.SUCCESS.value
         assert result["data"] == {"x": 1}

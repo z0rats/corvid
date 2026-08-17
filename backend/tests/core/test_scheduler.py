@@ -4,6 +4,7 @@ dependency inversion: core/scheduler.py must stay feature-agnostic, with
 per-feature job wiring living in app/utils/scheduler_registry.py instead
 (same pattern as app/utils/router_registry.py for routers).
 """
+
 import ast
 import asyncio
 import inspect
@@ -125,7 +126,8 @@ class TestDependencyInversion:
                 imported_modules.append(node.module)
 
         violations = [
-            module for module in imported_modules
-            if module.startswith(FORBIDDEN_IMPORT_PREFIXES)
+            module for module in imported_modules if module.startswith(FORBIDDEN_IMPORT_PREFIXES)
         ]
-        assert violations == [], f"core/scheduler.py must stay feature-agnostic, found: {violations}"
+        assert violations == [], (
+            f"core/scheduler.py must stay feature-agnostic, found: {violations}"
+        )

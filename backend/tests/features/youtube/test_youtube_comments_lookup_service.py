@@ -1,6 +1,7 @@
 """Orchestration tests for perform_youtube_comments_lookup - fetch_comment_threads and the
 API-key lookup are monkeypatched so these focus on listing vs. search-and-filter behavior and
 the truncation/cap bookkeeping, not on real network calls."""
+
 import asyncio
 
 import pytest
@@ -42,6 +43,7 @@ def _raw_comment(comment_id, author, text, likes=0, replies=0):
 def _patch_api_key(monkeypatch):
     async def _fake_get_key(db):
         return "test-key"
+
     monkeypatch.setattr(youtube_comments_lookup_service, "get_youtube_api_key", _fake_get_key)
 
 
@@ -55,6 +57,7 @@ def test_rejects_non_youtube_url():
 def test_rejects_when_no_api_key_configured(monkeypatch):
     async def _fake_get_key_none(db):
         return None
+
     monkeypatch.setattr(youtube_comments_lookup_service, "get_youtube_api_key", _fake_get_key_none)
 
     request = YoutubeCommentsRequest(url=VIDEO_URL)
@@ -75,6 +78,7 @@ def test_plain_listing_returns_one_page(monkeypatch):
             ],
             "nextPageToken": "page2",
         }
+
     monkeypatch.setattr(youtube_comments_lookup_service, "fetch_comment_threads", _fake_fetch)
 
     request = YoutubeCommentsRequest(url=VIDEO_URL)
@@ -96,6 +100,7 @@ def test_listing_passes_through_page_token_and_order(monkeypatch):
         captured["order"] = order
         captured["page_token"] = page_token
         return {"items": [], "nextPageToken": None}
+
     monkeypatch.setattr(youtube_comments_lookup_service, "fetch_comment_threads", _fake_fetch)
 
     request = YoutubeCommentsRequest(url=VIDEO_URL, order="time", page_token="abc")
@@ -115,6 +120,7 @@ def test_search_filters_by_text_and_author_stops_when_video_exhausted(monkeypatc
             ],
             "nextPageToken": None,
         }
+
     monkeypatch.setattr(youtube_comments_lookup_service, "fetch_comment_threads", _fake_fetch)
 
     request = YoutubeCommentsRequest(url=VIDEO_URL, query="spam")
@@ -135,6 +141,7 @@ def test_search_scans_multiple_pages_until_match_found(monkeypatch):
 
     async def _fake_fetch(video_id, api_key, order, page_token, max_results):
         return pages[page_token]
+
     monkeypatch.setattr(youtube_comments_lookup_service, "fetch_comment_threads", _fake_fetch)
 
     request = YoutubeCommentsRequest(url=VIDEO_URL, query="needle")
@@ -153,7 +160,11 @@ def test_search_truncates_when_page_cap_hit_before_exhausting(monkeypatch):
     async def _fake_fetch(video_id, api_key, order, page_token, max_results):
         call_count["n"] += 1
         # every page has more after it and never contains a match
-        return {"items": [_raw_comment(f"c{call_count['n']}", "alice", "no match here")], "nextPageToken": "more"}
+        return {
+            "items": [_raw_comment(f"c{call_count['n']}", "alice", "no match here")],
+            "nextPageToken": "more",
+        }
+
     monkeypatch.setattr(youtube_comments_lookup_service, "fetch_comment_threads", _fake_fetch)
 
     request = YoutubeCommentsRequest(url=VIDEO_URL, query="needle")
@@ -178,6 +189,7 @@ def test_search_truncates_when_result_cap_hit_before_exhausting(monkeypatch):
             ],
             "nextPageToken": "more",
         }
+
     monkeypatch.setattr(youtube_comments_lookup_service, "fetch_comment_threads", _fake_fetch)
 
     request = YoutubeCommentsRequest(url=VIDEO_URL, query="needle")

@@ -14,6 +14,7 @@ If this test fails on a new file: either route it through `safe_get`, or, if
 the target host is fixed/hardcoded (not user-supplied), add it to
 `ALLOWLISTED_FIXED_HOST_FILES` below with a one-line reason.
 """
+
 import re
 from pathlib import Path
 
@@ -60,6 +61,17 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "features/youtube/service/youtube_oembed_service.py",
     "features/youtube/service/youtube_page_service.py",
     "features/youtube/service/youtube_api_service.py",
+    # RU Business Check: fixed egrul.nalog.ru / service.nalog.ru / kad.arbitr.ru hosts
+    # (official registry/court-case services); only the ИНН/name/ФИО query value is
+    # user-supplied, never the host
+    "features/ru_business_check/service/egrul_service.py",
+    "features/ru_business_check/service/disqualified_persons_service.py",
+    "features/ru_business_check/service/arbitration_service.py",
+    "features/ru_business_check/service/fedresurs_service.py",
+    "features/ru_business_check/service/pb_nalog_service.py",
+    "features/ru_business_check/service/fedsfm_service.py",
+    # zakupki.gov.ru РНП: fixed host; only the ИНН is user-supplied, never the host
+    "features/ru_business_check/service/zakupki_rnp_service.py",
 }
 
 # Implementation module itself, and its own tests
@@ -107,4 +119,6 @@ def test_allowlist_entries_still_exist_and_still_need_the_exemption():
         if not _RAW_CLIENT_RE.search(path.read_text(encoding="utf-8")):
             stale.append(rel)
 
-    assert not stale, f"Allowlist entries no longer construct a raw HTTP client, remove them: {stale}"
+    assert not stale, (
+        f"Allowlist entries no longer construct a raw HTTP client, remove them: {stale}"
+    )

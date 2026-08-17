@@ -3,6 +3,7 @@ built on build_singleton_settings_router (GET on ReadSessionDep, safe since
 GeneralSettings is guaranteed created by _run_application_defaults() at startup),
 plus a regression check that the three hand-written PUTs (/darkmode, /language,
 /command-palette) still work unchanged on the same router object."""
+
 import asyncio
 from collections.abc import AsyncGenerator
 
@@ -22,7 +23,9 @@ from app.core.settings.general.routers.general_settings_routes import router
 @pytest.fixture
 def client():
     engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -32,7 +35,7 @@ def client():
 
     asyncio.run(_create_tables())
 
-    async def _get_db() -> AsyncGenerator[AsyncSession, None]:
+    async def _get_db() -> AsyncGenerator[AsyncSession]:
         async with session_factory() as db:
             yield db
             await db.commit()
@@ -89,7 +92,11 @@ class TestExtraPutsStillWork:
     def test_command_palette_endpoint(self, client):
         response = client.put(
             "/api/settings/general/command-palette",
-            json={"auto_open_on_single_match": False, "start_screen": "newsfeed", "always_tiles": True},
+            json={
+                "auto_open_on_single_match": False,
+                "start_screen": "newsfeed",
+                "always_tiles": True,
+            },
         )
 
         assert response.status_code == 200

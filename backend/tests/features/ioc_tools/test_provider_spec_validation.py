@@ -1,7 +1,10 @@
 import pytest
 
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.provider_spec import (
-    ApiKeySpec, ProviderSpec, TypeMapping, validate_provider_spec,
+    ApiKeySpec,
+    ProviderSpec,
+    TypeMapping,
+    validate_provider_spec,
 )
 
 

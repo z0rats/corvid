@@ -4,6 +4,7 @@ using the new on_error hook to preserve its distinct get/update error mapping
 (ValueError -> 400, anything else -> 500, differing error_code per operation).
 Also covers that POST /api/settings/cti was removed (unused by the frontend,
 functionally duplicated PUT)."""
+
 import asyncio
 from collections.abc import AsyncGenerator
 
@@ -24,7 +25,9 @@ from app.core.settings.cti_profile.service import cti_profile_service
 @pytest.fixture
 def client():
     engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -34,7 +37,7 @@ def client():
 
     asyncio.run(_create_tables())
 
-    async def _get_db() -> AsyncGenerator[AsyncSession, None]:
+    async def _get_db() -> AsyncGenerator[AsyncSession]:
         async with session_factory() as db:
             yield db
             await db.commit()
@@ -62,7 +65,9 @@ class TestGetCtiSettings:
         async def fake_get_or_create_singleton(db, model, defaults=None):
             raise RuntimeError("boom")
 
-        monkeypatch.setattr(cti_profile_service, "get_or_create_singleton", fake_get_or_create_singleton)
+        monkeypatch.setattr(
+            cti_profile_service, "get_or_create_singleton", fake_get_or_create_singleton
+        )
 
         response = client.get("/api/settings/cti")
 

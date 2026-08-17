@@ -25,12 +25,14 @@ def _reset_cache():
 def _fake_fetch(tag_name):
     async def _inner():
         return tag_name
+
     return _inner
 
 
 def _raising_fetch(exc):
     async def _inner():
         raise exc
+
     return _inner
 
 

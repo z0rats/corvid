@@ -5,6 +5,7 @@ reach since that only wraps httpx clients, not subprocess argv. These tests
 guard the allowlist validator that is the sole gate against a user-supplied
 target reaching subprocess argv (see git_recon_service.py's module docstring
 comment)."""
+
 import pytest
 
 from app.features.git_recon.service.git_recon_service import (

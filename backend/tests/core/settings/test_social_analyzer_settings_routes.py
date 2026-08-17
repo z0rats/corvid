@@ -1,5 +1,6 @@
 """HTTP-level coverage for social_analyzer_settings_routes.py, now built on
 build_singleton_settings_router - a direct-replacement adapter with no hooks."""
+
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -10,14 +11,18 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base
 from app.core.dependencies import get_db, get_read_db
-from app.core.settings.username_search.models.social_analyzer_settings_models import SocialAnalyzerConfig
+from app.core.settings.username_search.models.social_analyzer_settings_models import (
+    SocialAnalyzerConfig,
+)
 from app.core.settings.username_search.routers.social_analyzer_settings_routes import router
 
 
 @pytest.fixture
 def client():
     engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -26,9 +31,10 @@ def client():
             await conn.run_sync(Base.metadata.create_all, tables=[SocialAnalyzerConfig.__table__])
 
     import asyncio
+
     asyncio.run(_create_tables())
 
-    async def _get_db() -> AsyncGenerator[AsyncSession, None]:
+    async def _get_db() -> AsyncGenerator[AsyncSession]:
         async with session_factory() as db:
             yield db
             await db.commit()

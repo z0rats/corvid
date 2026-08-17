@@ -60,7 +60,12 @@ def test_perform_ct_subdomains_lookup_dedupes_and_filters_unrelated_names(monkey
     result = asyncio.run(perform_ct_subdomains_lookup(CtSubdomainsRequest(domain="example.com")))
 
     assert result.domain == "example.com"
-    assert result.subdomains == ["api.example.com", "dev.example.com", "example.com", "www.example.com"]
+    assert result.subdomains == [
+        "api.example.com",
+        "dev.example.com",
+        "example.com",
+        "www.example.com",
+    ]
     assert "unrelated-domain.net" not in result.subdomains
     assert result.total_certificates == 3
     assert len(result.certificates) == 3
@@ -83,7 +88,9 @@ def test_perform_ct_subdomains_lookup_handles_empty_response(monkeypatch):
 
     monkeypatch.setattr(ct_subdomains_service, "fetch_crtsh_certificates", fake_fetch)
 
-    result = asyncio.run(perform_ct_subdomains_lookup(CtSubdomainsRequest(domain="doesnotexist.example")))
+    result = asyncio.run(
+        perform_ct_subdomains_lookup(CtSubdomainsRequest(domain="doesnotexist.example"))
+    )
 
     assert result.subdomains == []
     assert result.total_certificates == 0

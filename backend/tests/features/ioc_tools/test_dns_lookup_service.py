@@ -84,7 +84,14 @@ def test_perform_dns_lookup_handles_nxdomain_for_all_types(monkeypatch):
 
     result = asyncio.run(perform_dns_lookup(DnsLookupRequest(domain="doesnotexist.example")))
 
-    assert result.records.model_dump() == {"A": [], "AAAA": [], "MX": [], "TXT": [], "NS": [], "CNAME": []}
+    assert result.records.model_dump() == {
+        "A": [],
+        "AAAA": [],
+        "MX": [],
+        "TXT": [],
+        "NS": [],
+        "CNAME": [],
+    }
     assert result.reverse_dns == {}
 
 

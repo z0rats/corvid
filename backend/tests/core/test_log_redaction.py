@@ -12,8 +12,13 @@ from app.core.config.logging_config import (
 
 def _filtered_message(msg: str, *args) -> str:
     record = logging.LogRecord(
-        name="test", level=logging.INFO, pathname=__file__, lineno=1,
-        msg=msg, args=args, exc_info=None,
+        name="test",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg=msg,
+        args=args,
+        exc_info=None,
     )
     SecretRedactionFilter().filter(record)
     return record.getMessage()
@@ -22,8 +27,18 @@ def _filtered_message(msg: str, *args) -> str:
 @pytest.mark.parametrize(
     "param",
     [
-        "api_key", "apikey", "key", "token", "secret", "password", "passwd",
-        "pwd", "access_token", "auth", "API_KEY", "Token",
+        "api_key",
+        "apikey",
+        "key",
+        "token",
+        "secret",
+        "password",
+        "passwd",
+        "pwd",
+        "access_token",
+        "auth",
+        "API_KEY",
+        "Token",
     ],
 )
 def test_redacts_query_param_secrets(param):

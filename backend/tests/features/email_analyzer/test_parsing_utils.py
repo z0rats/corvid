@@ -86,7 +86,9 @@ def test_extract_message_text_returns_list_for_multipart_message():
 def test_extract_message_text_skips_attachments():
     msg = EmailMessage()
     msg.set_content("plain body")
-    msg.add_attachment(b"binary-data", maintype="application", subtype="octet-stream", filename="a.bin")
+    msg.add_attachment(
+        b"binary-data", maintype="application", subtype="octet-stream", filename="a.bin"
+    )
 
     parts = extract_message_text(msg)
 

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import select
@@ -40,7 +40,9 @@ def _run(coro):
 @pytest.fixture
 def engine():
     return create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
 
@@ -49,7 +51,8 @@ def session_factory(engine):
     async def _create_tables():
         async with engine.begin() as conn:
             await conn.run_sync(
-                Base.metadata.create_all, tables=[NewsfeedSettings.__table__, NewsArticle.__table__],
+                Base.metadata.create_all,
+                tables=[NewsfeedSettings.__table__, NewsArticle.__table__],
             )
 
     _run(_create_tables())
@@ -57,7 +60,7 @@ def session_factory(engine):
 
 
 def _article_schema(*, link, days_ago=0, title="Article", tlp="TLP:CLEAR", **overrides):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     data = dict(
         feedname="feed1",
         icon="default.png",
@@ -100,9 +103,13 @@ class TestCreateNewsArticle:
         async def _scenario():
             async with session_factory() as db:
                 await _ensure_feed(db)
-                first = await create_news_article(db, _article_schema(link="https://news.example/dup"))
+                first = await create_news_article(
+                    db, _article_schema(link="https://news.example/dup")
+                )
                 await db.commit()
-                second = await create_news_article(db, _article_schema(link="https://news.example/dup"))
+                second = await create_news_article(
+                    db, _article_schema(link="https://news.example/dup")
+                )
                 await db.commit()
                 return first, second
 
@@ -114,6 +121,7 @@ class TestCreateNewsArticle:
         """create_news_article rolls back only its own failed flush, not the
         caller's whole session - a subsequent operation in the same session
         must still work."""
+
         async def _scenario():
             async with session_factory() as db:
                 await _ensure_feed(db)
@@ -169,7 +177,7 @@ class TestGetArticlesAfterCutoff:
                 await _seed(db, link="https://news.example/c-old", days_ago=3)
                 await _seed(db, link="https://news.example/c-new", days_ago=1)
                 await db.commit()
-                cutoff = datetime.now(timezone.utc) - timedelta(days=5)
+                cutoff = datetime.now(UTC) - timedelta(days=5)
                 return await get_articles_after_cutoff(db, cutoff, limit=1)
 
         articles = _run(_scenario())
@@ -367,7 +375,7 @@ class TestApplyArticleFilters:
                 await _seed(db, link="https://news.example/range-old", days_ago=20)
                 await _seed(db, link="https://news.example/range-new", days_ago=1)
                 await db.commit()
-                start = (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
+                start = (datetime.now(UTC) - timedelta(days=5)).isoformat()
                 stmt = apply_article_filters(select(NewsArticle), start_date=start)
                 return (await db.execute(stmt)).scalars().all()
 

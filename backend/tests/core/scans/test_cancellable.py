@@ -4,6 +4,7 @@ asyncio-level cancellation point), and has no existing test to mirror - unlike
 email_search's `_kill_orphaned_chromium`, which this mirrors but which itself
 has no test in this repo either.
 """
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 

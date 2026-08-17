@@ -193,8 +193,16 @@ def test_parse_authentication_results_all_fail_outlook_style():
 
 
 def test_parse_authentication_results_handles_missing_or_empty():
-    assert parse_authentication_results([]) == {"spf_pass": False, "dkim_pass": False, "dmarc_pass": False}
-    assert parse_authentication_results(None) == {"spf_pass": False, "dkim_pass": False, "dmarc_pass": False}
+    assert parse_authentication_results([]) == {
+        "spf_pass": False,
+        "dkim_pass": False,
+        "dmarc_pass": False,
+    }
+    assert parse_authentication_results(None) == {
+        "spf_pass": False,
+        "dkim_pass": False,
+        "dmarc_pass": False,
+    }
 
 
 def test_parse_authentication_results_merges_multiple_header_lines():

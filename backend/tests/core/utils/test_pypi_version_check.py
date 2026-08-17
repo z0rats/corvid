@@ -9,6 +9,7 @@ sqlite-backed fake model carrying `PypiVersionCheckMixin` (same engine-fixture
 pattern as `test_scan_crud.py`), rather than any of the three real *Config models,
 since the whole point of the mixin is that it doesn't matter which one is used.
 """
+
 import asyncio
 from pathlib import Path
 
@@ -94,7 +95,9 @@ class TestFetchLatestPypiVersion:
         assert result is None
 
     def test_returns_none_on_unexpected_json_shape(self, monkeypatch):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(200, json={"unexpected": "shape"}))
+        _patch_transport(
+            monkeypatch, lambda request: httpx.Response(200, json={"unexpected": "shape"})
+        )
 
         result = _run(pypi_version_check.fetch_latest_pypi_version("some-package"))
 
@@ -124,12 +127,16 @@ class TestRecordPypiCheck:
                 config_id = config.id
 
             async with session_factory() as db:
-                config = (await db.execute(select(FakeToolConfig).where(FakeToolConfig.id == config_id))).scalar_one()
+                config = (
+                    await db.execute(select(FakeToolConfig).where(FakeToolConfig.id == config_id))
+                ).scalar_one()
                 await pypi_version_check.record_pypi_check(db, config, "3.1.4")
                 await db.commit()
 
             async with session_factory() as db:
-                return (await db.execute(select(FakeToolConfig).where(FakeToolConfig.id == config_id))).scalar_one()
+                return (
+                    await db.execute(select(FakeToolConfig).where(FakeToolConfig.id == config_id))
+                ).scalar_one()
 
         row = _run(_scenario())
         assert row.latest_pypi_version == "3.1.4"
@@ -151,7 +158,9 @@ class TestCheckForUpdate:
                 db.add(config)
                 await db.commit()
 
-                result = await pypi_version_check.check_for_update(db, "some-package", config, "1.0.0")
+                result = await pypi_version_check.check_for_update(
+                    db, "some-package", config, "1.0.0"
+                )
                 await db.commit()
                 return result, config.latest_pypi_version
 
@@ -173,7 +182,9 @@ class TestCheckForUpdate:
                 config = FakeToolConfig()
                 db.add(config)
                 await db.commit()
-                return await pypi_version_check.check_for_update(db, "some-package", config, "1.0.0")
+                return await pypi_version_check.check_for_update(
+                    db, "some-package", config, "1.0.0"
+                )
 
         result = _run(_scenario())
 
@@ -191,7 +202,9 @@ class TestCheckForUpdate:
                 config = FakeToolConfig()
                 db.add(config)
                 await db.commit()
-                return await pypi_version_check.check_for_update(db, "some-package", config, "1.0.0")
+                return await pypi_version_check.check_for_update(
+                    db, "some-package", config, "1.0.0"
+                )
 
         result = _run(_scenario())
 

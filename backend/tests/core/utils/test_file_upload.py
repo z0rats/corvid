@@ -4,6 +4,7 @@ is tested against a minimal duck-typed stand-in for `UploadFile` (only `.filenam
 and `.read()` are used); `run_file_endpoint` is tested against plain sync/async
 callables so the dispatch/error-mapping logic runs independent of any real service.
 """
+
 import asyncio
 
 import pytest
@@ -13,7 +14,9 @@ from app.core.utils.file_upload import run_file_endpoint, validate_uploaded_file
 
 
 class FakeUploadFile:
-    def __init__(self, filename: str | None, content: bytes = b"data", read_error: Exception | None = None):
+    def __init__(
+        self, filename: str | None, content: bytes = b"data", read_error: Exception | None = None
+    ):
         self.filename = filename
         self._content = content
         self._read_error = read_error
@@ -45,7 +48,10 @@ def test_validate_uploaded_file_rejects_missing_filename():
     with pytest.raises(AppHTTPException) as exc_info:
         _run(
             validate_uploaded_file(
-                file, no_file_code="NO_FILE", read_error_code="READ_ERROR", validate_fn=_always_valid
+                file,
+                no_file_code="NO_FILE",
+                read_error_code="READ_ERROR",
+                validate_fn=_always_valid,
             )
         )
 
@@ -59,7 +65,10 @@ def test_validate_uploaded_file_maps_read_failure():
     with pytest.raises(AppHTTPException) as exc_info:
         _run(
             validate_uploaded_file(
-                file, no_file_code="NO_FILE", read_error_code="READ_ERROR", validate_fn=_always_valid
+                file,
+                no_file_code="NO_FILE",
+                read_error_code="READ_ERROR",
+                validate_fn=_always_valid,
             )
         )
 
@@ -73,7 +82,10 @@ def test_validate_uploaded_file_propagates_validate_fn_failure():
     with pytest.raises(AppHTTPException) as exc_info:
         _run(
             validate_uploaded_file(
-                file, no_file_code="NO_FILE", read_error_code="READ_ERROR", validate_fn=_always_invalid
+                file,
+                no_file_code="NO_FILE",
+                read_error_code="READ_ERROR",
+                validate_fn=_always_invalid,
             )
         )
 
@@ -86,7 +98,9 @@ def test_validate_uploaded_file_returns_bytes_on_success():
     file = FakeUploadFile(filename="a.txt", content=b"hello world")
 
     result = _run(
-        validate_uploaded_file(file, no_file_code="NO_FILE", read_error_code="READ_ERROR", validate_fn=_always_valid)
+        validate_uploaded_file(
+            file, no_file_code="NO_FILE", read_error_code="READ_ERROR", validate_fn=_always_valid
+        )
     )
 
     assert result == b"hello world"
@@ -112,9 +126,7 @@ async def _async_ok(a, b):
 
 
 def test_run_file_endpoint_returns_result_on_success():
-    result = _run(
-        run_file_endpoint(_sync_ok, 1, 2, error_code="FAILED", failure_message="failed")
-    )
+    result = _run(run_file_endpoint(_sync_ok, 1, 2, error_code="FAILED", failure_message="failed"))
 
     assert result == 3
 
@@ -138,14 +150,20 @@ def test_run_file_endpoint_maps_value_error_to_own_message_and_error_code():
 
 def test_run_file_endpoint_value_error_reuses_error_code_when_unset():
     with pytest.raises(AppHTTPException) as exc_info:
-        _run(run_file_endpoint(_sync_value_error, "x", error_code="FAILED", failure_message="failed"))
+        _run(
+            run_file_endpoint(_sync_value_error, "x", error_code="FAILED", failure_message="failed")
+        )
 
     assert exc_info.value.error_code == "FAILED"
 
 
 def test_run_file_endpoint_maps_generic_exception_to_error_code():
     with pytest.raises(AppHTTPException) as exc_info:
-        _run(run_file_endpoint(_sync_boom, "x", error_code="FAILED", failure_message="operation failed"))
+        _run(
+            run_file_endpoint(
+                _sync_boom, "x", error_code="FAILED", failure_message="operation failed"
+            )
+        )
 
     assert exc_info.value.status_code == 422
     assert exc_info.value.error_code == "FAILED"
@@ -153,7 +171,9 @@ def test_run_file_endpoint_maps_generic_exception_to_error_code():
 
 def test_run_file_endpoint_runs_coroutine_function_directly_when_not_in_thread():
     result = _run(
-        run_file_endpoint(_async_ok, 2, 3, error_code="FAILED", failure_message="failed", run_in_thread=False)
+        run_file_endpoint(
+            _async_ok, 2, 3, error_code="FAILED", failure_message="failed", run_in_thread=False
+        )
     )
 
     assert result == 5

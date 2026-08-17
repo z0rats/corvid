@@ -138,7 +138,9 @@ def test_get_status_detects_moderator_removed_post():
 
 
 def test_get_status_detects_removed_by_category_post():
-    removed, deleted = _get_status({"selftext": "hello", "removed_by_category": "moderator"}, "posts")
+    removed, deleted = _get_status(
+        {"selftext": "hello", "removed_by_category": "moderator"}, "posts"
+    )
     assert removed is True
     assert deleted is False
 

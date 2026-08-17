@@ -8,6 +8,7 @@ and check_blacklist (DB-backed, no HTTP at all). Exercises real httpx.Response
 objects through the real handle_response, rather than mocking away the parsing
 logic being tested.
 """
+
 import asyncio
 from base64 import b64encode
 
@@ -18,7 +19,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base
 from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models import (
-    BlacklistedAddress, BlacklistSource,
+    BlacklistedAddress,
+    BlacklistSource,
 )
 from app.features.ioc_tools.ioc_lookup.single_lookup.service import external_api_clients
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import (
@@ -214,7 +216,12 @@ class TestCheckHudsonrock:
         assert fake.last_call["params"] == {"domain": "example.com"}
 
     def test_no_hit_shape_passes_through_unchanged(self, monkeypatch):
-        no_hit = {"message": "not associated", "stealers": [], "total_corporate_services": 0, "total_user_services": 0}
+        no_hit = {
+            "message": "not associated",
+            "stealers": [],
+            "total_corporate_services": 0,
+            "total_user_services": 0,
+        }
         _patch_client(monkeypatch, _response(200, json=no_hit))
 
         result = _run(external_api_clients.check_hudsonrock("clean@example.com", "email"))
@@ -229,6 +236,100 @@ class TestCheckHudsonrock:
         assert result == {"stealers": []}
 
 
+# --- check_libraryofleaks: keyless, must never surface raw entity content -
+
+
+# Shape actually observed from the live API (`docs/library-of-leaks-integration-plan.md`):
+# `results` entities carry raw leaked content in `properties` (emails, names, password
+# mentions, document titles); `facets.collection_id.values` gives per-collection counts
+# without needing to fetch any entity at all.
+_LIBRARYOFLEAKS_RAW_RESPONSE = {
+    "status": "ok",
+    "total": 128,
+    "results": [
+        {
+            "schema": "HyperText",
+            "properties": {
+                "emailMentioned": ["haytham@puckettfaraj.com"],
+                "peopleMentioned": ["Haytham Password"],
+                "title": ["Your new password"],
+            },
+        }
+    ],
+    "facets": {
+        "collection_id": {
+            "values": [
+                {"id": "1", "label": "BlueLeaks", "category": "leak", "count": 9},
+                {"id": "31", "label": "Fuck FBI Friday", "category": "leak", "count": 3},
+            ]
+        }
+    },
+}
+
+
+class TestCheckLibraryOfLeaks:
+    def test_succeeds_without_an_apikey_argument(self, monkeypatch):
+        _patch_client(monkeypatch, _response(200, json=_LIBRARYOFLEAKS_RAW_RESPONSE))
+
+        result = _run(external_api_clients.check_libraryofleaks("person@example.com"))
+
+        assert result["total_hits"] == 128
+
+    def test_requests_facets_only_never_matching_entities(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json=_LIBRARYOFLEAKS_RAW_RESPONSE))
+
+        _run(external_api_clients.check_libraryofleaks("person@example.com"))
+
+        params = fake.last_call["params"]
+        assert params["q"] == "person@example.com"
+        assert params["limit"] == 0
+        assert params["facet"] == "collection_id"
+
+    def test_parsed_result_never_contains_raw_entity_content(self, monkeypatch):
+        """Regression guard for the plan's core requirement: `properties` (and everything
+        under it — emails, names, password mentions from the leaked documents themselves)
+        must never leak into the dict that becomes `SingleLookupResult.data`."""
+        _patch_client(monkeypatch, _response(200, json=_LIBRARYOFLEAKS_RAW_RESPONSE))
+
+        result = _run(external_api_clients.check_libraryofleaks("person@example.com"))
+
+        assert result == {
+            "query": "person@example.com",
+            "total_hits": 128,
+            "collections": [
+                {
+                    "label": "BlueLeaks",
+                    "category": "leak",
+                    "count": 9,
+                    "url": "https://search.libraryofleaks.org/datasets/1",
+                },
+                {
+                    "label": "Fuck FBI Friday",
+                    "category": "leak",
+                    "count": 3,
+                    "url": "https://search.libraryofleaks.org/datasets/31",
+                },
+            ],
+            "search_url": "https://search.libraryofleaks.org/search?q=person%40example.com",
+        }
+        assert "properties" not in str(result)
+        assert "password" not in str(result).lower()
+
+    def test_zero_hits(self, monkeypatch):
+        no_hit = {
+            "status": "ok",
+            "total": 0,
+            "results": [],
+            "facets": {"collection_id": {"values": []}},
+        }
+        _patch_client(monkeypatch, _response(200, json=no_hit))
+
+        result = _run(external_api_clients.check_libraryofleaks("nomatch@example.com"))
+
+        assert result["total_hits"] == 0
+        assert result["collections"] == []
+
+
 # --- check_blacklist: local DB lookup, no HTTP at all ---------------------
 
 
@@ -236,7 +337,9 @@ class TestCheckBlacklist:
     @pytest.fixture
     def session_factory(self):
         engine = create_async_engine(
-            "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+            "sqlite+aiosqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
         )
 
         async def _create_tables():
@@ -258,9 +361,13 @@ class TestCheckBlacklist:
     def test_matches_active_blacklisted_address(self, session_factory):
         async def _scenario():
             async with session_factory() as db:
-                db.add(BlacklistedAddress(
-                    address="0xabc123", source=BlacklistSource.OFAC.value, is_active=True,
-                ))
+                db.add(
+                    BlacklistedAddress(
+                        address="0xabc123",
+                        source=BlacklistSource.OFAC.value,
+                        is_active=True,
+                    )
+                )
                 await db.commit()
                 return await external_api_clients.check_blacklist("0xabc123", db)
 
@@ -271,11 +378,63 @@ class TestCheckBlacklist:
     def test_ignores_inactive_blacklist_entries(self, session_factory):
         async def _scenario():
             async with session_factory() as db:
-                db.add(BlacklistedAddress(
-                    address="0xabc123", source=BlacklistSource.OFAC.value, is_active=False,
-                ))
+                db.add(
+                    BlacklistedAddress(
+                        address="0xabc123",
+                        source=BlacklistSource.OFAC.value,
+                        is_active=False,
+                    )
+                )
                 await db.commit()
                 return await external_api_clients.check_blacklist("0xabc123", db)
 
         result = _run(_scenario())
         assert result["matched"] is False
+
+    def test_matches_opensanctions_terror_financing_address(self, session_factory):
+        """A crypto address from OpenSanctions' il_mod_crypto source (not OFAC/ScamSniffer)."""
+
+        async def _scenario():
+            async with session_factory() as db:
+                db.add(
+                    BlacklistedAddress(
+                        address="TWaertrZdpRJSbLv2G638UL5HCK6sKcZYy",
+                        source=BlacklistSource.OPENSANCTIONS.value,
+                        chain="USDT",
+                        label="crime.terror",
+                        entity_name="NOBITEX",
+                        details={
+                            "dataset": "il_mod_crypto",
+                            "profile_url": "https://www.opensanctions.org/entities/il-nbctf-abc123/",
+                        },
+                        is_active=True,
+                    )
+                )
+                await db.commit()
+                return await external_api_clients.check_blacklist(
+                    "TWaertrZdpRJSbLv2G638UL5HCK6sKcZYy",
+                    db,
+                )
+
+        result = _run(_scenario())
+        assert result["matched"] is True
+        assert result["sources"] == [BlacklistSource.OPENSANCTIONS.value]
+        assert result["ofac"] is None
+        assert result["opensanctions"] == {
+            "chain": "USDT",
+            "topics": "crime.terror",
+            "holder_name": "NOBITEX",
+            "dataset": "il_mod_crypto",
+            "profile_url": "https://www.opensanctions.org/entities/il-nbctf-abc123/",
+        }
+
+    def test_clean_address_has_no_opensanctions_match(self, session_factory):
+        async def _scenario():
+            async with session_factory() as db:
+                return await external_api_clients.check_blacklist(
+                    "TCleanAddressNotListed0000000", db
+                )
+
+        result = _run(_scenario())
+        assert result["matched"] is False
+        assert result["opensanctions"] is None

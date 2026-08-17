@@ -3,6 +3,7 @@ endpoints (`/info`, `/maigret/check-update`, `/social-analyzer/check-update`) - 
 fetch/record/compute logic they delegate to now lives in `core/utils/pypi_version_check.py`
 and is covered there (`test_pypi_version_check.py`).
 """
+
 from types import SimpleNamespace
 
 import pytest
@@ -57,8 +58,12 @@ class TestReadInfo:
         async def fake_get_sa_config(db):
             return sa_config
 
-        monkeypatch.setattr(username_search_routes, "get_username_search_config", fake_get_maigret_config)
-        monkeypatch.setattr(username_search_routes, "get_social_analyzer_config", fake_get_sa_config)
+        monkeypatch.setattr(
+            username_search_routes, "get_username_search_config", fake_get_maigret_config
+        )
+        monkeypatch.setattr(
+            username_search_routes, "get_social_analyzer_config", fake_get_sa_config
+        )
 
         response = client.get("/api/username-search/info")
 
@@ -76,7 +81,9 @@ class TestReadInfo:
 
 
 class TestCheckMaigretUpdate:
-    def test_delegates_to_check_for_update_with_package_name_config_and_installed_version(self, client, monkeypatch):
+    def test_delegates_to_check_for_update_with_package_name_config_and_installed_version(
+        self, client, monkeypatch
+    ):
         config = _fake_maigret_config()
         captured = {}
 
@@ -106,7 +113,9 @@ class TestCheckMaigretUpdate:
 
 
 class TestCheckSocialAnalyzerUpdate:
-    def test_delegates_to_check_for_update_with_package_name_config_and_installed_version(self, client, monkeypatch):
+    def test_delegates_to_check_for_update_with_package_name_config_and_installed_version(
+        self, client, monkeypatch
+    ):
         config = _fake_sa_config()
         captured = {}
 

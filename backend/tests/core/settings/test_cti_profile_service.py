@@ -20,7 +20,9 @@ def _run(coro):
 @pytest.fixture
 def engine():
     return create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
 
@@ -65,7 +67,10 @@ class TestUpdateCtiProfileSettings:
         async def _scenario():
             async with session_factory() as db:
                 result = await update_cti_profile_settings(
-                    db, CTISettingsUpdate(settings={"profile_name": "My Profile", "severity_threshold": "high"}),
+                    db,
+                    CTISettingsUpdate(
+                        settings={"profile_name": "My Profile", "severity_threshold": "high"}
+                    ),
                 )
                 await db.commit()
                 return result
@@ -85,7 +90,9 @@ class TestUpdateCtiProfileSettings:
     def test_rejects_empty_profile_name(self, session_factory):
         async def _scenario():
             async with session_factory() as db:
-                await update_cti_profile_settings(db, CTISettingsUpdate(settings={"profile_name": "   "}))
+                await update_cti_profile_settings(
+                    db, CTISettingsUpdate(settings={"profile_name": "   "})
+                )
 
         with pytest.raises(ValueError, match="non-empty string"):
             _run(_scenario())
@@ -93,7 +100,9 @@ class TestUpdateCtiProfileSettings:
     def test_rejects_non_string_profile_name(self, session_factory):
         async def _scenario():
             async with session_factory() as db:
-                await update_cti_profile_settings(db, CTISettingsUpdate(settings={"profile_name": 123}))
+                await update_cti_profile_settings(
+                    db, CTISettingsUpdate(settings={"profile_name": 123})
+                )
 
         with pytest.raises(ValueError, match="non-empty string"):
             _run(_scenario())
@@ -102,7 +111,10 @@ class TestUpdateCtiProfileSettings:
         async def _scenario():
             async with session_factory() as db:
                 await update_cti_profile_settings(
-                    db, CTISettingsUpdate(settings={"profile_name": "P", "severity_threshold": "extreme"}),
+                    db,
+                    CTISettingsUpdate(
+                        settings={"profile_name": "P", "severity_threshold": "extreme"}
+                    ),
                 )
 
         with pytest.raises(ValueError, match="Invalid severity threshold"):
@@ -112,7 +124,10 @@ class TestUpdateCtiProfileSettings:
         async def _scenario():
             async with session_factory() as db:
                 await update_cti_profile_settings(
-                    db, CTISettingsUpdate(settings={"profile_name": "P", "indicators_of_interest": "ip_addresses"}),
+                    db,
+                    CTISettingsUpdate(
+                        settings={"profile_name": "P", "indicators_of_interest": "ip_addresses"}
+                    ),
                 )
 
         with pytest.raises(ValueError, match="must be a list"):
@@ -122,7 +137,13 @@ class TestUpdateCtiProfileSettings:
         async def _scenario():
             async with session_factory() as db:
                 result = await update_cti_profile_settings(
-                    db, CTISettingsUpdate(settings={"profile_name": "P", "indicators_of_interest": ["not_a_real_type"]}),
+                    db,
+                    CTISettingsUpdate(
+                        settings={
+                            "profile_name": "P",
+                            "indicators_of_interest": ["not_a_real_type"],
+                        }
+                    ),
                 )
                 await db.commit()
                 return result
@@ -134,7 +155,10 @@ class TestUpdateCtiProfileSettings:
         async def _scenario():
             async with session_factory() as db:
                 await update_cti_profile_settings(
-                    db, CTISettingsUpdate(settings={"profile_name": "P", "notification_preferences": "yes please"}),
+                    db,
+                    CTISettingsUpdate(
+                        settings={"profile_name": "P", "notification_preferences": "yes please"}
+                    ),
                 )
 
         with pytest.raises(ValueError, match="Notification preferences must be a dictionary"):
@@ -145,10 +169,12 @@ class TestUpdateCtiProfileSettings:
             async with session_factory() as db:
                 await update_cti_profile_settings(
                     db,
-                    CTISettingsUpdate(settings={
-                        "profile_name": "P",
-                        "notification_preferences": {"email": "enabled"},
-                    }),
+                    CTISettingsUpdate(
+                        settings={
+                            "profile_name": "P",
+                            "notification_preferences": {"email": "enabled"},
+                        }
+                    ),
                 )
 
         with pytest.raises(ValueError, match="Email preferences must be a dictionary"):
@@ -159,10 +185,12 @@ class TestUpdateCtiProfileSettings:
             async with session_factory() as db:
                 await update_cti_profile_settings(
                     db,
-                    CTISettingsUpdate(settings={
-                        "profile_name": "P",
-                        "notification_preferences": {"email": {"enabled": "yes"}},
-                    }),
+                    CTISettingsUpdate(
+                        settings={
+                            "profile_name": "P",
+                            "notification_preferences": {"email": {"enabled": "yes"}},
+                        }
+                    ),
                 )
 
         with pytest.raises(ValueError, match="Email enabled flag must be a boolean"):
@@ -173,10 +201,12 @@ class TestUpdateCtiProfileSettings:
             async with session_factory() as db:
                 await update_cti_profile_settings(
                     db,
-                    CTISettingsUpdate(settings={
-                        "profile_name": "P",
-                        "notification_preferences": {"webhook": {"enabled": 1}},
-                    }),
+                    CTISettingsUpdate(
+                        settings={
+                            "profile_name": "P",
+                            "notification_preferences": {"webhook": {"enabled": 1}},
+                        }
+                    ),
                 )
 
         with pytest.raises(ValueError, match="Webhook enabled flag must be a boolean"):
@@ -187,15 +217,21 @@ class TestUpdateCtiProfileSettings:
             async with session_factory() as db:
                 result = await update_cti_profile_settings(
                     db,
-                    CTISettingsUpdate(settings={
-                        "profile_name": "P",
-                        "notification_preferences": {"email": {"enabled": True}, "webhook": {"enabled": False}},
-                    }),
+                    CTISettingsUpdate(
+                        settings={
+                            "profile_name": "P",
+                            "notification_preferences": {
+                                "email": {"enabled": True},
+                                "webhook": {"enabled": False},
+                            },
+                        }
+                    ),
                 )
                 await db.commit()
                 return result
 
         result = _run(_scenario())
         assert result.settings["notification_preferences"] == {
-            "email": {"enabled": True}, "webhook": {"enabled": False},
+            "email": {"enabled": True},
+            "webhook": {"enabled": False},
         }

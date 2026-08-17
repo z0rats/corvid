@@ -23,15 +23,21 @@ RDAP_SAMPLE = {
             "objectClassName": "entity",
             "roles": ["registrar"],
             "publicIds": [{"type": "IANA Registrar ID", "identifier": "292"}],
-            "vcardArray": ["vcard", [["version", {}, "text", "4.0"], ["fn", {}, "text", "MarkMonitor Inc."]]],
+            "vcardArray": [
+                "vcard",
+                [["version", {}, "text", "4.0"], ["fn", {}, "text", "MarkMonitor Inc."]],
+            ],
             "entities": [
                 {
                     "objectClassName": "entity",
                     "roles": ["abuse"],
-                    "vcardArray": ["vcard", [
-                        ["version", {}, "text", "4.0"],
-                        ["email", {}, "text", "abusecomplaints@markmonitor.com"],
-                    ]],
+                    "vcardArray": [
+                        "vcard",
+                        [
+                            ["version", {}, "text", "4.0"],
+                            ["email", {}, "text", "abusecomplaints@markmonitor.com"],
+                        ],
+                    ],
                 }
             ],
         }
@@ -49,12 +55,17 @@ RDAP_SAMPLE = {
 
 
 def test_parse_vcard_extracts_name_org_email():
-    vcard = _parse_vcard(["vcard", [
-        ["version", {}, "text", "4.0"],
-        ["fn", {}, "text", "Jane Doe"],
-        ["org", {}, "text", ["Example Org"]],
-        ["email", {}, "text", "jane@example.com"],
-    ]])
+    vcard = _parse_vcard(
+        [
+            "vcard",
+            [
+                ["version", {}, "text", "4.0"],
+                ["fn", {}, "text", "Jane Doe"],
+                ["org", {}, "text", ["Example Org"]],
+                ["email", {}, "text", "jane@example.com"],
+            ],
+        ]
+    )
 
     assert vcard == {"name": "Jane Doe", "organization": "Example Org", "email": "jane@example.com"}
 

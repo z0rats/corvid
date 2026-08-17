@@ -1,6 +1,7 @@
 """Encryption-touching tests monkeypatch secrets_crypto._get_fernet to a fixed
 in-memory key, same pattern as test_secrets_crypto.py, so they never touch
 this developer's real <data_dir>/.encryption_key file."""
+
 import asyncio
 
 import pytest
@@ -21,7 +22,9 @@ def _run(coro):
 @pytest.fixture
 def engine():
     return create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
 

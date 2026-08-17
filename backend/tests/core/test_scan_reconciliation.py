@@ -5,6 +5,7 @@ against real tables, covering the three call shapes it replaces:
 `interrupt_running_searches` (no `completed_at` column, error column named
 `error`). Same engine-fixture pattern as test_fk_cascade_delete.py.
 """
+
 import asyncio
 from pathlib import Path
 
@@ -57,7 +58,8 @@ class TestMaigretSearchLikeModels:
 
             async with session_factory() as db:
                 count = await mark_stale_running_as_failed(
-                    db, MaigretSearch,
+                    db,
+                    MaigretSearch,
                     error_column="error_message",
                     error_message="Interrupted by server restart",
                     completed_at_column="completed_at",
@@ -65,9 +67,9 @@ class TestMaigretSearchLikeModels:
                 await db.commit()
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(MaigretSearch).where(MaigretSearch.id == running_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(MaigretSearch).where(MaigretSearch.id == running_id))
+                ).scalar_one()
                 return count, row
 
         count, row = _run(_scenario())
@@ -88,7 +90,8 @@ class TestMaigretSearchLikeModels:
 
             async with session_factory() as db:
                 count = await mark_stale_running_as_failed(
-                    db, MaigretSearch,
+                    db,
+                    MaigretSearch,
                     error_column="error_message",
                     error_message="Interrupted by server restart",
                     completed_at_column="completed_at",
@@ -96,9 +99,9 @@ class TestMaigretSearchLikeModels:
                 await db.commit()
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(MaigretSearch).where(MaigretSearch.id == completed_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(MaigretSearch).where(MaigretSearch.id == completed_id))
+                ).scalar_one()
                 return count, row
 
         count, row = _run(_scenario())
@@ -111,16 +114,19 @@ class TestMaigretSearchLikeModels:
 
         async def _scenario():
             async with session_factory() as db:
-                db.add_all([
-                    MailSearch(username="a", status="running"),
-                    MailSearch(username="b", status="running"),
-                    MailSearch(username="c", status="failed"),
-                ])
+                db.add_all(
+                    [
+                        MailSearch(username="a", status="running"),
+                        MailSearch(username="b", status="running"),
+                        MailSearch(username="c", status="failed"),
+                    ]
+                )
                 await db.commit()
 
             async with session_factory() as db:
                 count = await mark_stale_running_as_failed(
-                    db, MailSearch,
+                    db,
+                    MailSearch,
                     error_column="error_message",
                     error_message="Interrupted by server restart",
                     completed_at_column="completed_at",
@@ -146,7 +152,8 @@ class TestGitReconSearchShape:
 
             async with session_factory() as db:
                 count = await mark_stale_running_as_failed(
-                    db, GitReconSearch,
+                    db,
+                    GitReconSearch,
                     error_column="error",
                     error_message="Interrupted by server restart",
                     completed_at_column=None,
@@ -154,9 +161,9 @@ class TestGitReconSearchShape:
                 await db.commit()
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(GitReconSearch).where(GitReconSearch.id == running_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(GitReconSearch).where(GitReconSearch.id == running_id))
+                ).scalar_one()
                 return count, row
 
         count, row = _run(_scenario())

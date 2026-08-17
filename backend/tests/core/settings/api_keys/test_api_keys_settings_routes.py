@@ -1,5 +1,6 @@
 """Covers the two bulk-lookup routes' interaction with keyless providers
 (core/settings/api_keys/service/keyless_providers.py) - previously untested."""
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -32,7 +33,9 @@ class TestGetAllApikeysBulkLookup:
             return {"abuseipdb": False}
 
         monkeypatch.setattr(
-            api_keys_settings_routes, "get_all_apikeys_bulk_lookup_status", fake_get_all_apikeys_bulk_lookup_status,
+            api_keys_settings_routes,
+            "get_all_apikeys_bulk_lookup_status",
+            fake_get_all_apikeys_bulk_lookup_status,
         )
         keyless_providers.set_keyless_provider_names({"urlscan"})
 
@@ -46,7 +49,9 @@ class TestGetAllApikeysBulkLookup:
             return {"urlscan": False}
 
         monkeypatch.setattr(
-            api_keys_settings_routes, "get_all_apikeys_bulk_lookup_status", fake_get_all_apikeys_bulk_lookup_status,
+            api_keys_settings_routes,
+            "get_all_apikeys_bulk_lookup_status",
+            fake_get_all_apikeys_bulk_lookup_status,
         )
         keyless_providers.set_keyless_provider_names({"urlscan"})
 
@@ -64,14 +69,20 @@ class TestUpdateApikeyBulkLookup:
             return ApikeySchema(name=name, bulk_ioc_lookup=bulk_ioc_lookup)
 
         monkeypatch.setattr(
-            api_keys_settings_routes, "update_apikey_bulk_lookup_status", fake_update_apikey_bulk_lookup_status,
+            api_keys_settings_routes,
+            "update_apikey_bulk_lookup_status",
+            fake_update_apikey_bulk_lookup_status,
         )
         monkeypatch.setattr(
-            api_keys_settings_routes, "upsert_apikey_bulk_lookup_status", fake_upsert_apikey_bulk_lookup_status,
+            api_keys_settings_routes,
+            "upsert_apikey_bulk_lookup_status",
+            fake_upsert_apikey_bulk_lookup_status,
         )
         keyless_providers.set_keyless_provider_names({"urlscan"})
 
-        response = client.patch("/api/apikeys/urlscan/bulk_ioc_lookup", json={"bulk_ioc_lookup": True})
+        response = client.patch(
+            "/api/apikeys/urlscan/bulk_ioc_lookup", json={"bulk_ioc_lookup": True}
+        )
 
         assert response.status_code == 200
         assert response.json()["name"] == "urlscan"
@@ -82,10 +93,14 @@ class TestUpdateApikeyBulkLookup:
             return None
 
         monkeypatch.setattr(
-            api_keys_settings_routes, "update_apikey_bulk_lookup_status", fake_update_apikey_bulk_lookup_status,
+            api_keys_settings_routes,
+            "update_apikey_bulk_lookup_status",
+            fake_update_apikey_bulk_lookup_status,
         )
         keyless_providers.set_keyless_provider_names({"urlscan"})
 
-        response = client.patch("/api/apikeys/abuseipdb/bulk_ioc_lookup", json={"bulk_ioc_lookup": True})
+        response = client.patch(
+            "/api/apikeys/abuseipdb/bulk_ioc_lookup", json={"bulk_ioc_lookup": True}
+        )
 
         assert response.status_code == 404

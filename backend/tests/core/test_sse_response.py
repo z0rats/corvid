@@ -3,10 +3,9 @@ the three scan routers relied on when this was copy-pasted inline: dict events
 off a queue, formatted as `data: {json}\\n\\n`, terminated by a `None` sentinel,
 with the same Cache-Control/Connection/X-Accel-Buffering headers.
 """
+
 import asyncio
 import json
-
-import pytest
 
 from app.core.scans.sse import sse_response
 

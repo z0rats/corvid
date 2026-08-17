@@ -5,6 +5,7 @@ cancel_search_run/fail_search_run, and git_recon's create_running_search/
 complete_search/fail_search (no cancel path, no completed_at column). Same
 engine-fixture pattern as test_scan_reconciliation.py.
 """
+
 import asyncio
 from pathlib import Path
 
@@ -14,7 +15,13 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.core.config.settings import settings
 from app.core.database import Base, create_database_engine
-from app.core.scans.crud import ScanColumns, create_running, mark_cancelled, mark_completed, mark_failed
+from app.core.scans.crud import (
+    ScanColumns,
+    create_running,
+    mark_cancelled,
+    mark_completed,
+    mark_failed,
+)
 from app.features.email_search.models.email_search_models import MailSearch
 from app.features.git_recon.models.git_recon_models import GitReconSearch
 from app.features.username_search.models.username_search_models import MaigretSearch
@@ -76,7 +83,9 @@ class TestMaigretSearchLikeModels:
 
             async with session_factory() as db:
                 search = await mark_completed(
-                    db, MaigretSearch, running_id,
+                    db,
+                    MaigretSearch,
+                    running_id,
                     columns=MAIGRET_COLUMNS,
                     total_sites_checked=42,
                     found_count=3,
@@ -85,9 +94,9 @@ class TestMaigretSearchLikeModels:
                 assert search is not None
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(MaigretSearch).where(MaigretSearch.id == running_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(MaigretSearch).where(MaigretSearch.id == running_id))
+                ).scalar_one()
                 return row
 
         row = _run(_scenario())
@@ -108,7 +117,9 @@ class TestMaigretSearchLikeModels:
 
             async with session_factory() as db:
                 await mark_cancelled(
-                    db, MailSearch, running_id,
+                    db,
+                    MailSearch,
+                    running_id,
                     columns=MAIGRET_COLUMNS,
                     total_providers_checked=5,
                     found_count=1,
@@ -116,9 +127,9 @@ class TestMaigretSearchLikeModels:
                 await db.commit()
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(MailSearch).where(MailSearch.id == running_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(MailSearch).where(MailSearch.id == running_id))
+                ).scalar_one()
                 return row
 
         row = _run(_scenario())
@@ -138,16 +149,18 @@ class TestMaigretSearchLikeModels:
 
             async with session_factory() as db:
                 await mark_failed(
-                    db, MailSearch, running_id,
+                    db,
+                    MailSearch,
+                    running_id,
                     columns=MAIGRET_COLUMNS,
                     error_message="boom",
                 )
                 await db.commit()
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(MailSearch).where(MailSearch.id == running_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(MailSearch).where(MailSearch.id == running_id))
+                ).scalar_one()
                 return row
 
         row = _run(_scenario())
@@ -161,7 +174,9 @@ class TestMaigretSearchLikeModels:
         async def _scenario():
             async with session_factory() as db:
                 return await mark_completed(
-                    db, MailSearch, 999,
+                    db,
+                    MailSearch,
+                    999,
                     columns=MAIGRET_COLUMNS,
                     total_providers_checked=0,
                     found_count=0,
@@ -186,7 +201,9 @@ class TestGitReconSearchShape:
 
             async with session_factory() as db:
                 await mark_completed(
-                    db, GitReconSearch, running_id,
+                    db,
+                    GitReconSearch,
+                    running_id,
                     columns=GIT_RECON_COLUMNS,
                     repos_scanned=10,
                     repos_failed=1,
@@ -196,9 +213,9 @@ class TestGitReconSearchShape:
                 await db.commit()
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(GitReconSearch).where(GitReconSearch.id == running_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(GitReconSearch).where(GitReconSearch.id == running_id))
+                ).scalar_one()
                 return row
 
         row = _run(_scenario())
@@ -218,16 +235,18 @@ class TestGitReconSearchShape:
 
             async with session_factory() as db:
                 await mark_failed(
-                    db, GitReconSearch, running_id,
+                    db,
+                    GitReconSearch,
+                    running_id,
                     columns=GIT_RECON_COLUMNS,
                     error_message="scan failed",
                 )
                 await db.commit()
 
             async with session_factory() as db:
-                row = (await db.execute(
-                    select(GitReconSearch).where(GitReconSearch.id == running_id)
-                )).scalar_one()
+                row = (
+                    await db.execute(select(GitReconSearch).where(GitReconSearch.id == running_id))
+                ).scalar_one()
                 return row
 
         row = _run(_scenario())

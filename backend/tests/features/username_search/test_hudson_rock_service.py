@@ -5,7 +5,11 @@ from app.features.username_search.service.hudson_rock_service import _build_resp
 def test_build_response_maps_date_computer_and_os_fields():
     data = {
         "stealers": [
-            {"date_compromised": "2026-08-01T00:00:00.000Z", "computer_name": "DESKTOP-1", "operating_system": "Windows 10"},
+            {
+                "date_compromised": "2026-08-01T00:00:00.000Z",
+                "computer_name": "DESKTOP-1",
+                "operating_system": "Windows 10",
+            },
         ],
     }
 
@@ -21,8 +25,16 @@ def test_build_response_maps_date_computer_and_os_fields():
 def test_build_response_handles_multiple_stealers():
     data = {
         "stealers": [
-            {"date_compromised": "2026-08-01T00:00:00.000Z", "computer_name": "DESKTOP-1", "operating_system": "Windows 10"},
-            {"date_compromised": "2026-07-01T00:00:00.000Z", "computer_name": "DESKTOP-2", "operating_system": "Windows 11"},
+            {
+                "date_compromised": "2026-08-01T00:00:00.000Z",
+                "computer_name": "DESKTOP-1",
+                "operating_system": "Windows 10",
+            },
+            {
+                "date_compromised": "2026-07-01T00:00:00.000Z",
+                "computer_name": "DESKTOP-2",
+                "operating_system": "Windows 11",
+            },
         ],
     }
 
@@ -47,4 +59,6 @@ def test_build_response_handles_missing_stealers_key():
 def test_build_response_defaults_missing_fields_to_none():
     result = _build_response("johndoe", {"stealers": [{}]})
 
-    assert result.stealers == [HudsonRockStealerSummary(date_compromised=None, computer_name=None, operating_system=None)]
+    assert result.stealers == [
+        HudsonRockStealerSummary(date_compromised=None, computer_name=None, operating_system=None)
+    ]

@@ -21,6 +21,7 @@ fresh interpreter per step (with `DB_URL` etc. set before Python starts) is the
 only way to safely point it at a throwaway database without leaking into other
 tests or the real `data/corvid.db`.
 """
+
 import json
 import os
 import sqlite3
@@ -48,7 +49,12 @@ def _env(tmp_path: Path) -> dict:
 
 def _run(args: list[str], env: dict) -> subprocess.CompletedProcess:
     result = subprocess.run(
-        args, cwd=BACKEND_DIR, env=env, capture_output=True, text=True, timeout=120,
+        args,
+        cwd=BACKEND_DIR,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     if result.returncode != 0:
         pytest.fail(
@@ -64,7 +70,14 @@ def _alembic(args: list[str], env: dict) -> subprocess.CompletedProcess:
 
 def _create_all_tables(env: dict) -> None:
     _run(
-        [sys.executable, "-c", "import asyncio\nfrom main import _create_database_tables\nasyncio.run(_create_database_tables())"],
+        [
+            sys.executable,
+            "-c",
+            (
+                "import asyncio\nfrom main import "
+                "_create_database_tables\nasyncio.run(_create_database_tables())"
+            ),
+        ],
         env,
     )
 
@@ -78,7 +91,14 @@ def _expected_table_names(env: dict) -> set[str]:
     13-of-27 explicit import list, which relies on this same side effect).
     """
     result = _run(
-        [sys.executable, "-c", "import json\nimport main\nfrom app.core.database import Base\nprint(json.dumps(sorted(Base.metadata.tables.keys())))"],
+        [
+            sys.executable,
+            "-c",
+            (
+                "import json\nimport main\nfrom app.core.database import "
+                "Base\nprint(json.dumps(sorted(Base.metadata.tables.keys())))"
+            ),
+        ],
         env,
     )
     return set(json.loads(result.stdout.strip().splitlines()[-1]))

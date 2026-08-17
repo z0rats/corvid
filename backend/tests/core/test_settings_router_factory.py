@@ -133,7 +133,9 @@ class TestOnAfterUpdate:
 
 def _mapped_error(exc: Exception, op: str) -> None:
     raise AppHTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, detail=f"mapped:{op}", error_code="MAPPED",
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"mapped:{op}",
+        error_code="MAPPED",
     ) from exc
 
 
@@ -252,11 +254,7 @@ class TestExcludeNone:
             exclude_none=exclude_none,
         )
 
-        routes_by_method = {
-            method: route
-            for route in router.routes
-            for method in route.methods
-        }
+        routes_by_method = {method: route for route in router.routes for method in route.methods}
 
         assert routes_by_method["GET"].response_model_exclude_none is exclude_none
         assert routes_by_method["PUT"].response_model_exclude_none is exclude_none

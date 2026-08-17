@@ -49,7 +49,9 @@ def _patch_discovery_client(monkeypatch, **client_kwargs):
     just an AsyncClient factory - patching the real httpx module directly would also
     swap AsyncClient out from under pydantic-ai/openai's own internals (OpenAIProvider
     builds its own httpx.AsyncClient when none is passed in), breaking unrelated code."""
-    fake_httpx = types.SimpleNamespace(AsyncClient=lambda **kwargs: _FakeAsyncClient(**client_kwargs))
+    fake_httpx = types.SimpleNamespace(
+        AsyncClient=lambda **kwargs: _FakeAsyncClient(**client_kwargs)
+    )
     monkeypatch.setattr(llm_service, "httpx", fake_httpx)
 
 

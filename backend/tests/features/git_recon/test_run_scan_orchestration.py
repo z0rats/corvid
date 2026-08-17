@@ -12,6 +12,7 @@ builds: the run_work closure's mapping from a gitcolombo result to a ScanOutcome
 (including its GitReconError/TimeoutError handling), and that it's handed to
 ScanRun.execute() with the right feature_name/model/create_fields/cancellable.
 """
+
 import asyncio
 
 import pytest
@@ -29,12 +30,22 @@ def _run(coro):
 
 class TestRunScanDispatch:
     def test_search_mode_delegates_to_search_runner(self, monkeypatch):
-        monkeypatch.setattr(svc, "_run_search_mode_sync", lambda username, token, ignore_noreply: {"stats": "search-result"})
+        monkeypatch.setattr(
+            svc,
+            "_run_search_mode_sync",
+            lambda username, token, ignore_noreply: {"stats": "search-result"},
+        )
 
-        result = _run(run_scan(
-            mode="search", target="octocat", include_forks=False,
-            resolve_github_logins=False, ignore_noreply=False, github_token=None,
-        ))
+        result = _run(
+            run_scan(
+                mode="search",
+                target="octocat",
+                include_forks=False,
+                resolve_github_logins=False,
+                ignore_noreply=False,
+                github_token=None,
+            )
+        )
 
         assert result == {"stats": "search-result"}
 
@@ -48,10 +59,16 @@ class TestRunScanDispatch:
         monkeypatch.setattr(svc, "_run_search_mode_sync", fail)
 
         with pytest.raises(GitReconError):
-            _run(run_scan(
-                mode="search", target="not a valid nickname!!!", include_forks=False,
-                resolve_github_logins=False, ignore_noreply=False, github_token=None,
-            ))
+            _run(
+                run_scan(
+                    mode="search",
+                    target="not a valid nickname!!!",
+                    include_forks=False,
+                    resolve_github_logins=False,
+                    ignore_noreply=False,
+                    github_token=None,
+                )
+            )
         assert called is False
 
     def test_url_mode_clones_the_single_validated_url(self, monkeypatch):
@@ -63,10 +80,16 @@ class TestRunScanDispatch:
 
         monkeypatch.setattr(svc, "_run_clone_mode_sync", fake_clone)
 
-        result = _run(run_scan(
-            mode="url", target="https://github.com/octocat/Hello-World", include_forks=False,
-            resolve_github_logins=False, ignore_noreply=False, github_token=None,
-        ))
+        result = _run(
+            run_scan(
+                mode="url",
+                target="https://github.com/octocat/Hello-World",
+                include_forks=False,
+                resolve_github_logins=False,
+                ignore_noreply=False,
+                github_token=None,
+            )
+        )
 
         assert captured["sources"] == ["https://github.com/octocat/Hello-World"]
         assert result == {"stats": "cloned"}
@@ -75,34 +98,58 @@ class TestRunScanDispatch:
         monkeypatch.setattr(svc, "_get_public_repos_count", lambda nickname, token: 0)
 
         with pytest.raises(GitReconError, match="No public repos"):
-            _run(run_scan(
-                mode="nickname", target="octocat", include_forks=False,
-                resolve_github_logins=False, ignore_noreply=False, github_token=None,
-            ))
+            _run(
+                run_scan(
+                    mode="nickname",
+                    target="octocat",
+                    include_forks=False,
+                    resolve_github_logins=False,
+                    ignore_noreply=False,
+                    github_token=None,
+                )
+            )
 
     def test_nickname_mode_truncates_to_max_repos_and_adds_a_note(self, monkeypatch):
         many_repos = {f"https://github.com/octocat/repo{i}" for i in range(30)}
         monkeypatch.setattr(svc, "_get_public_repos_count", lambda nickname, token: 30)
-        monkeypatch.setattr(svc, "_get_github_repos", lambda nickname, count, include_forks, token: many_repos)
         monkeypatch.setattr(
-            svc, "_run_clone_mode_sync",
-            lambda sources, repos_dir, *, resolve_github_logins: {"stats": "ok", "sources_scanned": len(sources)},
+            svc, "_get_github_repos", lambda nickname, count, include_forks, token: many_repos
+        )
+        monkeypatch.setattr(
+            svc,
+            "_run_clone_mode_sync",
+            lambda sources, repos_dir, *, resolve_github_logins: {
+                "stats": "ok",
+                "sources_scanned": len(sources),
+            },
         )
 
-        result = _run(run_scan(
-            mode="nickname", target="octocat", include_forks=False,
-            resolve_github_logins=False, ignore_noreply=False, github_token=None,
-        ))
+        result = _run(
+            run_scan(
+                mode="nickname",
+                target="octocat",
+                include_forks=False,
+                resolve_github_logins=False,
+                ignore_noreply=False,
+                github_token=None,
+            )
+        )
 
         assert result["sources_scanned"] == 25  # MAX_REPOS_PER_SCAN
         assert any("found 30 public repo" in note for note in result["notes"])
 
     def test_unknown_mode_raises_git_recon_error(self):
         with pytest.raises(GitReconError, match="Unknown scan mode"):
-            _run(run_scan(
-                mode="bogus", target="x", include_forks=False,
-                resolve_github_logins=False, ignore_noreply=False, github_token=None,
-            ))
+            _run(
+                run_scan(
+                    mode="bogus",
+                    target="x",
+                    include_forks=False,
+                    resolve_github_logins=False,
+                    ignore_noreply=False,
+                    github_token=None,
+                )
+            )
 
 
 class TestRunScanTask:
@@ -116,15 +163,26 @@ class TestRunScanTask:
         captured = {}
 
         async def fake_execute(feature_name, model, run_work, on_event, **kwargs):
-            captured.update(feature_name=feature_name, model=model, run_work=run_work, on_event=on_event, **kwargs)
+            captured.update(
+                feature_name=feature_name,
+                model=model,
+                run_work=run_work,
+                on_event=on_event,
+                **kwargs,
+            )
 
         monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
         return captured
 
     def _start(self, **overrides):
         kwargs = dict(
-            mode="url", target="https://github.com/octocat/Hello-World", include_forks=False,
-            resolve_github_logins=False, ignore_noreply=False, github_token=None, queue=asyncio.Queue(),
+            mode="url",
+            target="https://github.com/octocat/Hello-World",
+            include_forks=False,
+            resolve_github_logins=False,
+            ignore_noreply=False,
+            github_token=None,
+            queue=asyncio.Queue(),
         )
         kwargs.update(overrides)
         _run(run_scan_task(**kwargs))
@@ -135,10 +193,12 @@ class TestRunScanTask:
         assert captured["feature_name"] == "git_recon"
         assert captured["model"] is GitReconSearch
         assert captured["create_fields"] == {
-            "mode": "url", "target": "https://github.com/octocat/Hello-World",
+            "mode": "url",
+            "target": "https://github.com/octocat/Hello-World",
         }
         assert captured["started_fields"] == {
-            "mode": "url", "target": "https://github.com/octocat/Hello-World",
+            "mode": "url",
+            "target": "https://github.com/octocat/Hello-World",
         }
         assert isinstance(captured["cancellable"], GitCloneCancellable)
 
@@ -177,7 +237,9 @@ class TestRunScanTask:
         with pytest.raises(TimeoutError, match="Scan timed out"):
             _run(captured["run_work"](123))
 
-    def test_run_work_raises_scan_cancelled_once_the_cancellable_was_triggered(self, monkeypatch, captured):
+    def test_run_work_raises_scan_cancelled_once_the_cancellable_was_triggered(
+        self, monkeypatch, captured
+    ):
         async def fake_run_scan(**kwargs):
             return {"repos": [{"url": "r1", "cloned": False}], "persons": []}
 
@@ -188,4 +250,8 @@ class TestRunScanTask:
 
         with pytest.raises(ScanCancelled) as exc_info:
             _run(captured["run_work"](123))
-        assert exc_info.value.outcome.fields == {"repos_scanned": 0, "repos_failed": 1, "persons_found": 0}
+        assert exc_info.value.outcome.fields == {
+            "repos_scanned": 0,
+            "repos_failed": 1,
+            "persons_found": 0,
+        }

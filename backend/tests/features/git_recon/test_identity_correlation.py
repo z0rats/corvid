@@ -4,6 +4,7 @@ keeps a single last-seen repo/commit per identity - see the module docstring
 comment above _run_clone_mode_sync in git_recon_service.py). These tests
 exercise that aggregation directly against real gitcolombo.Person/GitAnalyst
 objects, without going through an actual git clone."""
+
 from collections import defaultdict
 
 import gitcolombo
@@ -58,7 +59,10 @@ def test_record_mention_tracks_separate_repos_independently():
     _record_mention(mentions, "alice", "https://github.com/o/repo1", "sha1", role="as_author")
     _record_mention(mentions, "alice", "https://github.com/o/repo2", "sha2", role="as_author")
 
-    assert set(mentions["alice"].keys()) == {"https://github.com/o/repo1", "https://github.com/o/repo2"}
+    assert set(mentions["alice"].keys()) == {
+        "https://github.com/o/repo1",
+        "https://github.com/o/repo2",
+    }
     assert mentions["alice"]["https://github.com/o/repo1"]["as_author"] == 1
     assert mentions["alice"]["https://github.com/o/repo2"]["as_author"] == 1
 
@@ -78,11 +82,17 @@ def test_record_mention_tracks_separate_persons_independently():
 # --- build_mentions ------------------------------------------------------
 
 
-def _make_commit(hash, author, committer, author_name="", author_email="", committer_name="", committer_email=""):
+def _make_commit(
+    hash, author, committer, author_name="", author_email="", committer_name="", committer_email=""
+):
     return gitcolombo.Commit(
-        hash=hash, author=author, committer=committer,
-        author_name=author_name, author_email=author_email,
-        committer_name=committer_name, committer_email=committer_email,
+        hash=hash,
+        author=author,
+        committer=committer,
+        author_name=author_name,
+        author_email=author_email,
+        committer_name=committer_name,
+        committer_email=committer_email,
     )
 
 
@@ -98,8 +108,12 @@ def test_build_mentions_attributes_commits_to_their_own_repo():
         "https://github.com/o/repo1",
         "https://github.com/o/repo2",
     }
-    assert mentions["alice"]["https://github.com/o/repo1"]["repo_url"] == "https://github.com/o/repo1"
-    assert mentions["alice"]["https://github.com/o/repo2"]["repo_url"] == "https://github.com/o/repo2"
+    assert (
+        mentions["alice"]["https://github.com/o/repo1"]["repo_url"] == "https://github.com/o/repo1"
+    )
+    assert (
+        mentions["alice"]["https://github.com/o/repo2"]["repo_url"] == "https://github.com/o/repo2"
+    )
 
 
 def test_build_mentions_counts_author_and_committer_across_multiple_commits():
@@ -190,14 +204,20 @@ def test_track_commits_per_repo_orders_result_by_cloned_processing_order():
 
 def _make_person(key, name, email, as_author=0, as_committer=0, github_login=None, also_known=None):
     return gitcolombo.Person(
-        key=key, name=name, email=email,
-        as_author=as_author, as_committer=as_committer,
-        github_login=github_login, also_known=also_known or {},
+        key=key,
+        name=name,
+        email=email,
+        as_author=as_author,
+        as_committer=as_committer,
+        github_login=github_login,
+        also_known=also_known or {},
     )
 
 
 def test_person_to_dict_includes_core_fields_and_noreply_flag():
-    person = _make_person("alice", "Alice", "alice@users.noreply.github.com", as_author=5, as_committer=2)
+    person = _make_person(
+        "alice", "Alice", "alice@users.noreply.github.com", as_author=5, as_committer=2
+    )
 
     result = _person_to_dict(person)
 
@@ -216,7 +236,9 @@ def test_person_to_dict_flags_real_email_as_not_noreply():
 
 def test_person_to_dict_includes_aliases_with_their_own_noreply_flag():
     alias = _make_person("bob-work", "Bob W.", "bob@company.com")
-    person = _make_person("bob", "Bob", "bob@users.noreply.github.com", also_known={"bob-work": alias})
+    person = _make_person(
+        "bob", "Bob", "bob@users.noreply.github.com", also_known={"bob-work": alias}
+    )
 
     result = _person_to_dict(person)
 
@@ -228,10 +250,16 @@ def test_person_to_dict_includes_aliases_with_their_own_noreply_flag():
 def test_person_to_dict_sorts_mentions_by_total_activity_descending():
     mentions = {
         "https://github.com/o/quiet-repo": {
-            "repo_url": "https://github.com/o/quiet-repo", "sample_commit": "s1", "as_author": 1, "as_committer": 0,
+            "repo_url": "https://github.com/o/quiet-repo",
+            "sample_commit": "s1",
+            "as_author": 1,
+            "as_committer": 0,
         },
         "https://github.com/o/busy-repo": {
-            "repo_url": "https://github.com/o/busy-repo", "sample_commit": "s2", "as_author": 10, "as_committer": 5,
+            "repo_url": "https://github.com/o/busy-repo",
+            "sample_commit": "s2",
+            "as_author": 10,
+            "as_committer": 5,
         },
     }
     person = _make_person("alice", "Alice", "alice@example.com")
@@ -255,7 +283,9 @@ def test_person_to_dict_handles_no_mentions():
 # --- _analyst_to_result -------------------------------------------------
 
 
-def _make_analyst(persons=(), name_to_emails=None, same_emails_persons=None, commits_count=0, repos=()):
+def _make_analyst(
+    persons=(), name_to_emails=None, same_emails_persons=None, commits_count=0, repos=()
+):
     analyst = gitcolombo.GitAnalyst()
     analyst.persons = {p.key: p for p in persons}
     analyst.name_to_emails = name_to_emails or {}
@@ -335,7 +365,10 @@ def test_analyst_to_result_wires_mentions_into_matching_persons_only():
     mentions = {
         "alice": {
             "https://github.com/o/repo": {
-                "repo_url": "https://github.com/o/repo", "sample_commit": "sha1", "as_author": 1, "as_committer": 0,
+                "repo_url": "https://github.com/o/repo",
+                "sample_commit": "sha1",
+                "as_author": 1,
+                "as_committer": 0,
             },
         },
     }

@@ -6,7 +6,9 @@ import pytest
 from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import DnsDumpsterRequest
 from app.features.ioc_tools.domain_finder.service import dnsdumpster_service
-from app.features.ioc_tools.domain_finder.service.dnsdumpster_service import perform_dnsdumpster_lookup
+from app.features.ioc_tools.domain_finder.service.dnsdumpster_service import (
+    perform_dnsdumpster_lookup,
+)
 
 DNSDUMPSTER_SAMPLE = {
     "a": [
@@ -52,7 +54,9 @@ def test_perform_dnsdumpster_lookup_maps_response(monkeypatch):
     monkeypatch.setattr(dnsdumpster_service, "get_apikey", fake_get_apikey)
     monkeypatch.setattr(dnsdumpster_service, "fetch_dnsdumpster_data", fake_fetch)
 
-    result = asyncio.run(perform_dnsdumpster_lookup(DnsDumpsterRequest(domain="example.com"), db=None))
+    result = asyncio.run(
+        perform_dnsdumpster_lookup(DnsDumpsterRequest(domain="example.com"), db=None)
+    )
 
     assert result.domain == "example.com"
     assert result.total_a_records == 1
@@ -67,7 +71,10 @@ def test_perform_dnsdumpster_lookup_maps_response(monkeypatch):
     assert result.txt == ["v=spf1 -all"]
 
 
-@pytest.mark.parametrize("apikey", [None, SimpleNamespace(key="", is_active=True), SimpleNamespace(key="abc", is_active=False)])
+@pytest.mark.parametrize(
+    "apikey",
+    [None, SimpleNamespace(key="", is_active=True), SimpleNamespace(key="abc", is_active=False)],
+)
 def test_perform_dnsdumpster_lookup_requires_configured_key(monkeypatch, apikey):
     async def fake_get_apikey(db, name):
         return apikey
@@ -86,7 +93,9 @@ def test_perform_dnsdumpster_lookup_propagates_rate_limit(monkeypatch):
         return _active_key()
 
     async def fake_fetch(domain, api_key):
-        raise AppHTTPException(status_code=429, detail="rate limited", error_code="DNSDUMPSTER_RATE_LIMITED")
+        raise AppHTTPException(
+            status_code=429, detail="rate limited", error_code="DNSDUMPSTER_RATE_LIMITED"
+        )
 
     monkeypatch.setattr(dnsdumpster_service, "get_apikey", fake_get_apikey)
     monkeypatch.setattr(dnsdumpster_service, "fetch_dnsdumpster_data", fake_fetch)

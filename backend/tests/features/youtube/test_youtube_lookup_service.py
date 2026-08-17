@@ -1,6 +1,7 @@
 """Orchestration tests for perform_youtube_lookup - the individual HTTP-fetch
 functions (oEmbed/page-scrape/Data API) are monkeypatched so these focus purely
 on how the service combines their results, not on real network calls."""
+
 import asyncio
 
 import pytest
@@ -24,6 +25,7 @@ async def _fake_get_key_none(db):
 def _fake_get_key_with(key: str | None):
     async def _fake(db):
         return key
+
     return _fake
 
 
@@ -96,13 +98,19 @@ def test_perform_lookup_maps_page_metadata_when_scrape_succeeds(monkeypatch):
 
 
 def test_perform_lookup_uses_data_api_when_key_configured(monkeypatch):
-    monkeypatch.setattr(youtube_lookup_service, "get_youtube_api_key", _fake_get_key_with("test-key"))
+    monkeypatch.setattr(
+        youtube_lookup_service, "get_youtube_api_key", _fake_get_key_with("test-key")
+    )
 
     async def _fake_api_data(video_id, api_key):
         assert video_id == VIDEO_ID
         assert api_key == "test-key"
         return {
-            "snippet": {"publishedAt": "2009-10-25T00:00:00Z", "channelTitle": "Rick Astley", "tags": ["80s"]},
+            "snippet": {
+                "publishedAt": "2009-10-25T00:00:00Z",
+                "channelTitle": "Rick Astley",
+                "tags": ["80s"],
+            },
             "contentDetails": {"duration": "PT3M33S"},
             "statistics": {"viewCount": "1500000000", "likeCount": "18000000"},
             "status": {"privacyStatus": "public"},
@@ -121,7 +129,9 @@ def test_perform_lookup_uses_data_api_when_key_configured(monkeypatch):
 
 
 def test_perform_lookup_survives_data_api_failure(monkeypatch):
-    monkeypatch.setattr(youtube_lookup_service, "get_youtube_api_key", _fake_get_key_with("test-key"))
+    monkeypatch.setattr(
+        youtube_lookup_service, "get_youtube_api_key", _fake_get_key_with("test-key")
+    )
 
     async def _fake_api_data_fails(video_id, api_key):
         return None
@@ -137,7 +147,9 @@ def test_perform_lookup_survives_data_api_failure(monkeypatch):
 
 def test_perform_lookup_propagates_oembed_failure(monkeypatch):
     async def _fake_oembed_fails(video_url):
-        raise AppHTTPException(status_code=404, detail="not found", error_code="YOUTUBE_VIDEO_NOT_FOUND")
+        raise AppHTTPException(
+            status_code=404, detail="not found", error_code="YOUTUBE_VIDEO_NOT_FOUND"
+        )
 
     monkeypatch.setattr(youtube_lookup_service, "fetch_oembed_data", _fake_oembed_fails)
 

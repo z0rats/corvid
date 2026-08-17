@@ -1,6 +1,7 @@
 """Uses httpx.MockTransport (stdlib to httpx, no extra dependency) rather than
 mocking away httpx.AsyncClient's behavior, so raise_for_status()/response.json()
 parsing in fetch_crtsh_certificates runs for real against a canned response."""
+
 import asyncio
 
 import httpx
@@ -25,7 +26,10 @@ def _patch_transport(monkeypatch, handler):
 
 
 def test_returns_parsed_certificate_list_on_success(monkeypatch):
-    certs = [{"id": 1, "name_value": "www.example.com"}, {"id": 2, "name_value": "mail.example.com"}]
+    certs = [
+        {"id": 1, "name_value": "www.example.com"},
+        {"id": 2, "name_value": "mail.example.com"},
+    ]
 
     def handler(request):
         assert request.url.params["q"] == "%.example.com"
@@ -45,7 +49,9 @@ def test_returns_empty_list_for_empty_response_body(monkeypatch):
 
 
 def test_raises_502_when_response_is_not_valid_json(monkeypatch):
-    _patch_transport(monkeypatch, lambda request: httpx.Response(200, text="<html>overloaded</html>"))
+    _patch_transport(
+        monkeypatch, lambda request: httpx.Response(200, text="<html>overloaded</html>")
+    )
 
     with pytest.raises(AppHTTPException) as exc_info:
         _run(fetch_crtsh_certificates("example.com"))

@@ -2,6 +2,7 @@
 resolution/SSRF checks, already covered by test_ssrf_guard.py) so these tests
 focus on fetch_rdap_domain_data's own logic: 404 handling, recovering the
 answering RDAP server from the pinned request's Host header, and error mapping."""
+
 import asyncio
 
 import httpx
@@ -34,7 +35,10 @@ def _patch_safe_get(monkeypatch, result=None, exc=None):
 
 
 def test_returns_data_and_answering_server_on_success(monkeypatch):
-    _patch_safe_get(monkeypatch, result=_response(200, json={"ldhName": "EXAMPLE.COM"}, host="rdap.verisign.com"))
+    _patch_safe_get(
+        monkeypatch,
+        result=_response(200, json={"ldhName": "EXAMPLE.COM"}, host="rdap.verisign.com"),
+    )
 
     data, server = _run(fetch_rdap_domain_data("example.com"))
 

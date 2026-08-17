@@ -22,7 +22,9 @@ def _run(coro):
 @pytest.fixture
 def engine():
     return create_async_engine(
-        "sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
 
 
@@ -76,12 +78,14 @@ class TestUpdateCommandPaletteSettings:
         async def _seed_then_update():
             async with session_factory() as db:
                 await update_command_palette_settings(
-                    db, CommandPaletteSettingsUpdate(always_tiles=True),
+                    db,
+                    CommandPaletteSettingsUpdate(always_tiles=True),
                 )
                 await db.commit()
             async with session_factory() as db:
                 result = await update_command_palette_settings(
-                    db, CommandPaletteSettingsUpdate(start_screen="newsfeed"),
+                    db,
+                    CommandPaletteSettingsUpdate(start_screen="newsfeed"),
                 )
                 await db.commit()
                 return result
@@ -96,7 +100,8 @@ class TestUpdateCommandPaletteSettings:
         async def _update():
             async with session_factory() as db:
                 result = await update_command_palette_settings(
-                    db, CommandPaletteSettingsUpdate(start_screen="newsfeed"),
+                    db,
+                    CommandPaletteSettingsUpdate(start_screen="newsfeed"),
                 )
                 await db.commit()
                 return result
@@ -111,7 +116,8 @@ class TestUpdateCommandPaletteSettings:
         async def _update():
             async with session_factory() as db:
                 await update_command_palette_settings(
-                    db, CommandPaletteSettingsUpdate(start_screen="not-a-real-screen"),
+                    db,
+                    CommandPaletteSettingsUpdate(start_screen="not-a-real-screen"),
                 )
 
         with pytest.raises(ApplicationError):
@@ -121,7 +127,8 @@ class TestUpdateCommandPaletteSettings:
         async def _update():
             async with session_factory() as db:
                 result = await update_command_palette_settings(
-                    db, CommandPaletteSettingsUpdate(start_screen="NEWSFEED"),
+                    db,
+                    CommandPaletteSettingsUpdate(start_screen="NEWSFEED"),
                 )
                 await db.commit()
                 return result

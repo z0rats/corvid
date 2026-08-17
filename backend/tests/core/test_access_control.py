@@ -3,6 +3,7 @@ route (see access_control.py's module docstring) - these tests exercise it
 through a real HTTP request/response cycle via TestClient, rather than
 calling the function directly with a hand-built Header value, so they cover
 the actual contract a client (or attacker) hits."""
+
 import pytest
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient

@@ -13,8 +13,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import (
 # testdata/ioc-type-detection-cases.json at the repo root, so the two can't silently diverge.
 FIXTURE_PATH = Path(__file__).resolve().parents[4] / "testdata" / "ioc-type-detection-cases.json"
 HAPPY_PATH_CASES = [
-    (case["value"], case["expectedType"])
-    for case in json.loads(FIXTURE_PATH.read_text())
+    (case["value"], case["expectedType"]) for case in json.loads(FIXTURE_PATH.read_text())
 ]
 
 
@@ -74,6 +73,9 @@ def test_normalize_address_lowercases_evm_only():
 
     btc = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
     assert normalize_address(btc) == btc
+
+    tron = "TWaertrZdpRJSbLv2G638UL5HCK6sKcZYy"
+    assert normalize_address(tron) == tron
 
 
 def test_normalize_address_strips_whitespace():
