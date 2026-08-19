@@ -1051,10 +1051,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fontsource/jetbrains-mono@npm:^5.2.8":
-  version: 5.2.8
-  resolution: "@fontsource/jetbrains-mono@npm:5.2.8"
-  checksum: 10c0/a51a1ad9cc847ccb3f5986d00b49fcd0eb2061200eb9caf215f968d658806e96e0ee305ab45df3d167f62223e45935cb7e89f984e7fb88fbe6928855a20e044e
+"@fontsource/jetbrains-mono@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/jetbrains-mono@npm:5.3.0"
+  checksum: 10c0/1351b2350e893f5da39559ed90ff0e5e60bcc876b1f40531ad081ad4bf2f3cda3fa9e8940364aef5a7430ae3140685c9cd4819c36d8ad62bcd3fa37e3cc66b1d
   languageName: node
   linkType: hard
 
@@ -3981,7 +3981,7 @@ __metadata:
     "@emotion/styled": "npm:^11.14.1"
     "@eslint/js": "npm:^10.0.1"
     "@fontsource/archivo": "npm:^5.3.0"
-    "@fontsource/jetbrains-mono": "npm:^5.2.8"
+    "@fontsource/jetbrains-mono": "npm:^5.3.0"
     "@hello-pangea/dnd": "npm:^18.0.1"
     "@mdxeditor/editor": "npm:^4.0.4"
     "@mui/icons-material": "npm:9.3.1"
