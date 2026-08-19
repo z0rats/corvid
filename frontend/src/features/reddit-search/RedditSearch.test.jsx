@@ -1,25 +1,14 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router';
+import { screen } from '@testing-library/react';
 import RedditSearch from './RedditSearch';
 import { useRedditSearch } from './hooks/useRedditSearch';
+import { renderFeatureRoute } from '../../core/testUtils/renderFeatureRoute';
 
 vi.mock('./hooks/useRedditSearch');
 
 const emptyTab = () => ({ items: [], sources: [], page: 1, hasMore: false, loading: false, error: null });
 
-// RedditSearch owns its own nested <Routes> (index/new/history), same as it's mounted in the
-// real app (routes.jsx's `path="reddit-search/*"`) — mounting it bare under MemoryRouter without
-// this wrapping route fails to match anything, since its own `index` route only matches an empty
-// relative path once nested under a `/*` parent.
 function renderRedditSearch(initialEntries) {
-  return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route path="reddit-search/*" element={<RedditSearch />} />
-      </Routes>
-    </MemoryRouter>,
-  );
+  return renderFeatureRoute(RedditSearch, 'reddit-search', initialEntries);
 }
 
 describe('RedditSearch — cross-feature prefill (command palette pivot)', () => {

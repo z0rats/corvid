@@ -46,6 +46,20 @@ class AppHTTPException(HTTPException):
         self.error_code = error_code
 
 
+def _stringify_ctx_error(err: dict) -> dict:
+    """Replace a raw exception instance under err['ctx']['error'] with its string form.
+
+    Pydantic v2 embeds the actual exception object there for any `field_validator`
+    that raises a bare `ValueError` (a common, idiomatic pattern) - left as-is, it's
+    not JSON-serializable and crashes this very error response instead of reporting
+    the validation failure.
+    """
+    ctx = err.get("ctx")
+    if isinstance(ctx, dict) and isinstance(ctx.get("error"), Exception):
+        err = {**err, "ctx": {**ctx, "error": str(ctx["error"])}}
+    return err
+
+
 def _sanitize_validation_errors(errors: list[dict]) -> list[dict]:
     """Strip internal details from validation errors in production.
 
@@ -54,7 +68,7 @@ def _sanitize_validation_errors(errors: list[dict]) -> list[dict]:
     to avoid exposing internal schema details to clients.
     """
     if settings.environment != "production":
-        return errors
+        return [_stringify_ctx_error(err) for err in errors]
 
     return [
         {

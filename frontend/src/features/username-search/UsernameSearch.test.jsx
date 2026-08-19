@@ -1,25 +1,14 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router';
+import { screen } from '@testing-library/react';
 import UsernameSearch from './UsernameSearch';
 import { useUsernameSearchScan } from './hooks/useUsernameSearchScan';
 import { usernameSearchApi } from './services/api/usernameSearchApi';
+import { renderFeatureRoute } from '../../core/testUtils/renderFeatureRoute';
 
 vi.mock('./hooks/useUsernameSearchScan');
 vi.mock('./services/api/usernameSearchApi');
 
-// UsernameSearch owns its own nested <Routes> (index/new/history/settings), same as it's mounted
-// in the real app (routes.jsx's `path="username-search/*"`) — mounting it bare under MemoryRouter
-// without this wrapping route fails to match anything, since its own `index` route only matches
-// an empty relative path once nested under a `/*` parent.
 function renderUsernameSearch(initialEntries) {
-  return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route path="username-search/*" element={<UsernameSearch />} />
-      </Routes>
-    </MemoryRouter>,
-  );
+  return renderFeatureRoute(UsernameSearch, 'username-search', initialEntries);
 }
 
 describe('UsernameSearch — cross-feature prefill (command palette pivot)', () => {

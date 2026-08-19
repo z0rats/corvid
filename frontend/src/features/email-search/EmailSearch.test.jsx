@@ -1,25 +1,14 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router';
+import { screen } from '@testing-library/react';
 import EmailSearch from './EmailSearch';
 import { useEmailSearchScan } from './hooks/useEmailSearchScan';
 import { emailSearchApi } from './services/api/emailSearchApi';
+import { renderFeatureRoute } from '../../core/testUtils/renderFeatureRoute';
 
 vi.mock('./hooks/useEmailSearchScan');
 vi.mock('./services/api/emailSearchApi');
 
-// EmailSearch owns its own nested <Routes> (index/new/history/settings), same as it's mounted in
-// the real app (routes.jsx's `path="email-search/*"`) — mounting it bare under MemoryRouter
-// without this wrapping route fails to match anything, since its own `index` route only matches
-// an empty relative path once nested under a `/*` parent.
 function renderEmailSearch(initialEntries) {
-  return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route path="email-search/*" element={<EmailSearch />} />
-      </Routes>
-    </MemoryRouter>,
-  );
+  return renderFeatureRoute(EmailSearch, 'email-search', initialEntries);
 }
 
 describe('EmailSearch — cross-feature prefill (command palette pivot)', () => {

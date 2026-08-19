@@ -18,7 +18,11 @@ function useTestHarness() {
 describe('useGitRecon — cancelScan', () => {
   afterEach(() => vi.clearAllMocks());
 
-  it('exposes cancelScan and calls the API with the running scan\'s searchId', async () => {
+  // The running/searchId gate itself (no scan running, already finished, the
+  // `loading`-vs-`phase` state-shape fallback) is exercised generically in
+  // core/hooks/useResumableScan.test.js - this only checks useGitRecon wires
+  // its own gitReconApi.cancelScan into that gate.
+  it("wires cancelScan to gitReconApi.cancelScan with the running scan's searchId", async () => {
     gitReconApi.cancelScan.mockResolvedValue(undefined);
     const { result } = renderHook(() => useTestHarness());
 
@@ -31,33 +35,5 @@ describe('useGitRecon — cancelScan', () => {
     });
 
     expect(gitReconApi.cancelScan).toHaveBeenCalledWith(42);
-  });
-
-  it('does not call the API when no scan is running', async () => {
-    const { result } = renderHook(() => useTestHarness());
-
-    act(() => {
-      result.current.setState(GIT_RECON_INITIAL_STATE);
-    });
-
-    await act(async () => {
-      result.current.cancelScan();
-    });
-
-    expect(gitReconApi.cancelScan).not.toHaveBeenCalled();
-  });
-
-  it('does not call the API once the scan has already finished (loading: false)', async () => {
-    const { result } = renderHook(() => useTestHarness());
-
-    act(() => {
-      result.current.setState({ ...GIT_RECON_INITIAL_STATE, loading: false, searchId: 42 });
-    });
-
-    await act(async () => {
-      result.current.cancelScan();
-    });
-
-    expect(gitReconApi.cancelScan).not.toHaveBeenCalled();
   });
 });

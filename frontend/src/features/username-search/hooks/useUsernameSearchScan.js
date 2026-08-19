@@ -30,7 +30,7 @@ async function fetchFoundSites(searchId) {
   }
 }
 
-async function reduce(prev, event) {
+export async function reduce(prev, event) {
   const { data } = event;
   if (event.type === 'started') {
     return { ...prev, searchId: data.search_id, totalSites: data.total_sites };
@@ -63,7 +63,7 @@ async function reduce(prev, event) {
   return prev;
 }
 
-async function reconcile(prev, run) {
+export async function reconcile(prev, run) {
   return {
     ...prev,
     phase: run.status,

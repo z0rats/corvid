@@ -12,7 +12,7 @@ const api = {
   cancelScan: (searchId) => emailSearchApi.cancelScan(searchId),
 };
 
-function reduce(prev, event) {
+export function reduce(prev, event) {
   const { data } = event;
   if (event.type === 'started') {
     return { ...prev, searchId: data.search_id, totalProviders: data.total_providers };
@@ -43,7 +43,7 @@ function reduce(prev, event) {
   return prev;
 }
 
-function reconcile(prev, run) {
+export function reconcile(prev, run) {
   return {
     ...prev,
     phase: run.status,

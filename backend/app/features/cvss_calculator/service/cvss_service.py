@@ -202,8 +202,11 @@ def _build_cvss31_response(cvss: CVSS3, vector_string: str) -> CVSSScoreResponse
         environmental_score=environmental_score,
         environmental_severity=environmental_severity,
         vector_string=vector_string,
-        exploitability_score=getattr(cvss, "exploitability_score", None),
-        impact_score=getattr(cvss, "impact_score", None),
+        # The `cvss` library names these `esc`/`isc`, not `exploitability_score`/
+        # `impact_score` - getattr(..., "exploitability_score", None) always
+        # returned None regardless of the real subscores.
+        exploitability_score=getattr(cvss, "esc", None),
+        impact_score=getattr(cvss, "isc", None),
     )
 
 
@@ -216,6 +219,8 @@ def _build_cvss40_response(cvss: CVSS4, vector_string: str) -> CVSS40ScoreRespon
         base_score=base_score,
         base_severity=base_severity,
         vector_string=vector_string,
-        exploitability_score=getattr(cvss, "exploitability_score", None),
-        impact_score=getattr(cvss, "impact_score", None),
+        # The installed `cvss` package (3.6) doesn't expose exploitability/impact
+        # subscores for CVSS 4.0 at all - these stay None until it does.
+        exploitability_score=None,
+        impact_score=None,
     )

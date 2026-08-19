@@ -1,23 +1,12 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router';
+import { screen } from '@testing-library/react';
 import GitRecon from './GitRecon';
 import { useGitRecon } from './hooks/useGitRecon';
+import { renderFeatureRoute } from '../../core/testUtils/renderFeatureRoute';
 
 vi.mock('./hooks/useGitRecon');
 
-// GitRecon owns its own nested <Routes> (index/new/history), same as it's mounted in the real app
-// (routes.jsx's `path="git-recon/*"`) — mounting it bare under MemoryRouter without this wrapping
-// route fails to match anything, since its own `index` route only matches an empty relative path
-// once nested under a `/*` parent.
 function renderGitRecon(initialEntries) {
-  return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route path="git-recon/*" element={<GitRecon />} />
-      </Routes>
-    </MemoryRouter>,
-  );
+  return renderFeatureRoute(GitRecon, 'git-recon', initialEntries);
 }
 
 describe('GitRecon — cross-feature prefill (command palette pivot)', () => {

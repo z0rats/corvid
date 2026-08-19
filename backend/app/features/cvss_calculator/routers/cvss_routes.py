@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 
+from app.core.exceptions import AppHTTPException
+
 from ..schemas.cvss_schemas import (
     CVSS31Request,
     CVSS31VectorRequest,
@@ -30,7 +32,12 @@ router = APIRouter(
     ),
 )
 def calculate_cvss31_from_metrics(request: CVSS31Request) -> CVSSScoreResponse:
-    return cvss_service.calculate_cvss31_from_metrics(request)
+    try:
+        return cvss_service.calculate_cvss31_from_metrics(request)
+    except ValueError as e:
+        raise AppHTTPException(
+            status_code=400, detail=str(e), error_code="CVSS_INVALID_INPUT"
+        ) from e
 
 
 @router.post(
@@ -44,7 +51,12 @@ def calculate_cvss31_from_metrics(request: CVSS31Request) -> CVSSScoreResponse:
     ),
 )
 def calculate_cvss31_from_vector(request: CVSS31VectorRequest) -> CVSSScoreResponse:
-    return cvss_service.calculate_cvss31_from_vector(request)
+    try:
+        return cvss_service.calculate_cvss31_from_vector(request)
+    except ValueError as e:
+        raise AppHTTPException(
+            status_code=400, detail=str(e), error_code="CVSS_INVALID_INPUT"
+        ) from e
 
 
 @router.post(
@@ -72,7 +84,12 @@ def validate_cvss31_vector(request: CVSS31VectorRequest) -> VectorValidationResp
     ),
 )
 def calculate_cvss40_from_metrics(request: CVSS40Request) -> CVSS40ScoreResponse:
-    return cvss_service.calculate_cvss40_from_metrics(request)
+    try:
+        return cvss_service.calculate_cvss40_from_metrics(request)
+    except ValueError as e:
+        raise AppHTTPException(
+            status_code=400, detail=str(e), error_code="CVSS_INVALID_INPUT"
+        ) from e
 
 
 @router.post(
@@ -86,7 +103,12 @@ def calculate_cvss40_from_metrics(request: CVSS40Request) -> CVSS40ScoreResponse
     ),
 )
 def calculate_cvss40_from_vector(request: CVSS40VectorRequest) -> CVSS40ScoreResponse:
-    return cvss_service.calculate_cvss40_from_vector(request)
+    try:
+        return cvss_service.calculate_cvss40_from_vector(request)
+    except ValueError as e:
+        raise AppHTTPException(
+            status_code=400, detail=str(e), error_code="CVSS_INVALID_INPUT"
+        ) from e
 
 
 @router.post(
