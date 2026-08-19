@@ -9,15 +9,11 @@ objects through the real handle_response, rather than mocking away the parsing
 logic being tested.
 """
 
-import asyncio
 from base64 import b64encode
 
 import httpx
 import pytest
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base
 from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models import (
     BlacklistedAddress,
     BlacklistSource,
@@ -27,10 +23,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import 
     ServiceAuthError,
     ServiceError,
 )
-
-
-def _run(coro):
-    return asyncio.run(coro)
+from tests.conftest import run as _run
 
 
 def _response(status_code: int, json=None) -> httpx.Response:
@@ -335,19 +328,8 @@ class TestCheckLibraryOfLeaks:
 
 class TestCheckBlacklist:
     @pytest.fixture
-    def session_factory(self):
-        engine = create_async_engine(
-            "sqlite+aiosqlite:///:memory:",
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-        )
-
-        async def _create_tables():
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all, tables=[BlacklistedAddress.__table__])
-
-        _run(_create_tables())
-        return async_sessionmaker(engine, expire_on_commit=False)
+    def session_factory(self, make_session_factory):
+        return make_session_factory([BlacklistedAddress.__table__])
 
     def test_returns_no_match_for_unlisted_address(self, session_factory):
         async def _scenario():

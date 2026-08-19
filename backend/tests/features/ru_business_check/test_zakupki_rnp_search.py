@@ -28,18 +28,8 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-def _patch_transport(monkeypatch, handler):
-    real_async_client = httpx.AsyncClient
-
-    def factory(*args, **kwargs):
-        kwargs["transport"] = httpx.MockTransport(handler)
-        return real_async_client(*args, **kwargs)
-
-    monkeypatch.setattr(httpx, "AsyncClient", factory)
-
-
 class TestSessionAndRequestShape:
-    def test_seeds_the_search_page_before_the_rss_request(self, monkeypatch):
+    def test_seeds_the_search_page_before_the_rss_request(self, patch_httpx_transport):
         requested_paths = []
 
         def handler(request):
@@ -50,7 +40,7 @@ class TestSessionAndRequestShape:
                 )
             return httpx.Response(200, text=_RSS_TEMPLATE.format(inn="7712345678"))
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         _run(fetch_rnp_entries("7712345678"))
 
@@ -59,7 +49,9 @@ class TestSessionAndRequestShape:
             "/epz/dishonestsupplier/search/rss",
         ]
 
-    def test_sends_a_browser_user_agent_and_the_seeded_cookie_on_the_rss_request(self, monkeypatch):
+    def test_sends_a_browser_user_agent_and_the_seeded_cookie_on_the_rss_request(
+        self, patch_httpx_transport
+    ):
         captured = {}
 
         def handler(request):
@@ -71,14 +63,14 @@ class TestSessionAndRequestShape:
             captured["cookie"] = request.headers.get("cookie")
             return httpx.Response(200, text=_RSS_TEMPLATE.format(inn="7712345678"))
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         _run(fetch_rnp_entries("7712345678"))
 
         assert captured["user_agent"]
         assert "session-cookie=abc" in captured["cookie"]
 
-    def test_sends_the_fixed_search_params_plus_the_inn(self, monkeypatch):
+    def test_sends_the_fixed_search_params_plus_the_inn(self, patch_httpx_transport):
         captured = {}
 
         def handler(request):
@@ -87,7 +79,7 @@ class TestSessionAndRequestShape:
             captured["params"] = dict(request.url.params)
             return httpx.Response(200, text=_RSS_TEMPLATE.format(inn="7712345678"))
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         _run(fetch_rnp_entries("7712345678"))
 
@@ -105,40 +97,40 @@ class TestSessionAndRequestShape:
 
 
 class TestErrorHandling:
-    def test_a_404_on_the_seed_request_raises_a_clean_error(self, monkeypatch):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(404, text="Not Found"))
+    def test_a_404_on_the_seed_request_raises_a_clean_error(self, patch_httpx_transport):
+        patch_httpx_transport(lambda request: httpx.Response(404, text="Not Found"))
 
         with pytest.raises(ZakupkiRnpError, match="HTTP 404"):
             _run(fetch_rnp_entries("7712345678"))
 
-    def test_a_404_on_the_rss_request_raises_a_clean_error(self, monkeypatch):
+    def test_a_404_on_the_rss_request_raises_a_clean_error(self, patch_httpx_transport):
         def handler(request):
             if request.url.path.endswith("results.html"):
                 return httpx.Response(200, text="<html></html>")
             return httpx.Response(404, text="Not Found")
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         with pytest.raises(ZakupkiRnpError, match="HTTP 404"):
             _run(fetch_rnp_entries("7712345678"))
 
     def test_an_unrelated_server_error_raises_a_clean_error_not_the_raw_httpx_exception(
-        self, monkeypatch
+        self, patch_httpx_transport
     ):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(500, text="error"))
+        patch_httpx_transport(lambda request: httpx.Response(500, text="error"))
 
         with pytest.raises(ZakupkiRnpError, match="HTTP 500"):
             _run(fetch_rnp_entries("7712345678"))
 
 
 class TestSuccessPath:
-    def test_returns_exact_matches_and_the_raw_payload(self, monkeypatch):
+    def test_returns_exact_matches_and_the_raw_payload(self, patch_httpx_transport):
         def handler(request):
             if request.url.path.endswith("results.html"):
                 return httpx.Response(200, text="<html></html>")
             return httpx.Response(200, text=_RSS_TEMPLATE.format(inn="7712345678"))
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         entries, raw = _run(fetch_rnp_entries("7712345678"))
 
@@ -146,23 +138,23 @@ class TestSuccessPath:
         assert entries[0]["inn"] == "7712345678"
         assert "7712345678" in raw
 
-    def test_no_matching_entries_is_a_clean_empty_list_not_an_error(self, monkeypatch):
+    def test_no_matching_entries_is_a_clean_empty_list_not_an_error(self, patch_httpx_transport):
         def handler(request):
             if request.url.path.endswith("results.html"):
                 return httpx.Response(200, text="<html></html>")
             return httpx.Response(200, text="<rss><channel></channel></rss>")
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         entries, _ = _run(fetch_rnp_entries("7712345678"))
 
         assert entries == []
 
-    def test_empty_inn_short_circuits_without_a_network_call(self, monkeypatch):
+    def test_empty_inn_short_circuits_without_a_network_call(self, patch_httpx_transport):
         def fail_handler(request):
             raise AssertionError("should not have made a request")
 
-        _patch_transport(monkeypatch, fail_handler)
+        patch_httpx_transport(fail_handler)
 
         entries, raw = _run(fetch_rnp_entries(""))
 

@@ -27,53 +27,43 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-def _patch_transport(monkeypatch, handler):
-    real_async_client = httpx.AsyncClient
-
-    def factory(*args, **kwargs):
-        kwargs["transport"] = httpx.MockTransport(handler)
-        return real_async_client(*args, **kwargs)
-
-    monkeypatch.setattr(httpx, "AsyncClient", factory)
-
-
 class TestBlockedAndCaptchaDetection:
-    def test_a_451_from_ddos_guard_raises_a_clean_blocked_error(self, monkeypatch):
+    def test_a_451_from_ddos_guard_raises_a_clean_blocked_error(self, patch_httpx_transport):
         def handler(request):
             return httpx.Response(
                 451, headers={"server": "ddos-guard"}, html="<html>Доступ заблокирован</html>"
             )
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         with pytest.raises(ArbitrationBlocked, match="ограничил доступ"):
             _run(fetch_arbitration_cases("7712345678"))
 
-    def test_a_403_is_also_treated_as_blocked_not_a_raw_http_error(self, monkeypatch):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(403, text="Forbidden"))
+    def test_a_403_is_also_treated_as_blocked_not_a_raw_http_error(self, patch_httpx_transport):
+        patch_httpx_transport(lambda request: httpx.Response(403, text="Forbidden"))
 
         with pytest.raises(ArbitrationBlocked):
             _run(fetch_arbitration_cases("7712345678"))
 
-    def test_captcha_required_flag_in_a_200_response_raises_captcha_error(self, monkeypatch):
-        _patch_transport(
-            monkeypatch, lambda request: httpx.Response(200, json={"CaptchaRequired": True})
-        )
+    def test_captcha_required_flag_in_a_200_response_raises_captcha_error(
+        self, patch_httpx_transport
+    ):
+        patch_httpx_transport(lambda request: httpx.Response(200, json={"CaptchaRequired": True}))
 
         with pytest.raises(ArbitrationCaptchaRequired, match="капчу"):
             _run(fetch_arbitration_cases("7712345678"))
 
     def test_an_unrelated_server_error_raises_a_clean_error_not_the_raw_httpx_exception(
-        self, monkeypatch
+        self, patch_httpx_transport
     ):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(500, text="internal error"))
+        patch_httpx_transport(lambda request: httpx.Response(500, text="internal error"))
 
         with pytest.raises(ArbitrationError, match="HTTP 500"):
             _run(fetch_arbitration_cases("7712345678"))
 
 
 class TestSuccessPath:
-    def test_returns_parsed_cases_and_raw_payload_on_success(self, monkeypatch):
+    def test_returns_parsed_cases_and_raw_payload_on_success(self, patch_httpx_transport):
         payload = {
             "Success": True,
             "Result": {
@@ -86,7 +76,7 @@ class TestSuccessPath:
                 ]
             },
         }
-        _patch_transport(monkeypatch, lambda request: httpx.Response(200, json=payload))
+        patch_httpx_transport(lambda request: httpx.Response(200, json=payload))
 
         cases, raw = _run(fetch_arbitration_cases("7712345678"))
 
@@ -103,11 +93,11 @@ class TestSuccessPath:
         ]
         assert "A1" in raw
 
-    def test_empty_inn_short_circuits_without_a_network_call(self, monkeypatch):
+    def test_empty_inn_short_circuits_without_a_network_call(self, patch_httpx_transport):
         def fail_handler(request):
             raise AssertionError("should not have made a request")
 
-        _patch_transport(monkeypatch, fail_handler)
+        patch_httpx_transport(fail_handler)
 
         cases, raw = _run(fetch_arbitration_cases(""))
 

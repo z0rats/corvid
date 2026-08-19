@@ -5,16 +5,13 @@ using the new on_error hook to preserve its distinct get/update error mapping
 Also covers that POST /api/settings/cti was removed (unused by the frontend,
 functionally duplicated PUT)."""
 
-import asyncio
 from collections.abc import AsyncGenerator
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import Base
 from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import AppHTTPException, register_exception_handlers
 from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings
@@ -23,19 +20,8 @@ from app.core.settings.cti_profile.service import cti_profile_service
 
 
 @pytest.fixture
-def client():
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
-
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, tables=[CTIProfileSettings.__table__])
-
-    asyncio.run(_create_tables())
+def client(make_session_factory):
+    session_factory = make_session_factory([CTIProfileSettings.__table__])
 
     async def _get_db() -> AsyncGenerator[AsyncSession]:
         async with session_factory() as db:

@@ -15,17 +15,7 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-def _patch_transport(monkeypatch, handler):
-    real_async_client = httpx.AsyncClient
-
-    def factory(*args, **kwargs):
-        kwargs["transport"] = httpx.MockTransport(handler)
-        return real_async_client(*args, **kwargs)
-
-    monkeypatch.setattr(httpx, "AsyncClient", factory)
-
-
-def test_returns_parsed_certificate_list_on_success(monkeypatch):
+def test_returns_parsed_certificate_list_on_success(patch_httpx_transport):
     certs = [
         {"id": 1, "name_value": "www.example.com"},
         {"id": 2, "name_value": "mail.example.com"},
@@ -35,23 +25,21 @@ def test_returns_parsed_certificate_list_on_success(monkeypatch):
         assert request.url.params["q"] == "%.example.com"
         return httpx.Response(200, json=certs)
 
-    _patch_transport(monkeypatch, handler)
+    patch_httpx_transport(handler)
 
     result = _run(fetch_crtsh_certificates("example.com"))
 
     assert result == certs
 
 
-def test_returns_empty_list_for_empty_response_body(monkeypatch):
-    _patch_transport(monkeypatch, lambda request: httpx.Response(200, content=b""))
+def test_returns_empty_list_for_empty_response_body(patch_httpx_transport):
+    patch_httpx_transport(lambda request: httpx.Response(200, content=b""))
 
     assert _run(fetch_crtsh_certificates("example.com")) == []
 
 
-def test_raises_502_when_response_is_not_valid_json(monkeypatch):
-    _patch_transport(
-        monkeypatch, lambda request: httpx.Response(200, text="<html>overloaded</html>")
-    )
+def test_raises_502_when_response_is_not_valid_json(patch_httpx_transport):
+    patch_httpx_transport(lambda request: httpx.Response(200, text="<html>overloaded</html>"))
 
     with pytest.raises(AppHTTPException) as exc_info:
         _run(fetch_crtsh_certificates("example.com"))
@@ -60,8 +48,8 @@ def test_raises_502_when_response_is_not_valid_json(monkeypatch):
     assert exc_info.value.error_code == "CRTSH_INVALID_RESPONSE"
 
 
-def test_raises_with_upstream_status_code_on_http_error(monkeypatch):
-    _patch_transport(monkeypatch, lambda request: httpx.Response(500, text="server error"))
+def test_raises_with_upstream_status_code_on_http_error(patch_httpx_transport):
+    patch_httpx_transport(lambda request: httpx.Response(500, text="server error"))
 
     with pytest.raises(AppHTTPException) as exc_info:
         _run(fetch_crtsh_certificates("example.com"))
@@ -70,11 +58,11 @@ def test_raises_with_upstream_status_code_on_http_error(monkeypatch):
     assert exc_info.value.error_code == "CRTSH_API_ERROR"
 
 
-def test_raises_504_on_timeout(monkeypatch):
+def test_raises_504_on_timeout(patch_httpx_transport):
     def handler(request):
         raise httpx.TimeoutException("timed out", request=request)
 
-    _patch_transport(monkeypatch, handler)
+    patch_httpx_transport(handler)
 
     with pytest.raises(AppHTTPException) as exc_info:
         _run(fetch_crtsh_certificates("example.com"))
@@ -83,11 +71,11 @@ def test_raises_504_on_timeout(monkeypatch):
     assert exc_info.value.error_code == "CRTSH_TIMEOUT"
 
 
-def test_raises_503_on_connection_error(monkeypatch):
+def test_raises_503_on_connection_error(patch_httpx_transport):
     def handler(request):
         raise httpx.ConnectError("connection refused", request=request)
 
-    _patch_transport(monkeypatch, handler)
+    patch_httpx_transport(handler)
 
     with pytest.raises(AppHTTPException) as exc_info:
         _run(fetch_crtsh_certificates("example.com"))

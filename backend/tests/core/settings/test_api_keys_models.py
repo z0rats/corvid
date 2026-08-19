@@ -2,40 +2,18 @@
 in-memory key, same pattern as test_secrets_crypto.py, so they never touch
 this developer's real <data_dir>/.encryption_key file."""
 
-import asyncio
-
 import pytest
 from cryptography.fernet import Fernet
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base
 from app.core.security import secrets_crypto
 from app.core.settings.api_keys.models.api_keys_settings_models import Apikey
-
-
-def _run(coro):
-    return asyncio.run(coro)
+from tests.conftest import run as _run
 
 
 @pytest.fixture
-def engine():
-    return create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-
-@pytest.fixture
-def session_factory(engine):
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, tables=[Apikey.__table__])
-
-    _run(_create_tables())
-    return async_sessionmaker(engine, expire_on_commit=False)
+def session_factory(make_session_factory):
+    return make_session_factory([Apikey.__table__])
 
 
 @pytest.fixture(autouse=True)
@@ -128,13 +106,13 @@ class TestEncryptionAtRest:
 
         assert _run(_scenario()) == "my-secret-key"
 
-    def test_key_is_actually_encrypted_on_disk(self, session_factory, engine):
+    def test_key_is_actually_encrypted_on_disk(self, session_factory, async_engine):
         async def _scenario():
             async with session_factory() as db:
                 db.add(Apikey(name="vt", key="my-secret-key"))
                 await db.commit()
 
-            async with engine.connect() as conn:
+            async with async_engine.connect() as conn:
                 result = await conn.execute(text("SELECT key FROM apikeys WHERE name = 'vt'"))
                 return result.scalar_one()
 

@@ -37,16 +37,6 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-def _patch_transport(monkeypatch, handler):
-    real_async_client = httpx.AsyncClient
-
-    def factory(*args, **kwargs):
-        kwargs["transport"] = httpx.MockTransport(handler)
-        return real_async_client(*args, **kwargs)
-
-    monkeypatch.setattr(httpx, "AsyncClient", factory)
-
-
 @pytest.fixture
 def engine(tmp_path: Path, monkeypatch):
     db_path = tmp_path / "pypi_version_check.db"
@@ -66,38 +56,36 @@ def _session_factory(engine):
 
 
 class TestFetchLatestPypiVersion:
-    def test_returns_version_on_success(self, monkeypatch):
+    def test_returns_version_on_success(self, patch_httpx_transport):
         def handler(request):
             assert request.url.path == "/pypi/some-package/json"
             return httpx.Response(200, json={"info": {"version": "1.2.3"}})
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         result = _run(pypi_version_check.fetch_latest_pypi_version("some-package"))
 
         assert result == "1.2.3"
 
-    def test_returns_none_on_network_error(self, monkeypatch):
+    def test_returns_none_on_network_error(self, patch_httpx_transport):
         def handler(request):
             raise httpx.ConnectError("offline")
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         result = _run(pypi_version_check.fetch_latest_pypi_version("some-package"))
 
         assert result is None
 
-    def test_returns_none_on_http_error_status(self, monkeypatch):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(404))
+    def test_returns_none_on_http_error_status(self, patch_httpx_transport):
+        patch_httpx_transport(lambda request: httpx.Response(404))
 
         result = _run(pypi_version_check.fetch_latest_pypi_version("some-package"))
 
         assert result is None
 
-    def test_returns_none_on_unexpected_json_shape(self, monkeypatch):
-        _patch_transport(
-            monkeypatch, lambda request: httpx.Response(200, json={"unexpected": "shape"})
-        )
+    def test_returns_none_on_unexpected_json_shape(self, patch_httpx_transport):
+        patch_httpx_transport(lambda request: httpx.Response(200, json={"unexpected": "shape"}))
 
         result = _run(pypi_version_check.fetch_latest_pypi_version("some-package"))
 

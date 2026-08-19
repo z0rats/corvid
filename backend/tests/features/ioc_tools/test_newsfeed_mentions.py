@@ -1,4 +1,3 @@
-import asyncio
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -6,45 +5,22 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 from app.core.config.rate_limit_config import limiter
-from app.core.database import Base
 from app.core.dependencies import get_read_db
 from app.features.ioc_tools.ioc_lookup.single_lookup.routers.unified_routes import (
     router as ioc_lookup_router,
 )
 from app.features.newsfeed.crud.news_articles_crud import get_articles_mentioning_ioc
 from app.features.newsfeed.models.newsfeed_models import NewsArticle, NewsfeedSettings
-
-
-def _run(coro):
-    return asyncio.run(coro)
+from tests.conftest import run as _run
 
 
 @pytest.fixture
-def engine():
-    """An isolated in-memory SQLite engine holding only the newsfeed tables this
-    crud query touches — cheaper than spinning up the full app schema."""
-    return create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-
-@pytest.fixture
-def session_factory(engine):
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(
-                Base.metadata.create_all,
-                tables=[NewsfeedSettings.__table__, NewsArticle.__table__],
-            )
-
-    _run(_create_tables())
-    return async_sessionmaker(engine, expire_on_commit=False)
+def session_factory(make_session_factory):
+    # Only the newsfeed tables this crud query touches — cheaper than
+    # spinning up the full app schema.
+    return make_session_factory([NewsfeedSettings.__table__, NewsArticle.__table__])
 
 
 async def _seed_article(session_factory, *, link, iocs, days_ago=0, title="Test Article"):

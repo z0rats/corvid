@@ -1,12 +1,9 @@
-import asyncio
 from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import Base
 from app.features.newsfeed.crud.news_articles_crud import (
     apply_article_filters,
     check_article_exists,
@@ -23,40 +20,17 @@ from app.features.newsfeed.crud.news_articles_crud import (
 )
 from app.features.newsfeed.models.newsfeed_models import NewsArticle, NewsfeedSettings
 from app.features.newsfeed.schemas.newsfeed_schemas import NewsArticleSchema
+from tests.conftest import run as _run
 
 # NB: every test below funnels all its DB work (seeding + the operation under
-# test) through a single `_run(...)` / asyncio.run() call. The in-memory
-# sqlite engine uses StaticPool to keep one physical connection alive across
-# calls, but aiosqlite binds that connection's background worker thread to
-# whichever event loop first touches it - a second asyncio.run() call in the
-# same test would hand it a *new, different* loop and silently corrupt
-# results instead of raising. One run() per test avoids that trap.
-
-
-def _run(coro):
-    return asyncio.run(coro)
+# test) through a single `_run(...)` call - see `tests/conftest.py`'s
+# `async_engine` fixture docstring for why a second `asyncio.run()` in the
+# same test would silently corrupt results instead of raising.
 
 
 @pytest.fixture
-def engine():
-    return create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-
-@pytest.fixture
-def session_factory(engine):
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(
-                Base.metadata.create_all,
-                tables=[NewsfeedSettings.__table__, NewsArticle.__table__],
-            )
-
-    _run(_create_tables())
-    return async_sessionmaker(engine, expire_on_commit=False)
+def session_factory(make_session_factory):
+    return make_session_factory([NewsfeedSettings.__table__, NewsArticle.__table__])
 
 
 def _article_schema(*, link, days_ago=0, title="Article", tlp="TLP:CLEAR", **overrides):

@@ -6,10 +6,8 @@ from collections.abc import AsyncGenerator
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import Base
 from app.core.dependencies import get_db, get_read_db
 from app.core.settings.username_search.models.social_analyzer_settings_models import (
     SocialAnalyzerConfig,
@@ -18,21 +16,8 @@ from app.core.settings.username_search.routers.social_analyzer_settings_routes i
 
 
 @pytest.fixture
-def client():
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
-
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, tables=[SocialAnalyzerConfig.__table__])
-
-    import asyncio
-
-    asyncio.run(_create_tables())
+def client(make_session_factory):
+    session_factory = make_session_factory([SocialAnalyzerConfig.__table__])
 
     async def _get_db() -> AsyncGenerator[AsyncSession]:
         async with session_factory() as db:

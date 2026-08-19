@@ -10,39 +10,20 @@ import contextlib
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 import app.core.scans.run as run_module
-from app.core.database import Base
 from app.core.scans.crud import ScanColumns
 from app.core.scans.run import ScanCancelled, ScanEvent, ScanOutcome, ScanRun
 from app.features.email_search.models.email_search_models import MailSearch
 from app.features.username_search.models.username_search_models import MaigretSearch
+from tests.conftest import run as _run
 
 MAIGRET_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
 
 
-def _run(coro):
-    return asyncio.run(coro)
-
-
 @pytest.fixture
-def session_factory(monkeypatch):
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(
-                Base.metadata.create_all, tables=[MaigretSearch.__table__, MailSearch.__table__]
-            )
-
-    _run(_create_tables())
-    factory = async_sessionmaker(engine, expire_on_commit=False)
+def session_factory(monkeypatch, make_session_factory):
+    factory = make_session_factory([MaigretSearch.__table__, MailSearch.__table__])
 
     @contextlib.asynccontextmanager
     async def fake_managed_session():

@@ -1,39 +1,17 @@
-import asyncio
-
 import pytest
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base
 from app.core.settings.cti_profile.models.cti_profile_models import CTIProfileSettings
 from app.core.settings.cti_profile.schemas.cti_profile_schemas import CTISettingsUpdate
 from app.core.settings.cti_profile.service.cti_profile_service import (
     get_cti_profile_settings,
     update_cti_profile_settings,
 )
-
-
-def _run(coro):
-    return asyncio.run(coro)
+from tests.conftest import run as _run
 
 
 @pytest.fixture
-def engine():
-    return create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-
-@pytest.fixture
-def session_factory(engine):
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, tables=[CTIProfileSettings.__table__])
-
-    _run(_create_tables())
-    return async_sessionmaker(engine, expire_on_commit=False)
+def session_factory(make_session_factory):
+    return make_session_factory([CTIProfileSettings.__table__])
 
 
 class TestGetCtiProfileSettings:

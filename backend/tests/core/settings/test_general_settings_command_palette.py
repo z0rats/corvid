@@ -1,10 +1,5 @@
-import asyncio
-
 import pytest
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base
 from app.core.exceptions import ApplicationError
 from app.core.settings.general.models.general_settings_models import GeneralSettings
 from app.core.settings.general.schemas.general_settings_schemas import CommandPaletteSettingsUpdate
@@ -13,29 +8,12 @@ from app.core.settings.general.service.general_settings_service import (
     update_command_palette_settings,
 )
 from app.core.settings.general.utils.validation_utils import validate_start_screen
-
-
-def _run(coro):
-    return asyncio.run(coro)
+from tests.conftest import run as _run
 
 
 @pytest.fixture
-def engine():
-    return create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-
-@pytest.fixture
-def session_factory(engine):
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, tables=[GeneralSettings.__table__])
-
-    _run(_create_tables())
-    return async_sessionmaker(engine, expire_on_commit=False)
+def session_factory(make_session_factory):
+    return make_session_factory([GeneralSettings.__table__])
 
 
 class TestGetGeneralSettingsDefaults:

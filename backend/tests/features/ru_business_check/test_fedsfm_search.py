@@ -24,16 +24,6 @@ def _run(coro):
     return asyncio.run(coro)
 
 
-def _patch_transport(monkeypatch, handler):
-    real_async_client = httpx.AsyncClient
-
-    def factory(*args, **kwargs):
-        kwargs["transport"] = httpx.MockTransport(handler)
-        return real_async_client(*args, **kwargs)
-
-    monkeypatch.setattr(httpx, "AsyncClient", factory)
-
-
 class TestParseMatches:
     def test_extracts_id_name_type_status_from_each_row(self):
         data = {
@@ -65,31 +55,28 @@ class TestParseMatches:
 
 
 class TestBlockedDetection:
-    def test_a_403_with_no_user_agent_raises_a_clean_error(self, monkeypatch):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(403, text="Forbidden"))
+    def test_a_403_with_no_user_agent_raises_a_clean_error(self, patch_httpx_transport):
+        patch_httpx_transport(lambda request: httpx.Response(403, text="Forbidden"))
 
         with pytest.raises(FedsfmError, match="HTTP 403"):
             _run(check_terrorist_list("Иванов Иван Иванович"))
 
     def test_an_unrelated_server_error_raises_a_clean_error_not_the_raw_httpx_exception(
-        self, monkeypatch
+        self, patch_httpx_transport
     ):
-        _patch_transport(monkeypatch, lambda request: httpx.Response(500, text="internal error"))
+        patch_httpx_transport(lambda request: httpx.Response(500, text="internal error"))
 
         with pytest.raises(FedsfmError, match="HTTP 500"):
             _run(check_terrorist_list("Иванов Иван Иванович"))
 
-    def test_a_non_json_body_raises_a_clean_error(self, monkeypatch):
-        _patch_transport(
-            monkeypatch, lambda request: httpx.Response(200, text="<html>block</html>")
-        )
+    def test_a_non_json_body_raises_a_clean_error(self, patch_httpx_transport):
+        patch_httpx_transport(lambda request: httpx.Response(200, text="<html>block</html>"))
 
         with pytest.raises(FedsfmError, match="не JSON"):
             _run(check_terrorist_list("Иванов Иван Иванович"))
 
-    def test_is_error_true_raises_a_clean_error(self, monkeypatch):
-        _patch_transport(
-            monkeypatch,
+    def test_is_error_true_raises_a_clean_error(self, patch_httpx_transport):
+        patch_httpx_transport(
             lambda request: httpx.Response(
                 200, json={"IsError": True, "recordsTotal": 0, "recordsFiltered": 0, "data": []}
             ),
@@ -100,7 +87,7 @@ class TestBlockedDetection:
 
 
 class TestSuccessPath:
-    def test_sends_the_search_text_and_a_browser_user_agent(self, monkeypatch):
+    def test_sends_the_search_text_and_a_browser_user_agent(self, patch_httpx_transport):
         captured = {}
 
         def handler(request):
@@ -110,14 +97,14 @@ class TestSuccessPath:
                 200, json={"IsError": False, "recordsTotal": 0, "recordsFiltered": 0, "data": []}
             )
 
-        _patch_transport(monkeypatch, handler)
+        patch_httpx_transport(handler)
 
         _run(check_terrorist_list("Иванов Иван Иванович"))
 
         assert "Иванов".encode() in captured["body"]
         assert captured["user_agent"]
 
-    def test_returns_clean_result_and_raw_payload_when_matched(self, monkeypatch):
+    def test_returns_clean_result_and_raw_payload_when_matched(self, patch_httpx_transport):
         payload = {
             "IsError": False,
             "recordsTotal": 1,
@@ -131,7 +118,7 @@ class TestSuccessPath:
                 }
             ],
         }
-        _patch_transport(monkeypatch, lambda request: httpx.Response(200, json=payload))
+        patch_httpx_transport(lambda request: httpx.Response(200, json=payload))
 
         result, raw = _run(check_terrorist_list("Иванов Иван Иванович"))
 
@@ -150,9 +137,11 @@ class TestSuccessPath:
         }
         assert "ИВАНОВ" in raw
 
-    def test_no_matching_row_is_a_clean_not_matched_result_not_an_error(self, monkeypatch):
+    def test_no_matching_row_is_a_clean_not_matched_result_not_an_error(
+        self, patch_httpx_transport
+    ):
         payload = {"IsError": False, "recordsTotal": 0, "recordsFiltered": 0, "data": []}
-        _patch_transport(monkeypatch, lambda request: httpx.Response(200, json=payload))
+        patch_httpx_transport(lambda request: httpx.Response(200, json=payload))
 
         result, _ = _run(check_terrorist_list("Совершенно Несуществующее Имя"))
 
@@ -163,11 +152,11 @@ class TestSuccessPath:
             "matches": [],
         }
 
-    def test_empty_name_short_circuits_without_a_network_call(self, monkeypatch):
+    def test_empty_name_short_circuits_without_a_network_call(self, patch_httpx_transport):
         def fail_handler(request):
             raise AssertionError("should not have made a request")
 
-        _patch_transport(monkeypatch, fail_handler)
+        patch_httpx_transport(fail_handler)
 
         result, raw = _run(check_terrorist_list(""))
 

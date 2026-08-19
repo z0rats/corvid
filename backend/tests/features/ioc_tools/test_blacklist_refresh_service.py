@@ -5,16 +5,12 @@ local blacklist can go stale indefinitely — is_blacklist_stale re-derives stal
 the DB on every startup instead) and fetch_opensanctions_addresses' NDJSON parsing (filters
 to CryptoWallet-schema entities, skips entities with no publicKey property)."""
 
-import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base
 from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models import (
     BlacklistedAddress,
     BlacklistSource,
@@ -24,10 +20,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service.blacklist_refresh_s
     fetch_opensanctions_addresses,
     is_blacklist_stale,
 )
-
-
-def _run(coro):
-    return asyncio.run(coro)
+from tests.conftest import run as _run
 
 
 class _FakeClient:
@@ -39,19 +32,8 @@ class _FakeClient:
 
 
 @pytest.fixture
-def session_factory():
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-    async def _create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all, tables=[BlacklistedAddress.__table__])
-
-    _run(_create_tables())
-    return async_sessionmaker(engine, expire_on_commit=False)
+def session_factory(make_session_factory):
+    return make_session_factory([BlacklistedAddress.__table__])
 
 
 class TestIsBlacklistStale:
