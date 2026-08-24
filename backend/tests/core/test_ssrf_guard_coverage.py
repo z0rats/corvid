@@ -36,6 +36,9 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # user-supplied, never the host itself
     "features/ioc_tools/domain_finder/service/urlscan_api_service.py",
     "features/ioc_tools/domain_finder/service/crtsh_api_service.py",
+    "features/ioc_tools/domain_finder/service/wayback_api_service.py",
+    "features/ioc_tools/domain_finder/service/hackertarget_api_service.py",
+    "features/ioc_tools/domain_finder/service/rapiddns_api_service.py",
     "features/ioc_tools/domain_finder/service/dnsdumpster_api_service.py",
     "features/ioc_tools/ioc_lookup/single_lookup/service/client_base.py",
     "features/reddit_search/service/reddit_search_service.py",
@@ -52,6 +55,9 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # Reverse geocoding: fixed nominatim.openstreetmap.org host; only already-parsed
     # lat/lon floats (not raw user/EXIF input) are query params
     "features/image_tools/service/reverse_geocode_service.py",
+    # ChronoVerify provenance check: fixed chronoverify.com host; only the uploaded
+    # image bytes and the user's own optional API key are user-supplied, never the host
+    "features/image_tools/service/chronoverify_api_service.py",
     # Local Ollama model auto-discovery: host comes from settings.llm.ollama_base_url
     # (an operator-configured env var, LLM_OLLAMA_BASE_URL), never a request-time value
     "utils/llm_service.py",
