@@ -51,7 +51,14 @@ export default function NewSearch() {
           <ResultsList items={active.items} sources={active.sources} />
 
           {active.items.length > 0 && (
-            <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ mt: 2 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                justifyContent: "center",
+                alignItems: "center",
+                mt: 2
+              }}>
               <IconButton
                 size="small"
                 onClick={() => goPrev(kind)}

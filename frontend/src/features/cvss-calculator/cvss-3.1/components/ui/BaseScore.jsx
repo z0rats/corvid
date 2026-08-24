@@ -38,7 +38,7 @@ export default function BaseScore() {
   };
 
   const renderCard = (title, metrics) => (
-    <Grid size={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Typography variant="h6" align="center">
         {title}
       </Typography>
@@ -74,7 +74,11 @@ export default function BaseScore() {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <BarChartIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('cvss31.base.accordionTitle')}</Typography>
         </Box>
@@ -141,7 +145,7 @@ export default function BaseScore() {
               t('cvss31.base.impactMetrics'),
               impactMetrics
             )}
-            <Box sx={{ mx: "auto", width: "40%" }}>
+            <Box sx={{ mx: "auto", width: { xs: "100%", sm: "60%", md: "40%" } }}>
               <MetricSelect
                 label={t('cvss31.base.scopeLabel')}
                 value={state.metrics.base.scope}

@@ -22,7 +22,9 @@ export default function KeywordsSection({ item }) {
         expandIcon={<ExpandMoreIcon />}
         sx={{ flexDirection: "row-reverse" }} 
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <FindInPageIcon />
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
             {item.matches.length > 1 ? t('feed.keywords.titlePlural') : t('feed.keywords.title')}
@@ -32,7 +34,9 @@ export default function KeywordsSection({ item }) {
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
-        <Stack direction="row" spacing={1} flexWrap="wrap">
+        <Stack direction="row" spacing={1} sx={{
+          flexWrap: "wrap"
+        }}>
           {item.matches.map((keyword) => (
             <Chip
               key={keyword}

@@ -22,7 +22,9 @@ export default function GroupsSection({ item }) {
         expandIcon={<ExpandMoreIcon />}
         sx={{ flexDirection: "row-reverse" }} 
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <FindInPageIcon />
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
             {item.matches.length > 1 ? t('feed.groups.titlePlural') : t('feed.groups.title')}
@@ -32,7 +34,9 @@ export default function GroupsSection({ item }) {
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
-        <Stack direction="row" spacing={1} flexWrap="wrap">
+        <Stack direction="row" spacing={1} sx={{
+          flexWrap: "wrap"
+        }}>
           {item.matches.map((keyword) => (
             <Chip
               key={keyword}

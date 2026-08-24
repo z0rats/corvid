@@ -39,7 +39,11 @@ export default function Hops({ result }) {
         id="hops-header"
         sx={{ minHeight: '48px', padding: '0 16px' }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <RouteIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
             {t('hops.title', { count: result ? result.length : 0 })}

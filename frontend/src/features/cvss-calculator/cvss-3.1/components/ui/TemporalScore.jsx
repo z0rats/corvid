@@ -57,7 +57,11 @@ export default function TemporalScore() {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <TimerIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('cvss31.temporal.accordionTitle')}</Typography>
         </Box>

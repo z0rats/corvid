@@ -57,7 +57,11 @@ export default function EnvironmentalScore() {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <ForestIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('cvss31.environmental.accordionTitle')}</Typography>
         </Box>

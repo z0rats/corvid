@@ -61,7 +61,13 @@ export default function GithubDetails({ result, ioc }) {
     <Box sx={{ margin: 1, mt:0 }}>
       <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
-          <Grid container spacing={1} alignItems="center" mb={2}>
+          <Grid
+            container
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mb: 2
+            }}>
             <GitHubIcon color="action"/>
             <Typography variant="h6" component="div" sx={{ ml: 1 }}>
               {t('providers.github.mentionsTotal', { count: totalCount })}

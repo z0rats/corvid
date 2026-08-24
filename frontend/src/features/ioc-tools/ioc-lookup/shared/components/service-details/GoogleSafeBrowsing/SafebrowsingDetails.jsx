@@ -67,7 +67,13 @@ export default function SafeBrowseDetails({ result, ioc }) {
     <Box sx={{ margin: 1, mt:0 }}>
       <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
-          <Grid container spacing={1} alignItems="center" mb={2}>
+          <Grid
+            container
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mb: 2
+            }}>
              {hasMatches ? <ReportProblemIcon color="warning" /> : <CheckCircleOutlineIcon color="success" />}
             <Typography variant="h6" component="div" sx={{ ml: 1 }}>
               {t('providers.googleSafeBrowsing.analysisFor')} <Typography component="span" sx={{wordBreak: 'break-all'}}>{ioc}</Typography>
@@ -84,7 +90,14 @@ export default function SafeBrowseDetails({ result, ioc }) {
               ))}
             </>
           ) : (
-            <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column" p={2}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+                p: 2
+              }}>
               <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'success.main', mb:1 }} />
               <Typography variant="subtitle1" color="text.secondary">
                 {t('providers.googleSafeBrowsing.noThreatsFound')}

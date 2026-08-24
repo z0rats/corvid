@@ -66,7 +66,11 @@ export default function MandiantDetails({ result: dataFromParent }) {
       {indicators.length > 0 && (
         <Accordion sx={{ borderRadius: 1, mb: 1, '&::before': { display: 'none' } }} defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="indicators-content" id="indicators-header">
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <BugReportIcon sx={{ mr: 1 }} />
               <Typography variant="h6">{t('providers.crowdstrike.indicatorsCount', { count: indicators.length })}</Typography>
             </Box>
@@ -84,7 +88,11 @@ export default function MandiantDetails({ result: dataFromParent }) {
       {reports.length > 0 && (
         <Accordion sx={{ borderRadius: 1, '&::before': { display: 'none' } }} defaultExpanded>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="reports-content" id="reports-header">
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <AssessmentIcon sx={{ mr: 1 }} />
               <Typography variant="h6">{t('providers.mandiant.reportsCount', { count: reports.length })}</Typography>
             </Box>

@@ -23,7 +23,9 @@ export default function KeywordsInput({ keywords, onAddKeyword, onDeleteKeyword 
 
   return (
     <>
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={{ xs: 12, sm: 11 }}>
           <TextField
             fullWidth

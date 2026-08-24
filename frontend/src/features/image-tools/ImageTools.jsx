@@ -76,7 +76,12 @@ export default function ImageTools() {
       </Box>
 
       <Paper elevation={1} sx={{ p: 2, mb: 2 }}>
-        <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 1
+          }}>
           <ImageSearchIcon sx={{ mr: 1, color: 'primary.main' }} />
           <Typography variant="subtitle1" fontWeight="medium">{t('reverseSearch.title')}</Typography>
         </Box>

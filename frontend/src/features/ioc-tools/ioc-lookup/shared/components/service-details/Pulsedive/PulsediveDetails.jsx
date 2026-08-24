@@ -77,7 +77,13 @@ export default function PulsediveDetails({ result, ioc }) {
     <Box sx={{ margin: 1, mt:0 }}>
       <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
         <CardContent>
-          <Grid container spacing={1} alignItems="center" mb={2}>
+          <Grid
+            container
+            spacing={1}
+            sx={{
+              alignItems: "center",
+              mb: 2
+            }}>
             <RiskIcon color="action" />
             <Typography variant="h6" component="div" sx={{ ml: 1 }}>
               {t('providers.pulsedive.analysisFor')} <Typography component="span" sx={{wordBreak: 'break-all'}}>{data.indicator || ioc}</Typography>

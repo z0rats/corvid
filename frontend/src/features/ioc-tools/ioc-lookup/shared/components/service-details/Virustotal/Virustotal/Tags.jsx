@@ -15,8 +15,12 @@ export default function Tags(props) {
       key="tags_card"
       sx={{ m: 1, p: 2, borderRadius: 1, boxShadow: 0 }}
     >
-      <Grid container alignItems="center">
-        <Grid mr={1}>
+      <Grid container sx={{
+        alignItems: "center"
+      }}>
+        <Grid sx={{
+          mr: 1
+        }}>
           <TagIcon />
         </Grid>
         <Grid>

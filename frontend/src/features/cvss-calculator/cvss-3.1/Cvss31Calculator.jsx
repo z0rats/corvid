@@ -35,7 +35,7 @@ export default function Cvss31Calculator() {
       <BaseScore />
       <TemporalScore />
       <EnvironmentalScore />
-      
+
       <Accordion 
         defaultExpanded
         sx={{ 
@@ -55,14 +55,20 @@ export default function Cvss31Calculator() {
             },
           }}
         >
-          <Box display="flex" alignItems="center">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center"
+            }}>
             <DataUsageIcon fontSize="small" sx={{ mr: 1 }} />
             <Typography variant="subtitle2">{t('cvss31.overallScoreTitle')}</Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ px: 1, py: 1 }}>
           <Box>
-            <Grid container spacing={2} alignItems="center">
+            <Grid container spacing={2} sx={{
+              alignItems: "center"
+            }}>
               <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <Typography variant="h5" gutterBottom>{t('common.overallScore')}</Typography>
                 <Box sx={{

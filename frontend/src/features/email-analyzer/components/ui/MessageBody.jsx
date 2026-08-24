@@ -29,7 +29,11 @@ export default function MessageBody({ result }) {
         id="message-body-header"
         sx={{ minHeight: '48px', padding: '0 16px' }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <ChatIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
             {t('messageBody.title')}

@@ -27,8 +27,19 @@ export default function ImageGeolocationPanel({ file }) {
 
   return (
     <Card variant="outlined" sx={{ mt: 2, p: 2 }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
-        <Box display="flex" alignItems="center">
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1
+        }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <PublicIcon sx={{ mr: 1, color: 'primary.main' }} />
           <Typography variant="subtitle1" fontWeight="medium">{t('geolocation.title')}</Typography>
         </Box>
@@ -61,7 +72,13 @@ export default function ImageGeolocationPanel({ file }) {
                 key={candidate.location}
                 sx={{ mb: 1.5, p: 1.5, borderRadius: 1, border: '1px solid', borderColor: 'divider' }}
               >
-                <Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1
+                  }}>
                   <Typography variant="body1" fontWeight="medium">{candidate.location}</Typography>
                   <Chip
                     size="small"

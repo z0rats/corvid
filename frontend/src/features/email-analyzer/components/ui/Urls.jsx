@@ -35,7 +35,11 @@ export default function Urls({ result }) {
         id="urls-header"
         sx={{ minHeight: '48px', padding: '0 16px' }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <LinkIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
             {t('urls.title', { count: result.length })}

@@ -55,7 +55,9 @@ export default function ApiKeys() {
   if (loading && Object.keys(servicesConfig).length === 0) {
     return (
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <Stack spacing={2} alignItems="center">
+        <Stack spacing={2} sx={{
+          alignItems: "center"
+        }}>
           <CircularProgress size={48} />
           <Typography variant="h6" color="text.secondary">
             {t('apiKeys.loadingServices')}

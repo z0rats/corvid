@@ -50,7 +50,14 @@ export default function VideoOverviewCard({ result }) {
               {oembed.title || t('overview.untitled')}
             </Typography>
 
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1, flexWrap: 'wrap' }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 1,
+                flexWrap: 'wrap'
+              }}>
               {oembed.author_name && (
                 <Chip
                   size="small"

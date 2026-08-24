@@ -253,44 +253,51 @@ function Layout() {
             </IconButton>
           </Tooltip>
 
-          <Box
-            onClick={handleOpenPalette}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenPalette(); }}
-            aria-label={tPalette('searchPlaceholder')}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              flexGrow: 1,
-              mx: 2,
-              maxWidth: 480,
-              px: 2,
-              py: 0.75,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.common.white, 0.15),
-              color: 'inherit',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.25) },
-            }}
-          >
-            <SearchIcon fontSize="small" />
-            <Typography variant="body2" noWrap sx={{ opacity: 0.85, flexGrow: 1 }}>
-              {tPalette('searchPlaceholder')}
-            </Typography>
-            <Chip
-              label="/"
-              size="small"
-              variant="outlined"
+          {location.pathname === '/' ? (
+            // StartScreen (rendered below, at "/") already is a live search input with the same
+            // placeholder - showing this trigger too would just be a second, confusingly identical
+            // search box stacked right above it. Keep the flex spacer so the right-side icons stay put.
+            <Box sx={{ flexGrow: 1 }} />
+          ) : (
+            <Box
+              onClick={handleOpenPalette}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenPalette(); }}
+              aria-label={tPalette('searchPlaceholder')}
               sx={{
-                display: { xs: 'none', sm: 'flex' },
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                flexGrow: 1,
+                mx: 2,
+                maxWidth: 480,
+                px: 2,
+                py: 0.75,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.common.white, 0.15),
                 color: 'inherit',
-                borderColor: alpha(theme.palette.common.white, 0.4),
-                fontFamily: 'monospace',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.25) },
               }}
-            />
-          </Box>
+            >
+              <SearchIcon fontSize="small" />
+              <Typography variant="body2" noWrap sx={{ opacity: 0.85, flexGrow: 1 }}>
+                {tPalette('searchPlaceholder')}
+              </Typography>
+              <Chip
+                label="/"
+                size="small"
+                variant="outlined"
+                sx={{
+                  display: { xs: 'none', sm: 'flex' },
+                  color: 'inherit',
+                  borderColor: alpha(theme.palette.common.white, 0.4),
+                  fontFamily: 'monospace',
+                }}
+              />
+            </Box>
+          )}
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', flexShrink: 0, pl: 2 }}>
             <Tooltip title={currentLanguage === 'en' ? 'Русский' : 'English'}>

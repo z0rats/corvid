@@ -11,7 +11,13 @@ export default function PayloadFieldsEditor({ fields, onAdd, onUpdate, onDelete 
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1
+        }}>
         <Typography variant="body2">
           {t('payloadFields.helperText')}
         </Typography>

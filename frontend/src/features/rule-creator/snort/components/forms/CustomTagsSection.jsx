@@ -34,7 +34,9 @@ export default function CustomTagsSection({ tags, onTagsChange }) {
       <Typography variant="subtitle2" gutterBottom>
         {t('snort.customTagsSection.header')}
       </Typography>
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={{ xs: 12, sm: 10 }}>
           <TextField
             fullWidth

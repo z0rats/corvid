@@ -100,110 +100,120 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
 
   return (
     <>
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{t('editDialog.title')}</DialogTitle>
-      <DialogContent dividers>
-        <Typography variant="subtitle1" gutterBottom>{t('editDialog.basicInfo')}</Typography>
-        <ResizableTextField label={t('editDialog.titleLabel')} fullWidth value={tpl.title} onChange={e => updateField('title', e.target.value)} required sx={{ mb: 2 }} />
-        <FormControl sx={{ minWidth: 200, mb: 2 }}>
-          <InputLabel>{t('editDialog.modelLabel')}</InputLabel>
-          <Select value={tpl.model} label={t('editDialog.modelLabel')} onChange={e => updateField('model', e.target.value)}>
-            {Object.entries(Object.groupBy(availableModels, m => m.provider)).flatMap(([provider, models]) => [
-              <ListSubheader key={provider}>{provider}</ListSubheader>,
-              ...models.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>),
-            ])}
-          </Select>
-        </FormControl>
-        <ResizableTextField label={t('editDialog.descriptionLabel')} fullWidth multiline minRows={2} value={tpl.description} onChange={e => updateField('description', e.target.value)} />
-        {categories.length > 0 && (
-          <FormControl sx={{ minWidth: 200, mt: 2 }}>
-            <InputLabel>{t('editDialog.groupLabel')}</InputLabel>
-            <Select
-              value={tpl.category_id || ''}
-              label={t('editDialog.groupLabel')}
-              onChange={e => updateField('category_id', e.target.value)}
-            >
-              {categories.map(c => (
-                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-              ))}
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>{t('editDialog.title')}</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="subtitle1" gutterBottom>{t('editDialog.basicInfo')}</Typography>
+          <ResizableTextField label={t('editDialog.titleLabel')} fullWidth value={tpl.title} onChange={e => updateField('title', e.target.value)} required sx={{ mb: 2 }} />
+          <FormControl sx={{ minWidth: 200, mb: 2 }}>
+            <InputLabel>{t('editDialog.modelLabel')}</InputLabel>
+            <Select value={tpl.model} label={t('editDialog.modelLabel')} onChange={e => updateField('model', e.target.value)}>
+              {Object.entries(Object.groupBy(availableModels, m => m.provider)).flatMap(([provider, models]) => [
+                <ListSubheader key={provider}>{provider}</ListSubheader>,
+                ...models.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>),
+              ])}
             </Select>
           </FormControl>
-        )}
+          <ResizableTextField label={t('editDialog.descriptionLabel')} fullWidth multiline minRows={2} value={tpl.description} onChange={e => updateField('description', e.target.value)} />
+          {categories.length > 0 && (
+            <FormControl sx={{ minWidth: 200, mt: 2 }}>
+              <InputLabel>{t('editDialog.groupLabel')}</InputLabel>
+              <Select
+                value={tpl.category_id || ''}
+                label={t('editDialog.groupLabel')}
+                onChange={e => updateField('category_id', e.target.value)}
+              >
+                {categories.map(c => (
+                  <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
-        <Box my={2}>
-          <Typography variant="subtitle1" gutterBottom>{t('editDialog.aiAgentConfig')}</Typography>
-          <ResizableTextField label={t('editDialog.agentRoleLabel')} fullWidth multiline minRows={1} value={tpl.ai_agent_role} onChange={e => updateField('ai_agent_role', e.target.value)} sx={{ mb: 2 }} />
-          <ResizableTextField label={t('editDialog.agentTaskLabel')} fullWidth multiline minRows={2} value={tpl.ai_agent_task} onChange={e => updateField('ai_agent_task', e.target.value)} />
-        </Box>
+          <Box sx={{
+            my: 2
+          }}>
+            <Typography variant="subtitle1" gutterBottom>{t('editDialog.aiAgentConfig')}</Typography>
+            <ResizableTextField label={t('editDialog.agentRoleLabel')} fullWidth multiline minRows={1} value={tpl.ai_agent_role} onChange={e => updateField('ai_agent_role', e.target.value)} sx={{ mb: 2 }} />
+            <ResizableTextField label={t('editDialog.agentTaskLabel')} fullWidth multiline minRows={2} value={tpl.ai_agent_task} onChange={e => updateField('ai_agent_task', e.target.value)} />
+          </Box>
 
-        <Box my={2}>
-          <PayloadFieldsEditor
-            fields={tpl.payload_fields}
-            onAdd={addListItem('payload_fields', { name: '', description: '', required: false })}
-            onUpdate={updateListItem('payload_fields')}
-            onDelete={deleteListItem('payload_fields')}
-          />
-        </Box>
-
-        <Box my={2}>
-          <StaticContextsEditor
-            contexts={tpl.static_contexts}
-            onAdd={addListItem('static_contexts', { name: '', description: '', content: '' })}
-            onUpdate={updateListItem('static_contexts')}
-            onDelete={deleteListItem('static_contexts')}
-          />
-        </Box>
-
-        <Box my={2}>
-          <WebContextsEditor
-            contexts={tpl.web_contexts}
-            onAdd={addListItem('web_contexts', { name: '', description: '', url: '' })}
-            onUpdate={updateListItem('web_contexts')}
-            onDelete={deleteListItem('web_contexts')}
-          />
-        </Box>
-
-        <Box my={2}>
-          <Typography variant="subtitle1" gutterBottom>{t('editDialog.exampleSection')}</Typography>
-          <Box className="mdxeditor-wrapper" sx={{ height: 300, minHeight: 100, resize: 'vertical', overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
-            <MDXEditor
-              className={theme.palette.mode === 'dark' ? 'dark-theme' : ''}
-              markdown={tpl.example_input_output || ''}
-              onChange={val => updateField('example_input_output', val)}
-              plugins={[
-                headingsPlugin(),
-                listsPlugin(),
-                quotePlugin(),
-                thematicBreakPlugin(),
-                markdownShortcutPlugin(),
-                codeBlockPlugin(),
-                codeMirrorPlugin({ codeBlockLanguages: { '': 'Plain Text', js: 'JavaScript', python: 'Python', css: 'CSS', html: 'HTML', json: 'JSON', bash: 'Bash', text: 'Plain Text' } }),
-                toolbarPlugin({ toolbarContents: () => (<><BlockTypeSelect /><BoldItalicUnderlineToggles /><StrikeThroughSupSubToggles /><ListsToggle /><InsertCodeBlock /><InsertThematicBreak /></>) }),
-              ]}
+          <Box sx={{
+            my: 2
+          }}>
+            <PayloadFieldsEditor
+              fields={tpl.payload_fields}
+              onAdd={addListItem('payload_fields', { name: '', description: '', required: false })}
+              onUpdate={updateListItem('payload_fields')}
+              onDelete={deleteListItem('payload_fields')}
             />
           </Box>
-        </Box>
-      </DialogContent>
 
-      <DialogActions>
-        <Button color="error" onClick={() => setDeleteDialogOpen(true)} disabled={deleting}>
-          {deleting ? <CircularProgress size={20} /> : t('editDialog.deleteButton')}
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        <Button onClick={onClose}>{t('editDialog.cancelButton')}</Button>
-        <Button variant="contained" onClick={handleSave} disabled={saving}>
-          {saving ? <CircularProgress size={20} /> : t('editDialog.saveButton')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <Box sx={{
+            my: 2
+          }}>
+            <StaticContextsEditor
+              contexts={tpl.static_contexts}
+              onAdd={addListItem('static_contexts', { name: '', description: '', content: '' })}
+              onUpdate={updateListItem('static_contexts')}
+              onDelete={deleteListItem('static_contexts')}
+            />
+          </Box>
 
-    <ConfirmDeleteDialog
-      open={deleteDialogOpen}
-      onClose={() => setDeleteDialogOpen(false)}
-      onConfirm={handleDeleteConfirm}
-      title={t('editDialog.deleteTemplateTitle')}
-      message={t('editDialog.deleteTemplateMessage')}
-    />
+          <Box sx={{
+            my: 2
+          }}>
+            <WebContextsEditor
+              contexts={tpl.web_contexts}
+              onAdd={addListItem('web_contexts', { name: '', description: '', url: '' })}
+              onUpdate={updateListItem('web_contexts')}
+              onDelete={deleteListItem('web_contexts')}
+            />
+          </Box>
+
+          <Box sx={{
+            my: 2
+          }}>
+            <Typography variant="subtitle1" gutterBottom>{t('editDialog.exampleSection')}</Typography>
+            <Box className="mdxeditor-wrapper" sx={{ height: 300, minHeight: 100, resize: 'vertical', overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1.5 }}>
+              <MDXEditor
+                className={theme.palette.mode === 'dark' ? 'dark-theme' : ''}
+                markdown={tpl.example_input_output || ''}
+                onChange={val => updateField('example_input_output', val)}
+                plugins={[
+                  headingsPlugin(),
+                  listsPlugin(),
+                  quotePlugin(),
+                  thematicBreakPlugin(),
+                  markdownShortcutPlugin(),
+                  codeBlockPlugin(),
+                  codeMirrorPlugin({ codeBlockLanguages: { '': 'Plain Text', js: 'JavaScript', python: 'Python', css: 'CSS', html: 'HTML', json: 'JSON', bash: 'Bash', text: 'Plain Text' } }),
+                  toolbarPlugin({ toolbarContents: () => (<><BlockTypeSelect /><BoldItalicUnderlineToggles /><StrikeThroughSupSubToggles /><ListsToggle /><InsertCodeBlock /><InsertThematicBreak /></>) }),
+                ]}
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+
+        <DialogActions>
+          <Button color="error" onClick={() => setDeleteDialogOpen(true)} disabled={deleting}>
+            {deleting ? <CircularProgress size={20} /> : t('editDialog.deleteButton')}
+          </Button>
+          <Box sx={{ flex: 1 }} />
+          <Button onClick={onClose}>{t('editDialog.cancelButton')}</Button>
+          <Button variant="contained" onClick={handleSave} disabled={saving}>
+            {saving ? <CircularProgress size={20} /> : t('editDialog.saveButton')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title={t('editDialog.deleteTemplateTitle')}
+        message={t('editDialog.deleteTemplateMessage')}
+      />
     </>
   );
 }

@@ -64,7 +64,7 @@ export default function DorkRunner() {
               size="small"
               value={engine}
               onChange={(e) => setEngine(e.target.value)}
-              sx={{ minWidth: 160 }}
+              sx={{ minWidth: 250 }}
             >
               {ENGINES.map((engineKey) => (
                 <MenuItem key={engineKey} value={engineKey}>

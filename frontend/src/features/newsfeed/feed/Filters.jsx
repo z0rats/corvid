@@ -70,7 +70,13 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
           },
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ flexGrow: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            flexGrow: 1
+          }}>
           <TuneIcon />
           <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
             {t('feed.filters.advancedOptions')}

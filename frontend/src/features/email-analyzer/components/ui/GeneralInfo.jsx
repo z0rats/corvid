@@ -35,7 +35,11 @@ export default function GeneralInfo({ result, hashes }) {
         id="general-info-header"
         sx={{ minHeight: '48px', padding: '0 16px' }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <InfoIcon sx={{ mr: 1 }} />
           <Typography variant="subtitle1" fontWeight="medium">{t('generalInfo.title')}</Typography>
         </Box>

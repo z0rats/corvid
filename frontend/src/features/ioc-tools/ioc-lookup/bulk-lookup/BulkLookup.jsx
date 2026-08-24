@@ -69,7 +69,12 @@ export default function BulkLookup() {
         <Typography variant="h5" gutterBottom>
           {t('bulkLookup.title')}
         </Typography>
-        <Box display="flex" justifyContent="center" sx={{ my: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            my: 4
+          }}>
           <CircularProgress />
         </Box>
       </Box>

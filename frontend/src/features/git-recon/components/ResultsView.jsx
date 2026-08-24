@@ -16,7 +16,9 @@ import TableRow from '@mui/material/TableRow';
 function EmailChip({ email, isNoreply }) {
   const { t } = useTranslation('gitRecon');
   return (
-    <Stack direction="row" spacing={0.5} alignItems="center" component="span">
+    <Stack direction="row" spacing={0.5} component="span" sx={{
+      alignItems: "center"
+    }}>
       <Typography variant="body2" component="span">{email}</Typography>
       {isNoreply && <Chip size="small" variant="outlined" color="warning" label={t('badges.noreply')} />}
     </Stack>
@@ -229,7 +231,13 @@ export default function ResultsView({ result }) {
       )}
 
       {hasClonedData && (
-        <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            flexWrap: "wrap",
+            mb: 2
+          }}>
           <Chip label={t('results.stats.repos', { count: stats.repos })} />
           <Chip label={t('results.stats.commits', { count: stats.commits })} />
           <Chip label={t('results.stats.persons', { count: stats.persons })} />

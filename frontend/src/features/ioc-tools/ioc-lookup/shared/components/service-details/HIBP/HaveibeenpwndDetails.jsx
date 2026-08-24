@@ -49,7 +49,13 @@ const Breaches = ({ breaches, t, notAvailable }) => {
   if (!breaches || breaches.length === 0) {
     return (
       <Card variant="outlined" sx={{ m: 1, p: 2, borderRadius: 2, boxShadow: 0, flexGrow: 1, border: '1px solid', borderColor: 'divider' }}>
-        <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
           <LockOpenIcon />
           <Typography variant="h6">{t('providers.hibp.breaches')}</Typography>
         </Stack>
@@ -104,7 +110,9 @@ const Breaches = ({ breaches, t, notAvailable }) => {
             mb:1
           }}
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <LockOpenIcon />
             <Typography variant="h6">
               {t('providers.hibp.breachesCount', { count: filteredBreaches.length })}
@@ -125,7 +133,9 @@ const Breaches = ({ breaches, t, notAvailable }) => {
         <CardContent sx={{ flexGrow: 1, p:0, overflowY: 'auto' }}>
           {paginatedBreaches.length > 0 ? (
             paginatedBreaches.map((account) => (
-              <Box key={account.Name || account.Title } mb={1} >
+              <Box key={account.Name || account.Title } sx={{
+                mb: 1
+              }} >
                 {account.Name && (
                   <Typography variant="body1" component="div">
                     {account.Name}
@@ -183,14 +193,20 @@ const Pastes = ({ pastes, t, notAvailable }) => {
 
   if (!pastes || pastes.length === 0) {
      return (
-      <Card variant="outlined" sx={{ m: 1, p: 2, borderRadius: 2, boxShadow: 0, flexGrow: 1, border: '1px solid', borderColor: 'divider' }}>
-        <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-          <ContentPasteSearchIcon />
-          <Typography variant="h6">{t('providers.hibp.pastes')}</Typography>
-        </Stack>
-        <Typography>{t('providers.hibp.noPastesFound')}</Typography>
-      </Card>
-    );
+       <Card variant="outlined" sx={{ m: 1, p: 2, borderRadius: 2, boxShadow: 0, flexGrow: 1, border: '1px solid', borderColor: 'divider' }}>
+         <Stack
+           direction="row"
+           spacing={1}
+           sx={{
+             alignItems: "center",
+             mb: 1
+           }}>
+           <ContentPasteSearchIcon />
+           <Typography variant="h6">{t('providers.hibp.pastes')}</Typography>
+         </Stack>
+         <Typography>{t('providers.hibp.noPastesFound')}</Typography>
+       </Card>
+     );
   }
 
   const handlePageChange = (event, newPage) => {
@@ -244,7 +260,9 @@ const Pastes = ({ pastes, t, notAvailable }) => {
             mb: 1
           }}
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <ContentPasteSearchIcon />
             <Typography variant="h6">
               {t('providers.hibp.pastesCount', { count: filteredPastes.length })}
@@ -265,7 +283,9 @@ const Pastes = ({ pastes, t, notAvailable }) => {
         <CardContent sx={{ flexGrow: 1, p:0, overflowY: 'auto' }}>
           {paginatedPastes.length > 0 ? (
             paginatedPastes.map((paste) => (
-              <Box key={paste.Id} mb={1}>
+              <Box key={paste.Id} sx={{
+                mb: 1
+              }}>
                 <Tooltip title={paste.Title || t('providers.hibp.noTitleAvailable')}>
                     <Typography variant="subtitle1" noWrap sx={{fontWeight:'medium'}}>
                         {paste.Title || t('providers.hibp.noTitle')}
@@ -362,7 +382,9 @@ export default function HaveibeenpwndDetails({ result, ioc }) {
 
   return (
     <Box sx={{ margin: 1, mt:0 }}>
-      <Grid container spacing={2} alignItems="stretch">
+      <Grid container spacing={2} sx={{
+        alignItems: "stretch"
+      }}>
         {(breaches.length > 0 || pastes.length === 0) && (
             <Grid size={12} md={pastes.length> 0 ? 6 : 12} sx={{ display: "flex" }}>
                 <Breaches breaches={breaches} t={t} notAvailable={notAvailable} />

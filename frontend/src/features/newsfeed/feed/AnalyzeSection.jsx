@@ -55,8 +55,10 @@ export default function AnalyzeSection({ item }) {
       >
         <Stack
           direction="row"
-          alignItems="center"
           spacing={1}
+          sx={{
+            alignItems: "center"
+          }}
         >
           <AutoAwesomeIcon />
           <Typography variant="body2" sx={{ fontWeight: "bold" }}>

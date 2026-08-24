@@ -27,7 +27,11 @@ export default function SecurityCheck({ result }) {
         id="security-checks-header"
         sx={{ minHeight: '48px', padding: '0 16px' }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <VerifiedUserIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">{t('securityCheck.title')}</Typography>
         </Box>

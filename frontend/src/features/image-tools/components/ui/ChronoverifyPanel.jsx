@@ -102,7 +102,14 @@ export default function ChronoverifyPanel({ file }) {
 
       {result && (
         <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1.5}
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1
+            }}>
             <VerdictChip verdict={result.verdict} t={t} />
             <Typography variant="caption" color="text.secondary">
               {t('chronoverify.confidence', { value: Math.round(result.confidence) })}

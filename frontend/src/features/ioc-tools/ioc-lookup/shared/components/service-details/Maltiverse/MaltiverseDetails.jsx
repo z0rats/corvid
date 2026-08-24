@@ -113,7 +113,13 @@ export default function MaltiverseDetails({ result, ioc }) {
   const blacklistDetailsTable = blacklistEntries.length > 0 && (
     <Card sx={{ mt: 2, borderRadius: 1, boxShadow: 0 }}>
       <CardContent>
-        <Grid container spacing={1} alignItems="center" mb={1}>
+        <Grid
+          container
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 1
+          }}>
             <ListAltIcon color="action" />
             <Typography variant="h6" component="div" sx={{ ml: 1 }}>
                 {t('providers.maltiverse.blacklistMentions', { count: blacklistEntries.length })}
@@ -159,7 +165,9 @@ export default function MaltiverseDetails({ result, ioc }) {
 
   return (
     <Box sx={{ margin: 1, mt:0 }}>
-      <Grid container spacing={2} alignItems="stretch">
+      <Grid container spacing={2} sx={{
+        alignItems: "stretch"
+      }}>
         <Grid size={{ xs: 12, md: 5 }} sx={{ display: 'flex' }}>
           <Box sx={{ flex: 1 }}>
             <GeneralInfo data={transformedData} />
@@ -170,7 +178,9 @@ export default function MaltiverseDetails({ result, ioc }) {
         </Grid>
       </Grid>
       {blacklistEntries.length > 0 && (
-        <Box mt={2}>
+        <Box sx={{
+          mt: 2
+        }}>
             {blacklistDetailsTable}
         </Box>
       )}

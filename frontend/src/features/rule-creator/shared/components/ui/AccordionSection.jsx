@@ -18,7 +18,11 @@ export default function AccordionSection({ icon, title, children, defaultExpande
           '& .MuiAccordionSummary-content': { margin: 0 },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           {icon}
           <Typography variant="subtitle2">{title}</Typography>
         </Box>

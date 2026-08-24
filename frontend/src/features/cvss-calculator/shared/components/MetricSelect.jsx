@@ -9,7 +9,13 @@ export default function MetricSelect({ label, value, options, onChange, onInfoCl
   const { t } = useTranslation('cvssCalculator');
 
   return (
-    <Box display="flex" alignItems="center" sx={{ my: 2, mx: 4 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        my: 2,
+        mx: 4
+      }}>
       <TextField
         select
         fullWidth

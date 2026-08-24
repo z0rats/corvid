@@ -70,7 +70,13 @@ function StealerCard({ stealer, t, notAvailable }) {
 
         {stealer.top_logins?.length > 0 && (
           <Box sx={{ mt: 1 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 0.5
+              }}>
               <VpnKeyIcon color="action" fontSize="small" />
               <Typography variant="body2" fontWeight="medium">{t('providers.hudsonrock.sampleLogins')}</Typography>
             </Stack>
@@ -108,7 +114,13 @@ function StealersView({ result, t, notAvailable }) {
 
   return (
     <Box sx={{ p: 1 }}>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
         <BugReportIcon color="error" />
         <Typography variant="h6" component="h2">
           {t('providers.hudsonrock.infectionsFound', { count: stealers.length })}
@@ -139,7 +151,13 @@ function DomainView({ result, t }) {
 
   return (
     <Box sx={{ p: 1 }}>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
         <BugReportIcon color="error" />
         <Typography variant="h6" component="h2">
           {t('providers.hudsonrock.domainInfectionsFound', { count: total })}
@@ -150,7 +168,9 @@ function DomainView({ result, t }) {
         <CardContent>
           <Grid container spacing={2}>
             <Grid size={4}>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <BusinessIcon color="action" fontSize="small" />
                 <Box>
                   <Typography variant="h6">{result.employees || 0}</Typography>
@@ -159,7 +179,9 @@ function DomainView({ result, t }) {
               </Stack>
             </Grid>
             <Grid size={4}>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <GroupIcon color="action" fontSize="small" />
                 <Box>
                   <Typography variant="h6">{result.users || 0}</Typography>
@@ -168,7 +190,9 @@ function DomainView({ result, t }) {
               </Stack>
             </Grid>
             <Grid size={4}>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack direction="row" spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <GroupIcon color="action" fontSize="small" />
                 <Box>
                   <Typography variant="h6">{result.third_parties || 0}</Typography>
@@ -183,7 +207,13 @@ function DomainView({ result, t }) {
       {employeeUrls.length > 0 && (
         <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
           <CardContent>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 1
+              }}>
               <LinkIcon color="action" fontSize="small" />
               <Typography variant="body2" fontWeight="medium">{t('providers.hudsonrock.topEmployeeUrls')}</Typography>
             </Stack>

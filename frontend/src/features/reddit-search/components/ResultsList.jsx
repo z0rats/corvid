@@ -21,7 +21,14 @@ function ResultCard({ item }) {
         borderColor: item.removed ? 'error.main' : item.deleted ? 'warning.main' : 'divider',
       }}
     >
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 0.5 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          flexWrap: "wrap",
+          mb: 0.5
+        }}>
         <Typography variant="body2" fontWeight={600}>r/{item.subreddit}</Typography>
         <Typography variant="caption" color="text.secondary">{createdAt.toLocaleString()}</Typography>
         {item.removed && <Chip size="small" color="error" label={t('badges.removed')} />}

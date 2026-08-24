@@ -57,7 +57,11 @@ export default function TagsForm({
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <FingerprintIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('yara.tagsForm.header')}</Typography>
         </Box>
@@ -92,7 +96,9 @@ export default function TagsForm({
           
           {/* Tags display */}
           {tags.length > 0 && (
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} useFlexGap sx={{
+              flexWrap: "wrap"
+            }}>
               {tags.map((tag) => (
                 <Chip
                   key={tag.id}

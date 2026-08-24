@@ -16,7 +16,9 @@ export default function ApiKeysFilters({ searchFilter, showOnlyConfigured, onSea
       elevation={0}
       sx={{ p: 3, mb: 3, borderRadius: 1 }}
     >
-      <Stack direction="row" spacing={3} alignItems="center">
+      <Stack direction="row" spacing={3} sx={{
+        alignItems: "center"
+      }}>
         <TextField
           placeholder={t('apiKeys.searchPlaceholder')}
           value={searchFilter}

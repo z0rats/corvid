@@ -22,7 +22,13 @@ function CommentRow({ comment }) {
     <Stack direction="row" spacing={1.5} sx={{ py: 1 }}>
       <Avatar src={comment.author_profile_image_url} sx={{ width: 32, height: 32 }} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Stack direction="row" spacing={1} alignItems="baseline" sx={{ flexWrap: 'wrap' }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "baseline",
+            flexWrap: 'wrap'
+          }}>
           {comment.author_channel_url ? (
             <Link href={comment.author_channel_url} target="_blank" rel="noopener noreferrer" variant="body2" sx={{ fontWeight: 600 }}>
               {comment.author_display_name}
@@ -37,7 +43,13 @@ function CommentRow({ comment }) {
         <Typography variant="body2" sx={{ whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
           {comment.text}
         </Typography>
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "center",
+            mt: 0.5
+          }}>
           <ThumbUpIcon sx={{ fontSize: 14 }} color="action" />
           <Typography variant="caption" color="text.secondary">{comment.like_count}</Typography>
           {comment.reply_count > 0 && (

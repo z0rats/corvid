@@ -17,7 +17,12 @@ export default function ActionButtons({
 }) {
   const { t } = useTranslation('ruleCreator');
   return (
-    <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        mt: 2
+      }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         <Button
           variant="outlined"

@@ -40,7 +40,9 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
         "&:hover": { backgroundColor: "action.hover" },
       }}
       secondaryAction={
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.5} sx={{
+          alignItems: "center"
+        }}>
           <Tooltip title={t('settings.feeds.refreshFavicon')}>
             <span>
               <IconButton
@@ -113,7 +115,9 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
       </ListItemAvatar>
       <ListItemText
         primary={
-          <Stack direction="row" spacing={0.5} alignItems="center">
+          <Stack direction="row" spacing={0.5} sx={{
+            alignItems: "center"
+          }}>
             <span>{name}</span>
             {feed.last_error && (
               <Tooltip

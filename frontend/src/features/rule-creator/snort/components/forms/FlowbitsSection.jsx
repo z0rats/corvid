@@ -46,7 +46,9 @@ export default function FlowbitsSection({ flowbitsList, onFlowbitsChange }) {
       <Typography variant="subtitle2" gutterBottom>
         {t('snort.flowbitsSection.header')}
       </Typography>
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
             <InputLabel>{t('snort.flowbitsSection.actionLabel')}</InputLabel>

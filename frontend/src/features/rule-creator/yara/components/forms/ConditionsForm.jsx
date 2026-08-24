@@ -56,7 +56,11 @@ export default function ConditionsForm({
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <SecurityIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('yara.conditionsForm.header')}</Typography>
         </Box>

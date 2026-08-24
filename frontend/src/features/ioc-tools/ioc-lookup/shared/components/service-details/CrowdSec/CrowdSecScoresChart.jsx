@@ -25,7 +25,12 @@ export default function CrowdSecScoresChart({ scoreData }) {
         title={t('providers.crowdsec.scoreInfoTitle')}
         text={t('providers.crowdsec.scoreInfoText')}
       />
-      <Box display="flex" alignItems="center" mb={1}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          mb: 1
+        }}>
         <Typography variant="h6" component="h3" gutterBottom sx={{ flexGrow: 1, mb: 0 }}>
           {t('providers.crowdsec.ctiScoresBreakdown')}
         </Typography>

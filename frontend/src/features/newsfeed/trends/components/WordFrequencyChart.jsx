@@ -44,7 +44,13 @@ export default function WordFrequencyChart({ data, loading, error, onSelectArtic
       <Card sx={{ minHeight: "450px", height: "100%" }}>
         <CardContent>
           <Typography variant="h6" color="text.primary" mb={2}>{t('trends.wordFrequency.title')}</Typography>
-          <Box height="400px" display="flex" justifyContent="center" alignItems="center">
+          <Box
+            sx={{
+              height: "400px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center"
+            }}>
             <Typography variant="body1" color="text.secondary">
               {t('trends.wordFrequency.noData')}
             </Typography>
@@ -112,7 +118,13 @@ export default function WordFrequencyChart({ data, loading, error, onSelectArtic
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%"
+              }}>
               <Typography variant="body1" color="text.secondary">
                 {t('trends.wordFrequency.noData')}
               </Typography>

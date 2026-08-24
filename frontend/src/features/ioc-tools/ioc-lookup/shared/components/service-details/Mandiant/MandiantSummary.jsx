@@ -54,7 +54,12 @@ export default function MandiantSummary({
     <Card sx={{ p: 2, mb: 2, borderRadius: 1, boxShadow: 0 }}>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Box display="flex" alignItems="center" mb={1}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 1
+            }}>
             <DonutLargeIcon sx={{ mr: 1 }} />
             <Typography variant="h6" component="h4">{t('providers.mandiant.threatCategories')}</Typography>
           </Box>
@@ -92,7 +97,12 @@ export default function MandiantSummary({
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <Box display="flex" alignItems="center" mb={1}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 1
+            }}>
             <TimelineIcon sx={{ mr: 1 }} />
             <Typography variant="h6" component="h4">{t('providers.mandiant.observationsTimeline')}</Typography>
           </Box>
@@ -140,7 +150,11 @@ export default function MandiantSummary({
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 4 }}>
               <Paper sx={summaryPaperSx}>
-                <Box display="flex" alignItems="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center"
+                  }}>
                   <SecurityIcon fontSize="large" sx={{ mr: 1, color: riskScore < 20 ? 'success.main' : riskScore < 40 ? 'warning.main' : 'error.main' }} />
                   <Box>
                     <Typography variant="h6">{t('providers.mandiant.averageRiskScore')}</Typography>
@@ -153,7 +167,11 @@ export default function MandiantSummary({
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <Paper sx={summaryPaperSx}>
-                <Box display="flex" alignItems="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center"
+                  }}>
                   <WarningIcon fontSize="large" sx={{ mr: 1, color: 'warning.main' }} />
                   <Box>
                     <Typography variant="h6">{t('providers.mandiant.indicatorsFound')}</Typography>
@@ -164,7 +182,11 @@ export default function MandiantSummary({
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <Paper sx={summaryPaperSx}>
-                <Box display="flex" alignItems="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center"
+                  }}>
                   <DescriptionIcon fontSize="large" sx={{ mr: 1, color: 'info.main' }} />
                   <Box>
                     <Typography variant="h6">{t('providers.mandiant.relatedReports')}</Typography>

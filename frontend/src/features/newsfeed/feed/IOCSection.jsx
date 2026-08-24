@@ -53,7 +53,9 @@ export default function IOCSection({ item }) {
                   width: "100%",
                 }}
               >
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack direction="row" spacing={1} sx={{
+                  alignItems: "center"
+                }}>
                   {ioc.icon}
                   <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                     {ioc.label} ({iocValues.length})
@@ -79,7 +81,9 @@ export default function IOCSection({ item }) {
               <Grid container spacing={1}>
                 {iocValues.map((value) => (
                   <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={value}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                    <Stack direction="row" spacing={1} sx={{
+                      alignItems: "center"
+                    }}>
                       <IconButton
                         size="small"
                         onClick={(e) => {

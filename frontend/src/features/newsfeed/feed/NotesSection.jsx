@@ -77,7 +77,9 @@ export default function NotesSection({
     <>
       <Accordion sx={{ borderRadius: 1 }} variant="secondary" defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ flexDirection: "row-reverse", alignItems: "center" }}>
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <EditNoteIcon />
             <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
               {t('feed.notes.label')}

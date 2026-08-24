@@ -82,7 +82,12 @@ function Section({ label, children }) {
 
 function ChipList({ items }) {
   return (
-    <Stack direction="row" flexWrap="wrap" gap={0.75}>
+    <Stack
+      direction="row"
+      sx={{
+        flexWrap: "wrap",
+        gap: 0.75
+      }}>
       {items.map((item) => (
         <Chip
           key={item.key}
@@ -126,7 +131,13 @@ function TTPItem({ ttp, isLast }) {
       }}
       onClick={hasDetails ? () => setOpen(!open) : undefined}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "flex-start"
+        }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.5 }}>
             {techniquePath.map((t, i) => (
@@ -272,7 +283,9 @@ export default function MitreAttackSection({ item }) {
           flexDirection: "row-reverse",
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <ShieldIcon />
           <Typography variant="body2" sx={{ fontWeight: "bold" }}>
             {t('feed.mitre.title')}

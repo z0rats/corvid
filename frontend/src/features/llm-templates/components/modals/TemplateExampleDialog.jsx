@@ -37,7 +37,13 @@ export default function TemplateExampleDialog({ open, onClose, template }) {
       <DialogContent sx={{ pt: 2 }}>
         <Stack spacing={2}>
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-            <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 1
+              }}>
               <PersonIcon fontSize="small" color="primary" />
               <Typography variant="subtitle2" color="primary">{t('exampleDialog.agentRole')}</Typography>
             </Stack>
@@ -45,7 +51,13 @@ export default function TemplateExampleDialog({ open, onClose, template }) {
           </Paper>
 
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-            <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 1
+              }}>
               <TaskAltIcon fontSize="small" color="primary" />
               <Typography variant="subtitle2" color="primary">{t('exampleDialog.agentTask')}</Typography>
             </Stack>

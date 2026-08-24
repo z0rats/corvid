@@ -39,7 +39,11 @@ export default function ImageCompareTool() {
   return (
     <Accordion sx={{ mb: 2 }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <CompareArrowsIcon sx={{ mr: 1, color: 'primary.main' }} />
           <Typography variant="subtitle1" fontWeight="medium">{t('compare.title')}</Typography>
         </Box>

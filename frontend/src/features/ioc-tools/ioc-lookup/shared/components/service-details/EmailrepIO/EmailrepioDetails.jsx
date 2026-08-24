@@ -109,7 +109,14 @@ export default function EmailrepioDetails({ result, ioc }) {
         <Grid size={{ xs: 12, md: 7 }}>
           <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <CardContent>
-              <Grid direction="row" container spacing={1} alignItems="center" mb={1}>
+              <Grid
+                direction="row"
+                container
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  mb: 1
+                }}>
                 <InfoIcon color="action" />
                 <Typography variant="h6" component="div" sx={{ ml: 1 }}>
                   {t('providers.emailrepio.reputationAndDetails')}
@@ -133,7 +140,14 @@ export default function EmailrepioDetails({ result, ioc }) {
         <Grid size={{ xs: 12, md: 5 }}>
           <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', height: '100%'  }}>
             <CardContent>
-                <Grid direction="row" container spacing={1} alignItems="center" mb={1}>
+                <Grid
+                  direction="row"
+                  container
+                  spacing={1}
+                  sx={{
+                    alignItems: "center",
+                    mb: 1
+                  }}>
                     <ContactsIcon color="action"/>
                     <Typography variant="h6" component="div" sx={{ ml: 1 }}>
                         {t('providers.emailrepio.onlineProfiles')}

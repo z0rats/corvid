@@ -81,8 +81,17 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
           borderLeftColor: tlpColors[item.tlp || "TLP:CLEAR"],
         }}
       >
-        <Stack direction="row" spacing={1} sx={{ mb: 1 }} justifyContent="space-between" alignItems="center">
-          <Stack direction="row" spacing={1} alignItems="center">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1
+          }}>
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Avatar
               alt={`${item.title} icon`}
               src={getFeedIconUrl(item.icon)}
@@ -99,7 +108,9 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
             </Stack>
           </Stack>
 
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{
+            alignItems: "center"
+          }}>
             <Tooltip title={t('feed.article.changeTlp')} arrow>
               <span>
                 <IconButton

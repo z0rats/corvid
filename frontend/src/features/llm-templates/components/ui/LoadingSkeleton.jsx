@@ -11,7 +11,9 @@ export default function LoadingSkeleton() {
           <CardContent>
             <Skeleton variant="text" width="60%" height={32} />
             <Skeleton variant="text" width="80%" />
-            <Box mt={2}>
+            <Box sx={{
+              mt: 2
+            }}>
               <Skeleton variant="rectangular" height={56} />
             </Box>
           </CardContent>

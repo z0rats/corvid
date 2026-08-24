@@ -40,7 +40,12 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
   return (
     <Card sx={{ mt: 2 }}>
       <CardContent>
-        <Box display="flex" alignItems="center" mb={2}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 2
+          }}>
           <Typography variant="h6" color="text.primary">
             {t('trends.articleTable.articlesContaining')}
           </Typography>
@@ -78,7 +83,12 @@ const ArticleTable = ({ selectedArticleIds, selectedTitle, articleDetails, artic
                   return (
                     <TableRow key={articleId}>
                       <TableCell colSpan={4}>
-                        <Box display="flex" alignItems="center" gap={1}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1
+                          }}>
                           <CircularProgress size={20} />
                           <Typography variant="body2">{t('trends.articleTable.loadingDetails')}</Typography>
                         </Box>

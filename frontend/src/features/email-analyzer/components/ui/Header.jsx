@@ -45,7 +45,11 @@ export default function Header({ result }) {
         id="header-fields-header"
         sx={{ minHeight: '48px', padding: '0 16px' }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <HorizontalSplitIcon sx={{ mr: 1 }} fontSize="small" />
           <Typography variant="subtitle1" fontWeight="medium">
             {t('header.title', { count: result ? result.length : 0 })}

@@ -40,7 +40,9 @@ export default function SelectionConditions({ conditionsList, onAddCondition, on
 
   return (
     <>
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Autocomplete
             options={fieldData}

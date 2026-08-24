@@ -13,6 +13,28 @@ import tseslint from 'typescript-eslint';
 // until eslint-plugin-react ships an ESLint-10-compatible release.
 const { version: reactVersion } = createRequire(import.meta.url)('react/package.json');
 
+// MUI 9's Box/Stack/Grid only read the `sx` prop for styling - the legacy top-level
+// shorthand style props (display, p, m, justifyContent, ...) that older MUI versions
+// supported are silently forwarded as invalid DOM attributes and do nothing. Move them
+// into `sx` instead. See docs/adr/0009-mui-box-shorthand-props-removed.md.
+const MUI_STYLE_SHORTHAND_PROPS = [
+  'display', 'position', 'top', 'right', 'bottom', 'left', 'zIndex',
+  'overflow', 'overflowX', 'overflowY',
+  'flexDirection', 'flexWrap', 'flexGrow', 'flexShrink', 'flexBasis', 'flex',
+  'justifyContent', 'alignItems', 'alignContent', 'alignSelf', 'order',
+  'gap', 'rowGap', 'columnGap',
+  'width', 'maxWidth', 'minWidth', 'height', 'maxHeight', 'minHeight', 'boxSizing',
+  'm', 'mt', 'mr', 'mb', 'ml', 'mx', 'my', 'margin', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft',
+  'p', 'pt', 'pr', 'pb', 'pl', 'px', 'py', 'padding', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+  'bgcolor', 'color', 'border', 'borderTop', 'borderRight', 'borderBottom', 'borderLeft',
+  'borderColor', 'borderRadius', 'boxShadow',
+  'textAlign', 'visibility', 'whiteSpace', 'textOverflow',
+  'fontSize', 'fontWeight', 'fontFamily', 'fontStyle', 'letterSpacing', 'lineHeight',
+];
+const muiBoxShorthandPropSelector =
+  `JSXOpeningElement[name.name=/^(Box|Stack|Grid)$/] > ` +
+  `JSXAttribute[name.name=/^(${MUI_STYLE_SHORTHAND_PROPS.join('|')})$/]`;
+
 export default [
   { ignores: ['build/**', 'node_modules/**', 'coverage/**'] },
   { settings: { react: { version: reactVersion } } },
@@ -46,6 +68,14 @@ export default [
       // pre-existing, deliberate, safe patterns - not worth a wide unrelated diff here.
       'no-prototype-builtins': 'off',
       'no-control-regex': 'off',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: muiBoxShorthandPropSelector,
+          message:
+            'MUI 9 Box/Stack/Grid no longer apply this as a top-level prop - move it into sx={{ ... }}.',
+        },
+      ],
     },
   },
   {
@@ -83,6 +113,14 @@ export default [
       '@typescript-eslint/no-unused-vars': [
         'error',
         { args: 'none', ignoreRestSiblings: true, caughtErrors: 'none' },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: muiBoxShorthandPropSelector,
+          message:
+            'MUI 9 Box/Stack/Grid no longer apply this as a top-level prop - move it into sx={{ ... }}.',
+        },
       ],
     },
   }),

@@ -108,7 +108,11 @@ export default function UrlScanDetails({ result }) {
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card sx={{ p: 2, height: '100%' }}>
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <NumbersIcon fontSize="large" sx={{ mr: 1, color: 'text.primary' }} />
               <Box>
                 <Typography variant="h6">{t('providers.urlscan.totalScans')}</Typography>
@@ -119,7 +123,11 @@ export default function UrlScanDetails({ result }) {
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card sx={{ p: 2, height: '100%' }}>
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <PublicIcon fontSize="large" sx={{ mr: 1, color: 'text.primary' }} />
               <Box>
                 <Typography variant="h6">{t('providers.urlscan.uniqueApexDomains')}</Typography>
@@ -130,7 +138,11 @@ export default function UrlScanDetails({ result }) {
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card sx={{ p: 2, height: '100%' }}>
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <HttpIcon fontSize="large" sx={{ mr: 1, color: 'text.primary' }} />
               <Box>
                 <Typography variant="h6">{t('providers.urlscan.uniqueIps')}</Typography>
@@ -144,7 +156,11 @@ export default function UrlScanDetails({ result }) {
       {/* Accordion for Scan Results */}
       <Accordion defaultExpanded sx={{ "&::before": { display: "none" } }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Box display="flex" alignItems="center">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center"
+            }}>
             <TravelExploreIcon sx={{ mr: 1 }} />
             <Typography variant="h6">{t('providers.urlscan.scanResults', { count: scans.length })}</Typography>
           </Box>
@@ -168,7 +184,13 @@ export default function UrlScanDetails({ result }) {
                      <LinkIcon fontSize="small" sx={{ mr: 0.5 }} /> {t('providers.urlscan.viewFullReport')}
                   </Link>
 
-                  <Box display="flex" flexWrap="wrap" gap={1} mb={1}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 1,
+                      mb: 1
+                    }}>
                     {(scan.task.tags || []).map(tag => (
                         <Chip icon={<TagIcon />} key={tag} label={tag} size="small" color="secondary" />
                     ))}
@@ -197,7 +219,12 @@ export default function UrlScanDetails({ result }) {
             </Card>
           ))}
           {scans.length > rowsPerPage && (
-            <Box display="flex" justifyContent="center" mt={2}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 2
+              }}>
               <Pagination
                 count={Math.ceil(scans.length / rowsPerPage)}
                 page={page}

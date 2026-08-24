@@ -19,6 +19,7 @@
     "sourceSocialAnalyzer": "Social Analyzer",
     "sourceThreatActorUsernames": "Threat Actor Usernames",
     "sourceHudsonRock": "Hudson Rock",
+    "sourceHudsonRockTooltip": "Not a scan engine like the others - a separate, always-quick keyless lookup for infostealer exposure",
     "tagsLabel": "Site tags",
     "tagsPlaceholder": "All sites",
     "tagsHelp": "Only scan sites with at least one of the selected tags (leave empty to scan all)"

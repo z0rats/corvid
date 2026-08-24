@@ -27,7 +27,9 @@ export default function TemplateCard({ template, selected, onSelect, onShowExamp
       }}
       onClick={() => onSelect(template)}
     >
-      <Box display="flex">
+      <Box sx={{
+        display: "flex"
+      }}>
         <CardContent sx={{ py: 1.5, px: 1.5, flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle1" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
             {template.title}
@@ -47,16 +49,15 @@ export default function TemplateCard({ template, selected, onSelect, onShowExamp
           </Typography>
         </CardContent>
         <Stack
-          justifyContent="center"
           spacing={0}
           sx={{
+            justifyContent: "center",
             pr: 0.5,
             py: 0.5,
             borderLeft: 1,
             borderColor: 'divider',
-            pl: 0.5,
-          }}
-        >
+            pl: 0.5
+          }}>
           <IconButton size="small" onClick={e => { e.stopPropagation(); onShowExample(template); }} aria-label={t('templateCard.viewExampleAria')}>
             <Tooltip title={t('templateCard.viewExampleTooltip')} arrow><VisibilityIcon fontSize="small" /></Tooltip>
           </IconButton>

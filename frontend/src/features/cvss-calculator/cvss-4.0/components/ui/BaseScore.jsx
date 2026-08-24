@@ -36,7 +36,7 @@ export default function BaseScore({ metrics, onMetricChange, scores }) {
   };
 
   const renderCard = (title, metricsList) => (
-    <Grid size={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Typography variant="h6" align="center">
         {title}
       </Typography>
@@ -72,7 +72,11 @@ export default function BaseScore({ metrics, onMetricChange, scores }) {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <BarChartIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('cvss40.base.accordionTitle')}</Typography>
         </Box>

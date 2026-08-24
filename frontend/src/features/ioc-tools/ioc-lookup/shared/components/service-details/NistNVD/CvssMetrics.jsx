@@ -75,7 +75,13 @@ export default function CvssMetrics(props) {
             }}
           />
         </Divider>
-        <Grid container spacing={2} mt={2} p={1}>
+        <Grid
+          container
+          spacing={2}
+          sx={{
+            mt: 2,
+            p: 1
+          }}>
           <Grid size={4}>
             <Typography variant="h6" gutterBottom component="div">
               {t('providers.nistnvd.exploitabilityScore', { score: props.metrics.exploitabilityScore })}

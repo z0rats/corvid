@@ -50,7 +50,7 @@ export default function Metadata({ metadata, handleMetadataChange }) {
   };
 
   return (
-    <Grid container spacing={2} rowSpacing={2}> 
+    <Grid container spacing={2} rowSpacing={2}>
       {/* Title */}
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField
@@ -101,7 +101,9 @@ export default function Metadata({ metadata, handleMetadataChange }) {
       </Grid>
       {/* Date and Modified Date */}
       <Grid size={{ xs: 12, sm: 6 }}> 
-        <Stack direction="row" spacing={2} alignItems="center"> 
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "center"
+        }}> 
           <TextField
             fullWidth
             label={t('sigma.metadata.dateLabel')}
@@ -130,7 +132,9 @@ export default function Metadata({ metadata, handleMetadataChange }) {
       </Grid>
       {/* Level and Status */}
       <Grid size={{ xs: 12, sm: 6 }}>
-        <Stack direction="row" spacing={2} alignItems="center"> 
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "center"
+        }}> 
           <FormControl fullWidth size="small">
             <InputLabel>{t('sigma.metadata.levelLabel')}</InputLabel>
             <Select
@@ -163,7 +167,9 @@ export default function Metadata({ metadata, handleMetadataChange }) {
       </Grid>
       {/* Authors and License */}
       <Grid size={12}>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={2} sx={{
+          alignItems: "center"
+        }}>
           <TextField
             fullWidth
             label={t('sigma.metadata.addAuthorLabel')}
@@ -207,7 +213,13 @@ export default function Metadata({ metadata, handleMetadataChange }) {
         </Stack>
         {/* Display Authors */}
         {metadata.authors.length > 0 && (
-          <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              flexWrap: "wrap",
+              mt: 1
+            }}>
             {metadata.authors.map((author) => (
               <Chip
                 key={author.id}

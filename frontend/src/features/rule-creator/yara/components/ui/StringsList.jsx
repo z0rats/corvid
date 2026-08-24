@@ -40,7 +40,11 @@ export default function StringsList({ strings, onDeleteString }) {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <CodeIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">
             {t('yara.stringsList.header', { count: strings.length })}

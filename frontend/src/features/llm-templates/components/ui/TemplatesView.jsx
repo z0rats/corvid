@@ -237,7 +237,11 @@ export default function TemplatesView() {
       ) : templates.length === 0 && categories.length === 0 ? (
         <Alert severity="info" sx={{ mb: 2 }}>{t('templatesView.noTemplatesAvailable')}</Alert>
       ) : (
-        <Box display="flex" sx={{ height: 'calc(100vh - 120px)' }}>
+        <Box
+          sx={{
+            display: "flex",
+            height: 'calc(100vh - 120px)'
+          }}>
           <TemplateSidebar
             templates={templates}
             categories={categories}

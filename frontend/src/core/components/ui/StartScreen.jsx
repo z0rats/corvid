@@ -250,7 +250,14 @@ export default function StartScreen() {
         }}
         >
           {query === '' && (
-            <Stack direction="row" spacing={1} rowGap={1} flexWrap="wrap" justifyContent="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                rowGap: 1,
+                flexWrap: "wrap",
+                justifyContent: "center"
+              }}>
               {EXAMPLE_CHIPS.map((chip) => (
                 <Chip
                   key={chip.label}

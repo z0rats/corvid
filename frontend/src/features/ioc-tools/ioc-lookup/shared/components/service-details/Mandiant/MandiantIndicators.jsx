@@ -29,21 +29,34 @@ export default function MandiantIndicators({ indicators, page, onPageChange }) {
                 <Box sx={{ p: 2, backgroundColor: (t) => t.palette.mode === 'dark' ? t.palette.background.default : t.palette.grey[100], height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <Typography variant="subtitle1" fontWeight="bold">{indicator.value}</Typography>
                   <Typography variant="body2" color="text.secondary">{t('providers.crowdstrike.type')} {indicator.type}</Typography>
-                  <Box display="flex" alignItems="center" mt={1}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mt: 1
+                    }}>
                     <Typography variant="body2" mr={1}>{t('providers.mandiant.riskScore')}</Typography>
                     <Box sx={{ backgroundColor: indicator.mscore < 20 ? 'success.main' : indicator.mscore < 40 ? 'warning.main' : 'error.main', px: 1, py: 0.5, borderRadius: 1, display: 'inline-block', color: 'white' }}>
                       {indicator.mscore}
                     </Box>
                   </Box>
-                  <Box mt={1}>
+                  <Box sx={{
+                    mt: 1
+                  }}>
                     <Typography variant="body2">{t('providers.threatfox.firstSeen')} {indicator.first_seen ? new Date(indicator.first_seen).toLocaleDateString() : notAvailable}</Typography>
                     <Typography variant="body2">{t('providers.threatfox.lastSeen')} {indicator.last_seen ? new Date(indicator.last_seen).toLocaleDateString() : notAvailable}</Typography>
                   </Box>
-                  <Box mt={2} sx={{ flexGrow: 1 }}>
+                  <Box
+                    sx={{
+                      mt: 2,
+                      flexGrow: 1
+                    }}>
                     {processedSources.length > 0 && (
                       <>
                         <Typography variant="body2" fontWeight="bold">{t('providers.mandiant.sources')}</Typography>
-                        <Box mt={1}>
+                        <Box sx={{
+                          mt: 1
+                        }}>
                           {processedSources.map((source) => (
                             <Box key={source.source_name} sx={{ mb: 1 }}>
                               <Typography variant="body2">{source.source_name}</Typography>
@@ -73,7 +86,12 @@ export default function MandiantIndicators({ indicators, page, onPageChange }) {
         </Grid>
       ))}
       {indicators.length > ROWS_PER_PAGE && (
-        <Box display="flex" justifyContent="center" mt={2}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 2
+          }}>
           <Pagination
             count={Math.ceil(indicators.length / ROWS_PER_PAGE)}
             page={page}

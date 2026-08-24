@@ -42,7 +42,9 @@ export default function ReferencesSection({ references, onReferencesChange }) {
       <Typography variant="subtitle2" gutterBottom>
         {t('snort.referencesSection.header')}
       </Typography>
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
             <InputLabel>{t('snort.referencesSection.typeLabel')}</InputLabel>

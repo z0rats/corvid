@@ -11,7 +11,13 @@ export default function StaticContextsEditor({ contexts, onAdd, onUpdate, onDele
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1
+        }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t('staticContexts.helperText')}
         </Typography>

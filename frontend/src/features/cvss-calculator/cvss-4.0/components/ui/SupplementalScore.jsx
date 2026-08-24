@@ -48,7 +48,11 @@ export default function SupplementalScore({ metrics, onMetricChange }) {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <ExtensionIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('cvss40.supplemental.accordionTitle')}</Typography>
         </Box>
@@ -68,7 +72,7 @@ export default function SupplementalScore({ metrics, onMetricChange }) {
         </Box>
 
         <Grid container spacing={2}>
-          <Grid size={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" align="center">
               {t('cvss40.supplemental.part1')}
             </Typography>
@@ -83,7 +87,7 @@ export default function SupplementalScore({ metrics, onMetricChange }) {
               />
             ))}
           </Grid>
-          <Grid size={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" align="center">
               {t('cvss40.supplemental.part2')}
             </Typography>

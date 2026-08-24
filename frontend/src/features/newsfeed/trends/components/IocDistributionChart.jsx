@@ -68,7 +68,13 @@ export default function IocDistributionChart({ timeRange, refreshKey }) {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%"
+              }}>
               <Typography variant="body1" color="text.secondary">
                 {t('trends.iocDistribution.noData')}
               </Typography>

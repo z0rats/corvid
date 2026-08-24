@@ -41,7 +41,9 @@ export default function BasicMetadataSection({ metadata, onMetadataChange }) {
       <Typography variant="subtitle2" gutterBottom>
         {t('snort.basicMetadataSection.header')}
       </Typography>
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             fullWidth

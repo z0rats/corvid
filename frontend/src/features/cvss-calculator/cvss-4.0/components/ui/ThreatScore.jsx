@@ -49,7 +49,11 @@ export default function ThreatScore({ metrics, onMetricChange }) {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <ScheduleIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('cvss40.threat.accordionTitle')}</Typography>
         </Box>

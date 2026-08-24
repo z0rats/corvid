@@ -26,7 +26,9 @@ export default function NewsfeedSkeleton({ pageSize }) {
                     width={50}
                     height={50}
                   />
-                  <Stack spacing={0} width={"30%"}>
+                  <Stack spacing={0} sx={{
+                    width: "30%"
+                  }}>
                     <Skeleton
                       variant="text"
                       animation="wave"

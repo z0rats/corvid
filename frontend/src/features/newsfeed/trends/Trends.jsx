@@ -79,7 +79,13 @@ export default function Trends() {
 
   if (loadingWordFrequency) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px"
+        }}>
         <CircularProgress />
       </Box>
     );
@@ -93,7 +99,9 @@ export default function Trends() {
         onRefresh={handleRefresh}
       />
 
-      <Grid container spacing={2} alignItems="stretch">
+      <Grid container spacing={2} sx={{
+        alignItems: "stretch"
+      }}>
         {/* First Row: Word Frequency Chart (left) and Top CVEs (right) */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

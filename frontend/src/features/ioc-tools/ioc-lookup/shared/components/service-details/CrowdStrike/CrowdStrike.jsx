@@ -171,7 +171,11 @@ export default function CrowdStrikeDetails({ result }) {
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Paper sx={summaryPaperSx}>
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <SecurityIcon fontSize="large" sx={{ mr: 1, color:
                 confidenceScore < 20 ? 'success.main' :
                 confidenceScore < 50 ? 'warning.main' : 'error.main'
@@ -190,7 +194,11 @@ export default function CrowdStrikeDetails({ result }) {
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Paper sx={summaryPaperSx}>
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <PersonIcon fontSize="large" sx={{ mr: 1, color: 'error.main' }} />
               <Box>
                 <Typography variant="h6">{t('providers.crowdstrike.threatActors')}</Typography>
@@ -203,7 +211,11 @@ export default function CrowdStrikeDetails({ result }) {
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Paper sx={summaryPaperSx}>
-            <Box display="flex" alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center"
+              }}>
               <CodeIcon fontSize="large" sx={{ mr: 1, color: 'warning.main' }} />
               <Box>
                 <Typography variant="h6">{t('providers.crowdstrike.malwareFamilies')}</Typography>
@@ -222,7 +234,12 @@ export default function CrowdStrikeDetails({ result }) {
           <Grid container spacing={3}>
             {Object.keys(threatTypes).length > 0 && (
               <Grid size={{ xs: 12, md: 6 }}>
-                <Box display="flex" alignItems="center" mb={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 1
+                  }}>
                   <DonutLargeIcon sx={{ mr: 1 }} />
                   <Typography variant="h6" component="h3">
                     {t('providers.crowdstrike.threatTypes')}
@@ -269,7 +286,12 @@ export default function CrowdStrikeDetails({ result }) {
 
             {Object.keys(killChains).length > 0 && (
               <Grid size={{ xs: 12, md: Object.keys(threatTypes).length > 0 ? 6 : 12 }}>
-                <Box display="flex" alignItems="center" mb={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 1
+                  }}>
                   <TimelineIcon sx={{ mr: 1 }} />
                   <Typography variant="h6" component="h3">
                     {t('providers.crowdstrike.killChainPhases')}
@@ -318,7 +340,11 @@ export default function CrowdStrikeDetails({ result }) {
           aria-controls="indicators-content"
           id="indicators-header"
         >
-          <Box display="flex" alignItems="center">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center"
+            }}>
             <BugReportIcon sx={{ mr: 1 }} />
             <Typography variant="h6">{t('providers.crowdstrike.indicatorsCount', { count: indicators.length })}</Typography>
           </Box>
@@ -340,7 +366,12 @@ export default function CrowdStrikeDetails({ result }) {
                 {t('providers.crowdstrike.type')} {indicator.type}
               </Typography>
 
-              <Box display="flex" alignItems="center" mt={1}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  mt: 1
+                }}>
                 <Typography variant="body2" mr={1}>
                   {t('providers.crowdstrike.confidence')}
                 </Typography>
@@ -351,7 +382,9 @@ export default function CrowdStrikeDetails({ result }) {
                 />
               </Box>
 
-              <Box mt={1}>
+              <Box sx={{
+                mt: 1
+              }}>
                 <Typography variant="body2">
                   {t('providers.crowdstrike.published')} {indicator.published_date ? new Date(indicator.published_date * 1000).toLocaleDateString() : notAvailable}
                 </Typography>
@@ -361,7 +394,9 @@ export default function CrowdStrikeDetails({ result }) {
               </Box>
 
               {indicator.actors && indicator.actors.length > 0 && (
-                <Box mt={2}>
+                <Box sx={{
+                  mt: 2
+                }}>
                   <Typography variant="body2" fontWeight="bold">
                     {t('providers.crowdstrike.threatActorsLabel')}
                   </Typography>
@@ -381,7 +416,9 @@ export default function CrowdStrikeDetails({ result }) {
               )}
 
               {indicator.malware_families && indicator.malware_families.length > 0 && (
-                <Box mt={2}>
+                <Box sx={{
+                  mt: 2
+                }}>
                   <Typography variant="body2" fontWeight="bold">
                     {t('providers.crowdstrike.malwareFamiliesLabel')}
                   </Typography>
@@ -401,7 +438,9 @@ export default function CrowdStrikeDetails({ result }) {
               )}
 
               {indicator.kill_chains && indicator.kill_chains.length > 0 && (
-                <Box mt={2}>
+                <Box sx={{
+                  mt: 2
+                }}>
                   <Typography variant="body2" fontWeight="bold">
                     {t('providers.crowdstrike.killChainPhasesRaw')}
                   </Typography>
@@ -420,7 +459,9 @@ export default function CrowdStrikeDetails({ result }) {
               )}
 
               {indicator.threat_types && indicator.threat_types.length > 0 && (
-                <Box mt={2}>
+                <Box sx={{
+                  mt: 2
+                }}>
                   <Typography variant="body2" fontWeight="bold">
                     {t('providers.crowdstrike.threatTypesLabel')}
                   </Typography>
@@ -442,7 +483,12 @@ export default function CrowdStrikeDetails({ result }) {
           ))}
 
           {indicators.length > rowsPerPage && (
-            <Box display="flex" justifyContent="center" mt={2}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 2
+              }}>
               <Pagination
                 count={Math.ceil(indicators.length / rowsPerPage)}
                 page={page}

@@ -11,7 +11,12 @@ export default function PayloadFieldEditor({ field, onUpdate, onDelete }) {
 
   return (
     <Paper sx={{ mb: 1.5, p: 1.5, position: 'relative' }}>
-      <Box display="flex" gap={2} alignItems="flex-start">
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          alignItems: "flex-start"
+        }}>
         <ResizableTextField
           label={t('payloadFields.nameLabel')}
           value={field.name}
@@ -29,7 +34,11 @@ export default function PayloadFieldEditor({ field, onUpdate, onDelete }) {
           size="small"
           sx={{ flex: 2 }}
         />
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <IconButton color="error" onClick={onDelete} aria-label={t('payloadFields.deleteFieldAria')}>
             <DeleteIcon />
           </IconButton>

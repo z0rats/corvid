@@ -42,7 +42,9 @@ export default function Feed() {
   } = useArticleActions(updateArticle, updateArticleField);
 
   return (
-    <Stack spacing={1} width="100%">
+    <Stack spacing={1} sx={{
+      width: "100%"
+    }}>
       <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, width: "100%" }}>
         <Box sx={{ flex: 1, mb: 1 }}>
           <Filters

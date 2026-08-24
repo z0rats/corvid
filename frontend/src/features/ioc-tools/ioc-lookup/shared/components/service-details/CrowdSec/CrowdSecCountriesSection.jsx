@@ -35,7 +35,9 @@ export default function CrowdSecCountriesSection({ targetCountries }) {
         <Typography variant="h6" component="h3" gutterBottom>
           {t('providers.crowdsec.targetCountriesByReportCount')}
         </Typography>
-        <Grid container spacing={2} alignItems="stretch">
+        <Grid container spacing={2} sx={{
+          alignItems: "stretch"
+        }}>
           <Grid size={{ xs: 12, md: 5 }} sx={{ height: "400px" }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>

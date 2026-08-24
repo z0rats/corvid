@@ -39,7 +39,13 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
   return (
     <Card sx={{ minHeight: "450px", height: "100%" }}>
       <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2
+          }}>
           <Typography variant="h6" color="text.primary">
             {t('trends.ioc.title')}
           </Typography>
@@ -107,7 +113,13 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%"
+              }}>
               <Typography variant="body1" color="text.secondary">
                 {t('trends.ioc.noData')}
               </Typography>

@@ -48,7 +48,11 @@ export default function EnvironmentalScore({ metrics, onMetricChange }) {
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <PublicIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('cvss40.environmental.accordionTitle')}</Typography>
         </Box>
@@ -68,7 +72,7 @@ export default function EnvironmentalScore({ metrics, onMetricChange }) {
         </Box>
 
         <Grid container spacing={2}>
-          <Grid size={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" align="center">
               {t('cvss40.environmental.modifiedExploitabilityMetrics')}
             </Typography>
@@ -83,7 +87,7 @@ export default function EnvironmentalScore({ metrics, onMetricChange }) {
               />
             ))}
           </Grid>
-          <Grid size={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="h6" align="center">
               {t('cvss40.environmental.modifiedImpactMetrics')}
             </Typography>

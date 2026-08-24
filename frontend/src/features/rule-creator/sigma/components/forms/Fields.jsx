@@ -33,7 +33,9 @@ export default function Fields({ fields, handleFieldsChange }) {
         {t('sigma.fields.helpText')}
       </Typography>
 
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={12}>
           <TextField
             fullWidth
@@ -73,7 +75,13 @@ export default function Fields({ fields, handleFieldsChange }) {
 
       {/* Display Fields */}
       {fields.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 2 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            flexWrap: "wrap",
+            mt: 2
+          }}>
           {fields.map((field) => (
             <Chip
               key={field.id}

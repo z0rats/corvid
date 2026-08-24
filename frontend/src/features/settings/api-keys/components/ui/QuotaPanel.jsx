@@ -36,7 +36,12 @@ function QuotaRow({ quota }) {
 
   return (
     <Box sx={{ py: 1 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "baseline"
+        }}>
         <Typography variant="body2" fontWeight={600}>{quota.provider}</Typography>
         <Typography variant="caption" color="text.secondary">
           {hasUsedLimit
@@ -61,7 +66,13 @@ export default function QuotaPanel() {
 
   return (
     <Paper elevation={0} sx={{ p: 2, mb: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1
+        }}>
         <Typography variant="subtitle1" fontWeight={600}>{t('quota.title')}</Typography>
         <Button
           size="small"

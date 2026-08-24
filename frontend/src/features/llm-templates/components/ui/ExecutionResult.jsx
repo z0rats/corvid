@@ -78,7 +78,13 @@ export default function ExecutionResult({ result, onCopy }) {
 
   return (
     <StyledPaper elevation={0} sx={{ mt: 2 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2
+        }}>
         <Typography variant="h6" fontWeight={600}>{t('executionResult.resultHeading')}</Typography>
         <Tooltip title={t('executionResult.copyResultTooltip')}>
           <IconButton onClick={onCopy} aria-label={t('executionResult.copyResultAria')}><CopyIcon fontSize="small" /></IconButton>

@@ -103,7 +103,13 @@ export default function ManageNewsfeeds() {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 1, p: 2, maxWidth: "100%", height: "90vh", display: "flex", flexDirection: "column" }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2
+        }}>
         <Typography variant="h6" component="h2">{t('settings.feeds.title')}</Typography>
         <Stack direction="row" spacing={1}>
           <Tooltip title={hasMissingIcons ? t('settings.feeds.fetchMissingIconsTooltip') : t('settings.feeds.allFeedsHaveIcons')}>
@@ -129,11 +135,22 @@ export default function ManageNewsfeeds() {
 
       <List dense sx={{ flex: 1, overflow: "auto", mt: 1, "& ul": { padding: 0 } }}>
         {loading ? (
-          <Box display="flex" justifyContent="center" p={2}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              p: 2
+            }}>
             <CircularProgress size={24} />
           </Box>
         ) : feedEntries.length === 0 ? (
-          <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              p: 4
+            }}>
             <Typography variant="body2" color="text.secondary">
               {t('settings.feeds.noFeedsConfigured')}
             </Typography>

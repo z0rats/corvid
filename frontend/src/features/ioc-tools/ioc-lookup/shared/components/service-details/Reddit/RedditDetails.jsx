@@ -40,7 +40,13 @@ function PostCard({ post, index, isExpanded, onToggleExpand, t, notAvailable }) 
       sx={{ mb: 1.5, p: 2, borderRadius: 1, boxShadow: 0 }}
     >
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "flex-start"
+          }}>
           <Typography variant="subtitle2" component="h2" sx={{ wordBreak: 'break-word', lineHeight: 1.4 }}>
             {post.title || t('providers.reddit.noTitle')}
           </Typography>
@@ -58,10 +64,13 @@ function PostCard({ post, index, isExpanded, onToggleExpand, t, notAvailable }) 
 
         <Stack
           direction="row"
-          alignItems="center"
           spacing={1.5}
-          sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}
-        >
+          sx={{
+            alignItems: "center",
+            mt: 0.75,
+            flexWrap: 'wrap',
+            gap: 0.5
+          }}>
           {post.subreddit && (
             <Chip
               icon={<Forum sx={{ fontSize: 14 }} />}
@@ -155,7 +164,13 @@ export default function RedditDetails({ result, ioc }) {
 
   return (
     <Box sx={{ margin: 1, mt: 0 }}>
-      <Grid container spacing={1} alignItems="center" mb={1.5}>
+      <Grid
+        container
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1.5
+        }}>
         <RedditIcon color="action" />
         <Typography variant="h6" component="div" sx={{ ml: 1 }}>
           {t('providers.reddit.mentionsCount', { count: posts.length })}
@@ -178,7 +193,11 @@ export default function RedditDetails({ result, ioc }) {
       })}
 
       {totalPages > 1 && (
-        <Stack alignItems="center" sx={{ mt: 1 }}>
+        <Stack
+          sx={{
+            alignItems: "center",
+            mt: 1
+          }}>
           <Pagination
             count={totalPages}
             page={page}

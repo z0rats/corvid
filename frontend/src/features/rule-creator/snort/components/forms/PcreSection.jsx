@@ -37,7 +37,9 @@ export default function PcreSection({ pcreList, onPcreChange }) {
       <Typography variant="subtitle2" gutterBottom>
         {t('snort.pcreSection.header')}
       </Typography>
-      <Grid container spacing={1} alignItems="center">
+      <Grid container spacing={1} sx={{
+        alignItems: "center"
+      }}>
         <Grid size={{ xs: 12, sm: 10 }}>
           <TextField
             fullWidth

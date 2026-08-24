@@ -69,7 +69,12 @@ export default function TemplateDetailPanel({
   return (
     <Box>
       <StyledPaper elevation={0}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
           <Typography variant="h6" fontWeight={600}>{template.title}</Typography>
           <Stack direction="row" spacing={1}>
             {onToggleFavorite && (
@@ -102,7 +107,9 @@ export default function TemplateDetailPanel({
 
         <Divider sx={{ my: 2 }} />
 
-        <Stack spacing={2} mt={1}>
+        <Stack spacing={2} sx={{
+          mt: 1
+        }}>
           {Array.isArray(template.payload_fields) && template.payload_fields.length > 0 ? (
             template.payload_fields.map(field => (
               <TextField
@@ -148,7 +155,12 @@ export default function TemplateDetailPanel({
           )}
         </Stack>
 
-        <Box display="flex" justifyContent="flex-end" mt={3}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            mt: 3
+          }}>
           <Button
             variant="contained"
             startIcon={executing ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}

@@ -12,8 +12,18 @@ export default function WebContextEditor({ ctx, onUpdate, onDelete }) {
 
   return (
     <Paper sx={{ mb: 1.5, p: 1.5 }}>
-      <Box display="flex" flexDirection="column" gap={1.5}>
-        <Box display="flex" gap={2} alignItems="flex-start">
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1.5
+        }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            alignItems: "flex-start"
+          }}>
           <ResizableTextField
             label={t('webContexts.nameLabel')}
             value={ctx.name}
@@ -33,7 +43,11 @@ export default function WebContextEditor({ ctx, onUpdate, onDelete }) {
             placeholder={t('webContexts.descriptionPlaceholder')}
             helperText=""
           />
-          <Box display="flex" alignItems="center">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center"
+            }}>
             <IconButton color="error" onClick={onDelete} aria-label={t('webContexts.deleteContextAria')}>
               <DeleteIcon />
             </IconButton>

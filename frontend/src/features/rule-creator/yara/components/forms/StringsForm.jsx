@@ -68,13 +68,19 @@ export default function StringsForm({
           },
         }}
       >
-        <Box display="flex" alignItems="center">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center"
+          }}>
           <CodeIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography variant="subtitle2">{t('yara.stringsForm.header')}</Typography>
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ px: 1, py: 1 }}>
-        <Grid container spacing={1} alignItems="center">
+        <Grid container spacing={1} sx={{
+          alignItems: "center"
+        }}>
           <Grid size={{ xs: 12, sm: 3 }}>
             <TextField
               fullWidth

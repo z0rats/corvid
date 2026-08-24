@@ -75,7 +75,13 @@ export default function Tags({ tags, handleTagsChange }) {
       />
       {/* Display Tags */}
       {tags.length > 0 && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 2 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            flexWrap: "wrap",
+            mt: 2
+          }}>
           {tags.map((tag) => (
             <Chip
               key={tag.id}

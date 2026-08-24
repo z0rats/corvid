@@ -32,7 +32,12 @@ export default function MandiantReports({ reports, page, onPageChange }) {
           {row.map((report, colIndex) => (
             <Grid size={{ xs: 12, md: 6 }} key={colIndex}>
               <Box sx={{ p: 2, backgroundColor: (t) => t.palette.mode === 'dark' ? t.palette.background.default : t.palette.grey[100], height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start"
+                  }}>
                   <Typography variant="subtitle1" fontWeight="bold" sx={{ flexGrow: 1, mr: 2 }}>
                     {report.title}
                   </Typography>
@@ -47,14 +52,30 @@ export default function MandiantReports({ reports, page, onPageChange }) {
                     {t('providers.mandiant.open')}
                   </Button>
                 </Box>
-                <Box mt={1} display="flex" alignItems="center">
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: "flex",
+                    alignItems: "center"
+                  }}>
                   <CalendarTodayIcon fontSize="small" sx={{ mr: 1 }} />
                   <Typography variant="body2">
                     {t('providers.crowdstrike.published')} {new Date(report.publish_date).toLocaleDateString()}
                   </Typography>
                 </Box>
-                <Box mt={1} display="flex" flexWrap="wrap" alignItems="flex-start">
-                  <Box display="flex" alignItems="center" sx={{ mr: 1 }}>
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "flex-start"
+                  }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mr: 1
+                    }}>
                     <CategoryIcon fontSize="small" sx={{ mr: 1 }} />
                     <Typography variant="body2">{t('providers.crowdstrike.type')} {report.report_type || notAvailable}</Typography>
                   </Box>
@@ -64,7 +85,11 @@ export default function MandiantReports({ reports, page, onPageChange }) {
                     ))}
                   </Box>
                 </Box>
-                <Box mt={1} sx={{ flexGrow: 1 }}>
+                <Box
+                  sx={{
+                    mt: 1,
+                    flexGrow: 1
+                  }}>
                   <Typography variant="body2" color="text.secondary">
                     {t('providers.mandiant.reportId')} {report.report_id}
                   </Typography>
@@ -75,7 +100,12 @@ export default function MandiantReports({ reports, page, onPageChange }) {
         </Grid>
       ))}
       {reports.length > ROWS_PER_PAGE && (
-        <Box display="flex" justifyContent="center" mt={2}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            mt: 2
+          }}>
           <Pagination
             count={Math.ceil(reports.length / ROWS_PER_PAGE)}
             page={page}

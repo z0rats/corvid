@@ -51,7 +51,13 @@ export default function Headlines() {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        sx={{
+          alignItems: "center",
+          mb: 2
+        }}>
         <TextField label={t('headlines.filterSource')} size="small" value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} />
         <TextField label={t('headlines.filterTitle')} size="small" value={titleFilter} onChange={(e) => setTitleFilter(e.target.value)} />
         <FormControl size="small" sx={{ minWidth: 120 }}>

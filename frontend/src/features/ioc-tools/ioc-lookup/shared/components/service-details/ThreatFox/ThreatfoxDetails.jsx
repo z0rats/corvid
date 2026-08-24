@@ -101,111 +101,117 @@ export default function ThreatfoxDetails({ result, ioc }) {
   }
 
   return (
-    <Box sx={{ margin: 1, mt:0 }}>
-        <Grid container spacing={1} alignItems="center" mb={1}>
-            <SecurityIcon color="action"/>
-            <Typography variant="h6" component="div" sx={{ ml: 1 }}>
-              {t('providers.threatfox.intelligenceFor')} <Typography component="span" sx={{wordBreak: 'break-all'}}>{ioc}</Typography>
-            </Typography>
-        </Grid>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }} mb={2}>
-            {t('providers.threatfox.displayingRecords', { count: result.data.length })}
-        </Typography>
-        {result.data.map((entry, index) => (
-        <Card key={entry.id || index} elevation={0} sx={{ mb: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-            <CardContent sx={{p:2}}>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    {t('providers.threatfox.entryIdConfidence', { id: entry.id, confidence: entry.confidence_level })}
-                </Typography>
-                <Divider sx={{mb:1}}/>
-                <List disablePadding dense>
-                    <RenderSection
-                        icon={<IocValueIcon />}
-                        title={t('providers.threatfox.iocValue')}
-                        content={entry.ioc_value}
-                        yes={yes} no={no}
-                    />
-                    <RenderSection
-                        icon={<InfoIcon />}
-                        title={t('providers.threatfox.iocType')}
-                        content={<>{entry.ioc_type} <Typography variant="caption" color="text.disabled">({entry.ioc_type_desc})</Typography></>}
-                        yes={yes} no={no}
-                    />
-                    <RenderSection
-                        icon={<SecurityIcon />}
-                        title={t('providers.threatfox.threatType')}
-                        content={<>{entry.threat_type} <Typography variant="caption" color="text.disabled">({entry.threat_type_desc})</Typography></>}
-                        yes={yes} no={no}
-                    />
-                    <RenderSection
-                        icon={<MalwareIcon />}
-                        title={t('providers.threatfox.malware')}
-                        yes={yes} no={no}
-                        content={
-                            <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {entry.malware_printable} ({entry.malware === 'unknown' ? t('providers.threatfox.genericUnknown') : entry.malware})
-                                </Typography>
-                                {entry.malware_alias && <Typography variant="caption" color="text.secondary">{t('providers.threatfox.alias')} {entry.malware_alias}</Typography>}
-                                <br/>
-                                {entry.malware_malpedia && (
-                                <Link
-                                    href={entry.malware_malpedia}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, typography: 'caption' }}
-                                >
-                                    <LinkIcon sx={{ fontSize: 'inherit' }} /> {t('providers.threatfox.malpediaEntry')}
-                                </Link>
-                                )}
-                            </Box>
-                        }
-                    />
-                    <RenderSection
-                        icon={<TimeIcon />}
-                        title={t('providers.threatfox.timeline')}
-                        yes={yes} no={no}
-                        content={
-                            <Box>
-                                <Typography variant="caption">{t('providers.threatfox.firstSeen')} {entry.first_seen_utc ? new Date(entry.first_seen_utc).toLocaleString() : notAvailable}</Typography><br/>
-                                <Typography variant="caption">{t('providers.threatfox.lastSeen')} {entry.last_seen_utc ? new Date(entry.last_seen_utc).toLocaleString() : notAvailable}</Typography>
-                            </Box>
-                        }
-                    />
-                    <RenderSection
-                        icon={<PersonIcon />}
-                        title={t('providers.threatfox.reporter')}
-                        content={entry.reporter}
-                        yes={yes} no={no}
-                    />
-                    {entry.reference && (
-                        <RenderSection
-                            icon={<LinkIcon />}
-                            title={t('providers.threatfox.reference')}
-                            yes={yes} no={no}
-                            content={
-                                <Link href={entry.reference} target="_blank" rel="noopener noreferrer" sx={{typography:'body2'}}>
-                                    {entry.reference}
-                                </Link>
-                            }
-                        />
-                    )}
-                    {entry.tags?.length > 0 && <RenderSection
-                        icon={<TagIcon />}
-                        title={t('providers.threatfox.tags')}
-                        yes={yes} no={no}
-                        content={
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.2 }}>
-                            {entry.tags.map((tag) => (
-                            <Chip key={tag} label={tag} size="small" variant="outlined" sx={{ borderRadius: 1 }}/>
-                            ))}
-                        </Box>
-                        }
-                    />}
-                </List>
-            </CardContent>
-        </Card>
-        ))}
-    </Box>
+      <Box sx={{ margin: 1, mt:0 }}>
+          <Grid
+              container
+              spacing={1}
+              sx={{
+                  alignItems: "center",
+                  mb: 1
+              }}>
+              <SecurityIcon color="action"/>
+              <Typography variant="h6" component="div" sx={{ ml: 1 }}>
+                {t('providers.threatfox.intelligenceFor')} <Typography component="span" sx={{wordBreak: 'break-all'}}>{ioc}</Typography>
+              </Typography>
+          </Grid>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }} mb={2}>
+              {t('providers.threatfox.displayingRecords', { count: result.data.length })}
+          </Typography>
+          {result.data.map((entry, index) => (
+          <Card key={entry.id || index} elevation={0} sx={{ mb: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+              <CardContent sx={{p:2}}>
+                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                      {t('providers.threatfox.entryIdConfidence', { id: entry.id, confidence: entry.confidence_level })}
+                  </Typography>
+                  <Divider sx={{mb:1}}/>
+                  <List disablePadding dense>
+                      <RenderSection
+                          icon={<IocValueIcon />}
+                          title={t('providers.threatfox.iocValue')}
+                          content={entry.ioc_value}
+                          yes={yes} no={no}
+                      />
+                      <RenderSection
+                          icon={<InfoIcon />}
+                          title={t('providers.threatfox.iocType')}
+                          content={<>{entry.ioc_type} <Typography variant="caption" color="text.disabled">({entry.ioc_type_desc})</Typography></>}
+                          yes={yes} no={no}
+                      />
+                      <RenderSection
+                          icon={<SecurityIcon />}
+                          title={t('providers.threatfox.threatType')}
+                          content={<>{entry.threat_type} <Typography variant="caption" color="text.disabled">({entry.threat_type_desc})</Typography></>}
+                          yes={yes} no={no}
+                      />
+                      <RenderSection
+                          icon={<MalwareIcon />}
+                          title={t('providers.threatfox.malware')}
+                          yes={yes} no={no}
+                          content={
+                              <Box>
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {entry.malware_printable} ({entry.malware === 'unknown' ? t('providers.threatfox.genericUnknown') : entry.malware})
+                                  </Typography>
+                                  {entry.malware_alias && <Typography variant="caption" color="text.secondary">{t('providers.threatfox.alias')} {entry.malware_alias}</Typography>}
+                                  <br/>
+                                  {entry.malware_malpedia && (
+                                  <Link
+                                      href={entry.malware_malpedia}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, typography: 'caption' }}
+                                  >
+                                      <LinkIcon sx={{ fontSize: 'inherit' }} /> {t('providers.threatfox.malpediaEntry')}
+                                  </Link>
+                                  )}
+                              </Box>
+                          }
+                      />
+                      <RenderSection
+                          icon={<TimeIcon />}
+                          title={t('providers.threatfox.timeline')}
+                          yes={yes} no={no}
+                          content={
+                              <Box>
+                                  <Typography variant="caption">{t('providers.threatfox.firstSeen')} {entry.first_seen_utc ? new Date(entry.first_seen_utc).toLocaleString() : notAvailable}</Typography><br/>
+                                  <Typography variant="caption">{t('providers.threatfox.lastSeen')} {entry.last_seen_utc ? new Date(entry.last_seen_utc).toLocaleString() : notAvailable}</Typography>
+                              </Box>
+                          }
+                      />
+                      <RenderSection
+                          icon={<PersonIcon />}
+                          title={t('providers.threatfox.reporter')}
+                          content={entry.reporter}
+                          yes={yes} no={no}
+                      />
+                      {entry.reference && (
+                          <RenderSection
+                              icon={<LinkIcon />}
+                              title={t('providers.threatfox.reference')}
+                              yes={yes} no={no}
+                              content={
+                                  <Link href={entry.reference} target="_blank" rel="noopener noreferrer" sx={{typography:'body2'}}>
+                                      {entry.reference}
+                                  </Link>
+                              }
+                          />
+                      )}
+                      {entry.tags?.length > 0 && <RenderSection
+                          icon={<TagIcon />}
+                          title={t('providers.threatfox.tags')}
+                          yes={yes} no={no}
+                          content={
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.2 }}>
+                              {entry.tags.map((tag) => (
+                              <Chip key={tag} label={tag} size="small" variant="outlined" sx={{ borderRadius: 1 }}/>
+                              ))}
+                          </Box>
+                          }
+                      />}
+                  </List>
+              </CardContent>
+          </Card>
+          ))}
+      </Box>
   );
 }

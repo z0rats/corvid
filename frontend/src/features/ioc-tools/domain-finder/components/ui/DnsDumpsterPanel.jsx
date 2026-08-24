@@ -109,7 +109,13 @@ function HostGroup({ groupKey, icon: Icon, hosts, t }) {
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{
+          alignItems: "center",
+          mb: 1
+        }}>
         <Icon fontSize="small" color="action" />
         <Typography variant="subtitle2">
           {t(`domainFinder.dnsDumpster.groups.${groupKey}`, { count: hosts.length })}

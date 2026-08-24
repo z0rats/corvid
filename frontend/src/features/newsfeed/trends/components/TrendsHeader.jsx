@@ -16,12 +16,23 @@ export default function TrendsHeader({ timeRange, onTimeRangeChange, onRefresh }
   const { t } = useTranslation('newsfeed');
 
   return (
-    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        mb: 2
+      }}>
       <Typography variant="h5" color="text.primary">
         {t('trends.header.title')}
       </Typography>
 
-      <Box display="flex" alignItems="center" gap={2}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2
+        }}>
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>{t('trends.header.timeRange')}</InputLabel>
           <Select value={timeRange} label={t('trends.header.timeRange')} onChange={onTimeRangeChange}>

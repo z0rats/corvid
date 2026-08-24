@@ -107,7 +107,12 @@ export default function CreateTemplateForm() {
           </Tooltip>
         }
       >
-        <Box display="flex" gap={2} alignItems="flex-start">
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            alignItems: "flex-start"
+          }}>
           <ResizableTextField
             label={t('createForm.titleLabel')}
             value={template.title}
@@ -141,7 +146,9 @@ export default function CreateTemplateForm() {
             </FormControl>
           )}
         </Box>
-        <Box mt={2}>
+        <Box sx={{
+          mt: 2
+        }}>
           <ResizableTextField
             label={t('createForm.descriptionLabel')}
             value={template.description}
@@ -161,7 +168,9 @@ export default function CreateTemplateForm() {
           error={!template.ai_agent_role.trim()}
           helperText={!template.ai_agent_role.trim() ? t('createForm.agentRoleRequiredHelper') : t('createForm.agentRoleHelper')}
         />
-        <Box mt={2}>
+        <Box sx={{
+          mt: 2
+        }}>
           <ResizableTextField
             label={t('createForm.agentTaskLabel')}
             value={template.ai_agent_task}
@@ -225,7 +234,13 @@ export default function CreateTemplateForm() {
         <FormHelperText sx={{ mt: 1 }}>{t('createForm.previewExampleBottomHelper')}</FormHelperText>
       </FormSection>
 
-      <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mt: 2
+        }}>
         <Button startIcon={<PreviewIcon />} onClick={() => setPreviewOpen(true)}>{t('createForm.previewButton')}</Button>
         <Button
           variant="contained"

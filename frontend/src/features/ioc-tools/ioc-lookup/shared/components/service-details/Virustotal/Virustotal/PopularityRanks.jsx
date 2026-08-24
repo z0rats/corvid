@@ -16,8 +16,12 @@ export default function PopularityRanks(props) {
       key="popularity_card"
       sx={{ m: 1, p: 2, borderRadius: 1, boxShadow: 0 }}
     >
-      <Grid container alignItems="center">
-        <Grid mr={1}>
+      <Grid container sx={{
+        alignItems: "center"
+      }}>
+        <Grid sx={{
+          mr: 1
+        }}>
           <StarHalfIcon />
         </Grid>
         <Grid>
@@ -46,7 +50,9 @@ export default function PopularityRanks(props) {
                 {name}
               </Typography>
               <Divider sx={{ my: 1 }} />
-              <Grid container spacing={1} alignItems="center">
+              <Grid container spacing={1} sx={{
+                alignItems: "center"
+              }}>
                 <Grid>
                   <StarIcon color="action" />
                 </Grid>

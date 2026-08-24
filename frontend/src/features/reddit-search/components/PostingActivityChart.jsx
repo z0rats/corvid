@@ -13,7 +13,14 @@ import { buildHourlyActivity, buildMonthlyActivity } from '../utils/activityUtil
 function ActivityTooltip({ active, payload, label, formatLabel, formatCount }) {
   if (!active || !payload?.length) return null;
   return (
-    <Box bgcolor="background.paper" p={1} border={1} borderColor="divider" borderRadius={1}>
+    <Box
+      sx={{
+        bgcolor: "background.paper",
+        p: 1,
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1
+      }}>
       <Typography variant="body2" color="text.primary" fontWeight="medium">
         {formatLabel ? formatLabel(label) : label}
       </Typography>
