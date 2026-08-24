@@ -80,6 +80,18 @@ DORK_TEMPLATES: list[DorkTemplate] = [
         description="LinkedIn profile mentions",
     ),
     DorkTemplate(
+        key="linkedin_company",
+        pattern='site:linkedin.com/company "{target}"',
+        target_types=("domain",),
+        description="LinkedIn company page mentions",
+    ),
+    DorkTemplate(
+        key="linkedin_employees",
+        pattern='site:linkedin.com/in "{target}"',
+        target_types=("domain",),
+        description="Indexed LinkedIn profiles mentioning the domain",
+    ),
+    DorkTemplate(
         key="social_mentions",
         pattern='"{target}" site:twitter.com OR site:reddit.com OR site:facebook.com',
         target_types=("username", "email"),
