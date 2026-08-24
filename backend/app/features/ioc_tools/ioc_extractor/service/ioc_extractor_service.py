@@ -25,6 +25,24 @@ IOC_PATTERNS = {
     "domains": r"\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{2,63})\b",
     "emails": r"(?<![\w\.-])[\w\.-]+@[\w\.-]+\.\w{2,}",
     "cves": r"CVE-\d{4}-\d{4,7}",
+    # Secret-shaped strings - a handful of instantly-recognizable formats (provider key
+    # prefixes, JWTs, PEM private key headers), not a generic high-entropy-string detector
+    # (too noisy for a text blob that's often source code or logs full of hashes/hex IDs).
+    "secrets": (
+        r"AKIA[0-9A-Z]{16}"  # AWS Access Key ID
+        r"|AIza[0-9A-Za-z\-_]{35}"  # Google API key
+        r"|xox[baprs]-[0-9A-Za-z-]{10,48}"  # Slack token
+        r"|gh[pousr]_[A-Za-z0-9]{36}"  # GitHub personal/OAuth/app/refresh token
+        r"|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"  # JWT
+        r"|-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"  # PEM private key header
+    ),
+    # Quoted relative paths with a security-interesting prefix (api/admin/internal/...),
+    # not every quoted string starting with "/" - that would mostly just be static asset
+    # paths, drowning out the endpoints actually worth an analyst's attention.
+    "js_endpoints": (
+        r"""["'](/(?:api|admin|internal|graphql|auth|login|logout|upload|download|"""
+        r"""config|debug|v[0-9]+)[a-zA-Z0-9/_\-.]{0,80})["']"""
+    ),
 }
 
 # Pre-compiled patterns for performance
@@ -236,6 +254,8 @@ def extract_iocs(content: str) -> ExtractionResponse:
             domains=filtered_domains,
             emails=unique_iocs["emails"],
             cves=unique_iocs["cves"],
+            secrets=unique_iocs["secrets"],
+            js_endpoints=unique_iocs["js_endpoints"],
             statistics=statistics,
         )
 

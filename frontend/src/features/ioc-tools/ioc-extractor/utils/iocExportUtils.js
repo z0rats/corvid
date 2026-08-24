@@ -9,7 +9,9 @@ export function collectAllIOCs(extractedData) {
     ...(extractedData.md5 || []),
     ...(extractedData.sha1 || []),
     ...(extractedData.sha256 || []),
-    ...(extractedData.cves || [])
+    ...(extractedData.cves || []),
+    ...(extractedData.secrets || []),
+    ...(extractedData.js_endpoints || [])
   ];
 }
 

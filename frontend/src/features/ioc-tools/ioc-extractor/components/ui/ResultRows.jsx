@@ -26,7 +26,7 @@ const iocCellSx = { py: 1, wordBreak: 'break-all', fontSize: '0.875rem' };
 const actionsCellSx = { py: 1 };
 const analyzeButtonSx = { minWidth: 'auto', px: 1.5, py: 0.25, fontSize: '0.75rem' };
 
-export default function ResultRows({ title, type, list = [], count, icon }) {
+export default function ResultRows({ title, type, list = [], count, icon, analyzable = true }) {
   const { t } = useTranslation('iocTools');
   const [selectedIoc, setSelectedIoc] = useState(null);
   const [page, setPage] = useState(0);
@@ -95,7 +95,9 @@ export default function ResultRows({ title, type, list = [], count, icon }) {
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 600, py: 1 }}>{t('iocExtractor.resultRows.columns.ioc')}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, py: 1, width: 100 }}>{t('iocExtractor.resultRows.columns.actions')}</TableCell>
+                    {analyzable && (
+                      <TableCell align="right" sx={{ fontWeight: 600, py: 1, width: 100 }}>{t('iocExtractor.resultRows.columns.actions')}</TableCell>
+                    )}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -104,16 +106,18 @@ export default function ResultRows({ title, type, list = [], count, icon }) {
                       <TableCell sx={iocCellSx}>
                         {ioc}
                       </TableCell>
-                      <TableCell align="right" sx={actionsCellSx}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => setSelectedIoc(ioc)}
-                          sx={analyzeButtonSx}
-                        >
-                          {t('iocExtractor.resultRows.analyzeButton')}
-                        </Button>
-                      </TableCell>
+                      {analyzable && (
+                        <TableCell align="right" sx={actionsCellSx}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => setSelectedIoc(ioc)}
+                            sx={analyzeButtonSx}
+                          >
+                            {t('iocExtractor.resultRows.analyzeButton')}
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

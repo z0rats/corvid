@@ -61,7 +61,8 @@ export default function IocExtractor() {
     ...category,
     list: extractedData?.[category.dataKey] || [],
     count: extractedData?.statistics?.[category.dataKey] || 0,
-    icon: <category.icon />
+    icon: <category.icon />,
+    analyzable: category.analyzable ?? true
   })), [extractedData]);
 
   return (
@@ -91,6 +92,7 @@ export default function IocExtractor() {
                 list={category.list}
                 count={category.count}
                 icon={category.icon}
+                analyzable={category.analyzable}
               />
             ))}
           </Box>

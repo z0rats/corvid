@@ -1,8 +1,10 @@
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import KeyIcon from '@mui/icons-material/Key';
 import LanIcon from '@mui/icons-material/Lan';
 import LinkIcon from '@mui/icons-material/Link';
 import PublicIcon from '@mui/icons-material/Public';
+import RouteIcon from '@mui/icons-material/Route';
 
 export const IOC_CATEGORIES = [
   {
@@ -46,5 +48,21 @@ export const IOC_CATEGORIES = [
     type: 'sha256',
     dataKey: 'sha256',
     icon: InsertDriveFileIcon
+  },
+  {
+    title: 'Secrets',
+    type: 'secret',
+    dataKey: 'secrets',
+    icon: KeyIcon,
+    // No ioc_lookup provider understands a "secret" type - analyzing one would
+    // silently fall back to an MD5 lookup, so skip the Analyze button for this category.
+    analyzable: false
+  },
+  {
+    title: 'JS Endpoints',
+    type: 'js_endpoint',
+    dataKey: 'js_endpoints',
+    icon: RouteIcon,
+    analyzable: false
   }
 ];

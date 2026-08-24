@@ -28,6 +28,12 @@ class IOCStatistics(BaseModel):
     domains: int = Field(default=0, description="Number of domains found")
     emails: int = Field(default=0, description="Number of email addresses found")
     cves: int = Field(default=0, description="Number of CVE identifiers found")
+    secrets: int = Field(
+        default=0, description="Number of secret-shaped strings found (API keys, tokens, ...)"
+    )
+    js_endpoints: int = Field(
+        default=0, description="Number of API/route-shaped path strings found"
+    )
     ips_removed_duplicates: int = Field(default=0, description="Number of duplicate IPs removed")
     md5_removed_duplicates: int = Field(default=0, description="Number of duplicate MD5s removed")
     sha1_removed_duplicates: int = Field(default=0, description="Number of duplicate SHA1s removed")
@@ -42,6 +48,12 @@ class IOCStatistics(BaseModel):
         default=0, description="Number of duplicate emails removed"
     )
     cves_removed_duplicates: int = Field(default=0, description="Number of duplicate CVEs removed")
+    secrets_removed_duplicates: int = Field(
+        default=0, description="Number of duplicate secrets removed"
+    )
+    js_endpoints_removed_duplicates: int = Field(
+        default=0, description="Number of duplicate JS endpoints removed"
+    )
     total_unique_iocs: int = Field(default=0, description="Total number of unique IOCs found")
 
 
@@ -56,6 +68,13 @@ class ExtractionResponse(BaseModel):
     domains: list[str] = Field(default_factory=list, description="Extracted domains")
     emails: list[str] = Field(default_factory=list, description="Extracted email addresses")
     cves: list[str] = Field(default_factory=list, description="Extracted CVE identifiers")
+    secrets: list[str] = Field(
+        default_factory=list,
+        description="Secret-shaped strings found (API keys, tokens, private key headers, ...)",
+    )
+    js_endpoints: list[str] = Field(
+        default_factory=list, description="API/route-shaped path strings found in the text"
+    )
     statistics: IOCStatistics = Field(..., description="Extraction statistics")
 
 
