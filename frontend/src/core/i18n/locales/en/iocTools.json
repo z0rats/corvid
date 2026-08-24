@@ -235,6 +235,64 @@
       "scanSubdomain": "Scan this subdomain",
       "certificateCount": "{{count}} certificate(s) found on crt.sh"
     },
+    "hackertarget": {
+      "title": "HackerTarget subdomains",
+      "errorPrefix": "HackerTarget lookup failed:",
+      "noSubdomains": "No subdomains found via HackerTarget.",
+      "scanSubdomain": "Scan this subdomain",
+      "hostCount": "{{count}} host(s) found via HackerTarget"
+    },
+    "rapidDns": {
+      "title": "RapidDNS subdomains",
+      "errorPrefix": "RapidDNS lookup failed:",
+      "noSubdomains": "No subdomains found via RapidDNS.",
+      "scanSubdomain": "Scan this subdomain",
+      "recordCount": "{{count}} DNS record(s) found via RapidDNS"
+    },
+    "webCheck": {
+      "title": "Web Check",
+      "checkedAt": "Checked at",
+      "ssl": {
+        "title": "TLS Certificate",
+        "errorPrefix": "TLS check failed:",
+        "valid": "Valid ({{days}}d left)",
+        "expired": "Expired",
+        "hostnameMatches": "Hostname matches",
+        "hostnameMismatch": "Hostname mismatch",
+        "issuer": "Issuer:",
+        "subject": "Subject:"
+      },
+      "headers": {
+        "title": "Security Headers",
+        "errorPrefix": "Security headers check failed:",
+        "summary": "{{present}} present, {{missing}} missing",
+        "hstsMaxAge": "HSTS max-age: {{maxAge}}s",
+        "includeSubdomains": "includeSubDomains",
+        "preload": "preload"
+      },
+      "dnssec": {
+        "title": "DNSSEC",
+        "errorPrefix": "DNSSEC check failed:",
+        "enabled": "DNSSEC enabled",
+        "disabled": "DNSSEC not detected"
+      },
+      "blocklist": {
+        "title": "DNS Blocklist Check",
+        "errorPrefix": "Blocklist check failed:",
+        "summary": "Flagged by {{count}} provider(s)"
+      }
+    },
+    "wayback": {
+      "title": "Wayback Machine",
+      "errorPrefix": "Wayback Machine lookup failed:",
+      "noSnapshots": "No archived snapshots found for this domain.",
+      "captureRange": "{{count}} capture(s) found, {{first}} – {{last}}",
+      "openSnapshot": "Open this snapshot on web.archive.org",
+      "pathPlaceholder": "Narrow to a page, e.g. /login (optional)",
+      "applyPath": "Search this page only",
+      "clearPath": "Clear, show the whole domain again",
+      "capturesLabel": "captures"
+    },
     "welcomeScreen": {
       "title": "Domain Finder",
       "intro": "Domain Finder is a module that helps you protect your organization from phishing attacks by allowing you to search for recently registered domains that match a specific pattern. This can help you identify potential threats before they occur.",
@@ -614,6 +672,15 @@
       "botStatus": "Bot Status",
       "mobileConnection": "Mobile Connection",
       "fraudRisk": "fraud risk"
+    },
+    "leakix": {
+      "loading": "Loading LeakIX details...",
+      "errorFetching": "Error fetching LeakIX details: {{error}}",
+      "noInfoFound": "No services or leaks found on \"{{ip}}\" via LeakIX.",
+      "reportFor": "LeakIX Report for:",
+      "leaksFound": "Leaks ({{count}})",
+      "servicesFound": "Open Services ({{count}})",
+      "datasetSummary": "{{rows}} row(s) across {{databases}} database(s)"
     },
     "libraryofleaks": {
       "unavailable": "Library of Leaks details are unavailable or still loading.",

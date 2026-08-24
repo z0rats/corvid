@@ -36,7 +36,7 @@ Pulls pre-built images and starts the app at http://localhost:4000 — no auto-u
 
 IOC lookups auto-route to the right services based on the type you paste in:
 
-- **IPs** — AbuseIPDB, AlienVault, CheckPhish.ai, CrowdSec, GitHub, IPQualityScore, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, VirusTotal
+- **IPs** — AbuseIPDB, AlienVault, CheckPhish.ai, CrowdSec, GitHub, IPQualityScore, LeakIX, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, VirusTotal
 - **Domains** — AlienVault, CheckPhish.ai, GitHub, Library of Leaks, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
 - **URLs** — AlienVault, CheckPhish.ai, GitHub, Google Safe Browsing, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
 - **Emails** — Emailrep.io, GitHub, Have I Been Pwned, Hunter.io, Library of Leaks, Reddit, Twitter/X
@@ -57,8 +57,9 @@ articles with AI. → [Docs](https://z0rats.github.io/corvid/features/newsfeed/)
 
 ### IOC Tools
 Analyze IPs, domains, URLs, hashes, emails, and crypto addresses against VirusTotal, AlienVault,
-AbuseIPDB, Shodan, and more, single or in bulk, plus Domain Finder, WHOIS/RDAP, and Certificate
-Transparency panels. → [Docs](https://z0rats.github.io/corvid/features/ioc-tools/)
+AbuseIPDB, Shodan, and more, single or in bulk, plus Domain Finder (WHOIS/RDAP, Certificate
+Transparency, HackerTarget/RapidDNS subdomains, Wayback history, and a keyless Web Check panel —
+TLS cert, security headers, DNSSEC, DNS blocklist). → [Docs](https://z0rats.github.io/corvid/features/ioc-tools/)
 <img width="1679" height="1102" alt="ioc_lookup" src="https://github.com/user-attachments/assets/40b1e656-ba6c-4f36-b8dd-beee0dca3fdd" />
 
 
@@ -67,8 +68,9 @@ Parse `.eml` files, run header/security checks, extract IOCs, and get an AI-assi
 suspicious messages. → [Docs](https://z0rats.github.io/corvid/features/email-analyzer/)
 
 ### Image Tools
-Inspect EXIF/GPS/hash metadata, reverse-image search with no API keys, and an optional AI photo
-geolocation hypothesis. → [Docs](https://z0rats.github.io/corvid/features/image-tools/)
+Inspect EXIF/GPS/hash metadata, reverse-image search with no API keys, an optional AI photo
+geolocation hypothesis, and an opt-in ChronoVerify provenance/C2PA check. →
+[Docs](https://z0rats.github.io/corvid/features/image-tools/)
 
 ### AI Templates
 Reusable AI prompt templates for log analysis, email analysis, and source-code explanation. →
