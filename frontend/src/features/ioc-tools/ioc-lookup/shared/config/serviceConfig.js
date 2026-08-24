@@ -12,6 +12,7 @@ import HaveibeenpwndDetails from '../components/service-details/HIBP/Haveibeenpw
 import HudsonRockDetails from '../components/service-details/HudsonRock/HudsonRockDetails';
 import HunterioDetails from '../components/service-details/HunterIO/HunterioDetails';
 import IpQualityscoreDetails from '../components/service-details/IpQualityScore/IpqualityscoreDetails';
+import LeakixDetails from '../components/service-details/LeakIX/LeakixDetails';
 import LibraryOfLeaksDetails from '../components/service-details/LibraryOfLeaks/LibraryOfLeaksDetails';
 import MandiantDetails from '../components/service-details/Mandiant/MandiantDetails';
 import MaltiverseDetails from '../components/service-details/Maltiverse/MaltiverseDetails';
@@ -272,6 +273,27 @@ export const SERVICE_DEFINITIONS = {
         if (typeof score === 'undefined') return { summary: "No score", tlp: 'WHITE' };
         const tlp = scoreTlpMapper(score, { red: 90, amber: 75 });
         return { summary: `Fraud Score: ${score}`, tlp, keyMetric: score };
+    }),
+  },
+  leakix: {
+    name: 'LeakIX',
+    icon: 'default_icon',
+    detailComponent: LeakixDetails,
+    requiredKeys: ['leakix'],
+    supportedIocTypes: ['IPv4'],
+    lookupEndpoint: createSingleEndpoint('leakix'),
+    getSummaryAndTlp: withErrorHandling((responseData) => {
+        const leakCount = responseData?.Leaks?.length || 0;
+        const serviceCount = responseData?.Services?.length || 0;
+        if (leakCount === 0 && serviceCount === 0) return { summary: 'No information', tlp: 'WHITE' };
+        if (leakCount > 0) {
+          return {
+            summary: `${leakCount} leak(s), ${serviceCount} service(s)`,
+            tlp: 'RED',
+            keyMetric: leakCount,
+          };
+        }
+        return { summary: `${serviceCount} service(s), no leaks`, tlp: 'GREEN', keyMetric: serviceCount };
     }),
   },
   libraryofleaks: {

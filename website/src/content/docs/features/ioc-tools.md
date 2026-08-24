@@ -8,7 +8,7 @@ sidebar:
 A set of tools for working with indicators of compromise:
 
 - **IOC Lookup** — analyze IPs, domains, URLs, hashes, emails, and crypto addresses against
-  services like VirusTotal, AlienVault, AbuseIPDB, Shodan, Reddit, and Twitter/X (see
+  services like VirusTotal, AlienVault, AbuseIPDB, Shodan, LeakIX, Reddit, and Twitter/X (see
   [External Services](/corvid/architecture/external-services/) for the full provider list, and
   which need an API key). The IOC type is auto-detected. Crypto addresses (EVM and Bitcoin) are
   additionally screened against a

@@ -6,7 +6,7 @@ sidebar:
 ---
 
 A single reference for every external service Corvid integrates with, across every feature — not
-just [IOC Lookup](/corvid/features/ioc-tools/)'s ~28 providers. For AI/LLM providers specifically,
+just [IOC Lookup](/corvid/features/ioc-tools/)'s ~29 providers. For AI/LLM providers specifically,
 see [AI / LLM Providers](/corvid/architecture/ai-providers/) instead — this page only lists them
 by name. Unless noted otherwise, a fetch to a user-supplied or externally-sourced URL (RSS feeds,
 article pages, WHOIS/RDAP redirects) is validated by Corvid's own SSRF guard first; a fixed host
@@ -20,7 +20,7 @@ which provider handles which type.
 
 - **Needs an API key** (Settings → API Keys): AbuseIPDB, AlienVault OTX, CheckPhish, CrowdSec,
   CrowdStrike, EmailRep.io, GitHub (optional — raises an otherwise-anonymous rate limit, not
-  required), Have I Been Pwned, Hunter.io, IPQualityScore, Maltiverse, Mandiant, NIST NVD,
+  required), Have I Been Pwned, Hunter.io, IPQualityScore, LeakIX, Maltiverse, Mandiant, NIST NVD,
   Pulsedive, Reddit, Google Safe Browsing, Shodan, ThreatFox, Twitter/X, VirusTotal.
 - **Fully keyless**: Address Blacklist (resolved locally, see below), FFraud, Hudson Rock, Library
   of Leaks, MalwareBazaar, URLhaus, URLScan.io.
@@ -111,6 +111,16 @@ verdict.
   to a human-readable address. Keyless.
 - Reverse image search (Google Lens, Yandex, TinEye, Bing) is client-side only — the browser
   builds a deep link straight to each engine; Corvid's backend never fetches or proxies these.
+- When GPS coordinates are present, the same client-side pattern deep-links ShadowMap,
+  Flightradar24, Open Infrastructure Map, and MapChecking, all keyless.
+- **Google Maps Embed API** (`google.com/maps/embed`) — an optional embedded Street View panorama
+  centered on the photo's coordinates. The only key in Corvid whose raw value reaches the
+  frontend rather than staying server-side, since the browser loads the iframe directly; see
+  [ADR 0008](https://github.com/z0rats/corvid/blob/main/docs/adr/0008-google-maps-key-exposed-to-frontend.md).
+- **ChronoVerify** (`chronoverify.com`) — capture-time/C2PA-provenance and pixel-forensics
+  verdict. Opt-in only: unlike every other entry on this page, the image is sent only when the
+  user explicitly clicks "Check with ChronoVerify" in the Image Tools UI, not on every upload.
+  Works keyless (free, rate-limited per IP); an optional key raises the limit.
 
 ## Dork Runner
 

@@ -168,6 +168,39 @@ class TestCheckShodan:
         assert "/shodan/dns/domain/example.com" in fake.last_call["url"]
 
 
+# --- check_leakix: host lookup, api-key header ----------------------------
+
+
+class TestCheckLeakix:
+    def test_requires_apikey(self):
+        with pytest.raises(ServiceAuthError):
+            _run(external_api_clients.check_leakix("1.2.3.4", ""))
+
+    def test_returns_parsed_json_on_success(self, monkeypatch):
+        _patch_client(
+            monkeypatch, _response(200, json={"Services": [{"port": "443"}], "Leaks": []})
+        )
+
+        result = _run(external_api_clients.check_leakix("1.2.3.4", "key"))
+
+        assert result == {"Services": [{"port": "443"}], "Leaks": []}
+
+    def test_sends_ioc_in_url_and_key_in_header(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200))
+
+        _run(external_api_clients.check_leakix("1.2.3.4", "my-key"))
+
+        assert fake.last_call["url"] == "https://leakix.net/host/1.2.3.4"
+        assert fake.last_call["headers"]["api-key"] == "my-key"
+        assert fake.last_call["headers"]["Accept"] == "application/json"
+
+    def test_raises_auth_error_on_invalid_key(self, monkeypatch):
+        _patch_client(monkeypatch, _response(401, json="Invalid API key"))
+
+        with pytest.raises(ServiceError):
+            _run(external_api_clients.check_leakix("1.2.3.4", "bad-key"))
+
+
 # --- check_ffraud: keyless -----------------------------------------------
 
 

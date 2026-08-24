@@ -287,6 +287,12 @@ def register_services(ioc_lookup_service_module) -> None:
                 },
             ),
         ),
+        "leakix": ProviderSpec(
+            func=ioc_lookup_service_module.check_leakix,
+            name="LeakIX",
+            supported_ioc_types=[IOC_TYPES["IPV4"]],
+            api_key=ApiKeySpec(setting_name="leakix"),
+        ),
         "threatfox": ProviderSpec(
             func=ioc_lookup_service_module.check_threatfox,
             name="ThreatFox",

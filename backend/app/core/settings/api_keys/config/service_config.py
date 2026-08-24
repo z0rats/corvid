@@ -232,6 +232,20 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.SECURITY_SCANNING,
         icon="ipqualityscore_logo_small",
     ),
+    "leakix": ServiceDefinition(
+        name="LeakIX",
+        key="leakix",
+        description=(
+            "Search engine for exposed services and leaked data indexed from "
+            "internet-wide scans, with a free-tier API key."
+        ),
+        documentation_url="https://leakix.net/api-documentation",
+        supported_ioc_types=["IPv4"],
+        required_keys=["leakix"],
+        tier=ServiceTier.FREEMIUM,
+        category=ServiceCategory.NETWORK_INFRASTRUCTURE,
+        icon="default_icon",
+    ),
     "maltiverse": ServiceDefinition(
         name="Maltiverse",
         key="maltiverse",
@@ -458,6 +472,39 @@ SERVICE_DEFINITIONS = {
         required_keys=["youtube"],
         tier=ServiceTier.FREE,
         category=ServiceCategory.SOCIAL_MEDIA,
+        icon="default_icon",
+    ),
+    "chronoverify": ServiceDefinition(
+        name="ChronoVerify",
+        key="chronoverify",
+        description=(
+            "Image provenance and manipulation-triage check: validates C2PA Content "
+            "Credentials against the official trust list and reads EXIF/XMP capture "
+            "metadata and pixel-forensic signals. Works keyless (free, rate-limited "
+            "per IP); a key raises the limit. Sends the image to a third-party service."
+        ),
+        documentation_url="https://chronoverify.com/docs",
+        supported_ioc_types=["Image Provenance"],
+        required_keys=["chronoverify"],
+        tier=ServiceTier.FREEMIUM,
+        category=ServiceCategory.SECURITY_SCANNING,
+        icon="default_icon",
+    ),
+    "google_maps": ServiceDefinition(
+        name="Google Maps",
+        key="google_maps",
+        description=(
+            "Optional key unlocking an embedded Street View panorama in Image "
+            "Analyzer's GPS chapter. Unlike every other key here, this one is read "
+            "directly by the browser to build the embed iframe, so it's visible in "
+            "the page - restrict it by HTTP referrer in Google Cloud Console rather "
+            "than relying on it staying secret."
+        ),
+        documentation_url="https://developers.google.com/maps/documentation/embed/get-api-key",
+        supported_ioc_types=["Image Geolocation"],
+        required_keys=["google_maps"],
+        tier=ServiceTier.FREEMIUM,
+        category=ServiceCategory.DEVELOPMENT_RESEARCH,
         icon="default_icon",
     ),
     "virustotal": ServiceDefinition(

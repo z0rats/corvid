@@ -16,6 +16,7 @@ DEFAULT_RATE_LIMITS = {
     "otx": 3.0,  # AlienVault OTX: 3 req/sec
     "threatminer": 2.0,  # ThreatMiner: 2 req/sec
     "censys": 1.0,  # Censys: 1 req/sec for free tier
+    "leakix": 1.0,  # LeakIX: ~1 req/sec free tier
     "greynoise": 2.0,  # GreyNoise: 2 req/sec
     "ipqualityscore": 1.5,  # IPQualityScore: 1.5 req/sec
     "libraryofleaks": 0.5,  # Library of Leaks: shared anonymous quota on a free non-profit service

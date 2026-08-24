@@ -471,6 +471,19 @@ async def check_shodan(ioc: str, method: str, apikey: str) -> dict[str, Any]:
     return await handle_response("Shodan", response)
 
 
+async def check_leakix(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform a host lookup using the LeakIX API - open services and any leaks found on it"""
+    _require_apikey("LeakIX", apikey)
+    logger.debug("Checking IP %s with LeakIX", ioc)
+
+    client = get_client()
+    response = await client.get(
+        url=f"https://leakix.net/host/{ioc}",
+        headers={"api-key": apikey, "Accept": "application/json"},
+    )
+    return await handle_response("LeakIX", response)
+
+
 async def check_threatfox(ioc: str, apikey: str) -> dict[str, Any]:
     """Perform IOC lookup using ThreatFox API"""
     _require_apikey("ThreatFox", apikey)
