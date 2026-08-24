@@ -14,3 +14,8 @@ Filter by subreddit, date range, or NSFW status, and page through results by pos
 separately. Pagination is cursor-based on timestamp rather than page number, so paging back and
 forth doesn't produce duplicate or skipped rows. Each username investigation is saved to history
 so you can revisit it later without re-querying.
+
+A posting-activity section above the results charts the currently viewed post/comment page by
+hour of day (spotting a likely timezone or routine) and by calendar month (spotting dormant
+stretches or a burst of activity around a specific event) — computed client-side from the
+already-fetched results, no extra request.

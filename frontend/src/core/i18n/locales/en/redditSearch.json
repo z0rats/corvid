@@ -40,6 +40,15 @@
     "nsfw": "NSFW"
   },
 
+  "activity": {
+    "sectionTitle": "Posting Activity",
+    "byHourTitle": "By hour of day",
+    "byMonthTitle": "By month",
+    "hourLabel": "{{hour}}:00",
+    "postsCount_one": "{{count}} item",
+    "postsCount_other": "{{count}} items"
+  },
+
   "history": {
     "empty": "No past searches yet",
     "notFound": "Search not found",

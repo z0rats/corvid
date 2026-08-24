@@ -9,6 +9,7 @@ import Tab from '@mui/material/Tab';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
+import PostingActivityChart from './PostingActivityChart';
 import ResultsList from './ResultsList';
 import { redditSearchApi } from '../services/api/redditSearchApi';
 
@@ -45,6 +46,7 @@ export default function HistoryDetail() {
         <Tab value="comment" label={t('results.commentsTab', { count: comments.length })} />
       </Tabs>
 
+      <PostingActivityChart items={active} />
       <ResultsList items={active} sources={['Arctic Shift', 'PullPush']} />
     </Box>
   );

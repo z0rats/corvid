@@ -11,6 +11,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 import SearchForm from './SearchForm';
+import PostingActivityChart from './PostingActivityChart';
 import ResultsList from './ResultsList';
 import { useRedditSearch } from '../hooks/useRedditSearch';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
@@ -46,6 +47,7 @@ export default function NewSearch() {
             <Typography color="error" sx={{ mb: 2 }}>{active.error}</Typography>
           )}
 
+          <PostingActivityChart items={active.items} />
           <ResultsList items={active.items} sources={active.sources} />
 
           {active.items.length > 0 && (
