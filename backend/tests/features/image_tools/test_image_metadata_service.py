@@ -2,6 +2,7 @@ import hashlib
 
 import pytest
 
+from app.features.image_tools.service import image_metadata_service
 from app.features.image_tools.service.image_metadata_service import analyze_image_content
 
 
@@ -72,6 +73,26 @@ class TestExifExtraction:
 
         assert "JPEGThumbnail" not in result.exif
         assert "TIFFThumbnail" not in result.exif
+
+
+class TestExiftoolIntegration:
+    def test_included_when_available(self, plain_jpeg_bytes, monkeypatch):
+        monkeypatch.setattr(
+            image_metadata_service,
+            "extract_exiftool_tags",
+            lambda data: {"EXIF DateTimeOriginal": "2024:01:01 12:00:00"},
+        )
+
+        result = analyze_image_content("photo.jpg", plain_jpeg_bytes)
+
+        assert result.exiftool == {"EXIF DateTimeOriginal": "2024:01:01 12:00:00"}
+
+    def test_none_when_exiftool_unavailable(self, plain_jpeg_bytes, monkeypatch):
+        monkeypatch.setattr(image_metadata_service, "extract_exiftool_tags", lambda data: None)
+
+        result = analyze_image_content("photo.jpg", plain_jpeg_bytes)
+
+        assert result.exiftool is None
 
 
 class TestGpsExtraction:

@@ -8,6 +8,7 @@ from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import get_read_db
 from app.features.image_tools.routers import image_routes
 from app.features.image_tools.schemas.image_schemas import (
+    ChronoverifyResponse,
     GeoCandidate,
     GeoClue,
     ImageGeolocationResponse,
@@ -40,6 +41,38 @@ class TestHealthEndpoint:
         assert body["service"] == "image_tools"
         assert body["status"] == "healthy"
         assert ".jpg" in body["supported_formats"]
+        assert "exiftool_version" in body
+
+    def test_health_check_reports_exiftool_version_when_available(self, client, monkeypatch):
+        monkeypatch.setattr(image_routes, "get_exiftool_version", lambda: "13.30")
+
+        response = client.get("/api/image/health")
+
+        assert response.json()["exiftool_version"] == "13.30"
+
+
+class TestStreetViewKeyEndpoint:
+    def test_returns_key_when_configured(self, client, monkeypatch):
+        async def fake_get_google_maps_key(db):
+            return "test-maps-key"
+
+        monkeypatch.setattr(image_routes, "get_google_maps_key", fake_get_google_maps_key)
+
+        response = client.get("/api/image/street-view-key")
+
+        assert response.status_code == 200
+        assert response.json() == {"key": "test-maps-key"}
+
+    def test_returns_null_when_not_configured(self, client, monkeypatch):
+        async def fake_get_google_maps_key(db):
+            return None
+
+        monkeypatch.setattr(image_routes, "get_google_maps_key", fake_get_google_maps_key)
+
+        response = client.get("/api/image/street-view-key")
+
+        assert response.status_code == 200
+        assert response.json() == {"key": None}
 
 
 class TestAnalyzeEndpoint:
@@ -313,6 +346,59 @@ class TestAnomaliesEndpoint:
         response = client.post("/api/image/anomalies")
 
         assert response.status_code == 422
+
+
+class TestChronoverifyEndpoint:
+    @pytest.fixture
+    def stub_provenance(self, monkeypatch):
+        """Stubs the ChronoVerify service so these tests exercise the HTTP contract only."""
+
+        async def fake_check_image_provenance(filename, data, db):
+            return ChronoverifyResponse(
+                verdict="consistent",
+                confidence=72,
+                summary="Metadata layers agree and no editing signals fired.",
+            )
+
+        monkeypatch.setattr(image_routes, "check_image_provenance", fake_check_image_provenance)
+
+    def test_checks_valid_image(self, client, plain_jpeg_bytes, stub_provenance):
+        response = client.post(
+            "/api/image/chronoverify",
+            files={"file": ("photo.jpg", plain_jpeg_bytes, "image/jpeg")},
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["verdict"] == "consistent"
+        assert body["confidence"] == 72
+
+    def test_rejects_disallowed_extension(self, client, stub_provenance):
+        response = client.post(
+            "/api/image/chronoverify",
+            files={"file": ("document.pdf", b"%PDF-1.4 fake", "application/pdf")},
+        )
+
+        assert response.status_code == 400
+
+    def test_missing_file_is_rejected(self, client, stub_provenance):
+        response = client.post("/api/image/chronoverify")
+
+        assert response.status_code == 422
+
+    def test_maps_value_error_from_service_to_422(self, client, plain_jpeg_bytes, monkeypatch):
+        async def fake_check_image_provenance(filename, data, db):
+            raise ValueError("ChronoVerify rate limit reached - try again shortly")
+
+        monkeypatch.setattr(image_routes, "check_image_provenance", fake_check_image_provenance)
+
+        response = client.post(
+            "/api/image/chronoverify",
+            files={"file": ("photo.jpg", plain_jpeg_bytes, "image/jpeg")},
+        )
+
+        assert response.status_code == 422
+        assert response.json()["detail"] == "ChronoVerify rate limit reached - try again shortly"
 
 
 class TestCompareEndpoint:

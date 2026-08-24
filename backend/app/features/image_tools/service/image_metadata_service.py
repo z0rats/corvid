@@ -9,6 +9,7 @@ from PIL import Image, UnidentifiedImageError
 from ..schemas.image_schemas import GpsInfo, ImageAnalysisResponse, ImageFileInfo, PerceptualHash
 from ..utils.hash_utils import calculate_image_hashes
 from ..utils.phash_utils import compute_phash, phash_to_bits, phash_to_hex
+from .exiftool_service import extract_exiftool_tags
 
 logger = logging.getLogger(__name__)
 
@@ -136,10 +137,12 @@ def analyze_image_content(filename: str, data: bytes) -> ImageAnalysisResponse:
     }
     gps = _extract_gps(raw_tags)
     thumbnail_base64 = _extract_thumbnail(raw_tags)
+    exiftool_tags = extract_exiftool_tags(data)
 
     logger.info(
-        "Image analysis completed - %s EXIF tags, GPS: %s, thumbnail: %s",
+        "Image analysis completed - %s EXIF tags (%s from exiftool), GPS: %s, thumbnail: %s",
         len(exif),
+        len(exiftool_tags) if exiftool_tags else 0,
         bool(gps),
         bool(thumbnail_base64),
     )
@@ -149,6 +152,7 @@ def analyze_image_content(filename: str, data: bytes) -> ImageAnalysisResponse:
         hashes=hashes,
         phash=phash,
         exif=exif,
+        exiftool=exiftool_tags,
         gps=gps,
         has_thumbnail=thumbnail_base64 is not None,
         thumbnail_base64=thumbnail_base64,

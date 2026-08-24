@@ -9,6 +9,7 @@ from app.core.utils.file_upload import run_file_endpoint, validate_uploaded_file
 
 from ..config.image_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
 from ..schemas.image_schemas import (
+    ChronoverifyResponse,
     ImageAnalysisResponse,
     ImageAnomalyResponse,
     ImageCompareResponse,
@@ -16,7 +17,11 @@ from ..schemas.image_schemas import (
     ImageHealthResponse,
     ImageStructureResponse,
     ImageVisualAnalysisResponse,
+    StreetViewKeyResponse,
 )
+from ..service.chronoverify_service import check_image_provenance
+from ..service.exiftool_service import get_exiftool_version
+from ..service.google_maps_service import get_google_maps_key
 from ..service.image_anomaly_service import analyze_image_anomalies
 from ..service.image_compare_service import compare_images
 from ..service.image_geolocation_service import analyze_image_location
@@ -185,6 +190,47 @@ async def analyze_image_anomalies_route(
 
 
 @router.post(
+    "/chronoverify",
+    response_model=ChronoverifyResponse,
+    summary="Check image provenance and manipulation signals via ChronoVerify",
+    description="Upload an image to ChronoVerify (https://chronoverify.com) for a "
+    "capture-time/C2PA-provenance and pixel-forensics verdict. Sends the image to a "
+    "third-party service - opt-in only, unlike this module's other (local) checks. "
+    "Works keyless (free, rate-limited); an optional API key under Settings > API "
+    "Keys raises the limit.",
+    responses={
+        400: {"description": "Invalid or missing file"},
+        422: {"description": "Provenance check failed, or ChronoVerify rejected the file"},
+    },
+)
+@limiter.limit("10/minute")
+async def check_image_provenance_route(
+    request: Request,
+    db: ReadSessionDep,
+    file: UploadFile = File(..., description="Image file to check"),
+) -> ChronoverifyResponse:
+    logger.info("Received ChronoVerify provenance check request for file: %s", file.filename)
+
+    file_content = await _validate_uploaded_image(file)
+
+    result = await run_file_endpoint(
+        check_image_provenance,
+        file.filename,
+        file_content,
+        db,
+        error_code="IMAGE_CHRONOVERIFY_FAILED",
+        failure_message="Provenance check failed",
+        value_error_code="IMAGE_CHRONOVERIFY_REJECTED",
+        run_in_thread=False,
+    )
+
+    logger.info(
+        "ChronoVerify check completed for '%s' - verdict: %s", file.filename, result.verdict
+    )
+    return result
+
+
+@router.post(
     "/visual-analysis",
     response_model=ImageVisualAnalysisResponse,
     summary="Pixel-level visual analysis",
@@ -299,6 +345,20 @@ async def strip_image_metadata(
 
 
 @router.get(
+    "/street-view-key",
+    response_model=StreetViewKeyResponse,
+    summary="Get the configured Google Maps key for the client-side Street View embed",
+    description=(
+        "Returns the raw Google Maps key if one is configured and active, or null "
+        "otherwise. Unlike other API keys in this app, this one is meant to be read "
+        "directly by the browser (Google's Maps Embed API), not proxied server-side."
+    ),
+)
+async def get_street_view_key(db: ReadSessionDep) -> StreetViewKeyResponse:
+    return StreetViewKeyResponse(key=await get_google_maps_key(db))
+
+
+@router.get(
     "/health",
     response_model=ImageHealthResponse,
     summary="Image tools health check",
@@ -313,6 +373,7 @@ async def health_check() -> ImageHealthResponse:
             "/api/image/geolocate",
             "/api/image/structure",
             "/api/image/anomalies",
+            "/api/image/chronoverify",
             "/api/image/visual-analysis",
             "/api/image/compare",
             "/api/image/strip-metadata",
@@ -320,4 +381,5 @@ async def health_check() -> ImageHealthResponse:
         ],
         supported_formats=ALLOWED_FILE_EXTENSIONS,
         max_file_size=f"{MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB",
+        exiftool_version=get_exiftool_version(),
     )

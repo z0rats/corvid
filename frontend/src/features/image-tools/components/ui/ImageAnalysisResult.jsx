@@ -17,6 +17,7 @@ import DataObjectIcon from '@mui/icons-material/DataObject';
 import PublicIcon from '@mui/icons-material/Public';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import { hasLlmKeyAtom } from '../../../../core/state/atoms';
 import ImagePreview from './ImagePreview';
 import FileMetadata from './FileMetadata';
@@ -26,6 +27,7 @@ import ImageStructurePanel from './ImageStructurePanel';
 import ImageGeolocationPanel from './ImageGeolocationPanel';
 import RemoveMetadataPanel from './RemoveMetadataPanel';
 import AnomalyPanel from './AnomalyPanel';
+import ChronoverifyPanel from './ChronoverifyPanel';
 
 // Scroll-spy, not a tab switcher: every chapter stays mounted and stacked in
 // one scrollable document (matches jpegaudit's "one document you scroll, not
@@ -48,14 +50,18 @@ export default function ImageAnalysisResult({ result, previewUrl, file }) {
     return [
       { id: 'general', label: t('chapters.general'), icon: <InfoIcon fontSize="small" /> },
       { id: 'anomalies', label: t('chapters.anomalies'), icon: <GppMaybeIcon fontSize="small" /> },
+      { id: 'chronoverify', label: t('chapters.chronoverify'), icon: <VerifiedUserIcon fontSize="small" /> },
       { id: 'exif', label: t('chapters.exif'), icon: <InfoIcon fontSize="small" /> },
+      ...(result.exiftool && Object.keys(result.exiftool).length > 0
+        ? [{ id: 'exiftool', label: t('chapters.exiftool'), icon: <InfoIcon fontSize="small" /> }]
+        : []),
       ...(result.gps ? [{ id: 'gps', label: t('chapters.gps'), icon: <PlaceIcon fontSize="small" /> }] : []),
       { id: 'structure', label: t('chapters.structure'), icon: <DataObjectIcon fontSize="small" /> },
       ...(hasLlmKey ? [{ id: 'geolocation', label: t('chapters.geolocation'), icon: <PublicIcon fontSize="small" /> }] : []),
       { id: 'removeMetadata', label: t('chapters.removeMetadata'), icon: <DeleteSweepIcon fontSize="small" /> },
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result?.gps, hasLlmKey, t]);
+  }, [result?.gps, result?.exiftool, hasLlmKey, t]);
 
   const chapterIds = chapters.map((c) => c.id).join(',');
 
@@ -133,8 +139,12 @@ export default function ImageAnalysisResult({ result, previewUrl, file }) {
         return <FileMetadata fileInfo={result.file_info} hashes={result.hashes} phash={result.phash} />;
       case 'anomalies':
         return <AnomalyPanel file={file} />;
+      case 'chronoverify':
+        return <ChronoverifyPanel file={file} />;
       case 'exif':
         return <ExifDetails exif={result.exif} hasThumbnail={result.has_thumbnail} thumbnailBase64={result.thumbnail_base64} />;
+      case 'exiftool':
+        return <ExifDetails exif={result.exiftool} hasThumbnail={false} thumbnailBase64={null} />;
       case 'gps':
         return <GpsMap gps={result.gps} />;
       case 'structure':

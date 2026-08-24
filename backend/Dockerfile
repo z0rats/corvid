@@ -42,8 +42,10 @@ ENV API_VERSION=${VERSION}
 RUN mkdir -p /backend/data
 
 # Runtime-only shared libs for source-compiled lxml (see builder stage), plus
-# git - needed at runtime as a subprocess by the git_recon feature, not just
-# at build time. No compilers/headers here: those stay in the builder stage.
+# git - needed at runtime as a subprocess by the git_recon feature - and
+# exiftool - needed at runtime as a subprocess by image_tools' exiftool_service
+# for extended EXIF/IPTC/XMP/maker-note extraction, optional/best-effort if
+# missing. No compilers/headers here: those stay in the builder stage.
 RUN rm -f /etc/apt/apt.conf.d/docker-clean
 RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime,sharing=locked \
     apt-get update && apt-get install -y \
@@ -52,6 +54,7 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime,sharing=locked
     liblzma5 \
     zlib1g \
     git \
+    libimage-exiftool-perl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/venv /opt/venv

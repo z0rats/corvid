@@ -87,6 +87,19 @@ describe('ImageAnalysisResult', () => {
     expect(screen.getAllByText('GPS Location').length).toBe(2);
   });
 
+  it('hides the Exiftool chapter when the result has no exiftool data', () => {
+    renderResult(BASE_RESULT);
+
+    expect(screen.queryByText('Exiftool (Extended)')).not.toBeInTheDocument();
+  });
+
+  it('shows the Exiftool chapter when exiftool data is present', () => {
+    renderResult({ ...BASE_RESULT, exiftool: { 'File FileType': 'JPEG' } });
+
+    // Appears twice: once in the nav list, once as the section heading.
+    expect(screen.getAllByText('Exiftool (Extended)').length).toBe(2);
+  });
+
   it('scrolls to a chapter and marks its nav item selected when clicked', () => {
     const scrollIntoViewSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {});
     renderResult(BASE_RESULT);

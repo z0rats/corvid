@@ -23,6 +23,9 @@ export const hasLlmKeyAtom = atom((get) => {
 });
 hasLlmKeyAtom.debugLabel = 'hasLlmKeyAtom';
 
+export const hasGoogleMapsKeyAtom = atom((get) => Boolean(get(apiKeysState).google_maps));
+hasGoogleMapsKeyAtom.debugLabel = 'hasGoogleMapsKeyAtom';
+
 const shallowObjEqual = (a, b) => {
   if (a === b) return true;
   const keysA = Object.keys(a);

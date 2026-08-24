@@ -23,7 +23,10 @@
     "viewOnMap": "View on map",
     "altitude": "(alt. {{value}} m)",
     "embeddedMapTitle": "Map showing the photo's GPS position",
-    "embeddedMapHint": "Loads a map tile from OpenStreetMap using the coordinates above."
+    "embeddedMapHint": "Loads a map tile from OpenStreetMap using the coordinates above.",
+    "externalToolsHint": "Jump to these coordinates in other geo tools:",
+    "streetViewTitle": "Street View",
+    "streetViewHint": "Nearest available Street View panorama - may not exist for every location."
   },
   "analysisResult": {
     "generalInfo": "General information",
@@ -57,7 +60,9 @@
   "chapters": {
     "general": "General",
     "anomalies": "Anomalies",
+    "chronoverify": "ChronoVerify",
     "exif": "EXIF & Tags",
+    "exiftool": "Exiftool (Extended)",
     "gps": "GPS Location",
     "structure": "Structure & Quality",
     "geolocation": "AI Geolocation",
@@ -76,6 +81,30 @@
       "marker_order": "Marker order",
       "quantization_tables": "Quantization tables"
     }
+  },
+  "chronoverify": {
+    "consentDescription": "Sends this image to chronoverify.com, a third-party service, for a capture-time/C2PA-provenance and manipulation-triage check. Unlike this module's other checks, it does not run automatically.",
+    "methodLink": "Read the method and limits",
+    "checkButton": "Check with ChronoVerify",
+    "recheckButton": "Check again",
+    "verdicts": {
+      "provenance_confirmed": "Provenance confirmed",
+      "consistent": "Consistent",
+      "metadata_anomaly": "Metadata anomaly",
+      "manipulation_indicated": "Manipulation indicated",
+      "inconclusive": "Inconclusive"
+    },
+    "confidence": "Confidence: {{value}}/100",
+    "captureTime": "Capture time",
+    "device": "Device",
+    "location": "Location",
+    "contentCredentials": "Content Credentials",
+    "credentialsValidated": "Validated (C2PA)",
+    "credentialsPresentNotValidated": "Present, not validated",
+    "credentialsNone": "None found",
+    "fingerprint": "SHA-256",
+    "signals": "Signals",
+    "disclaimer": "Investigative triage, not proof of tampering or authenticity."
   },
   "structureAnalyzer": {
     "jpegOnly": "Structure analysis is only available for JPEG files.",
@@ -138,6 +167,6 @@
     "exifGps": { "title": "EXIF & GPS", "description": "Full EXIF tag breakdown plus a map link when GPS data is present" },
     "fileProps": { "title": "File Properties & Hashes", "description": "Format, dimensions, color mode, DPI, and MD5/SHA1/SHA256 hashes" },
     "reverseSearch": { "title": "Reverse Image Search", "description": "Deep links into Google Lens, Yandex, Bing, and TinEye — no API keys required" },
-    "privacy": { "title": "Privacy-Friendly", "description": "Your image is only sent to this app's own backend, never to a third party" }
+    "privacy": { "title": "Privacy-Friendly", "description": "Your image stays with this app's own backend by default — optional checks you explicitly trigger (AI geolocation, ChronoVerify) are the only exceptions" }
   }
 }

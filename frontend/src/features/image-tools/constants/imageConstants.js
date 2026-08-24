@@ -20,6 +20,30 @@ export const IMAGE_CONSTANTS = {
   },
 };
 
+// Keyless external tools that take a lat/lon and jump straight to that spot -
+// same "one click, no API key" idea as REVERSE_SEARCH_ENGINES above, for GPS
+// results instead of image URLs. MapChecking has no coordinate-based deep
+// link (its URL hash encodes a drawn polygon, not a point), so it always
+// opens the plain homepage instead.
+export const GEO_EXTERNAL_TOOLS = [
+  {
+    name: 'ShadowMap',
+    urlSearch: (lat, lon) => `https://app.shadowmap.org/?lat=${lat}&lng=${lon}&zoom=16`,
+  },
+  {
+    name: 'Flightradar24',
+    urlSearch: (lat, lon) => `https://www.flightradar24.com/multiview/${lat},${lon}/10`,
+  },
+  {
+    name: 'Open Infrastructure Map',
+    urlSearch: (lat, lon) => `https://openinframap.org/#16/${lat}/${lon}/L,O,P,S,T,W`,
+  },
+  {
+    name: 'MapChecking',
+    urlSearch: () => 'https://www.mapchecking.com/',
+  },
+];
+
 export const REVERSE_SEARCH_ENGINES = [
   {
     name: 'Google Lens',

@@ -1,6 +1,24 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import React, { createElement } from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
 import GpsMap from './GpsMap';
+import { apiKeysState } from '../../../../core/state/atoms';
+import { streetViewApi } from '../../services/api/streetViewApi';
+
+vi.mock('../../services/api/streetViewApi');
+
+const SAMPLE_GPS = {
+  latitude: 40.446194,
+  longitude: -79.948778,
+  altitude: null,
+  map_url: 'https://www.google.com/maps?q=40.446194,-79.948778',
+};
+
+function renderWithApiKeys(gps, apiKeys = {}) {
+  const store = createStore();
+  store.set(apiKeysState, apiKeys);
+  return render(createElement(Provider, { store }, <GpsMap gps={gps} />));
+}
 
 describe('GpsMap', () => {
   it('shows a fallback message when no GPS data is present', () => {
@@ -56,6 +74,44 @@ describe('GpsMap', () => {
     render(<GpsMap gps={gps} />);
 
     expect(screen.getByText('123 Fake Street, Pittsburgh, PA')).toBeInTheDocument();
+  });
+
+  it('renders external geo tool links built from the coordinates', () => {
+    const gps = {
+      latitude: 40.446194,
+      longitude: -79.948778,
+      altitude: null,
+      map_url: 'https://www.google.com/maps?q=40.446194,-79.948778',
+    };
+
+    render(<GpsMap gps={gps} />);
+
+    const shadowMapLink = screen.getByRole('link', { name: /shadowmap/i });
+    expect(shadowMapLink).toHaveAttribute(
+      'href',
+      'https://app.shadowmap.org/?lat=40.446194&lng=-79.948778&zoom=16'
+    );
+
+    const mapCheckingLink = screen.getByRole('link', { name: /mapchecking/i });
+    expect(mapCheckingLink).toHaveAttribute('href', 'https://www.mapchecking.com/');
+  });
+
+  it('does not render Street View when no Google Maps key is configured', () => {
+    renderWithApiKeys(SAMPLE_GPS, {});
+
+    expect(screen.queryByText('Street View')).not.toBeInTheDocument();
+    expect(streetViewApi.getKey).not.toHaveBeenCalled();
+  });
+
+  it('renders an embedded Street View panorama when a Google Maps key is configured', async () => {
+    streetViewApi.getKey.mockResolvedValue({ key: 'test-maps-key' });
+
+    renderWithApiKeys(SAMPLE_GPS, { google_maps: true });
+
+    const iframe = await waitFor(() => screen.getByTitle('Street View'));
+    expect(iframe.tagName).toBe('IFRAME');
+    expect(iframe).toHaveAttribute('src', expect.stringContaining('key=test-maps-key'));
+    expect(iframe).toHaveAttribute('src', expect.stringContaining('location=40.446194%2C-79.948778'));
   });
 
   it('omits the altitude suffix when altitude is not provided', () => {

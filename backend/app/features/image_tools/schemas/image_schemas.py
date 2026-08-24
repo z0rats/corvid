@@ -69,6 +69,14 @@ class ImageAnalysisResponse(BaseModel):
             "DateTimeOriginal', 'GPS GPSLatitude')"
         ),
     )
+    exiftool: dict[str, str] | None = Field(
+        default=None,
+        description=(
+            "Extended EXIF/IPTC/XMP/maker-note tags from the exiftool binary, keyed the "
+            "same way as 'exif' (e.g. 'EXIF DateTimeOriginal') but covering many more tag "
+            "groups. Null if the exiftool binary isn't installed."
+        ),
+    )
     gps: GpsInfo | None = Field(default=None, description="Parsed GPS coordinates, if present")
     has_thumbnail: bool = Field(
         default=False, description="Whether an embedded EXIF thumbnail was found"
@@ -312,6 +320,92 @@ class ImageVisualAnalysisResponse(BaseModel):
     vectorscope: Vectorscope = Field(..., description="Cb/Cr color-distribution vectorscope")
 
 
+class ChronoverifySignal(BaseModel):
+    """A single forensic/provenance check ChronoVerify ran."""
+
+    name: str = Field(..., description="Signal identifier, e.g. 'ela_localized_anomaly'")
+    layer: str = Field(..., description="Which layer produced this signal, e.g. 'pixel', 'exif'")
+    direction: str = Field(
+        ..., description="'consistent', 'anomalous', or 'neutral' reading of this signal"
+    )
+    detail: str = Field(..., description="Plain-language explanation of what was observed")
+
+
+class ChronoverifyCaptureDevice(BaseModel):
+    make: str | None = Field(default=None, description="Camera/device manufacturer, if recovered")
+    model: str | None = Field(default=None, description="Camera/device model, if recovered")
+
+
+class ChronoverifyLocation(BaseModel):
+    """Maps the API's `capture_location` object."""
+
+    present: bool = Field(..., description="Whether GPS coordinates were recovered from the file")
+    place: str | None = Field(default=None, description="Named place, if resolved")
+    city: str | None = Field(default=None, description="City, if resolved")
+    region: str | None = Field(default=None, description="Region/state, if resolved")
+    country: str | None = Field(default=None, description="Country, if resolved")
+    latitude: float | None = Field(default=None, description="Decimal latitude, if present")
+    longitude: float | None = Field(default=None, description="Decimal longitude, if present")
+
+
+class ChronoverifyC2pa(BaseModel):
+    present: bool = Field(..., description="Whether the file carries C2PA Content Credentials")
+    validated: bool = Field(
+        ..., description="Whether those credentials validated against the official trust list"
+    )
+
+
+class ChronoverifyResponse(BaseModel):
+    """Provenance/manipulation-triage verdict from the ChronoVerify API - see
+    https://chronoverify.com/method. Investigative triage, not proof of tampering.
+    """
+
+    verdict: str = Field(
+        ...,
+        description=(
+            "One of 'provenance_confirmed', 'consistent', 'metadata_anomaly', "
+            "'manipulation_indicated', 'inconclusive'"
+        ),
+    )
+    confidence: float = Field(
+        ...,
+        description="How strongly the evidence supports the verdict, on a 0-100 scale",
+        ge=0,
+        le=100,
+    )
+    summary: str = Field(..., description="Plain-language explanation of the verdict")
+    capture_time: str | None = Field(
+        default=None, description="Recovered capture timestamp, if any, as reported by the API"
+    )
+    capture_device: ChronoverifyCaptureDevice | None = Field(
+        default=None, description="Recovered camera/device info, if any"
+    )
+    location: ChronoverifyLocation | None = Field(
+        default=None, description="Recovered GPS location, if any"
+    )
+    c2pa: ChronoverifyC2pa | None = Field(
+        default=None, description="C2PA Content Credential presence/validation status"
+    )
+    signals: list[ChronoverifySignal] = Field(
+        default_factory=list, description="Individual forensic checks that ran"
+    )
+    sha256: str | None = Field(
+        default=None, description="File fingerprint computed by ChronoVerify's own pipeline"
+    )
+
+
+class StreetViewKeyResponse(BaseModel):
+    """Google Maps key for the client-side Street View embed, or null if unset."""
+
+    key: str | None = Field(
+        default=None,
+        description=(
+            "Raw Google Maps key, consumed directly by the browser's Street View "
+            "embed iframe - null if no key is configured or it's inactive."
+        ),
+    )
+
+
 class ImageHealthResponse(BaseModel):
     """Health check response for the image tools service."""
 
@@ -320,3 +414,6 @@ class ImageHealthResponse(BaseModel):
     endpoints: list[str] = Field(..., description="Available endpoints")
     supported_formats: list[str] = Field(..., description="Supported file extensions")
     max_file_size: str = Field(..., description="Maximum file size")
+    exiftool_version: str | None = Field(
+        default=None, description="Installed exiftool version, null if not installed"
+    )
