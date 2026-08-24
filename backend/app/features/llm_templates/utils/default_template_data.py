@@ -423,4 +423,125 @@ DEFAULT_TEMPLATES = [
         ],
         "is_public": True,
     },
+    {
+        "title": "Dark Web Search Query Refinement",
+        "description": (
+            "Turn a plain-language investigation goal into a set of refined search "
+            "queries (operators, synonyms, jargon) for manual use in dark web search "
+            "engines like Ahmia or OnionLand. Generates queries only - it doesn't "
+            "search anything itself."
+        ),
+        "example_input_output": (
+            "**Input:** Looking for chatter about a stolen customer database from "
+            "'Acme Corp' being sold or leaked.\n\n**Output:**\n- **Refined "
+            'queries:**\n  1. "Acme Corp" database leak\n  2. "Acme Corp" '
+            "customer data for sale\n  3. Acme breach dump\n  4. site:*.onion Acme "
+            "Corp\n- **Synonyms/jargon to try:** dump, dox, leak, breach, combo "
+            "list, stealer log\n- **Notes:** Vary the company name (abbreviations, "
+            "old names, ticker symbol) since dark web listings often use "
+            "shorthand."
+        ),
+        "ai_agent_role": (
+            "You are an OSINT investigator experienced with dark web search engines "
+            "and marketplaces. You help analysts phrase effective search queries "
+            "without ever searching anything yourself."
+        ),
+        "ai_agent_task": (
+            "Given the investigation goal below, produce a short list of refined "
+            "search queries (using operators/synonyms/underground jargon where "
+            "relevant) an analyst can paste into a dark web search engine "
+            "themselves, plus any useful variant terms to try. Do not claim to have "
+            "searched anything - you are only suggesting query phrasing."
+        ),
+        "payload_fields": [
+            {
+                "name": "investigation_goal",
+                "description": "Plain-language description of what you're trying to find.",
+                "required": True,
+            }
+        ],
+        "is_public": True,
+    },
+    {
+        "title": "Dark Web Findings Summary",
+        "description": (
+            "Summarize findings an analyst has already manually gathered from dark "
+            "web sources (forum posts, marketplace listings, paste-site dumps) into "
+            "a structured threat assessment. Paste in text you've already collected "
+            "- this template never fetches anything itself."
+        ),
+        "example_input_output": (
+            "**Input:** [Pasted forum post advertising a database dump with sample "
+            "records, a price in Monero, and a claimed record count]\n\n**Output:**\n"
+            "- **Summary:** A threat actor is advertising a database dump attributed "
+            "to the target organization, priced in Monero, with sample records "
+            "posted as proof.\n- **Entities/handles mentioned:** [actor "
+            "alias]\n- **Claimed scope:** [record count, data fields]\n- **Payment/"
+            "contact method:** [Monero address / messaging handle]\n- **Confidence "
+            "assessment:** Low/Medium/High, with reasoning\n- **Recommended "
+            "next steps:** [e.g. verify sample records, check for prior listings "
+            "by the same actor]"
+        ),
+        "ai_agent_role": (
+            "You are a threat intelligence analyst who turns raw dark web source "
+            "material an investigator has already collected into a structured, "
+            "decision-ready summary."
+        ),
+        "ai_agent_task": (
+            "Summarize the pasted dark web findings below into a structured threat "
+            "assessment: what's being claimed, by whom (any handles/aliases), the "
+            "claimed scope/impact, any pricing or contact details, your confidence "
+            "in the claim's legitimacy and why, and recommended next steps. Flag "
+            "anything that looks like a scam or recycled/rehashed old data."
+        ),
+        "payload_fields": [
+            {
+                "name": "raw_findings",
+                "description": "Paste the text you've already gathered from dark web sources.",
+                "required": True,
+            }
+        ],
+        "is_public": True,
+    },
+    {
+        "title": "Investigation Pivot Suggestions",
+        "description": (
+            "Given a summary of what an investigation has found so far, suggest "
+            "concrete next pivots - other IOC types, platforms, or angles worth "
+            "checking - to keep the investigation moving."
+        ),
+        "example_input_output": (
+            "**Input:** Found a phishing domain impersonating our brand, registered "
+            "last week, hosting a fake login page. WHOIS is privacy-protected.\n\n"
+            "**Output:**\n- **Pivot on infrastructure:** Check the resolved IP for "
+            "other domains hosted on it (reverse IP), and its ASN for a pattern of "
+            "abuse.\n- **Pivot on registration:** Search Certificate Transparency "
+            "logs for similarly-named domains registered around the same date "
+            "(same actor often batches registrations).\n- **Pivot on content:** "
+            "Extract text/branding from the fake login page and search for it "
+            "elsewhere (other phishing kits reusing the same template).\n- **Pivot "
+            "on distribution:** Search for the domain being shared in phishing "
+            "emails, SMS, or social media reports."
+        ),
+        "ai_agent_role": (
+            "You are a senior OSINT investigator skilled at suggesting the next "
+            "productive step in an investigation from a summary of what's been "
+            "found so far."
+        ),
+        "ai_agent_task": (
+            "Given the investigation summary below, suggest concrete next pivots - "
+            "grouped by angle (infrastructure, registration/identity, content, "
+            "distribution, financial, or others as relevant) - explaining briefly "
+            "why each pivot is worth trying. Be specific to the details given, not "
+            "generic advice."
+        ),
+        "payload_fields": [
+            {
+                "name": "investigation_summary",
+                "description": "Summary of what the investigation has found so far.",
+                "required": True,
+            }
+        ],
+        "is_public": True,
+    },
 ]
