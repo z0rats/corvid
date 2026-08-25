@@ -20,6 +20,7 @@ import MandiantDetails from '../components/service-details/Mandiant/MandiantDeta
 import MaltiverseDetails from '../components/service-details/Maltiverse/MaltiverseDetails';
 import MalwarebazaarDetails from '../components/service-details/Malwarebazaar/MalwarebazaarDetails';
 import NistNvdDetailsComponent from '../components/service-details/NistNVD/NistNvdDetails';
+import OpenPhishDetails from '../components/service-details/OpenPhish/OpenPhishDetails';
 import PulsediveDetails from '../components/service-details/Pulsedive/PulsediveDetails';
 import RedditDetails from '../components/service-details/Reddit/RedditDetails';
 import SafeBrowseDetails from '../components/service-details/GoogleSafeBrowsing/SafebrowsingDetails';
@@ -412,6 +413,18 @@ export const SERVICE_DEFINITIONS = {
         else if (severity === 'LOW') tlp = 'BLUE';
         return { summary: `Severity: ${severity}`, tlp, keyMetric: severity };
     }),
+  },
+  openphish: {
+    name: 'OpenPhish',
+    icon: 'default_icon',
+    detailComponent: OpenPhishDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['Domain', 'URL'],
+    lookupEndpoint: createSingleEndpoint('openphish'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (!responseData.listed) return { summary: 'Not in OpenPhish feed', tlp: 'GREEN' };
+      return { summary: 'Listed as phishing in OpenPhish feed', tlp: 'RED', keyMetric: 'OpenPhish' };
+    })),
   },
   pulsedive: {
     name: 'Pulsedive',

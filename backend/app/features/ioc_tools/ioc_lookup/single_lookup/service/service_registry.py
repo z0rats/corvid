@@ -244,6 +244,11 @@ def register_services(ioc_lookup_service_module) -> None:
             supported_ioc_types=[IOC_TYPES["CVE"]],
             api_key=ApiKeySpec(setting_name="nist_nvd_api_key"),
         ),
+        "openphish": ProviderSpec(
+            func=ioc_lookup_service_module.check_openphish,
+            name="OpenPhish",
+            supported_ioc_types=[IOC_TYPES["DOMAIN"], IOC_TYPES["URL"]],
+        ),
         "pulsedive": ProviderSpec(
             func=ioc_lookup_service_module.check_pulsedive,
             name="Pulsedive",

@@ -756,6 +756,13 @@
       "status": "Status: {{status}}",
       "couldNotRetrieve": "Could not retrieve specific details for this hash from MalwareBazaar at the moment."
     },
+    "openphish": {
+      "unavailable": "OpenPhish details are unavailable.",
+      "errorFetching": "Error fetching OpenPhish details: {{error}}",
+      "notListed": "Not listed in OpenPhish's community phishing feed.",
+      "listedTitle": "Listed in OpenPhish feed",
+      "matchedUrls": "Matched URL(s)"
+    },
     "pulsedive": {
       "loading": "Loading Pulsedive details...",
       "errorFetching": "Error fetching Pulsedive details: {{error}}",

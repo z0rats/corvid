@@ -3,8 +3,9 @@ import logging
 import time
 from base64 import b64encode
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +18,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import norm
 
 from .client_base import (
     ServiceError,
+    ServiceUnavailableError,
     _authenticate_oauth,
     _require_apikey,
     _require_credentials,
@@ -577,6 +579,63 @@ async def check_urlhaus(ioc: str) -> dict[str, Any]:
     client = get_client()
     response = await client.post(url="https://urlhaus-api.abuse.ch/v1/url/", data={"url": ioc})
     return await handle_response("URLhaus", response)
+
+
+_OPENPHISH_FEED_URL = "https://openphish.com/feed.txt"
+_OPENPHISH_CACHE_TTL_SECONDS = 3600  # community feed updates every few hours
+_openphish_cache: dict[str, Any] = {"urls": None, "domains": None, "fetched_at": 0.0}
+_openphish_cache_lock = asyncio.Lock()
+
+
+async def _get_openphish_feed() -> tuple[set[str], set[str]]:
+    """Fetch and cache OpenPhish's free community feed (one phishing URL per line).
+
+    The free tier has no per-URL lookup endpoint, so this mirrors the CISA KEV catalog
+    cache: the whole feed is refreshed on a TTL rather than re-downloaded per lookup.
+    """
+    async with _openphish_cache_lock:
+        urls = _openphish_cache["urls"]
+        age = time.monotonic() - _openphish_cache["fetched_at"]
+        if urls is not None and age < _OPENPHISH_CACHE_TTL_SECONDS:
+            return urls, _openphish_cache["domains"]
+
+        client = get_client()
+        try:
+            response = await client.get(url=_OPENPHISH_FEED_URL)
+            response.raise_for_status()
+        except httpx.HTTPStatusError as http_err:
+            raise ServiceError(
+                "OpenPhish", f"OpenPhish error: HTTP {http_err.response.status_code}"
+            ) from http_err
+        except httpx.RequestError as req_err:
+            raise ServiceUnavailableError(
+                "OpenPhish", f"Could not connect to OpenPhish: {req_err}"
+            ) from req_err
+
+        lines = [line.strip() for line in response.text.splitlines() if line.strip()]
+        urls = set(lines)
+        domains = {hostname.lower() for line in lines if (hostname := urlsplit(line).hostname)}
+
+        _openphish_cache["urls"] = urls
+        _openphish_cache["domains"] = domains
+        _openphish_cache["fetched_at"] = time.monotonic()
+        return urls, domains
+
+
+async def check_openphish(ioc: str) -> dict[str, Any]:
+    """Check a URL or bare domain against OpenPhish's free community phishing feed"""
+    logger.debug("Checking %s against OpenPhish community feed", ioc)
+
+    urls, domains = await _get_openphish_feed()
+
+    if "://" in ioc:
+        matched_urls = [ioc] if ioc in urls else []
+    elif ioc.lower() in domains:
+        matched_urls = sorted(u for u in urls if urlsplit(u).hostname == ioc.lower())[:10]
+    else:
+        matched_urls = []
+
+    return {"listed": bool(matched_urls), "matched_urls": matched_urls}
 
 
 async def check_urlscan(ioc: str) -> dict[str, Any]:

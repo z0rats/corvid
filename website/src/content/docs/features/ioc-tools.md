@@ -20,6 +20,9 @@ A set of tools for working with indicators of compromise:
   ransomware use) and FIRST.org's EPSS score (the probability it will be exploited in the next 30
   days). Both are keyless; KEV's full catalog is cached in-process for an hour since CISA only
   publishes a bulk dump, not a per-CVE endpoint.
+- **OpenPhish** — checks a domain or URL against OpenPhish's free, keyless community phishing
+  feed (a flat list, no per-URL endpoint, so the full feed is cached in-process for up to an
+  hour rather than re-downloaded per lookup — same pattern as the CISA KEV catalog above).
 - **Library of Leaks** — checks a domain or email against a public, keyless Aleph instance
   (run by DDoSecrets/investigativedata.io) indexing tens of millions of records across dozens of
   breach/leak collections. Only per-collection hit counts are shown — never the matching
