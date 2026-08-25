@@ -184,11 +184,12 @@ API keys and app-level preferences are configured from within the app itself ins
 
 ### Backup, disk usage & operational security
 
-Covered in depth on the docs site:
-[Backup & Operational Security](https://z0rats.github.io/corvid/getting-started/backup-and-operations/)
-— what's under `data/` and how to back it up safely, disk-usage expectations, and practices worth
-following for sensitive engagements (isolating the instance, routing through Tor/a proxy, key
-rotation, and more).
+Settings → Backup lets you download/restore a full backup (database + encryption key,
+optionally passphrase-encrypted) from the browser, no shell access needed. Covered in depth on
+the docs site: [Backup & Operational Security](https://z0rats.github.io/corvid/getting-started/backup-and-operations/)
+— what's under `data/`, the in-app flow vs. a manual host-level backup, disk-usage expectations,
+and practices worth following for sensitive engagements (isolating the instance, routing through
+Tor/a proxy, key rotation, and more).
 
 ## Disclaimer
 

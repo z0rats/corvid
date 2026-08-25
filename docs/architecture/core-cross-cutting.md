@@ -63,6 +63,23 @@ Used by:
   authenticated blob fetch (`ruBusinessCheckApi.exportReport`), not a plain `<a href>`, since
   every `/api/*` route needs the `Authorization` header a bare anchor can't attach.
 
+## `backup/`
+
+Full app-state export/import, SQLite only (`get_backup_status` reports `supported: false` for any
+other dialect). `POST /api/backup/export` takes a consistent snapshot via `VACUUM INTO` (no
+separate `-wal`/`-shm` sidecars needed, unlike a raw file copy), tars it with `.encryption_key`
+and — only if `include_access_token` is set — `.access_token`, plus a `manifest.json` (app
+version, dialect, the DB's stamped Alembic revision). Optionally wraps the whole archive with a
+Fernet key derived from a user passphrase via PBKDF2-HMAC-SHA256; restore auto-detects an
+encrypted archive by its missing gzip magic bytes rather than needing a separate flag.
+
+`POST /api/backup/restore` validates the manifest (dialect match, a recognized Alembic revision)
+and the extracted DB (`PRAGMA integrity_check`) before swapping files into place via `os.replace`
+— an atomic rename, so the *currently running* process's already-open connections keep working
+against the pre-restore file (same inode) until the operator restarts the backend. No in-process
+engine hot-swap; see `docs/adr/0010-backup-restore-design.md` for why. Requires a `confirm:
+"RESTORE"` form field, checked before any file is touched.
+
 ## `alerts/`, `database.py`, `scheduler.py`, `exceptions.py`
 
 `alerts/` is WebSocket alerts (see Access control in AGENTS.md for its token-check exemption).

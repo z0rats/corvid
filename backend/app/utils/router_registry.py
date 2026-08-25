@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, FastAPI
 
 from app.core import healthcheck
 from app.core.alerts.routes import alerts_routes
+from app.core.backup import routers as backup_routes
 from app.core.security.access_control import verify_access_token
 from app.core.settings.ai_settings.routers import ai_settings_routes
 from app.core.settings.api_keys.routers import (
@@ -67,6 +68,7 @@ def get_core_routers() -> list[APIRouter]:
     """Get core application routers"""
     return [
         alerts_routes.router,
+        backup_routes.router,
     ]
 
 

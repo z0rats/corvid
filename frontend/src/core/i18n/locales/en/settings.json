@@ -118,5 +118,35 @@
     "saveError": "Failed to save changes.",
     "invalidApiKey": "Please enter a valid API key.",
     "aiSettingsUpdated": "AI settings updated successfully."
+  },
+  "backup": {
+    "title": "Backup & Restore",
+    "description": "Download a full backup of the database (all settings and history) plus the encryption key needed to decrypt stored API keys, or restore from a previously downloaded backup.",
+    "unsupported": "Backup/restore only supports the SQLite database backend (this deployment runs {{dialect}}). Use your database's own dump/restore tooling instead.",
+    "export": {
+      "title": "Download a backup",
+      "description": "Includes the database and the encryption key. The access token is left out by default.",
+      "includeAccessToken": "Include the access token (so a restore reproduces the exact same token)",
+      "passphraseLabel": "Passphrase (optional)",
+      "passphraseHelper": "If set, the archive is encrypted and this passphrase is required to restore it. There's no way to recover it if lost.",
+      "button": "Download backup",
+      "success": "Backup downloaded.",
+      "error": "Failed to create backup."
+    },
+    "restore": {
+      "title": "Restore from a backup",
+      "description": "Overwrites the current database, encryption key, and (if included) access token. Takes effect only after the backend is restarted.",
+      "chooseFile": "Choose backup file...",
+      "passphraseLabel": "Passphrase (if the archive is encrypted)",
+      "warning": "This replaces all current settings and history. It cannot be undone, and you must restart the backend afterwards for the restored data to take effect.",
+      "button": "Restore",
+      "cancel": "Cancel",
+      "confirmTitle": "Confirm restore",
+      "confirmBody": "This will overwrite the current database, encryption key, and (if included) access token. This cannot be undone. Type RESTORE to confirm.",
+      "confirmFieldLabel": "Type \"{{phrase}}\" to confirm",
+      "success": "Restore complete. Restart the backend for the restored data to take effect.",
+      "successWithToken": "Restore complete. The access token was also restored - restart the backend, then enter the restored token if the app asks you to re-authenticate.",
+      "error": "Failed to restore backup."
+    }
   }
 }

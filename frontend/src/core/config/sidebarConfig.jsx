@@ -31,6 +31,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import ApartmentIcon from "@mui/icons-material/ApartmentOutlined";
 import LinkIcon from "@mui/icons-material/LinkOutlined";
 import KeyboardCommandKeyIcon from "@mui/icons-material/KeyboardCommandKeyOutlined";
+import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestoreOutlined";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
@@ -308,6 +309,7 @@ const SETTINGS_TABS_CONFIG = [
   { i18nKey: "nav.settingsTabs.aiSettings", path: "/settings/ai-settings", icon: <PsychologyAltIcon /> },
   { i18nKey: "nav.settingsTabs.modules", path: "/settings/modules", icon: <ViewModuleIcon /> },
   { i18nKey: "nav.settingsTabs.commandPalette", path: "/settings/command-palette", icon: <KeyboardCommandKeyIcon /> },
+  { i18nKey: "nav.settingsTabs.backup", path: "/settings/backup", icon: <SettingsBackupRestoreIcon /> },
   { i18nKey: "nav.settingsTabs.about", path: "/settings/about", icon: <InfoIcon /> },
 ];
 

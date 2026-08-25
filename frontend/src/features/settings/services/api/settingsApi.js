@@ -1,5 +1,24 @@
 import api from '../../../../core/services/baseApi';
 
+/**
+ * A blob-responseType request still gets its error body as a Blob (axios applies
+ * responseType to error responses too), so the JSON `detail`/`error_code` the
+ * backend sends has to be read back out of it manually here instead of just
+ * surfacing the raw axios error.
+ */
+async function toApiError(err) {
+  const data = err.response?.data;
+  if (data instanceof Blob) {
+    try {
+      const parsed = JSON.parse(await data.text());
+      return new Error(parsed.detail || err.message);
+    } catch {
+      // fall through to the generic axios error below
+    }
+  }
+  return err;
+}
+
 export const settingsApi = {
   // General settings API calls
   async updateDarkmode(darkmode) {
@@ -93,6 +112,43 @@ export const settingsApi = {
   async updateModuleStatus(moduleName, enabled) {
     const response = await api.patch(`/api/settings/modules/${moduleName}/status`, {
       enabled: enabled
+    });
+    return response.data;
+  },
+
+  // Backup API calls
+  async getBackupStatus() {
+    const response = await api.get('/api/backup/status');
+    return response.data;
+  },
+
+  async exportBackup({ includeAccessToken = false, passphrase = null } = {}) {
+    // Blob response, same pattern as ru-business-check's report export: a plain
+    // <a href> download can't carry the Authorization header this app requires.
+    try {
+      const response = await api.post(
+        '/api/backup/export',
+        { include_access_token: includeAccessToken, passphrase: passphrase || null },
+        { responseType: 'blob' }
+      );
+      const disposition = response.headers['content-disposition'] || '';
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      return { blob: response.data, filename: match ? match[1] : 'corvid-backup.tar.gz' };
+    } catch (err) {
+      throw await toApiError(err);
+    }
+  },
+
+  async restoreBackup({ file, passphrase = null }) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confirm', 'RESTORE');
+    if (passphrase) {
+      formData.append('passphrase', passphrase);
+    }
+
+    const response = await api.post('/api/backup/restore', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },

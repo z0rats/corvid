@@ -159,3 +159,109 @@ describe('settingsApi — modules', () => {
     expect(api.patch).toHaveBeenCalledWith('/api/settings/modules/newsfeed/status', { enabled: false });
   });
 });
+
+describe('settingsApi — backup status', () => {
+  it('getBackupStatus fetches status', async () => {
+    api.get.mockResolvedValue({ data: { supported: true, db_dialect: 'sqlite' } });
+
+    const result = await settingsApi.getBackupStatus();
+
+    expect(api.get).toHaveBeenCalledWith('/api/backup/status');
+    expect(result).toEqual({ supported: true, db_dialect: 'sqlite' });
+  });
+});
+
+describe('settingsApi — exportBackup', () => {
+  it('posts snake_case options as a blob request', async () => {
+    api.post.mockResolvedValue({ data: new Blob(['x']), headers: {} });
+
+    await settingsApi.exportBackup({ includeAccessToken: true, passphrase: 'hunter2' });
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/api/backup/export',
+      { include_access_token: true, passphrase: 'hunter2' },
+      { responseType: 'blob' }
+    );
+  });
+
+  it('defaults to no access token and no passphrase', async () => {
+    api.post.mockResolvedValue({ data: new Blob(['x']), headers: {} });
+
+    await settingsApi.exportBackup();
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/api/backup/export',
+      { include_access_token: false, passphrase: null },
+      { responseType: 'blob' }
+    );
+  });
+
+  it('extracts the filename from the content-disposition header', async () => {
+    const blob = new Blob(['x']);
+    api.post.mockResolvedValue({
+      data: blob,
+      headers: { 'content-disposition': 'attachment; filename="corvid-backup-x.tar.gz"' },
+    });
+
+    const result = await settingsApi.exportBackup();
+
+    expect(result).toEqual({ blob, filename: 'corvid-backup-x.tar.gz' });
+  });
+
+  it('falls back to a generic filename with no content-disposition header', async () => {
+    api.post.mockResolvedValue({ data: new Blob(['x']), headers: {} });
+
+    const result = await settingsApi.exportBackup();
+
+    expect(result.filename).toBe('corvid-backup.tar.gz');
+  });
+
+  it('surfaces the parsed detail message from a blob error response', async () => {
+    const errorBlob = new Blob([JSON.stringify({ detail: 'No encryption key file found' })]);
+    api.post.mockRejectedValue({ message: 'Request failed', response: { data: errorBlob } });
+
+    await expect(settingsApi.exportBackup()).rejects.toThrow('No encryption key file found');
+  });
+
+  it('rethrows the original error when the blob body is not JSON', async () => {
+    const originalError = { message: 'Request failed', response: { data: new Blob(['not json']) } };
+    api.post.mockRejectedValue(originalError);
+
+    await expect(settingsApi.exportBackup()).rejects.toBe(originalError);
+  });
+
+  it('rethrows the original error when there is no response body at all', async () => {
+    const originalError = new Error('Network error');
+    api.post.mockRejectedValue(originalError);
+
+    await expect(settingsApi.exportBackup()).rejects.toBe(originalError);
+  });
+});
+
+describe('settingsApi — restoreBackup', () => {
+  it('posts a multipart form with the file and confirm phrase', async () => {
+    api.post.mockResolvedValue({ data: { restart_required: true, access_token_restored: false } });
+    const file = new File(['content'], 'backup.tar.gz');
+
+    const result = await settingsApi.restoreBackup({ file, passphrase: 'hunter2' });
+
+    expect(api.post).toHaveBeenCalledWith('/api/backup/restore', expect.any(FormData), {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    const formData = api.post.mock.calls[0][1];
+    expect(formData.get('file')).toBe(file);
+    expect(formData.get('confirm')).toBe('RESTORE');
+    expect(formData.get('passphrase')).toBe('hunter2');
+    expect(result).toEqual({ restart_required: true, access_token_restored: false });
+  });
+
+  it('omits the passphrase field when none is given', async () => {
+    api.post.mockResolvedValue({ data: {} });
+    const file = new File(['content'], 'backup.tar.gz');
+
+    await settingsApi.restoreBackup({ file });
+
+    const formData = api.post.mock.calls[0][1];
+    expect(formData.has('passphrase')).toBe(false);
+  });
+});

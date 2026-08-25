@@ -18,8 +18,33 @@ Everything Corvid needs to keep running lives under the host-mounted `data/` dir
 - `data/logs/` — optional, rotated application logs.
 
 Losing `data/` entirely means starting over from a blank instance; there is no other durable
-state. Back it up as a whole — stop the container first for a consistent SQLite snapshot, or use
-`sqlite3 .backup` for a live one.
+state.
+
+### In-app backup/restore
+
+Settings → Backup lets you download a full backup (the database, produced via a consistent
+`VACUUM INTO` snapshot, plus the encryption key) and restore from a previously downloaded one,
+without leaving the browser. The access token is left out of the archive by default — check
+"Include the access token" if you specifically want a restore to reproduce the exact same token.
+Optionally set a passphrase to encrypt the archive (PBKDF2-derived key, no new dependency) before
+it's stored anywhere; there's no way to recover a lost passphrase, so keep it somewhere durable if
+you set one.
+
+This only supports the default SQLite backend — a non-SQLite deployment
+(see [SQLite is the only supported backend](https://github.com/z0rats/corvid/blob/main/docs/adr/0004-sqlite-only-postgres-unsupported.md))
+gets a 501 from `/api/backup/*` and should use its own database's dump/restore tooling instead.
+
+**Restoring requires a manual restart.** The restore endpoint validates and writes the new
+database/key/token files to disk, but the currently running backend process keeps serving the
+pre-restore data until you restart it (`docker compose restart backend`, or `make rebuild`) — that
+restart is what runs the normal startup migration check against the restored database, the same
+as any other deploy.
+
+### Manual backup
+
+The in-app flow above covers day-to-day use; for a full host-level snapshot, or if you're not on
+SQLite, back up `data/` as a whole instead — stop the container first for a consistent SQLite
+snapshot, or use `sqlite3 .backup` for a live one.
 
 **Permissions travel with the backup.** `.encryption_key` and `.access_token` are written `0600`
 on the host, but that only protects them *in place*. A backup method that doesn't preserve file
