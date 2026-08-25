@@ -6,6 +6,8 @@ list in-process on a TTL rather than making one request per lookup like every ot
 search_first_epss is the plain keyless GET+params baseline (same shape as check_ffraud).
 """
 
+import time
+
 import httpx
 import pytest
 
@@ -95,7 +97,14 @@ class TestCheckCisaKev:
         fake = _patch_client(monkeypatch, _response(200, json=_KEV_CATALOG_RESPONSE))
 
         _run(external_api_clients.check_cisa_kev("CVE-2024-1234"))
-        monkeypatch.setitem(external_api_clients._kev_cache, "fetched_at", 0.0)
+        # 0.0 isn't reliably "in the past enough": time.monotonic()'s reference point is
+        # arbitrary (often system boot), so on a freshly-booted CI runner it can still be
+        # under the TTL - a relative offset is the only portable way to force expiry.
+        monkeypatch.setitem(
+            external_api_clients._kev_cache,
+            "fetched_at",
+            time.monotonic() - external_api_clients._KEV_CACHE_TTL_SECONDS - 1,
+        )
         _run(external_api_clients.check_cisa_kev("CVE-2024-1234"))
 
         assert len(fake.calls) == 2

@@ -5,6 +5,8 @@ URLs - so this fetches-and-caches the whole feed in-process on a TTL rather than
 one request per lookup.
 """
 
+import time
+
 import httpx
 import pytest
 
@@ -101,7 +103,14 @@ class TestCheckOpenphish:
         fake = _patch_client(monkeypatch, response=_response(200, _FEED_TEXT))
 
         _run(external_api_clients.check_openphish("evil.example.com"))
-        monkeypatch.setitem(external_api_clients._openphish_cache, "fetched_at", 0.0)
+        # 0.0 isn't reliably "in the past enough": time.monotonic()'s reference point is
+        # arbitrary (often system boot), so on a freshly-booted CI runner it can still be
+        # under the TTL - a relative offset is the only portable way to force expiry.
+        monkeypatch.setitem(
+            external_api_clients._openphish_cache,
+            "fetched_at",
+            time.monotonic() - external_api_clients._OPENPHISH_CACHE_TTL_SECONDS - 1,
+        )
         _run(external_api_clients.check_openphish("evil.example.com"))
 
         assert len(fake.calls) == 2
