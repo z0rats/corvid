@@ -22,12 +22,15 @@ which provider handles which type.
   CrowdStrike, EmailRep.io, GitHub (optional — raises an otherwise-anonymous rate limit, not
   required), Have I Been Pwned, Hunter.io, IPQualityScore, LeakIX, Maltiverse, Mandiant, NIST NVD,
   Pulsedive, Reddit, Google Safe Browsing, Shodan, ThreatFox, Twitter/X, VirusTotal.
-- **Fully keyless**: Address Blacklist (resolved locally, see below), FFraud, Hudson Rock, Library
-  of Leaks, MalwareBazaar, URLhaus, URLScan.io.
+- **Fully keyless**: Address Blacklist (resolved locally, see below), CISA KEV, FFraud, FIRST.org
+  EPSS, Hudson Rock, Library of Leaks, MalwareBazaar, URLhaus, URLScan.io.
 - **Address Blacklist** resolves instantly from a local table, refreshed daily rather than called
   per lookup, from three free keyless feeds: OFAC's `sanctionslistservice.ofac.treas.gov` (SDN
   digital-currency addresses), ScamSniffer's GitHub-hosted phishing-address database, and
   OpenSanctions' `data.opensanctions.org` (Israel counter-terror-financing crypto export).
+- **CISA KEV** (`cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json`) — the
+  full catalog (no per-CVE endpoint exists) is fetched and kept in an in-process cache for up to
+  an hour, rather than re-downloaded on every CVE lookup.
 
 ## Domain Finder
 

@@ -497,6 +497,17 @@
       "holder": "Holder/Exchange",
       "viewOnOpenSanctions": "View entity on OpenSanctions ↗"
     },
+    "cisakev": {
+      "unavailable": "CISA KEV details are unavailable.",
+      "errorFetching": "Error fetching CISA KEV details: {{error}}",
+      "notListed": "Not listed in CISA's Known Exploited Vulnerabilities catalog.",
+      "listedTitle": "Listed in CISA KEV",
+      "ransomwareUse": "Known ransomware use",
+      "vendorProject": "Vendor / Product",
+      "dateAdded": "Added to catalog",
+      "dueDate": "Remediation due date",
+      "requiredAction": "Required action"
+    },
     "checkphish": {
       "unavailable": "Checkphish details are unavailable or the scan is not complete.",
       "errorFetching": "Error fetching Checkphish details: {{error}}",
@@ -609,6 +620,15 @@
       "safeDomain": "Safe Domain",
       "communityBlacklisted": "Community Blacklisted",
       "blacklistReports": "Yes ({{count}} report(s))"
+    },
+    "firstepss": {
+      "unavailable": "EPSS details are unavailable.",
+      "errorFetching": "Error fetching EPSS details: {{error}}",
+      "notFound": "No EPSS score found for this CVE.",
+      "title": "Exploit Prediction Scoring System",
+      "epssScore": "EPSS score (probability of exploitation)",
+      "percentile": "Percentile among all scored CVEs",
+      "asOf": "As of {{date}}"
     },
     "hudsonrock": {
       "errorFetching": "Error fetching Hudson Rock details: {{error}}",

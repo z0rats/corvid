@@ -15,6 +15,11 @@ A set of tools for working with indicators of compromise:
   self-hosted reputation blacklist built from the OFAC SDN sanctions list and ScamSniffer's open
   phishing-address dataset, refreshed daily in the background — no API key or third-party call
   needed for that specific check. Lookups can be done one at a time or in bulk.
+- **CVE enrichment** — a CVE lookup is additionally checked against CISA's Known Exploited
+  Vulnerabilities (KEV) catalog (is it actively exploited in the wild, and is there known
+  ransomware use) and FIRST.org's EPSS score (the probability it will be exploited in the next 30
+  days). Both are keyless; KEV's full catalog is cached in-process for an hour since CISA only
+  publishes a bulk dump, not a per-CVE endpoint.
 - **Library of Leaks** — checks a domain or email against a public, keyless Aleph instance
   (run by DDoSecrets/investigativedata.io) indexing tens of millions of records across dozens of
   breach/leak collections. Only per-collection hit counts are shown — never the matching

@@ -70,6 +70,11 @@ def register_services(ioc_lookup_service_module) -> None:
             ],
             requires_db=True,
         ),
+        "cisakev": ProviderSpec(
+            func=ioc_lookup_service_module.check_cisa_kev,
+            name="CISA KEV",
+            supported_ioc_types=[IOC_TYPES["CVE"]],
+        ),
         "checkphish": ProviderSpec(
             func=ioc_lookup_service_module.check_checkphish,
             name="CheckPhish",
@@ -117,6 +122,11 @@ def register_services(ioc_lookup_service_module) -> None:
             func=ioc_lookup_service_module.check_ffraud_email,
             name="FFraud",
             supported_ioc_types=[IOC_TYPES["EMAIL"]],
+        ),
+        "firstepss": ProviderSpec(
+            func=ioc_lookup_service_module.search_first_epss,
+            name="FIRST.org EPSS",
+            supported_ioc_types=[IOC_TYPES["CVE"]],
         ),
         "github": ProviderSpec(
             func=ioc_lookup_service_module.search_github,

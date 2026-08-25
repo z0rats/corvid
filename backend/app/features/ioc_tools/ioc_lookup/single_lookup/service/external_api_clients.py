@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from base64 import b64encode
 from typing import Any
 from urllib.parse import quote
@@ -369,6 +370,63 @@ async def search_nist_nvd(ioc: str, apikey: str) -> dict[str, Any]:
         headers={"apiKey": apikey},
     )
     return await handle_response("NIST NVD", response)
+
+
+_KEV_CATALOG_URL = (
+    "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+)
+_KEV_CACHE_TTL_SECONDS = 3600  # CISA updates the catalog at most a few times a day
+_kev_cache: dict[str, Any] = {"catalog": None, "fetched_at": 0.0}
+_kev_cache_lock = asyncio.Lock()
+
+
+async def _get_kev_catalog() -> dict[str, dict[str, Any]]:
+    """Fetch and cache CISA's full KEV catalog, keyed by upper-cased CVE ID.
+
+    CISA only publishes the full catalog (~1300 entries), no per-CVE endpoint, so this keeps
+    an in-process copy refreshed on a TTL rather than re-downloading the whole feed on every
+    lookup.
+    """
+    async with _kev_cache_lock:
+        catalog = _kev_cache["catalog"]
+        age = time.monotonic() - _kev_cache["fetched_at"]
+        if catalog is not None and age < _KEV_CACHE_TTL_SECONDS:
+            return catalog
+
+        client = get_client()
+        response = await client.get(url=_KEV_CATALOG_URL)
+        raw = await handle_response("CISA KEV", response)
+        catalog = {
+            entry["cveID"].upper(): entry
+            for entry in raw.get("vulnerabilities", [])
+            if entry.get("cveID")
+        }
+        _kev_cache["catalog"] = catalog
+        _kev_cache["fetched_at"] = time.monotonic()
+        return catalog
+
+
+async def check_cisa_kev(ioc: str) -> dict[str, Any]:
+    """Check whether a CVE is listed in CISA's Known Exploited Vulnerabilities catalog"""
+    logger.debug("Checking CVE %s against CISA KEV", ioc)
+
+    catalog = await _get_kev_catalog()
+    entry = catalog.get(ioc.upper())
+    if entry is None:
+        return {"listed": False}
+    return {"listed": True, **entry}
+
+
+async def search_first_epss(ioc: str) -> dict[str, Any]:
+    """Look up a CVE's EPSS exploit-prediction score via FIRST.org's public API"""
+    logger.debug("Looking up CVE %s with FIRST.org EPSS", ioc)
+
+    client = get_client()
+    response = await client.get(
+        url="https://api.first.org/data/v1/epss",
+        params={"cve": ioc},
+    )
+    return await handle_response("FIRST.org EPSS", response)
 
 
 async def check_pulsedive(ioc: str, apikey: str) -> dict[str, Any]:

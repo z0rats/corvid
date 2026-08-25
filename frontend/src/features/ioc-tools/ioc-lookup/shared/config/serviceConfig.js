@@ -2,11 +2,13 @@ import AbuseIpdbDetails from '../components/service-details/AbuseIPDB/AbuseIpdbD
 import AlienvaultDetails from '../components/service-details/Alienvault/AlienvaultDetails';
 import BlacklistDetails from '../components/service-details/Blacklist/BlacklistDetails';
 import CheckphishDetails from '../components/service-details/Checkphish/CheckphishDetails';
+import CisaKevDetails from '../components/service-details/CisaKev/CisaKevDetails';
 import CrowdSecDetailsComponent from '../components/service-details/CrowdSec/CrowdSecDetails';
 import CrowdStrikeDetailsComponent from '../components/service-details/CrowdStrike/CrowdStrike';
 import EmailrepioDetails from '../components/service-details/EmailrepIO/EmailrepioDetails';
 import FfraudIpDetails from '../components/service-details/FFraud/FfraudIpDetails';
 import FfraudEmailDetails from '../components/service-details/FFraud/FfraudEmailDetails';
+import FirstEpssDetails from '../components/service-details/FirstEpss/FirstEpssDetails';
 import GithubDetails from '../components/service-details/GitHub/GithubDetails';
 import HaveibeenpwndDetails from '../components/service-details/HIBP/HaveibeenpwndDetails';
 import HudsonRockDetails from '../components/service-details/HudsonRock/HudsonRockDetails';
@@ -125,6 +127,23 @@ export const SERVICE_DEFINITIONS = {
         return { summary: `Disposition: ${disposition || 'N/A'}`, tlp, keyMetric: disposition || 'N/A' };
     }),
   },
+  cisakev: {
+    name: 'CISA KEV',
+    icon: 'default_icon',
+    detailComponent: CisaKevDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['CVE'],
+    lookupEndpoint: createSingleEndpoint('cisakev'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (!responseData.listed) return { summary: 'Not in CISA KEV catalog', tlp: 'GREEN' };
+      const ransomware = responseData.knownRansomwareCampaignUse === 'Known';
+      return {
+        summary: `Actively exploited${ransomware ? ' — known ransomware use' : ''}`,
+        tlp: 'RED',
+        keyMetric: 'KEV',
+      };
+    })),
+  },
   crowdsec: {
     name: 'CrowdSec',
     icon: 'crowdsec_logo_small',
@@ -194,6 +213,21 @@ export const SERVICE_DEFINITIONS = {
       if (!responseData.valid_format) return { summary: 'Invalid email format', tlp: 'AMBER' };
       return { summary: responseData.safe_domain ? 'Safe domain' : 'No issues detected', tlp: 'GREEN' };
     })),
+  },
+  firstepss: {
+    name: 'FIRST.org EPSS',
+    icon: 'default_icon',
+    detailComponent: FirstEpssDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['CVE'],
+    lookupEndpoint: createSingleEndpoint('firstepss'),
+    getSummaryAndTlp: withErrorHandling((responseData) => {
+      const entry = responseData.data?.[0];
+      if (!entry) return { summary: 'No EPSS score', tlp: 'WHITE' };
+      const epssPct = parseFloat(entry.epss) * 100;
+      const tlp = scoreTlpMapper(epssPct, { red: 50, amber: 10 });
+      return { summary: `EPSS: ${epssPct.toFixed(2)}%`, tlp, keyMetric: `${epssPct.toFixed(1)}%` };
+    }),
   },
   github: {
     name: 'GitHub Search',
