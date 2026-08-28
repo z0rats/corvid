@@ -21,6 +21,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
+      // `all` + `include` make every src file count toward the denominator,
+      // not just ones some test happens to import - without this, a file no
+      // test ever touches (directly or transitively) is invisible to the
+      // report rather than showing up as 0%, which quietly inflates the
+      // percentage as untested surface grows.
+      all: true,
+      include: ['src/**/*.{js,jsx,ts,tsx}'],
     },
   },
 });

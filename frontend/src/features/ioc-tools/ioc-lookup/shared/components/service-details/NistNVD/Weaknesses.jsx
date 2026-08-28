@@ -54,7 +54,7 @@ export default function Weaknesses(props) {
           <ListItemText secondary={t('providers.nistnvd.weaknessesDisclaimer')} />
         </ListItem>
       </List>
-      {props.details ? (
+      {props.weaknesses ? (
         <>
           <TableContainer component={Paper} sx={tableContainerStyle}>
             <Table sx={{ minWidth: 650 }} aria-label={t('providers.nistnvd.simpleTable')}>

@@ -21,10 +21,12 @@ export default function CrowdSecDetails({ result, ioc }) {
   if (!result || result.error) {
     const message = result?.error
       ? t('providers.crowdsec.errorFetching', { error: result.message || result.error })
-      : (result?.message?.includes("not found"))
-        ? t('providers.crowdsec.notFound')
-        : t('providers.crowdsec.unavailable');
+      : t('providers.crowdsec.unavailable');
     return <NoDetails message={message} />;
+  }
+
+  if (result.message?.includes("not found")) {
+    return <NoDetails message={t('providers.crowdsec.notFound')} />;
   }
 
   if (Object.keys(result).length === 0 || typeof result.ip_range_score === 'undefined') {
