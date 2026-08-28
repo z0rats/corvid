@@ -124,7 +124,7 @@ async def delete_module_setting_by_name(db: AsyncSession, module_name: str) -> N
     if not setting:
         raise ApplicationError("Module setting not found", status_code=404)
 
-    delete_module_setting(db, setting)
+    await delete_module_setting(db, setting)
     await db.flush()
 
     logger.info("Deleted module setting: %s", normalized_name)

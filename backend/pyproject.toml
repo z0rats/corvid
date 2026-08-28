@@ -18,6 +18,21 @@ extend-immutable-calls = [
     "fastapi.Form",
 ]
 
+[tool.coverage.run]
+# `source` (as opposed to relying on pytest-cov's bare `--cov=app` flag) makes
+# coverage.py walk the whole package and report never-imported files as 0%
+# instead of silently omitting them from the report - without this, modules
+# nothing imports (e.g. only wired through app/utils/router_registry.py,
+# which no test exercises) don't count against the coverage percentage at all.
+source = ["app"]
+
+[tool.coverage.report]
+# Most of app/ is implicit namespace packages (no __init__.py in most
+# subdirs) - coverage.py's unexecuted-file walk skips those by default, which
+# silently dropped ~90 real files (most of email_analyzer's routers/service,
+# most of newsfeed, all of ioc_defanger, ...) out of the report entirely.
+include_namespace_packages = true
+
 [tool.mypy]
 python_version = "3.14"
 plugins = ["pydantic.mypy"]
