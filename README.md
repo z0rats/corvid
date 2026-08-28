@@ -226,7 +226,7 @@ If AGPL-3.0 doesn't fit your use case — for example, if you want to integrate
 Corvid into a proprietary product or offer it as a managed service without
 open-sourcing your modifications — a commercial license is available.
 
-Contact: [z0rats.alex@gmail.com]
+Contact: [z0rats.dev@gmail.com]
 
 ### Prior Versions
 

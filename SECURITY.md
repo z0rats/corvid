@@ -18,7 +18,7 @@ Instead, report it privately:
 
 - Preferred: [GitHub Security Advisories](https://github.com/z0rats/corvid/security/advisories/new)
   for this repository.
-- Alternative: email **z0rats.alex@gmail.com** with a description of the issue, steps to
+- Alternative: email **z0rats.dev@gmail.com** with a description of the issue, steps to
   reproduce, and its potential impact.
 
 This is a solo-maintained project, so response times aren't guaranteed, but reports are taken
