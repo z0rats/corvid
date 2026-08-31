@@ -5,28 +5,28 @@ updates:
     schedule:
       interval: "weekly"
     cooldown:
-      default-days: 3
+      default-days: 7
 
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
     cooldown:
-      default-days: 3
+      default-days: 7
 
   - package-ecosystem: "docker"
     directory: "/backend"
     schedule:
       interval: "weekly"
     cooldown:
-      default-days: 3
+      default-days: 7
 
   - package-ecosystem: "docker"
     directory: "/frontend"
     schedule:
       interval: "weekly"
     cooldown:
-      default-days: 3
+      default-days: 7
 
   - package-ecosystem: "github-actions"
     directory: "/"
