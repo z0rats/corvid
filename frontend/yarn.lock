@@ -1908,21 +1908,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/lab@npm:^9.0.0-beta.6":
-  version: 9.0.0-beta.6
-  resolution: "@mui/lab@npm:9.0.0-beta.6"
+"@mui/lab@npm:^9.0.0-beta.8":
+  version: 9.0.0-beta.8
+  resolution: "@mui/lab@npm:9.0.0-beta.8"
   dependencies:
-    "@babel/runtime": "npm:^7.29.2"
-    "@mui/system": "npm:^9.2.0"
-    "@mui/types": "npm:^9.1.1"
-    "@mui/utils": "npm:^9.2.0"
+    "@babel/runtime": "npm:^7.29.7"
+    "@mui/system": "npm:^9.3.0"
+    "@mui/types": "npm:^9.3.0"
+    "@mui/utils": "npm:^9.3.0"
     clsx: "npm:^2.1.1"
     prop-types: "npm:^15.8.1"
   peerDependencies:
     "@emotion/react": ^11.5.0
     "@emotion/styled": ^11.3.0
-    "@mui/material": ^9.2.0
-    "@mui/material-pigment-css": ^9.2.0
+    "@mui/material": ^9.3.1
+    "@mui/material-pigment-css": ^9.3.0
     "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
     react: ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -1935,7 +1935,7 @@ __metadata:
       optional: true
     "@types/react":
       optional: true
-  checksum: 10c0/74456589751d43a88b16ca61c5a09e435724b0209079833d5858d37766d262f29722991e6bb55600c682e4399d0d6967b68f4b0b91054dbb6906a2137205bd51
+  checksum: 10c0/637fea715965851728638248f03f19ea3cd35eecbf7f8853d85a0224f75d32f552ac6f27b766aedf668b5265afe7b36e6a01bae059392b04c36d33df9b4d096f
   languageName: node
   linkType: hard
 
@@ -4220,7 +4220,7 @@ __metadata:
     "@hello-pangea/dnd": "npm:^18.0.1"
     "@mdxeditor/editor": "npm:^4.2.3"
     "@mui/icons-material": "npm:9.3.1"
-    "@mui/lab": "npm:^9.0.0-beta.6"
+    "@mui/lab": "npm:^9.0.0-beta.8"
     "@mui/material": "npm:9.3.1"
     "@testing-library/dom": "npm:^10.4.1"
     "@testing-library/jest-dom": "npm:^7.0.1"
