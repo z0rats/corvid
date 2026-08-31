@@ -141,7 +141,7 @@ jobs:
       # SBOM + provenance are generated for the merged multi-arch manifest list
       # (the digest operators actually pull), not the per-arch intermediates.
       - name: Generate SBOM for published image
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           image: ghcr.io/${{ github.repository_owner }}/${{ inputs.image-name }}@${{ steps.digest.outputs.value }}
           format: cyclonedx-json
