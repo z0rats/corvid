@@ -16,6 +16,7 @@ import WebCheckPanel from './components/ui/WebCheckPanel';
 import DnsRecordsPanel from './components/ui/DnsRecordsPanel';
 import DnsDumpsterPanel from './components/ui/DnsDumpsterPanel';
 import WaybackPanel from './components/ui/WaybackPanel';
+import TemporalAnalysisPanel from './components/ui/TemporalAnalysisPanel';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 import { domainUtils } from './utils/domainUtils';
 
@@ -74,6 +75,7 @@ export default function DomainMonitoring() {
             <HackertargetPanel key={`hackertarget_${searchDomain}`} domain={searchDomain} onScanSubdomain={handleSearch} />
             <RapidDnsPanel key={`rapiddns_${searchDomain}`} domain={searchDomain} onScanSubdomain={handleSearch} />
             <WaybackPanel key={`wayback_${searchDomain}`} domain={searchDomain} />
+            <TemporalAnalysisPanel key={`temporal_${searchDomain}`} domain={searchDomain} />
             <ResultTable key={searchDomain} domain={searchDomain} />
           </>
         ) : (

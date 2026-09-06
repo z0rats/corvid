@@ -28,6 +28,7 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     RapidDnsSubdomainsResponse,
     SecurityHeadersResponse,
     SslInfoResponse,
+    TemporalAnalysisResponse,
     WaybackLookupResponse,
     WhoisLookupResponse,
 )
@@ -278,6 +279,22 @@ class TestWaybackLookup:
         assert captured[0].path == "/login"
 
 
+class TestTemporalAnalysis:
+    def test_post_and_get_both_delegate_to_the_service(self, client, monkeypatch):
+        captured = []
+        result = TemporalAnalysisResponse(domain="example.com", events=[])
+        monkeypatch.setattr(
+            domain_routes, "perform_temporal_analysis", _fake_service(captured, result)
+        )
+
+        post_response = client.post("/api/domain/temporal-analysis", json={"domain": "example.com"})
+        get_response = client.get("/api/domain/temporal-analysis/example.com")
+
+        assert post_response.status_code == 200
+        assert get_response.status_code == 200
+        assert len(captured) == 2
+
+
 class TestHealthCheck:
     def test_reports_every_panels_endpoints(self, client):
         response = client.get("/api/domain/health")
@@ -287,3 +304,4 @@ class TestHealthCheck:
         assert body["service"] == "domain_lookup"
         assert body["status"] == "healthy"
         assert "/api/domain/whois" in body["endpoints"]
+        assert "/api/domain/temporal-analysis" in body["endpoints"]

@@ -28,6 +28,8 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     SecurityHeadersResponse,
     SslInfoRequest,
     SslInfoResponse,
+    TemporalAnalysisRequest,
+    TemporalAnalysisResponse,
     WaybackLookupRequest,
     WaybackLookupResponse,
     WhoisLookupRequest,
@@ -53,6 +55,9 @@ from app.features.ioc_tools.domain_finder.service.security_headers_service impor
     perform_security_headers_lookup,
 )
 from app.features.ioc_tools.domain_finder.service.ssl_info_service import perform_ssl_info_lookup
+from app.features.ioc_tools.domain_finder.service.temporal_analysis_service import (
+    perform_temporal_analysis,
+)
 from app.features.ioc_tools.domain_finder.service.wayback_lookup_service import (
     perform_wayback_lookup,
 )
@@ -589,6 +594,51 @@ async def wayback_lookup_get(
     return result
 
 
+@router.post(
+    "/temporal-analysis",
+    response_model=TemporalAnalysisResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Build an aggregated temporal-analysis timeline for a domain",
+    description=(
+        "Aggregate WHOIS registration/expiry dates, the live TLS certificate's validity "
+        "window, Wayback Machine first/last capture, and the homepage's schema.org "
+        "JSON-LD dates into one chronological timeline"
+    ),
+)
+@limiter.limit("30/minute")
+async def temporal_analysis_post(
+    request: Request, temporal_request: TemporalAnalysisRequest
+) -> TemporalAnalysisResponse:
+    """Perform an aggregated temporal analysis via POST request"""
+    logger.info("POST temporal analysis request - Domain: %s", temporal_request.domain)
+    result = await perform_temporal_analysis(temporal_request)
+    logger.info(
+        "POST temporal analysis completed - Domain: %s, Events: %s",
+        temporal_request.domain,
+        len(result.events),
+    )
+    return result
+
+
+@router.get(
+    "/temporal-analysis/{domain}",
+    response_model=TemporalAnalysisResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Build an aggregated temporal-analysis timeline for a domain via URL parameter",
+    description="Build the aggregated temporal-analysis timeline using domain from URL path",
+)
+@limiter.limit("30/minute")
+async def temporal_analysis_get(request: Request, domain: str) -> TemporalAnalysisResponse:
+    """Perform an aggregated temporal analysis using domain from URL path via GET request"""
+    logger.info("GET temporal analysis request - Domain: %s", domain)
+    temporal_request = TemporalAnalysisRequest(domain=domain)
+    result = await perform_temporal_analysis(temporal_request)
+    logger.info(
+        "GET temporal analysis completed - Domain: %s, Events: %s", domain, len(result.events)
+    )
+    return result
+
+
 @router.get(
     "/health",
     response_model=dict[str, Any],
@@ -626,5 +676,7 @@ async def check_domain_service_health() -> dict[str, Any]:
             "/api/domain/dnsdumpster/{domain}",
             "/api/domain/wayback",
             "/api/domain/wayback/{domain}",
+            "/api/domain/temporal-analysis",
+            "/api/domain/temporal-analysis/{domain}",
         ],
     }

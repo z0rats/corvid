@@ -69,3 +69,10 @@ A set of tools for working with indicators of compromise:
 - **Wayback Machine** — lists archived snapshots of a domain via the Internet Archive's CDX API
   (one capture per day), with the capture count and date range, and a direct link to open each
   snapshot on web.archive.org. No API key needed.
+- **Temporal Analysis** — aggregates WHOIS registration/expiry/update dates, the live TLS
+  certificate's validity window, Wayback Machine first/last capture, and any `dateCreated`/
+  `dateModified`/`datePublished` found in the homepage's schema.org JSON-LD into one chronological
+  scatter timeline (domain/infrastructure events vs. page-content events), plus a sortable event
+  list below it. Reuses the WHOIS/SSL/Wayback panels' own lookups rather than a separate API; a
+  single source failing (e.g. no TLS listener) is shown as unavailable rather than failing the
+  whole timeline. No API key needed.

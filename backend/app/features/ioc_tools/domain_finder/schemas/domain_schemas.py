@@ -1,6 +1,6 @@
 import logging
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -725,4 +725,63 @@ class BlocklistResponse(BaseModel):
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="Timestamp when the lookup was performed",
+    )
+
+
+class TemporalAnalysisRequest(BaseModel):
+    """Request model for the aggregated temporal-analysis timeline"""
+
+    domain: str = Field(
+        ...,
+        description="Domain name to build a temporal analysis timeline for (e.g., 'example.com')",
+        min_length=1,
+        max_length=255,
+    )
+
+    @field_validator("domain")
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        return _validate_plain_domain(v)
+
+
+class SchemaOrgDate(BaseModel):
+    """A single date field extracted from a page's schema.org JSON-LD"""
+
+    field: Literal["dateCreated", "dateModified", "datePublished"] = Field(
+        ..., description="The schema.org property this date was extracted from"
+    )
+    value: datetime = Field(..., description="Parsed date value")
+
+
+TemporalEventSource = Literal["whois", "ssl_certificate", "wayback", "schema_org"]
+
+
+class TemporalEvent(BaseModel):
+    """A single dated event feeding the temporal-analysis timeline"""
+
+    date: datetime = Field(..., description="When this event occurred")
+    category: Literal["server", "page"] = Field(
+        ...,
+        description="'server' for domain/infrastructure events (WHOIS, TLS cert), "
+        "'page' for the page's own content history (schema.org, Wayback captures)",
+    )
+    source: TemporalEventSource = Field(..., description="Which panel this event was derived from")
+    label: str = Field(..., description="Analyst-facing label, e.g. 'SSL Valid From'")
+
+
+class TemporalAnalysisResponse(BaseModel):
+    """Response model for the aggregated temporal-analysis timeline"""
+
+    domain: str = Field(..., description="The domain that was looked up")
+    events: list[TemporalEvent] = Field(
+        default_factory=list, description="All extracted events, sorted oldest first"
+    )
+    sources_failed: list[TemporalEventSource] = Field(
+        default_factory=list,
+        description="Sources that could not be fetched for this domain (e.g. no TLS listener), "
+        "contributing no events rather than failing the whole request",
+    )
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the analysis was performed",
     )

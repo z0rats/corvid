@@ -293,6 +293,17 @@
       "clearPath": "Clear, show the whole domain again",
       "capturesLabel": "captures"
     },
+    "temporalAnalysis": {
+      "title": "Temporal Analysis",
+      "errorPrefix": "Temporal analysis failed:",
+      "noEvents": "No dated events found for this domain.",
+      "today": "Today",
+      "sourcesFailed": "Could not fetch: {{sources}}",
+      "categories": {
+        "server": "Server",
+        "page": "Page"
+      }
+    },
     "welcomeScreen": {
       "title": "Domain Finder",
       "intro": "Domain Finder is a module that helps you protect your organization from phishing attacks by allowing you to search for recently registered domains that match a specific pattern. This can help you identify potential threats before they occur.",
