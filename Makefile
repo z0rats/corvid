@@ -40,7 +40,7 @@ migrate: ## Apply pending Alembic migrations by hand (runs automatically on cont
 ## --- Testing & linting (run locally, not in Docker) ---
 
 sync-backend: ## Sync the local backend venv with requirements.txt (same install CI uses)
-	cd backend && uv pip install -r requirements.txt --override lxml-override.txt
+	cd backend && uv pip install -r requirements.txt
 
 test-backend: ## Run backend tests with coverage (same invocation as CI)
 	cd backend && pytest -v --cov=app --cov-report=xml

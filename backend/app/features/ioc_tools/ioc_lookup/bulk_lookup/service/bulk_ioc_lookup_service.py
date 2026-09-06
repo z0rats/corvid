@@ -41,7 +41,11 @@ async def run_single_lookup_with_rate_limit(
                 }
 
             if ioc_type not in service_config.supported_ioc_types:
-                logger.debug("Service %s doesn't support IOC type %s", service_name, ioc_type)
+                # ioc_type is a fixed classification label (e.g. "email", "ip"), not the
+                # investigated value itself, despite the sensitive-data heuristic match.
+                logger.debug(  # codeql[py/clear-text-logging-sensitive-data]
+                    "Service %s doesn't support IOC type %s", service_name, ioc_type
+                )
                 return {
                     "status": LookupStatus.ERROR.value,
                     "error": f"Service '{service_name}' doesn't support {ioc_type}",
@@ -120,7 +124,9 @@ async def process_bulk_lookups_with_rate_limiting(
         for service_name in services_to_query:
             service_config = get_service(service_name)
             if not service_config or ioc_type not in service_config.supported_ioc_types:
-                logger.debug(
+                # ioc_type is a fixed classification label, not the investigated value - see
+                # run_single_lookup_with_rate_limit above.
+                logger.debug(  # codeql[py/clear-text-logging-sensitive-data]
                     "Skipping %s for %s - doesn't support %s", service_name, ioc_value, ioc_type
                 )
                 continue

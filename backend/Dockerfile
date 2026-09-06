@@ -18,17 +18,14 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-builder,sharing=locked
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# lxml has no prebuilt wheel for cp314 yet and must compile from source (~150s).
 # Installed in its own layer, pinned to match requirements.txt, so unrelated
 # requirements.txt changes don't invalidate this cache and force a rebuild.
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
-    uv pip install "lxml[html-clean]==5.4.0"
+    uv pip install "lxml[html-clean]==6.1.3"
 
-COPY ./requirements.txt ./lxml-override.txt /backend/
-# --override forces lxml==5.4.0 despite maigret's declared floor of lxml>=6.0.2
-# (maigret doesn't actually use lxml directly; see lxml-override.txt).
+COPY ./requirements.txt /backend/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache \
-    uv pip install --upgrade -r /backend/requirements.txt --override /backend/lxml-override.txt
+    uv pip install --upgrade -r /backend/requirements.txt
 
 
 FROM python:3.14-slim@sha256:cae66f2ef0ec51a9891263eeee7f987dacf0a9879e8aa9353d5606e0530619a5

@@ -44,9 +44,16 @@ def _fetch_certificate_sync(domain: str, ip: str) -> dict[str, Any]:
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
+    # Deliberately permissive, same rationale as CERT_NONE above: this is a recon tool that
+    # must report a legacy-TLS-only server's actual negotiated version rather than fail the
+    # handshake outright, and cert verification is already off so a weak protocol here isn't
+    # an added trust risk.
+    context.minimum_version = ssl.TLSVersion.MINIMUM_SUPPORTED
 
     with socket.create_connection((ip, SSL_PORT), timeout=SSL_CONNECT_TIMEOUT) as sock:
-        with context.wrap_socket(sock, server_hostname=domain) as tls_sock:
+        with context.wrap_socket(  # codeql[py/insecure-protocol]
+            sock, server_hostname=domain
+        ) as tls_sock:
             der_cert = tls_sock.getpeercert(binary_form=True)
             cipher = tls_sock.cipher()
             tls_version = tls_sock.version()

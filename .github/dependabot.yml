@@ -13,6 +13,13 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+    groups:
+      # react and react-dom must be bumped together - a solo bump leaves them on
+      # mismatched versions, which react-dom refuses to run with.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
 
   - package-ecosystem: "docker"
     directory: "/backend"
@@ -34,3 +41,9 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 3
+    groups:
+      # init and analyze must stay on the same codeql-action release - a solo bump
+      # leaves them mismatched, which fails the analyze step at runtime.
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"

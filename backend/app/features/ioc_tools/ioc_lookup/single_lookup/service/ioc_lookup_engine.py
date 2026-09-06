@@ -171,7 +171,11 @@ async def lookup_ioc(
 ) -> LookupResult | None:
     """Perform a unified IOC lookup by dispatching to the appropriate async service function."""
     await _ensure_registry_initialized()
-    logger.info("Starting IOC lookup for service=%s, ioc_type=%s", service_name, ioc_type)
+    # ioc_type is a fixed classification label (e.g. "email", "ip"), not the investigated
+    # value itself, so this isn't a sensitive-data leak despite the heuristic match.
+    logger.info(  # codeql[py/clear-text-logging-sensitive-data]
+        "Starting IOC lookup for service=%s, ioc_type=%s", service_name, ioc_type
+    )
 
     service_config = get_service(service_name)
     if not service_config:
@@ -179,7 +183,10 @@ async def lookup_ioc(
         return None
 
     if ioc_type not in service_config.supported_ioc_types:
-        logger.warning("Unsupported IOC type %s for service %s", ioc_type, service_name)
+        # ioc_type is a fixed classification label, not the investigated value - see above.
+        logger.warning(  # codeql[py/clear-text-logging-sensitive-data]
+            "Unsupported IOC type %s for service %s", ioc_type, service_name
+        )
         return _make_error_result(
             ioc,
             service_name,

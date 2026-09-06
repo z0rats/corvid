@@ -51,7 +51,7 @@ def test_extract_urls_from_text_strips_trailing_html_markup():
     text = 'click <a href="http://evil.example">http://evil.example</a>'
     urls = extract_urls_from_text(text)
     assert all(">" not in url and "<" not in url for url in urls)
-    assert "http://evil.example" in urls
+    assert any(url == "http://evil.example" for url in urls)
 
 
 def test_extract_urls_from_text_coerces_non_string_input():

@@ -12,14 +12,12 @@ but each part can also run directly on the host for faster iteration.
 
 ```bash
 cd backend
-uv pip install -r requirements.txt --override lxml-override.txt
+uv pip install -r requirements.txt
 pytest
 ```
 
-Syncing with `--override lxml-override.txt` matters — `maigret` and `newspaper4k` pin
-incompatible `lxml` ranges, resolved by that override file. A stale or partial local venv can
-pass tests locally while missing an import error that a full install would catch, so re-sync
-before trusting a green run.
+A stale or partial local venv can pass tests locally while missing an import error that a full
+install would catch, so re-sync before trusting a green run.
 
 Migrations run automatically against a fresh database via `Base.metadata.create_all()` on
 startup outside Docker; to run Alembic migrations manually:

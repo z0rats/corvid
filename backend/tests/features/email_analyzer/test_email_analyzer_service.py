@@ -32,7 +32,7 @@ class TestAnalyzeEmailContent:
         assert len(result.attachments) == 1
         assert result.attachments[0].filename == "notes.pdf"
         assert len(result.hops) == 1
-        assert "http://example.com" in result.urls
+        assert any(url == "http://example.com" for url in result.urls)
         assert len(result.warnings) > 0
         assert any(h["From"] == "alice@example.com" for h in result.headers)
 
