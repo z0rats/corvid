@@ -314,7 +314,7 @@ matplotlib-inline==0.2.2
     # via ipython
 mdurl==0.1.2
     # via markdown-it-py
-mitreattack-python==6.1.0
+mitreattack-python==6.2.0
     # via -r requirements.in
 multidict==6.7.1
     # via
