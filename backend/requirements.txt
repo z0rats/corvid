@@ -577,7 +577,7 @@ soupsieve==2.8.4
     # via
     #   beautifulsoup4
     #   maigret
-sqlalchemy==2.0.51
+sqlalchemy==2.0.52
     # via
     #   -r requirements.in
     #   alembic
