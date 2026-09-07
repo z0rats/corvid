@@ -22,7 +22,7 @@ aiosmtplib==5.1.2
     # via mailcat-osint
 aiosqlite==0.22.1
     # via -r requirements.in
-alembic==1.18.5
+alembic==1.19.1
     # via -r requirements.in
 alive-progress==3.3.0
     # via maigret
