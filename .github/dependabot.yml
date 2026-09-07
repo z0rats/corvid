@@ -6,6 +6,13 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+    groups:
+      # keep majors as individual PRs (higher breakage risk, worth reviewing
+      # one at a time); bundle everything else into one weekly PR.
+      pip-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "npm"
     directory: "/frontend"
@@ -20,6 +27,10 @@ updates:
         patterns:
           - "react"
           - "react-dom"
+      npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "docker"
     directory: "/backend"
@@ -47,3 +58,7 @@ updates:
       codeql-action:
         patterns:
           - "github/codeql-action/*"
+      actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
