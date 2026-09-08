@@ -108,6 +108,22 @@ export const settingsApi = {
     return response.data;
   },
 
+  // Telegram notification settings API calls
+  async getTelegramSettings() {
+    const response = await api.get('/api/settings/telegram');
+    return response.data;
+  },
+
+  async updateTelegramSettings(settings) {
+    const response = await api.put('/api/settings/telegram', settings);
+    return response.data;
+  },
+
+  async sendTelegramTestMessage() {
+    const response = await api.post('/api/settings/telegram/test');
+    return response.data;
+  },
+
   // Modules API calls
   async updateModuleStatus(moduleName, enabled) {
     const response = await api.patch(`/api/settings/modules/${moduleName}/status`, {
@@ -150,6 +166,12 @@ export const settingsApi = {
     const response = await api.post('/api/backup/restore', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return response.data;
+  },
+
+  // Access token API calls
+  async regenerateAccessToken() {
+    const response = await api.post('/api/settings/access-token/regenerate');
     return response.data;
   },
 };

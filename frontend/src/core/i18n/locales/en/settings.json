@@ -95,7 +95,15 @@
       "copy": "Copy token",
       "copied": "Token copied to clipboard.",
       "forgetButton": "Forget token on this browser",
-      "forgetConfirm": "This will sign you out of this browser. You'll need the token again (from the server logs, data/.access_token, or another already-unlocked browser) to get back in. Continue?"
+      "forgetConfirm": "This will sign you out of this browser. You'll need the token again (from the server logs, data/.access_token, or another already-unlocked browser) to get back in. Continue?",
+      "regenerateButton": "Regenerate token",
+      "regenerateConfirmTitle": "Regenerate access token?",
+      "regenerateConfirmBody": "This immediately invalidates the current token. Every other browser tab, device, and the browser extension will need the new token entered manually before they work again. This browser updates automatically.",
+      "regenerateConfirmButton": "Regenerate",
+      "regenerateCancel": "Cancel",
+      "regenerateSuccess": "Token regenerated. Copy it now and update any other browser, device, or the browser extension.",
+      "regenerateError": "Failed to regenerate the access token.",
+      "regenerateFixedByEnv": "The access token is fixed via the API_ACCESS_TOKEN environment variable and can't be regenerated here - unset it to allow regeneration."
     }
   },
   "quota": {
@@ -147,6 +155,39 @@
       "success": "Restore complete. Restart the backend for the restored data to take effect.",
       "successWithToken": "Restore complete. The access token was also restored - restart the backend, then enter the restored token if the app asks you to re-authenticate.",
       "error": "Failed to restore backup."
+    }
+  },
+  "telegram": {
+    "title": "Telegram Notifications",
+    "description": "Get a Telegram message when a scan finishes or a recurring job starts/stops failing, in addition to the in-app alerts inbox.",
+    "connection": {
+      "title": "Bot connection",
+      "description": "Create a bot with @BotFather on Telegram to get a token, then message the bot (or add it to a group) and use the chat ID it should notify.",
+      "botTokenLabel": "Bot token",
+      "botTokenHelper": "From @BotFather, e.g. 123456789:AAH...",
+      "chatIdLabel": "Chat ID",
+      "chatIdHelper": "Your user, group, or channel chat ID",
+      "webBaseUrlLabel": "Web base URL",
+      "webBaseUrlHelper": "Optional - your externally-reachable Corvid URL, used only to build the /lookup command's link to the full web-UI breakdown",
+      "saveButton": "Save",
+      "saveSuccess": "Telegram connection settings saved.",
+      "saveError": "Failed to save Telegram settings.",
+      "testButton": "Send test message",
+      "testError": "Failed to send the test message."
+    },
+    "preferences": {
+      "title": "Notification preferences",
+      "description": "The master switch also controls the in-app alerts inbox for routine scan completions - only failures always create an alert regardless of these toggles.",
+      "enabled": "Enable Telegram notifications",
+      "notifyScanEvents": "Notify on scan completed/cancelled (failures always notify)",
+      "notifyJobFailures": "Notify when a recurring job starts or stops failing",
+      "notifyNewsfeedMatches": "Notify when a newsfeed article matches a watchlist keyword",
+      "saveError": "Failed to save preference."
+    },
+    "commands": {
+      "title": "Bot commands",
+      "description": "Let the bot act on messages you send it: /lookup <value> for a quick IOC lookup, /digest for recent unread alerts, /help for the command list. Off by default - a different trust boundary than outbound notifications, since the bot now acts on messages sent to it.",
+      "enabled": "Enable inbound bot commands"
     }
   }
 }

@@ -33,6 +33,7 @@ import LinkIcon from "@mui/icons-material/LinkOutlined";
 import KeyboardCommandKeyIcon from "@mui/icons-material/KeyboardCommandKeyOutlined";
 import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestoreOutlined";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import TelegramIcon from "@mui/icons-material/Telegram";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
 // aliases/tags/accepts/acceptsRouting power the command palette's registry
@@ -309,6 +310,7 @@ const SETTINGS_TABS_CONFIG = [
   { i18nKey: "nav.settingsTabs.aiSettings", path: "/settings/ai-settings", icon: <PsychologyAltIcon /> },
   { i18nKey: "nav.settingsTabs.modules", path: "/settings/modules", icon: <ViewModuleIcon /> },
   { i18nKey: "nav.settingsTabs.commandPalette", path: "/settings/command-palette", icon: <KeyboardCommandKeyIcon /> },
+  { i18nKey: "nav.settingsTabs.telegram", path: "/settings/telegram", icon: <TelegramIcon /> },
   { i18nKey: "nav.settingsTabs.backup", path: "/settings/backup", icon: <SettingsBackupRestoreIcon /> },
   { i18nKey: "nav.settingsTabs.about", path: "/settings/about", icon: <InfoIcon /> },
 ];
@@ -372,3 +374,28 @@ export const getEmailSearchTabs = (t) => EMAIL_SEARCH_TABS_CONFIG.map(item => tr
 export const getRedditSearchTabs = (t) => REDDIT_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getGitReconTabs = (t) => GIT_RECON_TABS_CONFIG.map(item => translateItem(t, item));
 export const getRuBusinessCheckTabs = (t) => RU_BUSINESS_CHECK_TABS_CONFIG.map(item => translateItem(t, item));
+
+// Which sidebar tab set to show for the current route, keyed by path prefix — the single place
+// Layout.jsx needs to consult (`TAB_ROUTES.find(...)`) instead of growing its own if-chain. A
+// tabbed feature registers itself here alongside its own *_TABS_CONFIG above; `context` carries
+// the handful of cross-cutting flags a route's tabs may depend on (currently just `hasLlmKey`).
+export const TAB_ROUTES = [
+  {
+    prefix: "/ai-templates",
+    getTabs: (t, context) => (context.hasLlmKey ? getAiTemplatesTabs(t) : null),
+  },
+  {
+    prefix: "/newsfeed",
+    getTabs: (t, context) =>
+      getNewsfeedTabs(t).filter(tab => tab.path !== "/newsfeed/report" || context.hasLlmKey),
+  },
+  { prefix: "/settings", getTabs: (t) => getSettingsTabs(t) },
+  { prefix: "/rules", getTabs: (t) => getRulesTabs(t) },
+  { prefix: "/ioc-tools", getTabs: (t) => getIocToolsTabs(t) },
+  { prefix: "/cvss-calculator", getTabs: (t) => getCvssTabs(t) },
+  { prefix: "/username-search", getTabs: (t) => getUsernameSearchTabs(t) },
+  { prefix: "/email-search", getTabs: (t) => getEmailSearchTabs(t) },
+  { prefix: "/reddit-search", getTabs: (t) => getRedditSearchTabs(t) },
+  { prefix: "/git-recon", getTabs: (t) => getGitReconTabs(t) },
+  { prefix: "/ru-business-check", getTabs: (t) => getRuBusinessCheckTabs(t) },
+];

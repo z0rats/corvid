@@ -26,20 +26,7 @@ import SidebarTabs from '../ui/SidebarTabs';
 import LeftPanel from './LeftPanel';
 import CommandPalette from '../ui/CommandPalette/CommandPalette';
 import { OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useGlobalPaletteShortcuts';
-import {
-  getMainMenuItems,
-  getAiTemplatesTabs,
-  getNewsfeedTabs,
-  getSettingsTabs,
-  getRulesTabs,
-  getIocToolsTabs,
-  getCvssTabs,
-  getUsernameSearchTabs,
-  getEmailSearchTabs,
-  getRedditSearchTabs,
-  getGitReconTabs,
-  getRuBusinessCheckTabs,
-} from '../../config/sidebarConfig';
+import { getMainMenuItems, TAB_ROUTES } from '../../config/sidebarConfig';
 import { useTheme, alpha } from '@mui/material/styles';
 
 const defaultDrawerWidth = 240;
@@ -125,20 +112,8 @@ function Layout() {
   }, []);
 
   const currentTabs = useMemo(() => {
-    if (location.pathname.startsWith('/ai-templates') && hasLlmKey) return getAiTemplatesTabs(t);
-    if (location.pathname.startsWith('/newsfeed')) {
-      return getNewsfeedTabs(t).filter(tab => tab.path !== '/newsfeed/report' || hasLlmKey);
-    }
-    if (location.pathname.startsWith('/settings')) return getSettingsTabs(t);
-    if (location.pathname.startsWith('/rules')) return getRulesTabs(t);
-    if (location.pathname.startsWith('/ioc-tools')) return getIocToolsTabs(t);
-    if (location.pathname.startsWith('/cvss-calculator')) return getCvssTabs(t);
-    if (location.pathname.startsWith('/username-search')) return getUsernameSearchTabs(t);
-    if (location.pathname.startsWith('/email-search')) return getEmailSearchTabs(t);
-    if (location.pathname.startsWith('/reddit-search')) return getRedditSearchTabs(t);
-    if (location.pathname.startsWith('/git-recon')) return getGitReconTabs(t);
-    if (location.pathname.startsWith('/ru-business-check')) return getRuBusinessCheckTabs(t);
-    return null;
+    const route = TAB_ROUTES.find(({ prefix }) => location.pathname.startsWith(prefix));
+    return route ? route.getTabs(t, { hasLlmKey }) : null;
   }, [location.pathname, hasLlmKey, t]);
 
   const filteredMenuItems = useMemo(() => menuItems.filter(item => {

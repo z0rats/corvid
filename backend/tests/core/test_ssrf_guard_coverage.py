@@ -78,6 +78,10 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "features/ru_business_check/service/fedsfm_service.py",
     # zakupki.gov.ru РНП: fixed host; only the ИНН is user-supplied, never the host
     "features/ru_business_check/service/zakupki_rnp_service.py",
+    # Telegram Bot API notification delivery + inbound bot command polling: fixed
+    # api.telegram.org host; only the user's own bot token (path segment) and
+    # chat_id/text (body) are user-supplied
+    "core/settings/telegram/service/telegram_client.py",
 }
 
 # Implementation module itself, and its own tests

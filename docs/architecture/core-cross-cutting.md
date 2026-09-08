@@ -82,9 +82,11 @@ engine hot-swap; see `docs/adr/0010-backup-restore-design.md` for why. Requires 
 
 ## `alerts/`, `database.py`, `scheduler.py`, `exceptions.py`
 
-`alerts/` is WebSocket alerts (see Access control in AGENTS.md for its token-check exemption).
-The other three are unremarkable — standard DB session setup, APScheduler wiring, and the shared
-`AppHTTPException` hierarchy.
+`alerts/` is WebSocket alerts (see Access control in AGENTS.md for its token-check exemption)
+plus, via `alerts_service.raise_alert`, best-effort Telegram delivery and the shared hook
+points in `scans/run.py`/`scheduler.py` that call it — see
+`docs/architecture/notifications.md`. `database.py`/`exceptions.py` are otherwise
+unremarkable — standard DB session setup and the shared `AppHTTPException` hierarchy.
 
 ## `dependencies.py`
 

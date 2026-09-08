@@ -9,6 +9,7 @@ import ApiKeys from './api-keys/ApiKeys';
 import Modules from './modules/Modules';
 import CommandPaletteSettings from './command-palette/CommandPaletteSettings';
 import BackupSettings from './backup/BackupSettings';
+import TelegramSettings from './telegram/TelegramSettings';
 
 /**
  * Settings feature router component
@@ -22,6 +23,7 @@ export default function Settings() {
       <Route path="ai-settings" element={<AiSettings />} />
       <Route path="general" element={<General />} />
       <Route path="command-palette" element={<CommandPaletteSettings />} />
+      <Route path="telegram" element={<TelegramSettings />} />
       <Route path="backup" element={<BackupSettings />} />
       <Route path="about" element={<About />} />
       <Route path="*" element={<NotFound />} />
