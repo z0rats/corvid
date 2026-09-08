@@ -92,3 +92,11 @@ async def count_unread_alerts(db: AsyncSession) -> int:
     """Count the number of unread alerts"""
     result = await db.execute(select(func.count()).select_from(Alert).where(Alert.read.is_(False)))
     return result.scalar_one()
+
+
+async def get_unread_alerts(db: AsyncSession, limit: int = 10) -> list[Alert]:
+    """Retrieve the most recent unread alerts, newest first"""
+    result = await db.execute(
+        select(Alert).where(Alert.read.is_(False)).order_by(Alert.timestamp.desc()).limit(limit)
+    )
+    return list(result.scalars().all())

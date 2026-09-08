@@ -2,7 +2,7 @@ import hmac
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Path, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Path, WebSocket, WebSocketDisconnect, status
 
 from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
 from app.core.exceptions import AppHTTPException
@@ -16,6 +16,7 @@ from ..schemas.alerts_schemas import (
     AlertUpdateSchema,
     UnreadCountResponse,
 )
+from ..service.alerts_service import raise_alert
 from ..utils.alerts_websocket import manager
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
@@ -109,21 +110,15 @@ async def read_alerts(
     description="Create a new alert and broadcast it to all connected WebSocket clients",
 )
 async def create_new_alert(
-    background_tasks: BackgroundTasks,
     alert: AlertCreateSchema,
     db: SessionDep,
 ) -> AlertSchema:
-    """Create a new alert and broadcast it via WebSocket"""
-    new_alert = await alerts_crud.create_alert(
-        db, module=alert.module, title=alert.title, message=alert.message
-    )
+    """Create a new alert, broadcast it via WebSocket, and deliver it to
+    Telegram if configured (see `alerts_service.raise_alert`)."""
+    # No telegram_category passed, so raise_alert always creates and returns an alert.
+    new_alert = await raise_alert(db, alert.module, alert.title, alert.message)
+    assert new_alert is not None
     logger.info("Created alert %s for module %s", new_alert.id, new_alert.module)
-
-    background_tasks.add_task(
-        manager.broadcast,
-        AlertSchema.model_validate(new_alert).model_dump(mode="json"),
-    )
-
     return new_alert
 
 
