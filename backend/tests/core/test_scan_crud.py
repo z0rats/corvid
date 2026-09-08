@@ -7,6 +7,7 @@ engine-fixture pattern as test_scan_reconciliation.py.
 """
 
 import asyncio
+import datetime
 from pathlib import Path
 
 import pytest
@@ -18,13 +19,17 @@ from app.core.database import Base, create_database_engine
 from app.core.scans.crud import (
     ScanColumns,
     create_running,
+    make_scan_history_crud,
     mark_cancelled,
     mark_completed,
     mark_failed,
 )
 from app.features.email_search.models.email_search_models import MailSearch
 from app.features.git_recon.models.git_recon_models import GitReconSearch
-from app.features.username_search.models.username_search_models import MaigretSearch
+from app.features.username_search.models.username_search_models import (
+    MaigretSearch,
+    MaigretSiteResult,
+)
 
 MAIGRET_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
 GIT_RECON_COLUMNS = ScanColumns(error_column="error", completed_at_column=None)
@@ -252,3 +257,107 @@ class TestGitReconSearchShape:
         row = _run(_scenario())
         assert row.status == "failed"
         assert row.error == "scan failed"
+
+
+class TestMakeScanHistoryCrud:
+    """`make_scan_history_crud` replaces the near-identical list/get/
+    get_with_results/delete quartet that username_search_crud.py,
+    email_search_crud.py, and git_recon_crud.py used to each hand-write. One
+    build with a child relation (MaigretSearch/MaigretSiteResult) and one
+    without (GitReconSearch, whose results are a JSON blob column) cover both
+    shapes those three modules actually need."""
+
+    def test_list_orders_most_recent_first_and_paginates(self, engine):
+        session_factory = _session_factory(engine, MaigretSearch.__table__)
+        history = make_scan_history_crud(MaigretSearch, MaigretSearch.started_at)
+
+        async def _scenario():
+            async with session_factory() as db:
+                for i in range(3):
+                    row = MaigretSearch(username=f"user{i}", status="completed")
+                    row.started_at = datetime.datetime(2024, 1, i + 1, tzinfo=datetime.UTC)
+                    db.add(row)
+                await db.commit()
+
+            async with session_factory() as db:
+                return await history.list(db, skip=1, limit=1)
+
+        rows = _run(_scenario())
+        assert [row.username for row in rows] == ["user1"]
+
+    def test_get_returns_none_for_missing_id(self, engine):
+        session_factory = _session_factory(engine, GitReconSearch.__table__)
+        history = make_scan_history_crud(GitReconSearch, GitReconSearch.searched_at)
+
+        async def _scenario():
+            async with session_factory() as db:
+                return await history.get(db, 999)
+
+        assert _run(_scenario()) is None
+
+    def test_get_with_results_eager_loads_the_given_relation(self, engine):
+        session_factory = _session_factory(
+            engine, MaigretSearch.__table__, MaigretSiteResult.__table__
+        )
+        history = make_scan_history_crud(
+            MaigretSearch, MaigretSearch.started_at, relation=MaigretSearch.site_results
+        )
+
+        async def _scenario():
+            async with session_factory() as db:
+                search = MaigretSearch(username="alice", status="completed")
+                db.add(search)
+                await db.flush()
+                db.add(MaigretSiteResult(search_id=search.id, site_name="GitHub", url_user="alice"))
+                await db.commit()
+                search_id = search.id
+
+            async with session_factory() as db:
+                return await history.get_with_results(db, search_id)
+
+        row = _run(_scenario())
+        assert len(row.site_results) == 1
+        assert row.site_results[0].site_name == "GitHub"
+
+    def test_get_with_results_falls_back_to_plain_get_without_a_relation(self, engine):
+        session_factory = _session_factory(engine, GitReconSearch.__table__)
+        history = make_scan_history_crud(GitReconSearch, GitReconSearch.searched_at)
+
+        async def _scenario():
+            async with session_factory() as db:
+                search = GitReconSearch(mode="nickname", target="octocat", status="completed")
+                db.add(search)
+                await db.commit()
+                search_id = search.id
+
+            async with session_factory() as db:
+                return await history.get_with_results(db, search_id)
+
+        row = _run(_scenario())
+        assert row is not None
+        assert row.target == "octocat"
+
+    def test_delete_removes_the_row_and_returns_none_for_missing_id(self, engine):
+        session_factory = _session_factory(engine, GitReconSearch.__table__)
+        history = make_scan_history_crud(GitReconSearch, GitReconSearch.searched_at)
+
+        async def _scenario():
+            async with session_factory() as db:
+                search = GitReconSearch(mode="nickname", target="octocat", status="completed")
+                db.add(search)
+                await db.commit()
+                search_id = search.id
+
+            async with session_factory() as db:
+                deleted = await history.delete(db, search_id)
+                await db.commit()
+
+            async with session_factory() as db:
+                still_there = await history.get(db, search_id)
+                missing = await history.delete(db, 999)
+                return deleted, still_there, missing
+
+        deleted, still_there, missing = _run(_scenario())
+        assert deleted is not None
+        assert still_there is None
+        assert missing is None

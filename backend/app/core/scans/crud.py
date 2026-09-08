@@ -1,8 +1,10 @@
 import datetime
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 
 @dataclass(frozen=True)
@@ -94,3 +96,43 @@ async def mark_failed(
 
     await db.flush()
     return instance
+
+
+def make_scan_history_crud(model: type, order_by, relation=None) -> SimpleNamespace:
+    """Build the list/get/get_with_results/delete quartet shared by every
+    scan-style feature's CRUD module - across username_search, email_search, and
+    git_recon these only ever differed in the model class, the column history is
+    sorted by, and (except git_recon, whose results are a JSON blob column per
+    ADR-0002, not a child table) the relationship to eager-load. Each feature's
+    CRUD module still owns its own writes (e.g. add_site_results) directly.
+
+    Returns a namespace of async functions rather than a class: nothing here
+    holds state across calls, so there's no instance to construct or thread through.
+    """
+
+    async def list_runs(db: AsyncSession, skip: int = 0, limit: int = 100) -> list:
+        result = await db.execute(select(model).order_by(order_by.desc()).offset(skip).limit(limit))
+        return list(result.scalars().all())
+
+    async def get_run(db: AsyncSession, search_id: int):
+        return await _get_by_id(db, model, search_id)
+
+    async def get_run_with_results(db: AsyncSession, search_id: int):
+        if relation is None:
+            return await get_run(db, search_id)
+        result = await db.execute(
+            select(model).where(model.id == search_id).options(selectinload(relation))
+        )
+        return result.scalar_one_or_none()
+
+    async def delete_run(db: AsyncSession, search_id: int):
+        instance = await get_run(db, search_id)
+        if not instance:
+            return None
+        await db.delete(instance)
+        await db.flush()
+        return instance
+
+    return SimpleNamespace(
+        list=list_runs, get=get_run, get_with_results=get_run_with_results, delete=delete_run
+    )
