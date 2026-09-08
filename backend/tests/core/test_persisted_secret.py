@@ -1,7 +1,7 @@
 import os
 
 from app.core.config.settings import settings
-from app.core.security.persisted_secret import load_or_create_secret_file
+from app.core.security.persisted_secret import load_or_create_secret_file, overwrite_secret_file
 
 
 def test_creates_file_with_generated_value_when_missing(tmp_path, monkeypatch):
@@ -72,3 +72,29 @@ def test_concurrent_creation_race_falls_back_to_reading_winners_file(tmp_path, m
 
     assert value == "winner-value"
     assert created is False
+
+
+def test_overwrite_replaces_existing_file_contents(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "data_dir", str(tmp_path))
+    (tmp_path / "secret.txt").write_text("old-value")
+
+    overwrite_secret_file("secret.txt", "new-value")
+
+    assert (tmp_path / "secret.txt").read_text() == "new-value"
+
+
+def test_overwrite_creates_file_with_restrictive_permissions(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "data_dir", str(tmp_path))
+
+    overwrite_secret_file("secret.txt", "new-value")
+
+    mode = os.stat(tmp_path / "secret.txt").st_mode & 0o777
+    assert mode == 0o600
+
+
+def test_overwrite_leaves_no_temp_file_behind(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "data_dir", str(tmp_path))
+
+    overwrite_secret_file("secret.txt", "new-value")
+
+    assert [p.name for p in tmp_path.iterdir()] == ["secret.txt"]

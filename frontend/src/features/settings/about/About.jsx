@@ -25,6 +25,7 @@ import { useNotification } from '../../../core/hooks/ui/useNotification';
 import { isNewerVersion } from '../../../core/utils/versionCompare';
 import { healthService } from '../../../core/services/api/healthService';
 import { createLogger } from '../../../core/utils/logger';
+import { useAccessToken } from '../hooks/api/useAccessToken';
 import NotificationSnackbar from '../components/ui/NotificationSnackbar';
 
 const logger = createLogger('About');
@@ -34,11 +35,13 @@ export default function About() {
   const { t } = useTranslation('settings');
   const theme = useTheme();
   const appVersion = useAtomValue(appVersionAtom);
-  const { notification, showSuccess, hideNotification } = useNotification();
+  const { notification, showSuccess, showError, hideNotification } = useNotification();
+  const { regenerating, regenerate } = useAccessToken();
   const [tokenVisible, setTokenVisible] = useState(false);
   const [forgetDialogOpen, setForgetDialogOpen] = useState(false);
+  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
-  const token = getAccessToken();
+  const [token, setToken] = useState(() => getAccessToken());
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +71,22 @@ export default function About() {
   const handleForget = () => {
     clearAccessToken();
     window.location.reload();
+  };
+
+  const handleConfirmRegenerate = async () => {
+    const result = await regenerate(t('about.accessToken.regenerateError'));
+    setRegenerateDialogOpen(false);
+    if (!result.success) {
+      showError(
+        result.errorCode === 'ACCESS_TOKEN_FIXED_BY_ENV'
+          ? t('about.accessToken.regenerateFixedByEnv')
+          : result.message
+      );
+      return;
+    }
+    setToken(result.newToken);
+    setTokenVisible(true);
+    showSuccess(t('about.accessToken.regenerateSuccess'));
   };
 
   return (
@@ -133,15 +152,24 @@ export default function About() {
             </Tooltip>
           </Box>
 
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            sx={{ mt: 2 }}
-            onClick={() => setForgetDialogOpen(true)}
-          >
-            {t('about.accessToken.forgetButton')}
-          </Button>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={regenerating}
+              onClick={() => setRegenerateDialogOpen(true)}
+            >
+              {t('about.accessToken.regenerateButton')}
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              onClick={() => setForgetDialogOpen(true)}
+            >
+              {t('about.accessToken.forgetButton')}
+            </Button>
+          </Box>
         </Card>
       )}
 
@@ -154,6 +182,27 @@ export default function About() {
           <Button onClick={() => setForgetDialogOpen(false)} variant="outlined">Cancel</Button>
           <Button onClick={handleForget} variant="contained" color="error" autoFocus>
             {t('about.accessToken.forgetButton')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={regenerateDialogOpen} onClose={() => setRegenerateDialogOpen(false)}>
+        <DialogTitle>{t('about.accessToken.regenerateConfirmTitle')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{t('about.accessToken.regenerateConfirmBody')}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRegenerateDialogOpen(false)} variant="outlined">
+            {t('about.accessToken.regenerateCancel')}
+          </Button>
+          <Button
+            onClick={handleConfirmRegenerate}
+            variant="contained"
+            color="warning"
+            disabled={regenerating}
+            autoFocus
+          >
+            {t('about.accessToken.regenerateConfirmButton')}
           </Button>
         </DialogActions>
       </Dialog>

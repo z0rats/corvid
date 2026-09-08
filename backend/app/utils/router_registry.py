@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from app.core import healthcheck
 from app.core.alerts.routes import alerts_routes
 from app.core.backup import routers as backup_routes
+from app.core.security import routes as security_routes
 from app.core.security.access_control import verify_access_token
 from app.core.settings.ai_settings.routers import ai_settings_routes
 from app.core.settings.api_keys.routers import (
@@ -16,6 +17,7 @@ from app.core.settings.general.routers import general_settings_routes
 from app.core.settings.keywords.routers import keywords_settings_routes
 from app.core.settings.modules.routers import modules_settings_routes
 from app.core.settings.ru_business_check.routers import ru_business_check_settings_routes
+from app.core.settings.telegram.routers import telegram_settings_routes
 from app.core.settings.username_search.routers import (
     social_analyzer_settings_routes,
     username_search_settings_routes,
@@ -69,6 +71,7 @@ def get_core_routers() -> list[APIRouter]:
     return [
         alerts_routes.router,
         backup_routes.router,
+        security_routes.router,
     ]
 
 
@@ -90,6 +93,7 @@ def get_settings_routers() -> list[APIRouter]:
         social_analyzer_settings_routes.router,
         email_search_settings_routes.router,
         ru_business_check_settings_routes.router,
+        telegram_settings_routes.router,
     ]
 
 

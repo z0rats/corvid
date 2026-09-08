@@ -3,6 +3,7 @@ under <data_dir> so they survive restarts (e.g. the encryption key in
 secrets_crypto.py, the API access token in access_control.py).
 """
 
+import contextlib
 import os
 
 from app.core.config.settings import settings
@@ -29,3 +30,23 @@ def load_or_create_secret_file(filename: str, generator) -> tuple[str, bool]:
     with os.fdopen(fd, "w") as f:
         f.write(value)
     return value, True
+
+
+def overwrite_secret_file(filename: str, value: str) -> None:
+    """Replace `<data_dir>/<filename>` with `value` (mode 0600), for rotating a
+    secret that was previously created via `load_or_create_secret_file`.
+
+    Writes to a temp file in the same directory and `os.replace`s it into place
+    so a concurrent reader never observes a partially-written file.
+    """
+    path = os.path.join(settings.data_dir, filename)
+    tmp_path = f"{path}.tmp-{os.getpid()}"
+    fd = os.open(tmp_path, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600)
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(value)
+        os.replace(tmp_path, path)
+    except BaseException:
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(tmp_path)
+        raise

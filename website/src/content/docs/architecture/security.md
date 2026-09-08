@@ -16,7 +16,11 @@ No user accounts — the app is single-user. Every `/api/*` route is guarded beh
 bearer token (`API_ACCESS_TOKEN`, or auto-generated and persisted to `data/.access_token` on
 first startup). `/docs`, `/redoc`, and `/openapi.json` are covered too. The healthcheck endpoint
 and the alerts WebSocket handshake are the only exceptions (the WebSocket checks the same token
-via a query param, since browsers can't set a custom header on the handshake).
+via a query param, since browsers can't set a custom header on the handshake). The token can be
+regenerated from the app (Settings → About → Access Token → Regenerate) if it's ever exposed —
+this signs out every other tab/device/browser extension immediately, and is unavailable if
+`API_ACCESS_TOKEN` is set (the env var always wins, so a file-based rotation would have no
+effect).
 
 ## Secrets at rest
 
