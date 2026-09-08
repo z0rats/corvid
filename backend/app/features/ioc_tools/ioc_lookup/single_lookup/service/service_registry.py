@@ -1,3 +1,4 @@
+from app.core.settings.api_keys.config.service_config import get_service_definition
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.provider_spec import (
     ApiKeySpec,
     MultiApiKeySpec,
@@ -9,6 +10,20 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import IOC_
 
 # Global service registry
 _services: dict[str, ProviderSpec] = {}
+
+
+def _supported_ioc_types(service_config_key: str) -> list[str]:
+    """IOC types a provider covers, sourced from the API-keys settings registry
+    (service_config.py) so this dispatch table and the Settings page can't drift
+    apart on what a provider claims to support. Fully keyless providers with no
+    Settings entry (no key to configure) still pass their list literally below."""
+    definition = get_service_definition(service_config_key)
+    if definition is None:
+        raise KeyError(
+            f"No ServiceDefinition {service_config_key!r} in service_config.py — "
+            "add one there, or pass supported_ioc_types explicitly for a fully keyless provider"
+        )
+    return definition.supported_ioc_types
 
 
 def register_services(ioc_lookup_service_module) -> None:
@@ -24,21 +39,13 @@ def register_services(ioc_lookup_service_module) -> None:
         "abuseipdb": ProviderSpec(
             func=ioc_lookup_service_module.check_abuseipdb,
             name="AbuseIPDB",
-            supported_ioc_types=[IOC_TYPES["IPV4"]],
+            supported_ioc_types=_supported_ioc_types("abuseipdb"),
             api_key=ApiKeySpec(setting_name="abuseipdb"),
         ),
         "alienvault": ProviderSpec(
             func=ioc_lookup_service_module.check_alienvault,
             name="AlienVault OTX",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-            ],
+            supported_ioc_types=_supported_ioc_types("alienvault"),
             api_key=ApiKeySpec(setting_name="alienvault"),
             type_mapping=TypeMapping(
                 param="ioc_type",
@@ -56,18 +63,7 @@ def register_services(ioc_lookup_service_module) -> None:
         "blacklist": ProviderSpec(
             func=ioc_lookup_service_module.check_blacklist,
             name="Address Blacklist",
-            supported_ioc_types=[
-                IOC_TYPES["EVM_ADDRESS"],
-                IOC_TYPES["BITCOIN_ADDRESS"],
-                IOC_TYPES["TRON_ADDRESS"],
-                IOC_TYPES["XRP_ADDRESS"],
-                IOC_TYPES["DOGECOIN_ADDRESS"],
-                IOC_TYPES["LITECOIN_ADDRESS"],
-                IOC_TYPES["STELLAR_ADDRESS"],
-                IOC_TYPES["BINANCE_CHAIN_ADDRESS"],
-                IOC_TYPES["LISK_ADDRESS"],
-                IOC_TYPES["CARDANO_ADDRESS"],
-            ],
+            supported_ioc_types=_supported_ioc_types("blacklist"),
             requires_db=True,
         ),
         "cisakev": ProviderSpec(
@@ -78,28 +74,19 @@ def register_services(ioc_lookup_service_module) -> None:
         "checkphish": ProviderSpec(
             func=ioc_lookup_service_module.check_checkphish,
             name="CheckPhish",
-            supported_ioc_types=[IOC_TYPES["IPV4"], IOC_TYPES["DOMAIN"], IOC_TYPES["URL"]],
+            supported_ioc_types=_supported_ioc_types("checkphishai"),
             api_key=ApiKeySpec(setting_name="checkphishai"),
         ),
         "crowdsec": ProviderSpec(
             func=ioc_lookup_service_module.check_crowdsec,
             name="CrowdSec",
-            supported_ioc_types=[IOC_TYPES["IPV4"]],
+            supported_ioc_types=_supported_ioc_types("crowdsec"),
             api_key=ApiKeySpec(setting_name="crowdsec"),
         ),
         "crowdstrike": ProviderSpec(
             func=ioc_lookup_service_module.check_crowdstrike,
             name="CrowdStrike",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-                IOC_TYPES["EMAIL"],
-            ],
+            supported_ioc_types=_supported_ioc_types("crowdstrike"),
             api_key=MultiApiKeySpec(
                 {
                     "client_id": "crowdstrike_client_id",
@@ -110,7 +97,7 @@ def register_services(ioc_lookup_service_module) -> None:
         "emailrepio": ProviderSpec(
             func=ioc_lookup_service_module.check_emailrep,
             name="EmailRep.io",
-            supported_ioc_types=[IOC_TYPES["EMAIL"]],
+            supported_ioc_types=_supported_ioc_types("emailrepio"),
             api_key=ApiKeySpec(setting_name="emailrepio"),
         ),
         "ffraud": ProviderSpec(
@@ -131,23 +118,13 @@ def register_services(ioc_lookup_service_module) -> None:
         "github": ProviderSpec(
             func=ioc_lookup_service_module.search_github,
             name="GitHub",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["EMAIL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-                IOC_TYPES["CVE"],
-            ],
+            supported_ioc_types=_supported_ioc_types("github"),
             api_key=ApiKeySpec(setting_name="github_pat", param="access_token"),
         ),
         "haveibeenpwned": ProviderSpec(
             func=ioc_lookup_service_module.check_hibp,
             name="Have I Been Pwned",
-            supported_ioc_types=[IOC_TYPES["EMAIL"]],
+            supported_ioc_types=_supported_ioc_types("haveibeenpwned"),
             api_key=ApiKeySpec(setting_name="hibp_api_key"),
         ),
         "hudsonrock": ProviderSpec(
@@ -166,13 +143,13 @@ def register_services(ioc_lookup_service_module) -> None:
         "hunterio": ProviderSpec(
             func=ioc_lookup_service_module.check_hunter,
             name="Hunter.io",
-            supported_ioc_types=[IOC_TYPES["EMAIL"]],
+            supported_ioc_types=_supported_ioc_types("hunterio"),
             api_key=ApiKeySpec(setting_name="hunterio_api_key"),
         ),
         "ipqualityscore": ProviderSpec(
             func=ioc_lookup_service_module.check_ipqualityscore,
             name="IPQualityScore",
-            supported_ioc_types=[IOC_TYPES["IPV4"]],
+            supported_ioc_types=_supported_ioc_types("ipqualityscore"),
             api_key=ApiKeySpec(setting_name="ipqualityscore"),
         ),
         "libraryofleaks": ProviderSpec(
@@ -184,19 +161,13 @@ def register_services(ioc_lookup_service_module) -> None:
         "maltiverse": ProviderSpec(
             func=ioc_lookup_service_module.check_maltiverse,
             name="Maltiverse",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-            ],
+            supported_ioc_types=_supported_ioc_types("maltiverse"),
             api_key=ApiKeySpec(setting_name="maltiverse"),
             type_mapping=TypeMapping(
                 param="endpoint",
                 values={
                     IOC_TYPES["IPV4"]: "ip",
+                    IOC_TYPES["IPV6"]: "ip",
                     IOC_TYPES["DOMAIN"]: "hostname",
                     IOC_TYPES["URL"]: "url",
                     IOC_TYPES["MD5"]: "sample/md5",
@@ -208,21 +179,12 @@ def register_services(ioc_lookup_service_module) -> None:
         "malwarebazaar": ProviderSpec(
             func=ioc_lookup_service_module.check_malwarebazaar,
             name="MalwareBazaar",
-            supported_ioc_types=[IOC_TYPES["MD5"], IOC_TYPES["SHA1"], IOC_TYPES["SHA256"]],
+            supported_ioc_types=_supported_ioc_types("malwarebazaar"),
         ),
         "mandiant": ProviderSpec(
             func=ioc_lookup_service_module.check_mandiant,
             name="Mandiant",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-                IOC_TYPES["EMAIL"],
-            ],
+            supported_ioc_types=_supported_ioc_types("mandiant"),
             api_key=MultiApiKeySpec({"api_key": "mandiant_key", "api_secret": "mandiant_secret"}),
             type_mapping=TypeMapping(
                 param="ioc_type",
@@ -241,7 +203,7 @@ def register_services(ioc_lookup_service_module) -> None:
         "nistnvd": ProviderSpec(
             func=ioc_lookup_service_module.search_nist_nvd,
             name="NIST NVD",
-            supported_ioc_types=[IOC_TYPES["CVE"]],
+            supported_ioc_types=_supported_ioc_types("nistnvd"),
             api_key=ApiKeySpec(setting_name="nist_nvd_api_key"),
         ),
         "openphish": ProviderSpec(
@@ -252,30 +214,13 @@ def register_services(ioc_lookup_service_module) -> None:
         "pulsedive": ProviderSpec(
             func=ioc_lookup_service_module.check_pulsedive,
             name="Pulsedive",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-            ],
+            supported_ioc_types=_supported_ioc_types("pulsedive"),
             api_key=ApiKeySpec(setting_name="pulsedive"),
         ),
         "reddit": ProviderSpec(
             func=ioc_lookup_service_module.search_reddit,
             name="Reddit",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["EMAIL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-                IOC_TYPES["CVE"],
-            ],
+            supported_ioc_types=_supported_ioc_types("reddit"),
             api_key=MultiApiKeySpec(
                 {
                     "client_id": "reddit_client_id",
@@ -285,19 +230,20 @@ def register_services(ioc_lookup_service_module) -> None:
         ),
         "safeBrowse": ProviderSpec(
             func=ioc_lookup_service_module.check_safe_browsing,
-            name="Google Safe Browse",
-            supported_ioc_types=[IOC_TYPES["DOMAIN"], IOC_TYPES["URL"]],
+            name="Google Safe Browsing",
+            supported_ioc_types=_supported_ioc_types("safeBrowse"),
             api_key=ApiKeySpec(setting_name="safeBrowse"),
         ),
         "shodan": ProviderSpec(
             func=ioc_lookup_service_module.check_shodan,
             name="Shodan",
-            supported_ioc_types=[IOC_TYPES["IPV4"], IOC_TYPES["DOMAIN"]],
+            supported_ioc_types=_supported_ioc_types("shodan"),
             api_key=ApiKeySpec(setting_name="shodan"),
             type_mapping=TypeMapping(
                 param="method",
                 values={
                     IOC_TYPES["IPV4"]: "ip",
+                    IOC_TYPES["IPV6"]: "ip",
                     IOC_TYPES["DOMAIN"]: "domain",
                 },
             ),
@@ -305,61 +251,35 @@ def register_services(ioc_lookup_service_module) -> None:
         "leakix": ProviderSpec(
             func=ioc_lookup_service_module.check_leakix,
             name="LeakIX",
-            supported_ioc_types=[IOC_TYPES["IPV4"]],
+            supported_ioc_types=_supported_ioc_types("leakix"),
             api_key=ApiKeySpec(setting_name="leakix"),
         ),
         "threatfox": ProviderSpec(
             func=ioc_lookup_service_module.check_threatfox,
             name="ThreatFox",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-            ],
+            supported_ioc_types=_supported_ioc_types("threatfox"),
             api_key=ApiKeySpec(setting_name="threatfox"),
         ),
         "twitter": ProviderSpec(
             func=ioc_lookup_service_module.search_twitter,
             name="Twitter/X",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["EMAIL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-                IOC_TYPES["CVE"],
-            ],
+            supported_ioc_types=_supported_ioc_types("twitter"),
             api_key=ApiKeySpec(setting_name="twitter_bearer_token"),
         ),
         "urlhaus": ProviderSpec(
             func=ioc_lookup_service_module.check_urlhaus,
             name="URLhaus",
-            supported_ioc_types=[IOC_TYPES["URL"], IOC_TYPES["DOMAIN"], IOC_TYPES["IPV4"]],
+            supported_ioc_types=_supported_ioc_types("urlhaus"),
         ),
         "urlscanio": ProviderSpec(
             func=ioc_lookup_service_module.check_urlscan,
             name="URLScan.io",
-            supported_ioc_types=[IOC_TYPES["DOMAIN"], IOC_TYPES["URL"], IOC_TYPES["IPV4"]],
+            supported_ioc_types=_supported_ioc_types("urlscanio"),
         ),
         "virustotal": ProviderSpec(
             func=ioc_lookup_service_module.check_virustotal,
             name="VirusTotal",
-            supported_ioc_types=[
-                IOC_TYPES["IPV4"],
-                IOC_TYPES["IPV6"],
-                IOC_TYPES["DOMAIN"],
-                IOC_TYPES["URL"],
-                IOC_TYPES["MD5"],
-                IOC_TYPES["SHA1"],
-                IOC_TYPES["SHA256"],
-            ],
+            supported_ioc_types=_supported_ioc_types("virustotal"),
             api_key=ApiKeySpec(setting_name="virustotal"),
             type_mapping=TypeMapping(
                 param="ioc_type",
