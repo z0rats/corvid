@@ -65,15 +65,17 @@ failure path (side panel open, permission request, fetch) is wrapped and logged 
 
 ## Known limits
 
-This is intentionally close to the smallest possible slice of the fuller plan in
-`../ROADMAP.md` (Client surfaces) — no token-based API calls, quick links are a handful of
-hand-picked routes rather than a full nav mirror. Reverse search and EXIF metadata are
-self-contained — they never touch the Corvid backend or token, and work even with no Corvid
-instance running. IOC-type detection (`ioc-type-detection.js`, shared by the content script,
-background script, and side panel) is a hand-rolled port of `frontend`'s `iocTypeDetection.js`
-(plus a phone-number heuristic Corvid's own IOC vocabulary doesn't have a lookup for) — it only
-decides whether/how to label a match, the actual search still goes through whatever
-`ioc-tools/lookup` itself supports. `content.js` only reads `window.getSelection()` and, on a
+This is intentionally the smallest useful slice of what a fuller client could be — no
+token-based API calls, quick links are a handful of hand-picked routes rather than a full nav
+mirror. Reverse search and EXIF metadata are self-contained — they never touch the Corvid
+backend or token, and work even with no Corvid instance running. IOC-type detection
+(`ioc-type-detection.js`, shared by the content script, background script, and side panel) is a
+hand-rolled port of `frontend`'s `iocTypeDetection.ts` (plus a phone-number heuristic Corvid's
+own IOC vocabulary doesn't have a lookup for) — it only decides whether/how to label a match, the
+actual search still goes through whatever `ioc-tools/lookup` itself supports; kept in sync by
+hand (not via the `testdata/ioc-type-detection-cases.json` fixture the backend/frontend copies
+share), so re-check it against `iocTypeDetection.ts` when that file's patterns change.
+`content.js` only reads `window.getSelection()` and, on a
 click it triggered, relays the matched text to the background script via
 `chrome.runtime.sendMessage` — it never reads page content otherwise, never fetches anything
 itself, and injects nothing visible unless a qualifying selection is made.

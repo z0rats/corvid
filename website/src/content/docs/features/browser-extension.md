@@ -65,10 +65,10 @@ worker**) rather than the page's — the failure logs there, not in the page you
 
 ## Known limits
 
-The IOC lookup feature is intentionally the smallest possible slice of a fuller planned
-extension (token-based API calls) — see the "Chrome extension as a thin client" entry in the
-project's `ROADMAP.md`. Quick links in the side panel are a handful of hand-picked routes, not a
-full nav mirror. Reverse search and EXIF metadata are self-contained and never touch the Corvid
+The IOC lookup feature is intentionally the smallest useful slice of what a fuller extension
+could be (e.g. token-based API calls for a wider set of features). Quick links in the side panel
+are a handful of hand-picked routes, not a full nav mirror. Reverse search and EXIF metadata are
+self-contained and never touch the Corvid
 backend or token. IOC-type detection is a hand-rolled port of `frontend`'s
 `iocTypeDetection.js` (plus a phone-number heuristic Corvid's own IOC vocabulary doesn't have a
 lookup for), shared between the content script, the right-click menu, and the side panel's search

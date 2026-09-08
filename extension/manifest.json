@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Corvid Quick Send",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Search selected text as an IOC (via a right-click menu or an inline popup), reverse-image-search, view EXIF metadata, from a side panel with its own search and settings.",
   "action": {
     "default_title": "Open Corvid panel"
