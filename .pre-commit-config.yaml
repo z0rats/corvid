@@ -16,7 +16,7 @@ repos:
       - id: db-schema-docs
         name: Regenerate docs/database-schema.md
         description: Mirrors CI's staleness check - regenerates the file from the current models; if that changes it, `git add` it and commit again.
-        entry: bash -c 'cd backend && uv run python scripts/generate_db_docs.py'
+        entry: bash -c 'cd backend && ([ -x .venv/bin/python ] || { echo "backend/.venv missing or incomplete - run make sync-backend first" >&2; exit 1; }) && .venv/bin/python scripts/generate_db_docs.py'
         language: system
         pass_filenames: false
         files: ^backend/app/.*/models/.*\.py$
