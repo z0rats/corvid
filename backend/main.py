@@ -24,6 +24,7 @@ from app.core.dependencies import get_disk_space_health
 from app.core.exceptions import register_exception_handlers
 from app.core.scheduler import stop_scheduler
 from app.core.security.access_control import get_access_token, verify_access_token
+from app.core.telegram_bot.service.polling_service import start_bot_polling, stop_bot_polling
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import close_client
 from app.utils.router_registry import register_all_routers
 from app.utils.scheduler_registry import initialize_all_schedulers
@@ -173,6 +174,7 @@ async def handle_application_startup() -> None:
         asyncio.create_task(_fetch_favicons_in_background())
         asyncio.create_task(_populate_blacklist_if_stale_in_background())
         await initialize_all_schedulers()
+        start_bot_polling()
         logger.info("Application startup completed successfully")
     except Exception as e:
         logger.error("Startup failed: %s", e)
@@ -183,6 +185,7 @@ async def handle_application_shutdown() -> None:
     """Handle application shutdown tasks"""
     logger.info("Application shutting down...")
     try:
+        await stop_bot_polling()
         stop_scheduler()
         await close_client()
         await dispose_database_engine()
