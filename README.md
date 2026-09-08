@@ -28,6 +28,7 @@ Pulls pre-built images and starts the app at http://localhost:4000 — no auto-u
 - [Integrated services](#integrated-services)
 - [Features](#features)
 - [Keyboard-first navigation](#keyboard-first-navigation)
+- [Notifications](#notifications)
 - [Deploy with docker](#deploy-with-docker)
 - [Disclaimer](#disclaimer)
 - [License](#license)
@@ -123,6 +124,15 @@ type a tool's name to jump to it, or combine both (`john_doe reddit`) to open a 
 See the [Command Palette docs](https://z0rats.github.io/corvid/usage/command-palette/) for the
 full grammar (tags, filters, quick actions, defang/fang, playbooks).
 
+## Notifications
+
+Optionally get a Telegram message when a scan finishes (or fails) or a background job starts or
+stops failing, on top of the in-app alerts inbox — and optionally run `/lookup`, `/digest`, and
+`/help` commands from the chat itself. Configured entirely from **Settings → Telegram** — no
+`.env` entry needed. See the
+[Telegram Notifications docs](https://z0rats.github.io/corvid/usage/telegram-notifications/)
+for setup.
+
 
 ## Deploy with docker
 
@@ -174,6 +184,10 @@ the browser.
 
 To set your own fixed token instead of the auto-generated one, set `API_ACCESS_TOKEN` in `.env`
 before starting the container.
+
+If the token is ever exposed, regenerate it from Settings → About → Access Token → Regenerate
+(unavailable if `API_ACCESS_TOKEN` is set) — this immediately signs out every other browser
+tab/device and the browser extension, which then need the new token entered manually.
 
 ### Configuration
 
