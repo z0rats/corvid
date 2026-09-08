@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, status
 
+from app.core.alerts.service.alerts_service import raise_alert
 from app.core.dependencies import ReadSessionDep, SessionDep
 from app.core.exceptions import AppHTTPException
 from app.core.settings.api_keys.schemas.api_keys_settings_schemas import (
@@ -56,6 +57,14 @@ async def create_apikey(apikey: ApikeyCreateRequest, db: SessionDep) -> ApikeySc
             detail="API key already exists",
             error_code="API_KEY_ALREADY_EXISTS",
         )
+    # Name only, never the key value itself, in the alert/Telegram message.
+    await raise_alert(
+        db,
+        module="api_keys",
+        title="API key added",
+        message=f"An API key was configured for '{apikey.name}'.",
+        telegram_category="security",
+    )
     return result
 
 
@@ -198,6 +207,17 @@ async def update_apikey(
             detail="API key not found",
             error_code="API_KEY_NOT_FOUND",
         )
+    if apikey.key is not None:
+        # Only notify when the credential value itself changed, not a bare
+        # is_active/bulk_ioc_lookup flip (those have their own dedicated
+        # endpoints below and are routine UI toggles, not security events).
+        await raise_alert(
+            db,
+            module="api_keys",
+            title="API key updated",
+            message=f"The API key for '{name}' was updated.",
+            telegram_category="security",
+        )
     return result
 
 
@@ -216,4 +236,11 @@ async def delete_apikey(name: ApiKeyName, db: SessionDep) -> DeleteApikeyRespons
             detail="API key not found",
             error_code="API_KEY_NOT_FOUND",
         )
+    await raise_alert(
+        db,
+        module="api_keys",
+        title="API key removed",
+        message=f"The API key for '{name}' was removed.",
+        telegram_category="security",
+    )
     return result

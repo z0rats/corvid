@@ -10,13 +10,39 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, Response, UploadFile
 from pydantic import BaseModel, Field
 
+from app.core.alerts.service.alerts_service import raise_alert
 from app.core.backup.schemas import BackupStatusResponse, RestoreResponse
 from app.core.backup.service import export_backup, get_backup_status, restore_backup
+from app.core.database import managed_session
+from app.core.dependencies import SessionDep
 from app.core.exceptions import ApplicationError
 
 router = APIRouter(prefix="/api/backup", tags=["Backup"])
 
 _RESTORE_CONFIRMATION_PHRASE = "RESTORE"
+
+
+async def _run_with_failure_alert(op, *, failure_title: str):
+    """Run `op()`; on failure, raise a "failed" alert and re-raise.
+
+    Alerts on a raised exception in a fresh session, not the request's `db`:
+    that one gets rolled back by `get_db()` once the exception propagates past
+    it, which would silently discard the alert row (the WS broadcast/Telegram
+    push already happened for real by then and are unaffected, but the row
+    wouldn't persist).
+    """
+    try:
+        return await op()
+    except Exception as exc:
+        async with managed_session() as alert_db:
+            await raise_alert(
+                alert_db,
+                module="backup",
+                title=failure_title,
+                message=str(exc),
+                telegram_category="security",
+            )
+        raise
 
 
 class BackupExportRequest(BaseModel):
@@ -38,9 +64,20 @@ async def status_endpoint() -> BackupStatusResponse:
 
 
 @router.post("/export", summary="Download a full backup archive")
-async def export_endpoint(body: BackupExportRequest) -> Response:
-    content, filename = await export_backup(
-        include_access_token=body.include_access_token, passphrase=body.passphrase
+async def export_endpoint(body: BackupExportRequest, db: SessionDep) -> Response:
+    content, filename = await _run_with_failure_alert(
+        lambda: export_backup(
+            include_access_token=body.include_access_token, passphrase=body.passphrase
+        ),
+        failure_title="Backup export failed",
+    )
+
+    await raise_alert(
+        db,
+        module="backup",
+        title="Backup exported",
+        message=f"A backup archive ({filename}) was downloaded.",
+        telegram_category="security",
     )
     media_type = "application/x-gzip" if not body.passphrase else "application/octet-stream"
     return Response(
@@ -69,4 +106,27 @@ async def restore_endpoint(
         )
 
     archive_bytes = await file.read()
-    return await restore_backup(archive_bytes, passphrase=passphrase)
+    result = await _run_with_failure_alert(
+        lambda: restore_backup(archive_bytes, passphrase=passphrase),
+        failure_title="Backup restore failed",
+    )
+
+    # No SessionDep here: restore_backup() already replaced the underlying DB
+    # file on disk, and per docs/adr/0010-backup-restore-design.md the running
+    # process doesn't hot-swap its engine, so whether a *new* connection opened
+    # now lands on the pre- or post-restore file depends on unrelated connection-
+    # pool state. Either way this row's persistence isn't guaranteed across the
+    # restart this response tells the operator to do - but the WS broadcast/
+    # Telegram push below fire in real time regardless, which is what actually
+    # matters here.
+    async with managed_session() as alert_db:
+        await raise_alert(
+            alert_db,
+            module="backup",
+            title="Backup restored",
+            message=(
+                "A backup was restored. Restart the backend for the restored data to take effect."
+            ),
+            telegram_category="security",
+        )
+    return result

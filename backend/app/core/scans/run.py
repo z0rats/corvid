@@ -16,6 +16,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal
 
+from app.core.alerts.service.alerts_service import TelegramCategory, raise_alert
 from app.core.database import managed_session
 from app.core.scans.crud import (
     ScanColumns,
@@ -26,6 +27,40 @@ from app.core.scans.crud import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _format_fields(fields: dict[str, Any]) -> str:
+    """Best-effort human-readable rendering of a scan's create/outcome fields
+    for a notification message - generic on purpose, so every current and
+    future `ScanRun`-based feature is covered without a per-feature template."""
+    return ", ".join(f"{key}={value}" for key, value in fields.items() if value not in (None, ""))
+
+
+async def _notify_terminal(
+    db,
+    feature_name: str,
+    search_id: int,
+    create_fields: dict[str, Any],
+    *,
+    title_verb: str,
+    message_verb: str,
+    detail: str = "",
+    extra_fields: dict[str, Any] | None = None,
+    telegram_category: TelegramCategory,
+) -> None:
+    """Raise the "scan <verb>" alert shared by every terminal branch of
+    `ScanRun.execute()` below - only the wording, an optional trailing detail
+    (e.g. the exception on failure), and the outcome's own extra fields differ
+    between cancelled/failed/completed."""
+    extra = f" — {_format_fields(extra_fields)}" if extra_fields else ""
+    suffix = f": {detail}" if detail else f"{extra}."
+    await raise_alert(
+        db,
+        feature_name,
+        f"{feature_name}: scan {title_verb}",
+        f"Scan #{search_id} ({_format_fields(create_fields)}) {message_verb}{suffix}",
+        telegram_category=telegram_category,
+    )
 
 
 @dataclasses.dataclass
@@ -159,11 +194,30 @@ class ScanRun:
                         **exc.outcome.fields,
                         **exc.outcome.db_only_fields,
                     )
+                    await _notify_terminal(
+                        db,
+                        feature_name,
+                        search_id,
+                        create_fields,
+                        title_verb="cancelled",
+                        message_verb="was cancelled",
+                        extra_fields=exc.outcome.fields,
+                        telegram_category="scan_finished",
+                    )
                 on_event(ScanEvent("cancelled", {"search_id": search_id, **exc.outcome.fields}))
                 return
             except asyncio.CancelledError:
                 async with managed_session() as db:
                     await mark_cancelled(db, model, search_id, columns=columns)
+                    await _notify_terminal(
+                        db,
+                        feature_name,
+                        search_id,
+                        create_fields,
+                        title_verb="cancelled",
+                        message_verb="was cancelled",
+                        telegram_category="scan_finished",
+                    )
                 on_event(ScanEvent("cancelled", {"search_id": search_id}))
                 raise
             except Exception as exc:
@@ -175,6 +229,16 @@ class ScanRun:
                     )
                 async with managed_session() as db:
                     await mark_failed(db, model, search_id, columns=columns, error_message=str(exc))
+                    await _notify_terminal(
+                        db,
+                        feature_name,
+                        search_id,
+                        create_fields,
+                        title_verb="failed",
+                        message_verb="failed",
+                        detail=str(exc),
+                        telegram_category="scan_failed",
+                    )
                 on_event(ScanEvent("failed", {"search_id": search_id, "error": str(exc)}))
                 return
 
@@ -188,6 +252,16 @@ class ScanRun:
                     columns=columns,
                     **outcome.fields,
                     **outcome.db_only_fields,
+                )
+                await _notify_terminal(
+                    db,
+                    feature_name,
+                    search_id,
+                    create_fields,
+                    title_verb="completed",
+                    message_verb="completed",
+                    extra_fields=outcome.fields,
+                    telegram_category="scan_finished",
                 )
             on_event(ScanEvent("completed", {"search_id": search_id, **outcome.fields}))
         finally:

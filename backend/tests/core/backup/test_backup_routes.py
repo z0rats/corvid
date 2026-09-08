@@ -3,20 +3,49 @@ are covered by test_backup_service.py, so these patch export_backup/restore_back
 get_backup_status to isolate request parsing, the confirm-phrase gate, and error
 mapping."""
 
+import contextlib
+from collections.abc import AsyncGenerator
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.alerts.models.alerts_models import Alert
 from app.core.backup import routers as backup_routes
 from app.core.backup.schemas import BackupStatusResponse, RestoreResponse
+from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import ApplicationError, register_exception_handlers
+from app.core.settings.telegram.models.telegram_settings_models import TelegramSettings
 
 
 @pytest.fixture
-def client():
+def client(monkeypatch, make_session_factory):
+    # export/restore now raise an alert (in-app + optional Telegram, see
+    # alerts_service.raise_alert) on success/failure - route both the
+    # request-scoped SessionDep and the routers' own managed_session() (used for
+    # the failure-path/restore-success alerts, see routers.py's comments on why)
+    # at the same in-memory DB, so nothing here touches the real app database.
+    factory = make_session_factory([Alert.__table__, TelegramSettings.__table__])
+
+    async def _get_db() -> AsyncGenerator[AsyncSession]:
+        async with factory() as db:
+            yield db
+            await db.commit()
+
+    @contextlib.asynccontextmanager
+    async def fake_managed_session():
+        async with factory() as db:
+            yield db
+            await db.commit()
+
+    monkeypatch.setattr(backup_routes, "managed_session", fake_managed_session)
+
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(backup_routes.router)
+    app.dependency_overrides[get_db] = _get_db
+    app.dependency_overrides[get_read_db] = _get_db
     return TestClient(app)
 
 

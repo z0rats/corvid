@@ -6,11 +6,19 @@ from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+from app.core.alerts.service.alerts_service import raise_alert
 from app.core.config.settings import settings
+from app.core.database import managed_session
 
 logger = logging.getLogger(__name__)
 
 _scheduler: AsyncIOScheduler | None = None
+
+# Process-local, edge-triggered "is this job currently failing" flag per job_name -
+# resets on restart (same tradeoff ScanRun's own cancellation registry accepts).
+# Notifying on every failed tick of a job that's been down for days would be pure
+# spam; only the healthy->failing and failing->healthy transitions matter.
+_job_failing: dict[str, bool] = {}
 
 
 def get_scheduler() -> AsyncIOScheduler:
@@ -82,7 +90,10 @@ def wrap_job_errors(
     """Wrap a coroutine factory so exceptions are logged and swallowed.
 
     Keeps the job registered on the scheduler instead of letting an
-    unhandled exception remove it.
+    unhandled exception remove it. Also raises an alert (in-app + Telegram,
+    see alerts_service.raise_alert) the moment the job transitions from
+    healthy to failing, and again when it recovers - not on every failed run,
+    which would spam once per interval for as long as the job stays down.
     """
 
     async def _wrapped() -> None:
@@ -90,6 +101,27 @@ def wrap_job_errors(
             await coro_factory()
         except Exception as e:
             logger.error("Error in %s job: %s", job_name, e)
+            if not _job_failing.get(job_name, False):
+                _job_failing[job_name] = True
+                async with managed_session() as db:
+                    await raise_alert(
+                        db,
+                        "scheduler",
+                        f"{job_name}: job failing",
+                        f"The '{job_name}' scheduled job started failing: {e}",
+                        telegram_category="job_transition",
+                    )
+        else:
+            if _job_failing.get(job_name, False):
+                _job_failing[job_name] = False
+                async with managed_session() as db:
+                    await raise_alert(
+                        db,
+                        "scheduler",
+                        f"{job_name}: job recovered",
+                        f"The '{job_name}' scheduled job is succeeding again.",
+                        telegram_category="job_transition",
+                    )
 
     return _wrapped
 

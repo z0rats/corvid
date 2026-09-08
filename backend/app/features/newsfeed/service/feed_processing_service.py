@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.alerts.service.alerts_service import raise_alert
 from app.core.database import managed_session
 from app.core.settings.keywords.crud.keywords_settings_crud import get_keywords
 from app.features.newsfeed.crud.news_articles_crud import check_article_exists, create_news_article
@@ -138,6 +139,21 @@ async def store_article_async(
 
         if result is not None:
             logger.info("Stored article: %s", title)
+            if matches:
+                # A separate session/transaction from the article write above,
+                # deliberately: a failure raising the alert must never roll
+                # back (and so discard) the article that was already saved.
+                async with managed_session() as alert_db:
+                    await raise_alert(
+                        alert_db,
+                        module="newsfeed",
+                        title="Newsfeed keyword match",
+                        message=(
+                            f'"{title}" ({entry["name"]}) matched: {", ".join(matches)}\n'
+                            f"{post.get('link', '')}"
+                        ),
+                        telegram_category="newsfeed_match",
+                    )
         else:
             logger.debug("Article already exists, skipped: %s", title)
 

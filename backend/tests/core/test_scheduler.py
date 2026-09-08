@@ -7,18 +7,22 @@ per-feature job wiring living in app/utils/scheduler_registry.py instead
 
 import ast
 import asyncio
+import contextlib
 import inspect
 
 import pytest
 from apscheduler.triggers.interval import IntervalTrigger
+from sqlalchemy import select
 
 import app.core.scheduler as scheduler_module
+from app.core.alerts.models.alerts_models import Alert
 from app.core.scheduler import (
     add_recurring_job,
     configure_recurring_job,
     get_scheduler,
     wrap_job_errors,
 )
+from app.core.settings.telegram.models.telegram_settings_models import TelegramSettings
 
 FORBIDDEN_IMPORT_PREFIXES = ("app.features", "app.core.settings")
 
@@ -26,8 +30,33 @@ FORBIDDEN_IMPORT_PREFIXES = ("app.features", "app.core.settings")
 @pytest.fixture(autouse=True)
 def reset_scheduler():
     scheduler_module._scheduler = None
+    scheduler_module._job_failing.clear()
     yield
     scheduler_module._scheduler = None
+    scheduler_module._job_failing.clear()
+
+
+@pytest.fixture
+def db_session_factory(monkeypatch, make_session_factory):
+    """Points wrap_job_errors' managed_session at an in-memory DB, so its
+    failure/recovery alert side effect (see TestWrapJobErrors) never touches
+    the real app database - same pattern as tests/core/scans/test_run.py."""
+    factory = make_session_factory([Alert.__table__, TelegramSettings.__table__])
+
+    @contextlib.asynccontextmanager
+    async def fake_managed_session():
+        async with factory() as db:
+            yield db
+            await db.commit()
+
+    monkeypatch.setattr(scheduler_module, "managed_session", fake_managed_session)
+    return factory
+
+
+async def _alert_titles(factory):
+    async with factory() as db:
+        result = await db.execute(select(Alert.title).order_by(Alert.id))
+        return list(result.scalars().all())
 
 
 async def _noop() -> None:
@@ -89,7 +118,7 @@ class TestConfigureRecurringJob:
 
 
 class TestWrapJobErrors:
-    def test_exception_is_logged_and_swallowed(self, caplog):
+    def test_exception_is_logged_and_swallowed(self, caplog, db_session_factory):
         async def _boom() -> None:
             raise ValueError("kaboom")
 
@@ -111,6 +140,36 @@ class TestWrapJobErrors:
             asyncio.run(wrapped())
 
         assert caplog.text == ""
+
+    def test_failure_alert_is_edge_triggered_not_per_tick(self, db_session_factory):
+        """Repeated failures raise exactly one alert; a success afterwards
+        raises exactly one recovery alert; a further failure raises one more -
+        never one alert per failed tick, which would spam for as long as a job
+        stays down."""
+
+        async def _boom() -> None:
+            raise ValueError("kaboom")
+
+        async def _ok() -> None:
+            return None
+
+        wrapped_boom = wrap_job_errors("flaky job", _boom)
+        wrapped_ok = wrap_job_errors("flaky job", _ok)
+
+        async def _scenario():
+            await wrapped_boom()
+            await wrapped_boom()  # still failing - no second alert
+            await wrapped_ok()  # recovers - one recovery alert
+            await wrapped_ok()  # still healthy - no second recovery alert
+            await wrapped_boom()  # fails again - one more alert
+            return await _alert_titles(db_session_factory)
+
+        titles = asyncio.run(_scenario())
+        assert titles == [
+            "flaky job: job failing",
+            "flaky job: job recovered",
+            "flaky job: job failing",
+        ]
 
 
 class TestDependencyInversion:

@@ -12,8 +12,10 @@ import pytest
 from sqlalchemy import select
 
 import app.core.scans.run as run_module
+from app.core.alerts.models.alerts_models import Alert
 from app.core.scans.crud import ScanColumns
 from app.core.scans.run import ScanCancelled, ScanEvent, ScanOutcome, ScanRun
+from app.core.settings.telegram.models.telegram_settings_models import TelegramSettings
 from app.features.email_search.models.email_search_models import MailSearch
 from app.features.username_search.models.username_search_models import MaigretSearch
 from tests.conftest import run as _run
@@ -23,7 +25,11 @@ MAIGRET_COLUMNS = ScanColumns(error_column="error_message", completed_at_column=
 
 @pytest.fixture
 def session_factory(monkeypatch, make_session_factory):
-    factory = make_session_factory([MaigretSearch.__table__, MailSearch.__table__])
+    # Alert/TelegramSettings tables: ScanRun.execute() now raises an alert (and
+    # checks Telegram settings) on every terminal transition - see alerts_service.
+    factory = make_session_factory(
+        [MaigretSearch.__table__, MailSearch.__table__, Alert.__table__, TelegramSettings.__table__]
+    )
 
     @contextlib.asynccontextmanager
     async def fake_managed_session():
@@ -32,6 +38,17 @@ def session_factory(monkeypatch, make_session_factory):
             await db.commit()
 
     monkeypatch.setattr(run_module, "managed_session", fake_managed_session)
+
+    async def _seed_telegram_settings():
+        # Pre-create the singleton row so concurrent terminal events (see
+        # TestFeatureNamespacing) don't race to INSERT it - `get_or_create_singleton`'s
+        # own race handling assumes independent connections, not two sessions
+        # sharing this fixture's single StaticPool-pinned SQLite connection.
+        async with factory() as db:
+            db.add(TelegramSettings(id=1))
+            await db.commit()
+
+    _run(_seed_telegram_settings())
     return factory
 
 
