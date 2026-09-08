@@ -1,27 +1,9 @@
-from sqlalchemy import String, Text
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, validates
-from sqlalchemy.types import TypeDecorator
 
 from app.core.database import Base
 from app.core.models.mixins import TimestampMixin
-from app.core.security.secrets_crypto import decrypt_value, encrypt_value
-
-
-class EncryptedString(TypeDecorator):
-    """Transparently encrypts/decrypts a string column at rest (see secrets_crypto)."""
-
-    impl = Text
-    cache_ok = True
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        return encrypt_value(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        return decrypt_value(value)
+from app.core.security.secrets_crypto import EncryptedString
 
 
 class Apikey(Base, TimestampMixin):

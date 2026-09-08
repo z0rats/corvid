@@ -14,6 +14,8 @@ import logging
 from functools import lru_cache
 
 from cryptography.fernet import Fernet, InvalidToken
+from sqlalchemy import Text
+from sqlalchemy.types import TypeDecorator
 
 from app.core.config.settings import settings
 from app.core.security.persisted_secret import load_or_create_secret_file
@@ -71,3 +73,22 @@ def decrypt_value(value: str) -> str:
         return _get_fernet().decrypt(value.encode("utf-8")).decode("utf-8")
     except InvalidToken, ValueError:
         return value
+
+
+class EncryptedString(TypeDecorator):
+    """Transparently encrypts/decrypts a string column at rest via `encrypt_value`/
+    `decrypt_value` above. Shared by every settings model storing a secret
+    (API keys, the Telegram bot token, ...)."""
+
+    impl = Text
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        return encrypt_value(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        return decrypt_value(value)
