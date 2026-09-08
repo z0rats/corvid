@@ -541,6 +541,22 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `created_at` | datetime | no | server: now() | — | When this row was created |
 | `updated_at` | datetime | no | server: now() | — | When this row was last updated |
 
+### `telegram_settings`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Singleton row id, always 1 |
+| `bot_token` | text | no | '' | — | Telegram bot token from @BotFather (encrypted at rest) |
+| `chat_id` | string(100) | no | '' | — | Telegram chat ID notifications are sent to |
+| `enabled` | boolean | no | False | — | Master switch for Telegram delivery |
+| `notify_scan_events` | boolean | no | True | — | Notify on scan completed/cancelled (failures always notify while enabled) |
+| `notify_job_failures` | boolean | no | True | — | Notify when a recurring scheduler job starts or stops failing |
+| `notify_newsfeed_matches` | boolean | no | True | — | Notify when a newsfeed article matches a watchlist keyword |
+| `bot_commands_enabled` | boolean | no | False | — | Allow inbound Telegram bot commands (/lookup, /digest, /help). Off by default: a different trust boundary than outbound pushes, since the bot now acts on messages (see docs/adr/0012-telegram-bot-polling.md). |
+| `web_base_url` | string(500) | no | '' | — | Externally-reachable base URL of this Corvid instance, used only to build the /lookup command's web-UI deep link (Corvid has no public URL by default) |
+| `created_at` | datetime | no | server: now() | — | When this row was created |
+| `updated_at` | datetime | no | server: now() | — | When this row was last updated |
+
 ### `template_categories`
 
 | Column | Type | Nullable | Default | Key | Comment |
