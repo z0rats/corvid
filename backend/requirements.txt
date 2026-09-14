@@ -22,7 +22,7 @@ aiosmtplib==5.1.2
     # via mailcat-osint
 aiosqlite==0.22.1
     # via -r requirements.in
-alembic==1.19.1
+alembic==1.19.2
     # via -r requirements.in
 alive-progress==3.3.0
     # via maigret
@@ -426,13 +426,13 @@ pydantic[email]==2.13.5
     #   pydantic-extra-types
     #   pydantic-graph
     #   pydantic-settings
-pydantic-ai-slim[anthropic,google,openai]==2.36.0
+pydantic-ai-slim[anthropic,google,openai]==2.40.0
     # via -r requirements.in
 pydantic-core==2.46.5
     # via pydantic
 pydantic-extra-types==2.11.1
     # via fastapi
-pydantic-graph==2.36.0
+pydantic-graph==2.40.0
     # via pydantic-ai-slim
 pydantic-settings==2.15.0
     # via
@@ -499,7 +499,7 @@ pyyaml==6.0.3
     #   newspaper4k
     #   pyhanko
     #   uvicorn
-regex==2026.8.31
+regex==2026.9.3
     # via
     #   -r requirements.in
     #   tiktoken
@@ -543,7 +543,7 @@ rich-toolkit==0.20.3
     #   fastapi-cloud-cli
 rignore==0.8.0
     # via fastapi-cloud-cli
-ruff==0.16.5
+ruff==0.16.6
     # via -r requirements.in
 selenium==4.46.0
     # via galeodes
