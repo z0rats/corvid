@@ -218,7 +218,7 @@ html5lib==1.1
     #   xhtml2pdf
 httpcore==1.0.9
     # via httpx
-httpcore2==2.7.0
+httpcore2==2.13.1
     # via httpx2
 httptools==0.8.0
     # via uvicorn
@@ -228,7 +228,7 @@ httpx==0.28.1
     #   fastapi
     #   fastapi-cloud-cli
     #   google-genai
-httpx2==2.7.0
+httpx2==2.13.1
     # via
     #   anthropic
     #   genai-prices
@@ -570,7 +570,7 @@ socid-extractor==0.1.1
     # via maigret
 sortedcontainers==2.4.0
     # via trio
-soupsieve==2.8.4
+soupsieve==2.10
     # via
     #   beautifulsoup4
     #   maigret
