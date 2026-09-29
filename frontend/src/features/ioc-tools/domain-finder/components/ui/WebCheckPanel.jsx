@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useWebCheck } from "../../hooks/api/useWebCheck";
+import { useWebCheck } from "../../hooks/useWebCheck";
 import { domainUtils } from "../../utils/domainUtils";
 
 import Alert from '@mui/material/Alert';

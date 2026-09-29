@@ -383,3 +383,14 @@ class TestHealthCheck:
         assert "subfinder_version" in body
         assert "httpx_installed" in body
         assert "httpx_version" in body
+
+
+def test_every_panel_endpoint_has_its_own_rate_limit_counter():
+    """`_add_panel_routes` builds its endpoints as closures; slowapi keys a route's limit
+    counter by the function's name, so without a unique `__name__` per endpoint every
+    panel would share - and exhaust - one counter."""
+    keys = [key for key in limiter._route_limits if key.startswith(f"{domain_routes.__name__}.")]
+    limited_routes = [
+        route for route in domain_routes.router.routes if not route.path.endswith("/health")
+    ]
+    assert len(keys) == len(set(keys)) == len(limited_routes)

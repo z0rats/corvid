@@ -26,15 +26,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppHTTPException
 from app.core.scans.cancellable import CooperativeCancellable
-from app.core.scans.run import ScanCancelled, ScanOutcome, ScanRun
+from app.core.scans.run import ScanCancelled, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.features.instagram_search.config.instagram_search_config import (
     SCAN_MAX_ITEMS,
     SCAN_WALL_CLOCK_TIMEOUT_SECONDS,
     SESSION_OWNER_PLACEHOLDER,
 )
-from app.features.instagram_search.crud.instagram_search_crud import SCAN_COLUMNS
-from app.features.instagram_search.models.instagram_search_models import InstagramSearch
+from app.features.instagram_search.crud.instagram_search_crud import INSTAGRAM_SCANS
 from app.features.instagram_search.service.instagram_common import (
     build_loader,
     raise_mapped_instaloader_exception,
@@ -42,15 +41,6 @@ from app.features.instagram_search.service.instagram_common import (
 from app.features.instagram_search.service.instagram_session_service import get_session_dict
 
 logger = logging.getLogger(__name__)
-
-FEATURE_NAME = "instagram_search"
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running Instagram scan, keeping
-    whatever items were collected before cancellation. Returns False if no
-    scan with that id is currently running."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 def _map_follow_item(profile: instaloader.Profile) -> dict[str, Any]:
@@ -160,12 +150,9 @@ async def run_scan_task(
             raise ScanCancelled(outcome)
         return outcome
 
-    await ScanRun.execute(
-        FEATURE_NAME,
-        InstagramSearch,
+    await INSTAGRAM_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
         create_fields={"scan_type": scan_type, "username": username, "mode": mode},
         started_fields={"scan_type": scan_type, "username": username, "mode": mode},
         cancellable=cancellable,

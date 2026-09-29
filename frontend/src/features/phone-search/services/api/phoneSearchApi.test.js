@@ -1,56 +1,14 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../core/utils/accessToken';
+import api from '../../../../core/services/baseApi';
 import { phoneSearchApi } from './phoneSearchApi';
 
 vi.mock('../../../../core/services/baseApi', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
   baseURL: 'http://backend.test',
 }));
-vi.mock('../../../../core/utils/accessToken', () => ({ getAccessToken: vi.fn() }));
 
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
-});
-
-describe('phoneSearchApi.startScan', () => {
-  it('opens an SSE POST stream with the bearer token and phone number payload', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    const body = {};
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, body });
-    vi.stubGlobal('fetch', fetchMock);
-
-    const result = await phoneSearchApi.startScan('+15551234567');
-
-    expect(fetchMock).toHaveBeenCalledWith(`${baseURL}/api/phone-search/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': 'Bearer tok123',
-      },
-      body: JSON.stringify({ phone_number: '+15551234567' }),
-      signal: undefined,
-    });
-    expect(result).toBe(body);
-  });
-
-  it('throws when the response is not ok', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, statusText: 'Forbidden' }));
-
-    await expect(phoneSearchApi.startScan('+15551234567')).rejects.toThrow('Server error: Forbidden');
-  });
-});
-
-describe('phoneSearchApi.cancelScan', () => {
-  it('posts to the cancel endpoint for the given search id', async () => {
-    api.post.mockResolvedValue({});
-
-    await phoneSearchApi.cancelScan('search-1');
-
-    expect(api.post).toHaveBeenCalledWith('/api/phone-search/runs/search-1/cancel');
-  });
 });
 
 describe('phoneSearchApi.listRuns', () => {

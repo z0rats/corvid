@@ -7,7 +7,7 @@ with the same Cache-Control/Connection/X-Accel-Buffering headers.
 import asyncio
 import json
 
-from app.core.scans.sse import sse_response
+from app.core.scans.sse import sse_response, sse_stream
 
 
 async def _drain(response):
@@ -84,3 +84,22 @@ class TestSseResponse:
 
         assert chunks_a == [f"data: {json.dumps({'type': 'a'})}\n\n"]
         assert chunks_b == [f"data: {json.dumps({'type': 'b'})}\n\n"]
+
+
+class TestSseStream:
+    """`sse_stream` - the framing every SSE endpoint shares, including the non-scan ones
+    (bulk IOC lookup, newsfeed analysis) that stream straight from an async generator."""
+
+    def test_frames_dicts_and_passes_preserialized_strings_through(self):
+        async def events():
+            yield {"type": "ranking"}
+            yield '{"type": "complete"}'
+
+        response = sse_stream(events())
+        chunks = asyncio.run(_drain(response))
+
+        assert chunks == [
+            f"data: {json.dumps({'type': 'ranking'})}\n\n",
+            'data: {"type": "complete"}\n\n',
+        ]
+        assert response.headers["x-accel-buffering"] == "no"

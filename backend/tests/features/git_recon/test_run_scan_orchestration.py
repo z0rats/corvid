@@ -18,7 +18,7 @@ import asyncio
 import pytest
 
 from app.core.scans.cancellable import GitCloneCancellable
-from app.core.scans.run import ScanCancelled
+from app.core.scans.run import ScanCancelled, ScanRun
 from app.features.git_recon.models.git_recon_models import GitReconSearch
 from app.features.git_recon.service import git_recon_service as svc
 from app.features.git_recon.service.git_recon_service import GitReconError, run_scan, run_scan_task
@@ -171,7 +171,7 @@ class TestRunScanTask:
                 **kwargs,
             )
 
-        monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
+        monkeypatch.setattr(ScanRun, "execute", fake_execute)
         return captured
 
     def _start(self, **overrides):

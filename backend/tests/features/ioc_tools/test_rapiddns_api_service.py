@@ -7,9 +7,7 @@ whitespace inside cells, and the row/table structure it serves."""
 import asyncio
 
 import httpx
-import pytest
 
-from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.domain_finder.service.rapiddns_api_service import (
     fetch_rapiddns_records,
 )
@@ -90,39 +88,3 @@ def test_skips_rows_with_too_few_columns(patch_httpx_transport):
     patch_httpx_transport(lambda request: httpx.Response(200, text=_table_html(malformed_row)))
 
     assert _run(fetch_rapiddns_records("example.com")) == []
-
-
-def test_raises_with_upstream_status_code_on_http_error(patch_httpx_transport):
-    patch_httpx_transport(lambda request: httpx.Response(500, text="server error"))
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_rapiddns_records("example.com"))
-
-    assert exc_info.value.status_code == 500
-    assert exc_info.value.error_code == "RAPIDDNS_API_ERROR"
-
-
-def test_raises_504_on_timeout(patch_httpx_transport):
-    def handler(request):
-        raise httpx.TimeoutException("timed out", request=request)
-
-    patch_httpx_transport(handler)
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_rapiddns_records("example.com"))
-
-    assert exc_info.value.status_code == 504
-    assert exc_info.value.error_code == "RAPIDDNS_TIMEOUT"
-
-
-def test_raises_503_on_connection_error(patch_httpx_transport):
-    def handler(request):
-        raise httpx.ConnectError("connection refused", request=request)
-
-    patch_httpx_transport(handler)
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_rapiddns_records("example.com"))
-
-    assert exc_info.value.status_code == 503
-    assert exc_info.value.error_code == "RAPIDDNS_CONNECTION_ERROR"

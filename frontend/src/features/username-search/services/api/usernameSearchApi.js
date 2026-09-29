@@ -1,35 +1,6 @@
 import api, { baseURL } from '../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../core/utils/accessToken';
 
 export const usernameSearchApi = {
-  async startScan(username, { source, tags, excludedTags, signal } = {}) {
-    const response = await fetch(`${baseURL}/api/username-search/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': `Bearer ${getAccessToken()}`,
-      },
-      body: JSON.stringify({
-        username,
-        source: source || 'maigret',
-        tags: tags && tags.length ? tags : undefined,
-        excluded_tags: excludedTags && excludedTags.length ? excludedTags : undefined,
-      }),
-      signal,
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error(`Server error: ${response.statusText}`);
-    }
-
-    return response.body;
-  },
-
-  async cancelScan(searchId) {
-    await api.post(`/api/username-search/runs/${searchId}/cancel`);
-  },
-
   async checkHudsonRock(username, { signal } = {}) {
     const response = await api.get('/api/username-search/hudson-rock', { params: { username }, signal });
     return response.data;

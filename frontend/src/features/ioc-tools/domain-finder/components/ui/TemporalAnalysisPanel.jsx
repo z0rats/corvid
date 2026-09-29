@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
-import { useTemporalAnalysis } from "../../hooks/api/useTemporalAnalysis";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
 import { domainUtils } from "../../utils/domainUtils";
 import { modeValue } from "../../../../../core/utils/themeUtils";
 
@@ -47,7 +47,7 @@ function sourceCounts(events) {
 export default function TemporalAnalysisPanel({ domain }) {
   const { t } = useTranslation('iocTools');
   const theme = useTheme();
-  const { data, loading, error, unsupported } = useTemporalAnalysis(domain);
+  const { data, loading, error, unsupported } = useDomainPanel('temporal-analysis', domain);
 
   const events = useMemo(() => data?.events || [], [data]);
   const chartData = useMemo(

@@ -39,6 +39,27 @@ image or pagination (those are DNSDumpster's paid-tier features, not integrated 
 Further panels have been added since (HackerTarget/RapidDNS/subfinder subdomain enumeration,
 WebCheck's SSL/security-headers/DNSSEC/blocklist checks, Wayback Machine history, Temporal
 Analysis) - `docs/specs/README.md` lists what's implemented and what was deliberately not integrated.
+
+Backend: every third-party provider panel (crt.sh, RapidDNS, HackerTarget, Wayback, URLScan,
+DNSDumpster) calls its provider through `service/provider_http.py`'s `provider_get(Provider,
+path, parse=..., check=...)`, which owns the client, headers, timeout and the one error mapping
+(`<CODE>_TIMEOUT`/`_CONNECTION_ERROR`/`_API_ERROR`/`_INVALID_RESPONSE`/`_UNEXPECTED_ERROR`); a
+provider module keeps only its `parse` and provider-specific statuses. `provider_get` only
+requests a `Provider`'s hardcoded `base_url`, which is why it's the single allowlisted raw
+client in `test_ssrf_guard_coverage.py`; RDAP (redirect-followed through `safe_get`) reuses only
+`provider_errors`.
+Each panel's `POST /api/domain/<path>` + `GET /api/domain/<path>/{domain}` pair is mounted by
+`routers/domain_routes.py`'s `_add_panel_routes` (request/response models, service, rate limit);
+only Wayback and the site crawler, whose GET takes extra query parameters, are hand-written.
+The factory renames each endpoint before `limiter.limit` wraps it - slowapi keys rate-limit
+counters by function name, so closures would otherwise share one counter (pinned by a test).
+
+Frontend: every panel's request lifecycle is one hook, `hooks/useDomainPanel.ts`
+(`useDomainPanel(path, domain, {auto, params, notConfiguredCode})` → `GET
+/api/domain/<path>/<domain>`, wildcard patterns reported as `unsupported`, stale responses
+dropped, `auto: false` + `run()` for the click-triggered panels). An auto panel's
+loading/error/empty rendering is `components/ui/panelStatusView.jsx`. A new panel is its
+`*Panel.jsx` plus an entry in `DomainMonitoring.jsx` - no per-panel api/hook files.
 subfinder and httpx are the two Go binaries in this list, both compiled from source (pinned
 tags, not `@latest`) in one shared `go-tools-builder` Dockerfile stage and shelled out to via
 `asyncio.create_subprocess_exec` (`subfinder_service.py`/`host_probe_service.py`; version/

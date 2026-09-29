@@ -5,25 +5,19 @@ from maigret.checking import maigret as run_maigret_checks
 
 from app.core.database import managed_session
 from app.core.scans.cancellable import TaskCancellable
-from app.core.scans.run import OnEvent, ScanCancelled, ScanEvent, ScanOutcome, ScanRun
+from app.core.scans.run import OnEvent, ScanCancelled, ScanEvent, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.core.settings.username_search.crud.username_search_settings_crud import (
     get_username_search_config,
 )
 from app.features.username_search.config.maigret_config import get_site_dict
-from app.features.username_search.crud.username_search_crud import SCAN_COLUMNS, add_site_results
-from app.features.username_search.models.username_search_models import MaigretSearch
+from app.features.username_search.crud.username_search_crud import (
+    USERNAME_SEARCH_SCANS,
+    add_site_results,
+)
 from app.features.username_search.service.report_service import save_scan_results
 
 logger = logging.getLogger(__name__)
-
-FEATURE_NAME = "username_search"
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running scan. Returns False if
-    no scan with that id is currently running (already finished, or never existed)."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 class StreamingQueryNotify:
@@ -150,12 +144,9 @@ async def run_scan(
         )
 
     cancellable = TaskCancellable(asyncio.current_task())
-    await ScanRun.execute(
-        FEATURE_NAME,
-        MaigretSearch,
+    await USERNAME_SEARCH_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
         create_fields={"username": username, "tags": tags, "source": "maigret"},
         started_fields={"username": username, "total_sites": len(site_dict)},
         cancellable=cancellable,

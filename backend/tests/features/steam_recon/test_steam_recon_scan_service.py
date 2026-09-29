@@ -10,6 +10,7 @@ import pytest
 
 from app.core.exceptions import AppHTTPException
 from app.core.scans.cancellable import TaskCancellable
+from app.core.scans.run import ScanRun
 from app.features.steam_recon.models.steam_recon_models import SteamReconSearch
 from app.features.steam_recon.schemas.steam_recon_schemas import (
     CheaterReport,
@@ -83,7 +84,7 @@ def captured(monkeypatch):
             feature_name=feature_name, model=model, run_work=run_work, on_event=on_event, **kwargs
         )
 
-    monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
+    monkeypatch.setattr(ScanRun, "execute", fake_execute)
     monkeypatch.setattr(svc, "get_steam_api_key", _async(lambda db: "test-key"))
     monkeypatch.setattr(svc, "SteamApiClient", lambda key: FakeClient())
     monkeypatch.setattr(svc, "resolve_steamid64", _async(lambda client, target: "1"))

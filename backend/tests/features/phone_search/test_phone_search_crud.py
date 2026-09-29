@@ -4,14 +4,16 @@ import datetime
 import pytest
 
 from app.features.phone_search.crud.phone_search_crud import (
+    PHONE_SEARCH_SCANS,
     add_provider_results,
-    delete_search_run,
-    get_search_run,
-    get_search_run_with_results,
-    interrupt_running_searches,
-    list_search_runs,
 )
 from app.features.phone_search.models.phone_search_models import PhoneSearch, PhoneSearchResult
+
+list_search_runs = PHONE_SEARCH_SCANS.history.list
+get_search_run = PHONE_SEARCH_SCANS.history.get
+get_search_run_with_results = PHONE_SEARCH_SCANS.history.get_with_results
+delete_search_run = PHONE_SEARCH_SCANS.history.delete
+interrupt_running_searches = PHONE_SEARCH_SCANS.interrupt_running
 
 
 def _run(coro):

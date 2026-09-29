@@ -123,25 +123,7 @@ class WhoisLookupRequest(BaseModel):
     @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
-        """Validate domain format, rejecting search patterns which RDAP doesn't support"""
-        if not v or not v.strip():
-            raise ValueError("Domain cannot be empty")
-
-        domain = v.strip().lower()
-
-        if domain.startswith(("http://", "https://")):
-            domain = domain.split("://", 1)[1]
-
-        if "/" in domain:
-            domain = domain.split("/", 1)[0]
-
-        if len(domain) > 255:
-            raise ValueError("Domain name too long")
-
-        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
-            raise ValueError("Domain contains invalid characters")
-
-        return domain
+        return _validate_plain_domain(v)
 
 
 class CtSubdomainsRequest(BaseModel):
@@ -157,25 +139,7 @@ class CtSubdomainsRequest(BaseModel):
     @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
-        """Validate domain format, rejecting search patterns which crt.sh already applies itself"""
-        if not v or not v.strip():
-            raise ValueError("Domain cannot be empty")
-
-        domain = v.strip().lower()
-
-        if domain.startswith(("http://", "https://")):
-            domain = domain.split("://", 1)[1]
-
-        if "/" in domain:
-            domain = domain.split("/", 1)[0]
-
-        if len(domain) > 255:
-            raise ValueError("Domain name too long")
-
-        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
-            raise ValueError("Domain contains invalid characters")
-
-        return domain
+        return _validate_plain_domain(v)
 
 
 class CtCertificate(BaseModel):
@@ -223,25 +187,7 @@ class DnsLookupRequest(BaseModel):
     @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
-        """Validate domain format, rejecting search patterns which DNS resolution doesn't support"""
-        if not v or not v.strip():
-            raise ValueError("Domain cannot be empty")
-
-        domain = v.strip().lower()
-
-        if domain.startswith(("http://", "https://")):
-            domain = domain.split("://", 1)[1]
-
-        if "/" in domain:
-            domain = domain.split("/", 1)[0]
-
-        if len(domain) > 255:
-            raise ValueError("Domain name too long")
-
-        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
-            raise ValueError("Domain contains invalid characters")
-
-        return domain
+        return _validate_plain_domain(v)
 
 
 class DnsRecordSet(BaseModel):
@@ -284,25 +230,7 @@ class DnsDumpsterRequest(BaseModel):
     @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
-        """Validate domain format, rejecting search patterns which DNSDumpster doesn't support"""
-        if not v or not v.strip():
-            raise ValueError("Domain cannot be empty")
-
-        domain = v.strip().lower()
-
-        if domain.startswith(("http://", "https://")):
-            domain = domain.split("://", 1)[1]
-
-        if "/" in domain:
-            domain = domain.split("/", 1)[0]
-
-        if len(domain) > 255:
-            raise ValueError("Domain name too long")
-
-        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
-            raise ValueError("Domain contains invalid characters")
-
-        return domain
+        return _validate_plain_domain(v)
 
 
 class DnsDumpsterBanner(BaseModel):
@@ -382,25 +310,7 @@ class WaybackLookupRequest(BaseModel):
     @field_validator("domain")
     @classmethod
     def validate_domain_format(cls, v: str) -> str:
-        """Validate domain format, rejecting search patterns which CDX doesn't support"""
-        if not v or not v.strip():
-            raise ValueError("Domain cannot be empty")
-
-        domain = v.strip().lower()
-
-        if domain.startswith(("http://", "https://")):
-            domain = domain.split("://", 1)[1]
-
-        if "/" in domain:
-            domain = domain.split("/", 1)[0]
-
-        if len(domain) > 255:
-            raise ValueError("Domain name too long")
-
-        if any(char in domain for char in [" ", "\t", "\n", "\r", "*", "?"]):
-            raise ValueError("Domain contains invalid characters")
-
-        return domain
+        return _validate_plain_domain(v)
 
     @field_validator("path")
     @classmethod

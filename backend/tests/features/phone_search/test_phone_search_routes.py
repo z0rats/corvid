@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import register_exception_handlers
+from app.core.scans.run import ScanRun
 from app.features.phone_search.models.phone_search_models import PhoneSearch, PhoneSearchResult
 from app.features.phone_search.routers import phone_search_routes
 
@@ -72,7 +73,7 @@ class TestCancelScan:
         async def fake_cancel(search_id):
             return False
 
-        monkeypatch.setattr(phone_search_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/phone-search/runs/999/cancel")
 
@@ -83,7 +84,7 @@ class TestCancelScan:
         async def fake_cancel(search_id):
             return True
 
-        monkeypatch.setattr(phone_search_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/phone-search/runs/1/cancel")
 

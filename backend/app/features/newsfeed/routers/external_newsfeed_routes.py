@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 
 from app.core.database import managed_session
 from app.core.dependencies import ReadSessionDep, SessionDep
+from app.core.scans.sse import sse_stream
 from app.features.newsfeed.schemas.newsfeed_schemas import (
     ArticleAnalysisResponse,
     MessageResponse,
@@ -177,9 +178,9 @@ async def get_analyze_top_articles_stream() -> StreamingResponse:
     """
     logger.info("Starting streaming analysis of top articles")
 
-    async def event_stream():
+    async def events():
         async with managed_session() as db:
             async for message in analyze_top_articles_stream(db):
-                yield f"data: {message}\n\n"
+                yield message
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return sse_stream(events())

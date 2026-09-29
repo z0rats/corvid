@@ -12,7 +12,7 @@ import pytest
 
 from app.core.exceptions import AppHTTPException
 from app.core.scans.cancellable import CooperativeCancellable
-from app.core.scans.run import ScanCancelled
+from app.core.scans.run import ScanCancelled, ScanRun
 from app.features.instagram_search.models.instagram_search_models import InstagramSearch
 from app.features.instagram_search.service import instagram_scan_service as svc
 
@@ -43,7 +43,7 @@ def captured(monkeypatch):
             feature_name=feature_name, model=model, run_work=run_work, on_event=on_event, **kwargs
         )
 
-    monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
+    monkeypatch.setattr(ScanRun, "execute", fake_execute)
     return captured
 
 
@@ -153,20 +153,3 @@ class TestRunWorkOutcomeMapping:
             _run(captured["run_work"](123))
         assert exc_info.value.status_code == 401
         assert exc_info.value.error_code == "INSTAGRAM_SESSION_REQUIRED"
-
-
-class TestCancelScan:
-    def test_delegates_to_scan_run_cancel(self, monkeypatch):
-        captured = {}
-
-        async def fake_cancel(feature_name, search_id):
-            captured["feature_name"] = feature_name
-            captured["search_id"] = search_id
-            return True
-
-        monkeypatch.setattr(svc.ScanRun, "cancel", fake_cancel)
-
-        result = _run(svc.cancel_scan(42))
-
-        assert result is True
-        assert captured == {"feature_name": "instagram_search", "search_id": 42}

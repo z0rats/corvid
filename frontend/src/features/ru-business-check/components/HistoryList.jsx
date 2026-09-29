@@ -4,8 +4,8 @@ import Chip from '@mui/material/Chip';
 import HistoryTable from '../../../core/components/HistoryTable';
 import { ruBusinessCheckApi } from '../services/api/ruBusinessCheckApi';
 import { RISK_LABELS, RISK_COLORS } from '../constants/risk';
+import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 const STATUS_LABELS = { running: 'Выполняется', completed: 'Завершено', cancelled: 'Отменено', failed: 'Ошибка' };
 
 export default function HistoryList() {
@@ -17,7 +17,7 @@ export default function HistoryList() {
     {
       key: 'status',
       header: 'Статус',
-      render: (s) => <Chip size="small" label={STATUS_LABELS[s.status] || s.status} color={STATUS_COLORS[s.status] || 'default'} />,
+      render: (s) => <ScanStatusChip status={s.status} label={STATUS_LABELS[s.status] || s.status} />,
     },
     {
       key: 'risk_level',

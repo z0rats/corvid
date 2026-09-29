@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router';
 import ReactCountryFlag from "react-country-flag";
-import { useDnsDumpster } from "../../hooks/api/useDnsDumpster";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
 
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -144,7 +144,9 @@ function HostGroup({ groupKey, icon: Icon, hosts, t }) {
 export default function DnsDumpsterPanel({ domain }) {
   const { t } = useTranslation('iocTools');
   const theme = useTheme();
-  const { data, loading, error, notConfigured, unsupported } = useDnsDumpster(domain);
+  const { data, loading, error, notConfigured, unsupported } = useDomainPanel('dnsdumpster', domain, {
+    notConfiguredCode: 'DNSDUMPSTER_NOT_CONFIGURED'
+  });
 
   if (unsupported) return null;
 

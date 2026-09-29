@@ -1,59 +1,14 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../core/utils/accessToken';
+import api from '../../../../core/services/baseApi';
 import { ruBusinessCheckApi } from './ruBusinessCheckApi';
 
 vi.mock('../../../../core/services/baseApi', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
   baseURL: 'http://backend.test',
 }));
-vi.mock('../../../../core/utils/accessToken', () => ({ getAccessToken: vi.fn() }));
 
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
-});
-
-describe('ruBusinessCheckApi.startScan', () => {
-  it('opens an SSE POST stream with the bearer token and the given payload', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    const body = {};
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, body });
-    vi.stubGlobal('fetch', fetchMock);
-    const payload = { inn: '7707083893' };
-
-    const result = await ruBusinessCheckApi.startScan(payload);
-
-    expect(fetchMock).toHaveBeenCalledWith(`${baseURL}/api/ru-business-check/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': 'Bearer tok123',
-      },
-      body: JSON.stringify(payload),
-      signal: undefined,
-    });
-    expect(result).toBe(body);
-  });
-
-  it('throws when the response is not ok', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, statusText: 'Forbidden' }));
-
-    await expect(ruBusinessCheckApi.startScan({ inn: '7707083893' })).rejects.toThrow(
-      'Server error: Forbidden'
-    );
-  });
-});
-
-describe('ruBusinessCheckApi.cancelScan', () => {
-  it('posts to the cancel endpoint for the given search id', async () => {
-    api.post.mockResolvedValue({});
-
-    await ruBusinessCheckApi.cancelScan('search-1');
-
-    expect(api.post).toHaveBeenCalledWith('/api/ru-business-check/history/search-1/cancel');
-  });
 });
 
 describe('ruBusinessCheckApi.listHistory', () => {

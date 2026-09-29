@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useWhoisLookup } from "../../hooks/api/useWhoisLookup";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
 import { domainUtils } from "../../utils/domainUtils";
 
 import Alert from '@mui/material/Alert';
@@ -35,7 +35,7 @@ function Field({ icon, label, value, t }) {
 
 export default function WhoisPanel({ domain }) {
   const { t } = useTranslation('iocTools');
-  const { data, loading, error, unsupported } = useWhoisLookup(domain);
+  const { data, loading, error, unsupported } = useDomainPanel('whois', domain);
 
   if (unsupported) {
     return (

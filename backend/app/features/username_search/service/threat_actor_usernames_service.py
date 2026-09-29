@@ -4,10 +4,12 @@ import logging
 import httpx
 
 from app.core.scans.cancellable import TaskCancellable
-from app.core.scans.run import ScanCancelled, ScanOutcome, ScanRun
+from app.core.scans.run import ScanCancelled, ScanOutcome
 from app.core.scans.sse import queue_sink
-from app.features.username_search.crud.username_search_crud import SCAN_COLUMNS, add_site_results
-from app.features.username_search.models.username_search_models import MaigretSearch
+from app.features.username_search.crud.username_search_crud import (
+    USERNAME_SEARCH_SCANS,
+    add_site_results,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,12 +17,6 @@ FEATURE_NAME = "threat_actor_usernames"
 
 BASE_URL = "https://threatactorusernames.com"
 REQUEST_TIMEOUT_SECONDS = 10.0
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running lookup. Returns False if
-    no scan with that id is currently running (already finished, or never existed)."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 def _extract_found_sites(results: list[dict]) -> list[dict]:
@@ -80,12 +76,10 @@ async def run_scan(username: str, queue: asyncio.Queue) -> None:
         )
 
     cancellable = TaskCancellable(asyncio.current_task())
-    await ScanRun.execute(
-        FEATURE_NAME,
-        MaigretSearch,
+    await USERNAME_SEARCH_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
+        name=FEATURE_NAME,
         create_fields={"username": username, "source": "threat_actor_usernames"},
         started_fields={"username": username, "total_sites": None},
         cancellable=cancellable,

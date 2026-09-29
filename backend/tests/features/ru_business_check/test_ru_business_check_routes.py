@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import register_exception_handlers
+from app.core.scans.run import ScanRun
 from app.features.ru_business_check.models.ru_business_check_models import RuBusinessCheckSearch
 from app.features.ru_business_check.routers import ru_business_check_routes
 
@@ -96,7 +97,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return False
 
-        monkeypatch.setattr(ru_business_check_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/ru-business-check/history/999/cancel")
 
@@ -107,7 +108,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return True
 
-        monkeypatch.setattr(ru_business_check_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/ru-business-check/history/1/cancel")
 

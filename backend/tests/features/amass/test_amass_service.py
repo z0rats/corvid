@@ -12,11 +12,11 @@ import asyncio
 import pytest
 
 from app.core.scans.cancellable import ProcessCancellable
-from app.core.scans.run import ScanCancelled
+from app.core.scans.run import ScanCancelled, ScanRun
 from app.features.amass.models.amass_models import AmassSearch
 from app.features.amass.schemas.amass_schemas import AmassHost
 from app.features.amass.service import amass_service as svc
-from app.features.amass.service.amass_service import AmassError, cancel_scan, get_amass_version
+from app.features.amass.service.amass_service import AmassError, get_amass_version
 
 
 def _run(coro):
@@ -105,20 +105,6 @@ class TestRunSubs:
         assert process.killed is True
 
 
-class TestCancelScan:
-    def test_delegates_to_scan_run(self, monkeypatch):
-        captured = []
-
-        async def fake_cancel(feature_name, search_id):
-            captured.append((feature_name, search_id))
-            return True
-
-        monkeypatch.setattr(svc.ScanRun, "cancel", fake_cancel)
-
-        assert _run(cancel_scan(123)) is True
-        assert captured == [("amass", 123)]
-
-
 class TestGetAmassVersion:
     def setup_method(self):
         get_amass_version.cache_clear()
@@ -156,7 +142,7 @@ class TestRunScanTask:
                 **kwargs,
             )
 
-        monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
+        monkeypatch.setattr(ScanRun, "execute", fake_execute)
         return captured
 
     def _patch_engine_and_subprocess(self, monkeypatch, *, ready=True, process=None):

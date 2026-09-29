@@ -13,16 +13,13 @@ from html.parser import HTMLParser
 
 import httpx
 
-from app.core.exceptions import AppHTTPException
+from app.features.ioc_tools.domain_finder.service.provider_http import Provider, provider_get
 
 logger = logging.getLogger(__name__)
 
-RAPIDDNS_URL = "https://rapiddns.io/subdomain/{domain}"
-RAPIDDNS_TIMEOUT = 20.0
-DEFAULT_HEADERS: dict[str, str] = {
-    "User-Agent": "Corvid-Domain-Lookup/1.0",
-    "Accept": "text/html",
-}
+RAPIDDNS = Provider(
+    name="RapidDNS", code="RAPIDDNS", base_url="https://rapiddns.io/subdomain/", accept="text/html"
+)
 
 
 class _SubdomainTableParser(HTMLParser):
@@ -66,79 +63,28 @@ class _SubdomainTableParser(HTMLParser):
 
 
 async def fetch_rapiddns_records(domain: str) -> list[tuple[str, str, str]]:
-    """
-    Fetch raw (hostname, record_type, address) rows for a domain from RapidDNS.
+    """Raw (hostname, record_type, address) rows for a domain from RapidDNS. Failures raise
+    `AppHTTPException` (`provider_http`)."""
 
-    Args:
-        domain: Domain name to search for
+    def parse(response: httpx.Response) -> list[tuple[str, str, str]]:
+        if not response.text.strip():
+            logger.info("RapidDNS returned an empty response for domain: %s", domain)
+            return []
 
-    Returns:
-        List of (hostname, record_type, address) tuples
+        parser = _SubdomainTableParser()
+        parser.feed(response.text)
 
-    Raises:
-        AppHTTPException: For request failures
-    """
-    logger.debug("Fetching RapidDNS subdomain data for domain: %s", domain)
+        records: list[tuple[str, str, str]] = []
+        for row in parser.rows:
+            if len(row) < 4:
+                # Markup drifted from the shape this parser expects - skip
+                # rather than misinterpret a partial row
+                continue
+            _index, hostname, address, record_type = row[:4]
+            if hostname and record_type:
+                records.append((hostname, record_type, address))
 
-    try:
-        async with httpx.AsyncClient(timeout=RAPIDDNS_TIMEOUT, headers=DEFAULT_HEADERS) as client:
-            response = await client.get(RAPIDDNS_URL.format(domain=domain), params={"full": "1"})
-            response.raise_for_status()
+        logger.info("Retrieved %s records from RapidDNS for domain: %s", len(records), domain)
+        return records
 
-            if not response.text.strip():
-                logger.info("RapidDNS returned an empty response for domain: %s", domain)
-                return []
-
-            parser = _SubdomainTableParser()
-            parser.feed(response.text)
-
-            records: list[tuple[str, str, str]] = []
-            for row in parser.rows:
-                if len(row) < 4:
-                    # Markup drifted from the shape this parser expects - skip
-                    # rather than misinterpret a partial row
-                    continue
-                _index, hostname, address, record_type = row[:4]
-                if hostname and record_type:
-                    records.append((hostname, record_type, address))
-
-            logger.info("Retrieved %s records from RapidDNS for domain: %s", len(records), domain)
-            return records
-
-    except httpx.TimeoutException as e:
-        logger.error("Timeout while fetching RapidDNS data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=504,
-            detail="Request timeout while connecting to RapidDNS",
-            error_code="RAPIDDNS_TIMEOUT",
-        ) from e
-    except httpx.RequestError as e:
-        logger.error("Request error while fetching RapidDNS data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=503,
-            detail=f"Failed to connect to RapidDNS: {str(e)}",
-            error_code="RAPIDDNS_CONNECTION_ERROR",
-        ) from e
-    except httpx.HTTPStatusError as e:
-        logger.error(
-            "HTTP status error from RapidDNS for domain %s: Status %s",
-            domain,
-            e.response.status_code,
-        )
-        raise AppHTTPException(
-            status_code=e.response.status_code,
-            detail=f"RapidDNS returned error: {e.response.status_code}",
-            error_code="RAPIDDNS_API_ERROR",
-        ) from e
-    except Exception as e:
-        logger.error(
-            "Unexpected error while fetching RapidDNS data for domain %s: %s",
-            domain,
-            e,
-            exc_info=True,
-        )
-        raise AppHTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while fetching RapidDNS data",
-            error_code="RAPIDDNS_UNEXPECTED_ERROR",
-        ) from e
+    return await provider_get(RAPIDDNS, domain, subject=domain, params={"full": "1"}, parse=parse)

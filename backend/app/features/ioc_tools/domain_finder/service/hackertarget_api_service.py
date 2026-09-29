@@ -12,104 +12,51 @@ import logging
 
 import httpx
 
-from app.core.exceptions import AppHTTPException
+from app.features.ioc_tools.domain_finder.service.provider_http import Provider, provider_get
 
 logger = logging.getLogger(__name__)
 
-HACKERTARGET_URL = "https://api.hackertarget.com/hostsearch/"
-HACKERTARGET_TIMEOUT = 20.0
-DEFAULT_HEADERS: dict[str, str] = {
-    "User-Agent": "Corvid-Domain-Lookup/1.0",
-}
+HACKERTARGET = Provider(
+    name="HackerTarget",
+    code="HACKERTARGET",
+    base_url="https://api.hackertarget.com/hostsearch/",
+    accept=None,
+)
 
 
 async def fetch_hackertarget_hosts(domain: str) -> list[tuple[str, str | None]]:
-    """
-    Fetch raw hostname/IP pairs for a domain from HackerTarget's hostsearch API.
+    """Raw (hostname, ip_address) pairs for a domain from HackerTarget's hostsearch API.
+    Failures raise `AppHTTPException` (`provider_http`), plus `HACKERTARGET_RATE_LIMITED`
+    when the free-tier daily quota is hit."""
 
-    Args:
-        domain: Domain name to search for
+    def parse(response: httpx.Response) -> list[tuple[str, str | None]]:
+        text = response.text.strip()
+        if not text:
+            logger.info("HackerTarget returned an empty response for domain: %s", domain)
+            return []
 
-    Returns:
-        List of (hostname, ip_address) tuples
+        first_line = text.splitlines()[0].strip().lower()
+        if "api count exceeded" in first_line:
+            logger.warning("HackerTarget free-tier quota hit for domain: %s", domain)
+            raise HACKERTARGET.error(
+                429,
+                "RATE_LIMITED",
+                "HackerTarget free-tier API quota exceeded, try again later",
+            )
+        if first_line.startswith("error"):
+            # No hosts on file (or an invalid query our own validator already
+            # rejects) - not a failure worth surfacing, just nothing found
+            logger.info("HackerTarget found no hosts for domain: %s (%s)", domain, first_line)
+            return []
 
-    Raises:
-        AppHTTPException: For request failures, or when the free-tier daily quota is hit
-    """
-    logger.debug("Fetching HackerTarget hostsearch data for domain: %s", domain)
+        hosts: list[tuple[str, str | None]] = []
+        for line in text.splitlines():
+            hostname, _, ip = line.partition(",")
+            hostname = hostname.strip()
+            if hostname:
+                hosts.append((hostname, ip.strip() or None))
 
-    try:
-        async with httpx.AsyncClient(
-            timeout=HACKERTARGET_TIMEOUT, headers=DEFAULT_HEADERS
-        ) as client:
-            response = await client.get(HACKERTARGET_URL, params={"q": domain})
-            response.raise_for_status()
+        logger.info("Retrieved %s hosts from HackerTarget for domain: %s", len(hosts), domain)
+        return hosts
 
-            text = response.text.strip()
-            if not text:
-                logger.info("HackerTarget returned an empty response for domain: %s", domain)
-                return []
-
-            first_line = text.splitlines()[0].strip().lower()
-            if "api count exceeded" in first_line:
-                logger.warning("HackerTarget free-tier quota hit for domain: %s", domain)
-                raise AppHTTPException(
-                    status_code=429,
-                    detail="HackerTarget free-tier API quota exceeded, try again later",
-                    error_code="HACKERTARGET_RATE_LIMITED",
-                )
-            if first_line.startswith("error"):
-                # No hosts on file (or an invalid query our own validator already
-                # rejects) - not a failure worth surfacing, just nothing found
-                logger.info("HackerTarget found no hosts for domain: %s (%s)", domain, first_line)
-                return []
-
-            hosts: list[tuple[str, str | None]] = []
-            for line in text.splitlines():
-                hostname, _, ip = line.partition(",")
-                hostname = hostname.strip()
-                if hostname:
-                    hosts.append((hostname, ip.strip() or None))
-
-            logger.info("Retrieved %s hosts from HackerTarget for domain: %s", len(hosts), domain)
-            return hosts
-
-    except AppHTTPException:
-        raise
-    except httpx.TimeoutException as e:
-        logger.error("Timeout while fetching HackerTarget data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=504,
-            detail="Request timeout while connecting to HackerTarget",
-            error_code="HACKERTARGET_TIMEOUT",
-        ) from e
-    except httpx.RequestError as e:
-        logger.error("Request error while fetching HackerTarget data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=503,
-            detail=f"Failed to connect to HackerTarget: {str(e)}",
-            error_code="HACKERTARGET_CONNECTION_ERROR",
-        ) from e
-    except httpx.HTTPStatusError as e:
-        logger.error(
-            "HTTP status error from HackerTarget for domain %s: Status %s",
-            domain,
-            e.response.status_code,
-        )
-        raise AppHTTPException(
-            status_code=e.response.status_code,
-            detail=f"HackerTarget returned error: {e.response.status_code}",
-            error_code="HACKERTARGET_API_ERROR",
-        ) from e
-    except Exception as e:
-        logger.error(
-            "Unexpected error while fetching HackerTarget data for domain %s: %s",
-            domain,
-            e,
-            exc_info=True,
-        )
-        raise AppHTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while fetching HackerTarget data",
-            error_code="HACKERTARGET_UNEXPECTED_ERROR",
-        ) from e
+    return await provider_get(HACKERTARGET, subject=domain, params={"q": domain}, parse=parse)

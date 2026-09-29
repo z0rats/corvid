@@ -4,8 +4,8 @@ import Chip from '@mui/material/Chip';
 
 import HistoryTable from '../../../core/components/HistoryTable';
 import { instagramSearchApi } from '../services/api/instagramSearchApi';
+import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 
 export default function HistoryList() {
   const { t } = useTranslation('instagramSearch');
@@ -22,7 +22,7 @@ export default function HistoryList() {
       key: 'status',
       header: t('history.headers.status'),
       render: (search) => (
-        <Chip size="small" label={t(`history.status.${search.status}`)} color={STATUS_COLORS[search.status] || 'default'} />
+        <ScanStatusChip status={search.status} label={t(`history.status.${search.status}`)} />
       ),
     },
     {

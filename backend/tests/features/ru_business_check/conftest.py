@@ -2,6 +2,7 @@ import contextlib
 
 import pytest
 
+from app.core.scans.run import ScanRun
 from app.features.ru_business_check.service import ru_business_check_service as svc
 from tests.features.ru_business_check.scan_harness import FakeSettings
 from tests.features.ru_business_check.scan_harness import as_async as _async
@@ -115,5 +116,5 @@ def captured(monkeypatch):
             feature_name=feature_name, model=model, run_work=run_work, on_event=on_event, **kwargs
         )
 
-    monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
+    monkeypatch.setattr(ScanRun, "execute", fake_execute)
     return captured

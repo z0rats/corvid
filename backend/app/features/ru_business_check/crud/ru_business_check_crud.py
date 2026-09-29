@@ -4,42 +4,16 @@ from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.scans.crud import ScanColumns
-from app.core.scans.reconciliation import mark_stale_running_as_failed
+from app.core.scans.feature import ScanFeature
+from app.features.ru_business_check.config.ru_business_check_config import FEATURE_NAME
 from app.features.ru_business_check.models.ru_business_check_models import RuBusinessCheckSearch
 
-SCAN_COLUMNS = ScanColumns(error_column="error", completed_at_column="completed_at")
-
-
-async def interrupt_running_searches(db: AsyncSession) -> int:
-    """Mark any search still 'running' as failed - see `mark_stale_running_as_failed`'s
-    docstring for why this is needed (an in-memory asyncio task doesn't survive a
-    process restart)."""
-    return await mark_stale_running_as_failed(
-        db,
-        RuBusinessCheckSearch,
-        error_column=SCAN_COLUMNS.error_column,
-        error_message="Interrupted by server restart",
-        completed_at_column=SCAN_COLUMNS.completed_at_column,
-    )
-
-
-async def get_search(db: AsyncSession, search_id: int) -> RuBusinessCheckSearch | None:
-    result = await db.execute(
-        select(RuBusinessCheckSearch).where(RuBusinessCheckSearch.id == search_id)
-    )
-    return result.scalar_one_or_none()
-
-
-async def list_searches(
-    db: AsyncSession, skip: int = 0, limit: int = 100
-) -> list[RuBusinessCheckSearch]:
-    result = await db.execute(
-        select(RuBusinessCheckSearch)
-        .order_by(RuBusinessCheckSearch.searched_at.desc())
-        .offset(skip)
-        .limit(limit)
-    )
-    return list(result.scalars().all())
+RU_BUSINESS_CHECK_SCANS = ScanFeature(
+    name=FEATURE_NAME,
+    model=RuBusinessCheckSearch,
+    columns=ScanColumns(error_column="error", completed_at_column="completed_at"),
+    order_by=RuBusinessCheckSearch.searched_at,
+)
 
 
 async def find_recent_completed_search_by_query(
@@ -69,15 +43,6 @@ async def find_recent_completed_search_by_query(
         .limit(1)
     )
     return result.scalar_one_or_none()
-
-
-async def delete_search(db: AsyncSession, search_id: int) -> RuBusinessCheckSearch | None:
-    search = await get_search(db, search_id)
-    if not search:
-        return None
-    await db.delete(search)
-    await db.flush()
-    return search
 
 
 async def delete_expired_searches(db: AsyncSession, retention_days: int) -> int:

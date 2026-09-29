@@ -12,26 +12,16 @@ import gitcolombo
 import psutil
 
 from app.core.scans.cancellable import GitCloneCancellable
-from app.core.scans.run import ScanCancelled, ScanOutcome, ScanRun
+from app.core.scans.run import ScanCancelled, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.features.git_recon.config.git_recon_config import (
     CLONE_WORKERS,
     MAX_REPOS_PER_SCAN,
     WALL_CLOCK_TIMEOUT_SECONDS,
 )
-from app.features.git_recon.crud.git_recon_crud import SCAN_COLUMNS
-from app.features.git_recon.models.git_recon_models import GitReconSearch
+from app.features.git_recon.crud.git_recon_crud import GIT_RECON_SCANS
 
 logger = logging.getLogger(__name__)
-
-FEATURE_NAME = "git_recon"
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running git recon scan, keeping
-    whatever repos were cloned/analyzed before cancellation. Returns False if
-    no scan with that id is currently running."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 # gitcolombo's git_clone() shells out to `git clone <url> <dir>` via subprocess -
@@ -417,12 +407,9 @@ async def run_scan_task(
             raise ScanCancelled(outcome)
         return outcome
 
-    await ScanRun.execute(
-        FEATURE_NAME,
-        GitReconSearch,
+    await GIT_RECON_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
         create_fields={"mode": mode, "target": target},
         started_fields={"mode": mode, "target": target},
         cancellable=cancellable,

@@ -1,30 +1,6 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../core/utils/accessToken';
+import api from '../../../../core/services/baseApi';
 
 export const emailSearchApi = {
-  async startScan(username, { signal } = {}) {
-    const response = await fetch(`${baseURL}/api/email-search/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': `Bearer ${getAccessToken()}`,
-      },
-      body: JSON.stringify({ username }),
-      signal,
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error(`Server error: ${response.statusText}`);
-    }
-
-    return response.body;
-  },
-
-  async cancelScan(searchId) {
-    await api.post(`/api/email-search/runs/${searchId}/cancel`);
-  },
-
   async listRuns(skip = 0, limit = 100) {
     const response = await api.get('/api/email-search/runs', { params: { skip, limit } });
     return response.data;

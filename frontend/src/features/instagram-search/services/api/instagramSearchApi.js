@@ -1,5 +1,4 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../core/utils/accessToken';
+import api from '../../../../core/services/baseApi';
 
 export const instagramSearchApi = {
   async lookupProfile(username) {
@@ -10,29 +9,6 @@ export const instagramSearchApi = {
   async getHealth() {
     const response = await api.get('/api/instagram-search/health');
     return response.data;
-  },
-
-  async startScan({ username, scanType }, { signal } = {}) {
-    const response = await fetch(`${baseURL}/api/instagram-search/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-      body: JSON.stringify({ username, scan_type: scanType }),
-      signal,
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error(`Server error: ${response.statusText}`);
-    }
-
-    return response.body;
-  },
-
-  async cancelScan(searchId) {
-    await api.post(`/api/instagram-search/history/${searchId}/cancel`);
   },
 
   async listHistory(skip = 0, limit = 100) {

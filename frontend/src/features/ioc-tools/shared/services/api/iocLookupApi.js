@@ -1,5 +1,5 @@
-import api, { baseURL } from '../../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../../core/utils/accessToken';
+import api from '../../../../../core/services/baseApi';
+import { openSseStream } from '../../../../../core/services/sseStream';
 
 /**
  * IOC Lookup API Service
@@ -22,22 +22,8 @@ export const iocLookupApi = {
     return response.data;
   },
 
-  async bulkLookup(iocs, services) {
-    const response = await fetch(`${baseURL}/api/ioc-lookup/bulk`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': `Bearer ${getAccessToken()}`,
-      },
-      body: JSON.stringify({ iocs, services })
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error(`Server error: ${response.statusText}`);
-    }
-
-    return response.body;
+  bulkLookup(iocs, services, { signal } = {}) {
+    return openSseStream('/api/ioc-lookup/bulk', { body: { iocs, services }, signal });
   },
 
   async fetchBulkLookupSettings() {

@@ -4,6 +4,7 @@ import { determineIocType, IOC_TYPES } from '../../shared/utils/iocDefinitions';
 import { getOverallTlp } from '../../shared/utils/tlpUtils';
 import { SERVICE_DEFINITIONS } from '../../shared/config/serviceConfig';
 import { iocLookupApi } from '../../../shared/services/api/iocLookupApi';
+import { readSseEvents } from '../../../../../core/services/sseStream';
 import { createLogger } from '../../../../../core/utils/logger';
 import { bulkLookupStateAtom } from '../state/bulkLookupAtoms';
 
@@ -77,9 +78,6 @@ export function useBulkLookupProcessor() {
   }, [setCategorizedIocs]);
 
   const processSSEStream = useCallback(async (stream, uniqueIocs, selectedServices, signal) => {
-    const reader = stream.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
     let completedRequests = 0;
     const totalRequests = uniqueIocs.reduce((count, ioc) => {
       const type = determineIocType(ioc);
@@ -89,64 +87,46 @@ export function useBulkLookupProcessor() {
       }).length;
     }, 0);
 
-    try {
-    while (true) {
-      if (signal?.aborted) break;
-      const { done, value } = await reader.read();
-      if (done) break;
+    for await (const eventData of readSseEvents(stream, signal)) {
+      completedRequests++;
+      try {
+        const { ioc, service, data, error } = eventData;
 
-      buffer += decoder.decode(value, { stream: true });
-      const eventChunks = buffer.split('\n\n');
-      buffer = eventChunks.pop();
-
-      for (const chunk of eventChunks) {
-        if (chunk.startsWith('data: ')) {
-          completedRequests++;
-          const dataStr = chunk.substring(6);
-          try {
-            const eventData = JSON.parse(dataStr);
-            const { ioc, service, data, error } = eventData;
-
-            if (error) {
-              const isNotFound = error.toLowerCase().includes('not found');
-              if (isNotFound) {
-                updateIocServiceData(ioc, service, {
-                  status: 'completed',
-                  data: { error: true, message: error },
-                  summary: 'Not found',
-                  tlp: 'GREEN',
-                });
-              } else {
-                updateIocServiceData(ioc, service, {
-                  status: 'error',
-                  summary: error,
-                  tlp: 'WHITE',
-                  error: { message: error }
-                });
-              }
-            } else {
-              const serviceDef = SERVICE_DEFINITIONS[service];
-              if (serviceDef) {
-                const iocType = determineIocType(ioc);
-                const analysisResult = serviceDef.getSummaryAndTlp(data, iocType);
-                updateIocServiceData(ioc, service, {
-                  status: 'completed',
-                  data: data,
-                  summary: analysisResult.summary,
-                  tlp: analysisResult.tlp,
-                  keyMetric: analysisResult.keyMetric,
-                });
-              }
-            }
-          } catch (e) {
-            logger.error('Error parsing SSE data:', e, 'Data:', dataStr);
+        if (error) {
+          const isNotFound = error.toLowerCase().includes('not found');
+          if (isNotFound) {
+            updateIocServiceData(ioc, service, {
+              status: 'completed',
+              data: { error: true, message: error },
+              summary: 'Not found',
+              tlp: 'GREEN',
+            });
+          } else {
+            updateIocServiceData(ioc, service, {
+              status: 'error',
+              summary: error,
+              tlp: 'WHITE',
+              error: { message: error }
+            });
           }
-          setProgress(totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 0);
+        } else {
+          const serviceDef = SERVICE_DEFINITIONS[service];
+          if (serviceDef) {
+            const iocType = determineIocType(ioc);
+            const analysisResult = serviceDef.getSummaryAndTlp(data, iocType);
+            updateIocServiceData(ioc, service, {
+              status: 'completed',
+              data: data,
+              summary: analysisResult.summary,
+              tlp: analysisResult.tlp,
+              keyMetric: analysisResult.keyMetric,
+            });
+          }
         }
+      } catch (e) {
+        logger.error('Error handling bulk lookup event:', e, eventData);
       }
-    }
-    } finally {
-      reader.releaseLock();
+      setProgress(totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 0);
     }
   }, [updateIocServiceData, setProgress]);
 
@@ -199,7 +179,7 @@ export function useBulkLookupProcessor() {
     setCategorizedIocs(freshInitialCategorizedIocs);
 
     try {
-      const stream = await iocLookupApi.bulkLookup(uniqueIocs, selectedServices);
+      const stream = await iocLookupApi.bulkLookup(uniqueIocs, selectedServices, { signal });
       await processSSEStream(stream, uniqueIocs, selectedServices, signal);
     } catch (err) {
       if (signal.aborted) return;

@@ -6,8 +6,9 @@ import maigret
 from fastapi import APIRouter, Query, Request, Response, status
 
 from app.core.config.rate_limit_config import limiter
-from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
+from app.core.dependencies import ReadSessionDep, SessionDep
 from app.core.exceptions import AppHTTPException
+from app.core.scans.routes import add_run_routes
 from app.core.scans.sse import sse_response
 from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
     get_social_analyzer_config,
@@ -32,11 +33,7 @@ from app.features.username_search.config.social_analyzer_config import (
 from app.features.username_search.config.social_analyzer_config import (
     get_installed_version as get_social_analyzer_version,
 )
-from app.features.username_search.crud.username_search_crud import (
-    delete_search_run,
-    get_search_run_with_results,
-    list_search_runs,
-)
+from app.features.username_search.crud.username_search_crud import USERNAME_SEARCH_SCANS
 from app.features.username_search.schemas.username_search_schemas import (
     HudsonRockCheckResponse,
     ScanRequest,
@@ -55,19 +52,10 @@ from app.features.username_search.service.report_service import (
     load_scan_results,
 )
 from app.features.username_search.service.social_analyzer_service import (
-    cancel_scan as cancel_social_analyzer_scan,
-)
-from app.features.username_search.service.social_analyzer_service import (
     run_scan as run_social_analyzer_scan,
 )
 from app.features.username_search.service.threat_actor_usernames_service import (
-    cancel_scan as cancel_threat_actor_usernames_scan,
-)
-from app.features.username_search.service.threat_actor_usernames_service import (
     run_scan as run_threat_actor_usernames_scan,
-)
-from app.features.username_search.service.username_search_service import (
-    cancel_scan as cancel_maigret_scan,
 )
 from app.features.username_search.service.username_search_service import (
     run_scan as run_maigret_scan,
@@ -131,32 +119,6 @@ async def get_hudson_rock_check(
             detail="Hudson Rock lookup failed",
             error_code="USERNAME_SEARCH_HUDSON_ROCK_FAILED",
         ) from exc
-
-
-@router.post(
-    "/runs/{search_id}/cancel",
-    status_code=status.HTTP_202_ACCEPTED,
-    summary="Cancel a running search",
-    description=(
-        "Cancel a currently-running username search, keeping whatever sites "
-        "were found before cancellation"
-    ),
-    responses={404: {"description": "No running search with that ID"}},
-)
-async def cancel_scan_endpoint(search_id: int) -> None:
-    """Cancel a running scan, regardless of which source is running it"""
-    cancelled = (
-        await cancel_maigret_scan(search_id)
-        or await cancel_social_analyzer_scan(search_id)
-        or await cancel_threat_actor_usernames_scan(search_id)
-    )
-    if not cancelled:
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No running search with that ID",
-            error_code="USERNAME_SEARCH_NOT_RUNNING",
-        )
-    logger.info("Cancellation requested for username search run %s", search_id)
 
 
 @router.get(
@@ -273,41 +235,6 @@ async def check_maigret_update(db: SessionDep) -> UsernameSearchInfo:
 
 
 @router.get(
-    "/runs",
-    response_model=list[SearchRunSummary],
-    summary="List past searches",
-    description="Retrieve past and in-progress username searches, most recent first",
-)
-async def read_search_runs(
-    db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100
-) -> list[SearchRunSummary]:
-    """List past search runs with pagination"""
-    runs = await list_search_runs(db, skip=skip, limit=limit)
-    return [SearchRunSummary.model_validate(r) for r in runs]
-
-
-@router.get(
-    "/runs/{search_id}",
-    response_model=SearchRunDetail,
-    summary="Get search run detail",
-    description="Retrieve a specific search run including its found-site results",
-    responses={404: {"description": "Search run not found"}},
-)
-async def read_search_run(search_id: int, db: ReadSessionDep) -> SearchRunDetail:
-    """Get a specific search run with its found sites"""
-    run = await get_search_run_with_results(db, search_id)
-    if not run:
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Search run not found",
-            error_code="USERNAME_SEARCH_RUN_NOT_FOUND",
-        )
-    detail = SearchRunDetail.model_validate(run)
-    detail.has_export = has_scan_results(search_id)
-    return detail
-
-
-@router.get(
     "/runs/{search_id}/export/{export_format}",
     summary="Export a search run's report",
     description=(
@@ -321,7 +248,7 @@ async def read_search_run(search_id: int, db: ReadSessionDep) -> SearchRunDetail
 )
 async def export_search_run(search_id: int, export_format: str, db: ReadSessionDep) -> Response:
     """Export a search run's full report in the given format"""
-    run = await get_search_run_with_results(db, search_id)
+    run = await USERNAME_SEARCH_SCANS.history.get_with_results(db, search_id)
     if not run:
         raise AppHTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -355,21 +282,23 @@ async def export_search_run(search_id: int, export_format: str, db: ReadSessionD
     )
 
 
-@router.delete(
-    "/runs/{search_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete search run",
-    description="Permanently delete a search run and its found-site results",
-    responses={404: {"description": "Search run not found"}},
+def _run_detail(run) -> SearchRunDetail:
+    detail = SearchRunDetail.model_validate(run)
+    detail.has_export = has_scan_results(run.id)
+    return detail
+
+
+add_run_routes(
+    router,
+    USERNAME_SEARCH_SCANS,
+    display_name="username",
+    base="runs",
+    summary_schema=SearchRunSummary,
+    detail_schema=SearchRunDetail,
+    not_found_code="USERNAME_SEARCH_RUN_NOT_FOUND",
+    not_running_code="USERNAME_SEARCH_NOT_RUNNING",
+    not_found_detail="Search run not found",
+    with_results=True,
+    to_detail=_run_detail,
+    after_delete=delete_scan_results,
 )
-async def delete_search_run_endpoint(search_id: int, db: SessionDep) -> None:
-    """Delete a specific search run"""
-    run = await delete_search_run(db, search_id)
-    if not run:
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Search run not found",
-            error_code="USERNAME_SEARCH_RUN_NOT_FOUND",
-        )
-    delete_scan_results(search_id)
-    logger.info("Deleted username search run %s", search_id)

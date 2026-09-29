@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from app.core.database import managed_session
 from app.core.scans.cancellable import ProcessCancellable
-from app.core.scans.run import ScanCancelled, ScanOutcome, ScanRun
+from app.core.scans.run import ScanCancelled, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.core.settings.username_search.crud.social_analyzer_settings_crud import (
     get_social_analyzer_config,
@@ -14,19 +14,14 @@ from app.features.username_search.config.social_analyzer_config import (
     PROCESS_WATCHDOG_SECONDS,
     find_binary,
 )
-from app.features.username_search.crud.username_search_crud import SCAN_COLUMNS, add_site_results
-from app.features.username_search.models.username_search_models import MaigretSearch
+from app.features.username_search.crud.username_search_crud import (
+    USERNAME_SEARCH_SCANS,
+    add_site_results,
+)
 
 logger = logging.getLogger(__name__)
 
 FEATURE_NAME = "social_analyzer"
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running social-analyzer scan by
-    terminating its subprocess. Returns False if no scan with that id is
-    currently running."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 def _extract_found_sites(detected: list[dict]) -> list[dict]:
@@ -73,12 +68,10 @@ async def run_scan(
         async def run_work(search_id: int) -> ScanOutcome:
             raise RuntimeError("social-analyzer executable not found on PATH")
 
-        await ScanRun.execute(
-            FEATURE_NAME,
-            MaigretSearch,
+        await USERNAME_SEARCH_SCANS.execute(
             run_work,
             on_event,
-            columns=SCAN_COLUMNS,
+            name=FEATURE_NAME,
             create_fields={"username": username, "source": "social_analyzer"},
             started_fields={"username": username, "total_sites": top},
         )
@@ -139,12 +132,10 @@ async def run_scan(
 
         return ScanOutcome(fields={"total_sites_checked": top, "found_count": len(found_sites)})
 
-    await ScanRun.execute(
-        FEATURE_NAME,
-        MaigretSearch,
+    await USERNAME_SEARCH_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
+        name=FEATURE_NAME,
         create_fields={"username": username, "source": "social_analyzer"},
         started_fields={"username": username, "total_sites": top},
         cancellable=cancellable,

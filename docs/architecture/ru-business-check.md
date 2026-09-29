@@ -19,14 +19,22 @@ the verdict semantics, `extra_data` and the local dumps: `docs/adr/0014-*.md`.
   publications were read as well (`fedresurs_service.is_fully_checked`). `SearchDetail`'s
   computed `missing_required_sources` names what's missing (the UI and export list it); an
   `incomplete` scan is never served from the 24h cache.
+- **One seam per source** (`service/source_runner.py`): every source after ЕГРЮЛ is a `Source`
+  row in `ru_business_check_service._sources()` (subject it needs, fetcher, error class, "not
+  checked" shape, storage column or `extra_data`, optional `is_complete`/not-applicable-to-ИП).
+  `run_source` is the only place deciding a `SourceResult.status` (`checked`/`incomplete`/
+  `failed`/`skipped`/`not_applicable`) - and it treats the source's own error, any
+  `httpx.HTTPError` and a malformed JSON body alike as "failed → not checked", so a fetcher
+  that lets a transport error escape can't fail the scan. ЕГРЮЛ's own transport errors become
+  `EgrulError`. Adding a source = one `Source` row + `AVAILABLE_SOURCES`/labels + its flags,
+  report section, and drift case.
 - **Thresholds/results**: `flag_engine.evaluate(SourceResults, Thresholds, checked_sources)`;
-  `Thresholds` field names are the settings columns (`Thresholds.from_settings`).
+  `SourceResults.from_source_data` maps source keys onto flag inputs. `Thresholds` field names
+  are the settings columns (`Thresholds.from_settings`).
 - **"3+ soft flags → high" counts sources**, each at most once.
-- **`extra_data`/`extra_raw`** (JSON keyed by source id) hold ГИР БО, МСП and the dump lookups;
-  register a remote fetcher in `ru_business_check_service._extra_sources()`, a local-dump lookup
-  in `_local_lookups()`. Every source call goes through `_attempt` (failure -> default + not
-  checked). `raw_sha256` fingerprints
-  each captured payload at scan time.
+- **`extra_data`/`extra_raw`** (JSON keyed by source id) hold ГИР БО, МСП and the dump lookups
+  (a `Source` with no `data_column`). `raw_sha256` fingerprints each captured payload at scan
+  time.
 - **Canaries**: `tests/canary/` (`pytest -m canary -o addopts=`, weekly `.github/workflows/canary.yml`)
   calls the real sites; only "didn't answer us" (network, anti-bot, captcha, 401/403/429/451/5xx)
   skips - drift, a JSON endpoint answering HTML, and unexpected empty answers fail

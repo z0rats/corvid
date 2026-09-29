@@ -7,16 +7,6 @@ import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('UsernameSearchScan');
 
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => usernameSearchApi.startScan(payload.username, {
-    source: payload.source, tags: payload.tags, excludedTags: payload.excludedTags, signal,
-  }),
-  fetchPersisted: (searchId) => usernameSearchApi.getRun(searchId),
-  cancelScan: (searchId) => usernameSearchApi.cancelScan(searchId),
-};
-
 // Sources whose "completed"/"cancelled" SSE events don't carry the found-site
 // list inline (only counts) - social-analyzer has no per-site progress event to
 // have accumulated it from, so it must be fetched from the persisted run instead.
@@ -82,14 +72,18 @@ export function useUsernameSearchScan(source) {
     state,
     setState,
     initialState: buildInitialState(source),
-    terminalStatuses: TERMINAL_STATUSES,
-    api,
+    endpoint: { base: '/api/username-search', runs: 'runs' },
     reduce,
     reconcile,
   });
 
   const startScan = useCallback((username, options = {}) => resumableStartScan(
-    { username, source, tags: options.tags, excludedTags: options.excludedTags },
+    {
+      username,
+      source,
+      tags: options.tags?.length ? options.tags : undefined,
+      excluded_tags: options.excludedTags?.length ? options.excludedTags : undefined,
+    },
     buildRunningSeed(buildInitialState(source), { username }),
   ), [resumableStartScan, source]);
 

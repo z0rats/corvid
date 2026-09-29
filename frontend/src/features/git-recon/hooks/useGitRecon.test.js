@@ -1,9 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
+import baseApi from '../../../core/services/baseApi';
 import { useSetAtom } from 'jotai';
 import { useGitRecon } from './useGitRecon';
 import { gitReconStateAtom, GIT_RECON_INITIAL_STATE } from '../state/gitReconAtoms';
-import { gitReconApi } from '../services/api/gitReconApi';
 
+vi.mock('../../../core/services/baseApi', () => ({ default: { get: vi.fn(), post: vi.fn() }, baseURL: '' }));
 vi.mock('../services/api/gitReconApi');
 
 // gitReconStateAtom is module-scoped (see gitReconAtoms.js), so it doesn't
@@ -21,9 +22,9 @@ describe('useGitRecon — cancelScan', () => {
   // The running/searchId gate itself (no scan running, already finished, the
   // `loading`-vs-`phase` state-shape fallback) is exercised generically in
   // core/hooks/useResumableScan.test.js - this only checks useGitRecon wires
-  // its own gitReconApi.cancelScan into that gate.
-  it("wires cancelScan to gitReconApi.cancelScan with the running scan's searchId", async () => {
-    gitReconApi.cancelScan.mockResolvedValue(undefined);
+  // its own endpoint into that gate.
+  it("cancels the running scan through this feature's endpoint", async () => {
+    baseApi.post.mockResolvedValue({});
     const { result } = renderHook(() => useTestHarness());
 
     act(() => {
@@ -34,6 +35,6 @@ describe('useGitRecon — cancelScan', () => {
       result.current.cancelScan();
     });
 
-    expect(gitReconApi.cancelScan).toHaveBeenCalledWith(42);
+    expect(baseApi.post).toHaveBeenCalledWith('/api/git-recon/history/42/cancel');
   });
 });

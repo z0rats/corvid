@@ -1,81 +1,14 @@
 import api, { baseURL } from '../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../core/utils/accessToken';
 import { usernameSearchApi } from './usernameSearchApi';
 
 vi.mock('../../../../core/services/baseApi', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
   baseURL: 'http://backend.test',
 }));
-vi.mock('../../../../core/utils/accessToken', () => ({ getAccessToken: vi.fn() }));
 
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
-});
-
-describe('usernameSearchApi.startScan', () => {
-  it('defaults source to maigret and omits empty tags/excludedTags', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    const body = {};
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, body });
-    vi.stubGlobal('fetch', fetchMock);
-
-    const result = await usernameSearchApi.startScan('someuser');
-
-    expect(fetchMock).toHaveBeenCalledWith(`${baseURL}/api/username-search/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': 'Bearer tok123',
-      },
-      body: JSON.stringify({
-        username: 'someuser',
-        source: 'maigret',
-        tags: undefined,
-        excluded_tags: undefined,
-      }),
-      signal: undefined,
-    });
-    expect(result).toBe(body);
-  });
-
-  it('passes through source, tags, and excludedTags when given', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, body: {} });
-    vi.stubGlobal('fetch', fetchMock);
-
-    await usernameSearchApi.startScan('someuser', {
-      source: 'social_analyzer',
-      tags: ['social'],
-      excludedTags: ['adult'],
-    });
-
-    const [, options] = fetchMock.mock.calls[0];
-    expect(JSON.parse(options.body)).toEqual({
-      username: 'someuser',
-      source: 'social_analyzer',
-      tags: ['social'],
-      excluded_tags: ['adult'],
-    });
-  });
-
-  it('throws when the response is not ok', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, statusText: 'Forbidden' }));
-
-    await expect(usernameSearchApi.startScan('someuser')).rejects.toThrow('Server error: Forbidden');
-  });
-});
-
-describe('usernameSearchApi.cancelScan', () => {
-  it('posts to the cancel endpoint for the given search id', async () => {
-    api.post.mockResolvedValue({});
-
-    await usernameSearchApi.cancelScan('search-1');
-
-    expect(api.post).toHaveBeenCalledWith('/api/username-search/runs/search-1/cancel');
-  });
 });
 
 describe('usernameSearchApi.checkHudsonRock', () => {

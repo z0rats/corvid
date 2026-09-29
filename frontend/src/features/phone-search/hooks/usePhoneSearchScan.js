@@ -1,16 +1,7 @@
 import { useCallback } from 'react';
 import { useAtom } from 'jotai';
-import { phoneSearchApi } from '../services/api/phoneSearchApi';
 import { phoneScanStateAtom, SCAN_INITIAL_STATE } from '../state/scanAtoms';
 import { useResumableScan, failedReduce, buildRunningSeed } from '../../../core/hooks/useResumableScan';
-
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => phoneSearchApi.startScan(payload.phoneNumber, { signal }),
-  fetchPersisted: (searchId) => phoneSearchApi.getRun(searchId),
-  cancelScan: (searchId) => phoneSearchApi.cancelScan(searchId),
-};
 
 export function reduce(prev, event) {
   const { data } = event;
@@ -62,14 +53,13 @@ export function usePhoneSearchScan() {
     state,
     setState,
     initialState: SCAN_INITIAL_STATE,
-    terminalStatuses: TERMINAL_STATUSES,
-    api,
+    endpoint: { base: '/api/phone-search', runs: 'runs' },
     reduce,
     reconcile,
   });
 
   const startScan = useCallback((phoneNumber) => resumableStartScan(
-    { phoneNumber },
+    { phone_number: phoneNumber },
     buildRunningSeed(SCAN_INITIAL_STATE, { phoneNumber }),
   ), [resumableStartScan]);
 

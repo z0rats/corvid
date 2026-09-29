@@ -10,10 +10,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.core.scans.run import ScanCancelled
+from app.core.scans.run import ScanCancelled, ScanRun
 from app.features.phone_search.models.phone_search_models import PhoneSearch
 from app.features.phone_search.service import phone_search_service as svc
-from app.features.phone_search.service.phone_search_service import _run_checker, cancel_scan
+from app.features.phone_search.service.phone_search_service import _run_checker
 
 
 def _run(coro):
@@ -56,21 +56,6 @@ class TestRunChecker:
         }
 
 
-class TestCancelScan:
-    def test_delegates_to_scan_run_cancel_with_the_feature_name(self, monkeypatch):
-        captured = {}
-
-        async def fake_cancel(feature_name, search_id):
-            captured["feature_name"] = feature_name
-            captured["search_id"] = search_id
-            return True
-
-        monkeypatch.setattr(svc.ScanRun, "cancel", fake_cancel)
-
-        assert _run(cancel_scan(42)) is True
-        assert captured == {"feature_name": "phone_search", "search_id": 42}
-
-
 class TestRunScan:
     @pytest.fixture
     def captured(self, monkeypatch):
@@ -85,7 +70,7 @@ class TestRunScan:
                 **kwargs,
             )
 
-        monkeypatch.setattr(svc.ScanRun, "execute", fake_execute)
+        monkeypatch.setattr(ScanRun, "execute", fake_execute)
 
         @contextlib.asynccontextmanager
         async def fake_managed_session():

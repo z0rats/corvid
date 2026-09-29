@@ -1,13 +1,12 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useDnsLookup } from "../../hooks/api/useDnsLookup";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
+import { panelStatusView } from "./panelStatusView";
 
-import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import DnsIcon from "@mui/icons-material/DnsOutlined";
-import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
@@ -15,28 +14,11 @@ const RECORD_TYPES = ["A", "AAAA", "MX", "TXT", "NS", "CNAME"];
 
 export default function DnsRecordsPanel({ domain }) {
   const { t } = useTranslation('iocTools');
-  const { data, loading, error, unsupported } = useDnsLookup(domain);
+  const panel = useDomainPanel('dns', domain);
+  const { data } = panel;
 
-  if (unsupported) return null;
-
-  if (loading) {
-    return (
-      <>
-        <LinearProgress />
-        <br />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="warning" variant="outlined" sx={{ borderRadius: 1, mb: 2 }}>
-        {t('domainFinder.dnsRecords.errorPrefix')} {error}
-      </Alert>
-    );
-  }
-
-  if (!data) return null;
+  const status = panelStatusView(panel, t('domainFinder.dnsRecords.errorPrefix'));
+  if (status !== undefined) return status;
 
   const recordTypesWithData = RECORD_TYPES.filter((type) => data.records[type]?.length > 0);
   const reverseEntries = Object.entries(data.reverse_dns || {});

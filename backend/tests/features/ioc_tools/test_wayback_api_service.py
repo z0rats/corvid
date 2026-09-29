@@ -5,9 +5,7 @@ parsing in fetch_wayback_snapshots runs for real against a canned response."""
 import asyncio
 
 import httpx
-import pytest
 
-from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.domain_finder.service.wayback_api_service import (
     fetch_wayback_snapshots,
 )
@@ -86,49 +84,3 @@ def test_returns_empty_list_for_empty_response_body(patch_httpx_transport):
     patch_httpx_transport(lambda request: httpx.Response(200, content=b""))
 
     assert _run(fetch_wayback_snapshots("example.com")) == []
-
-
-def test_raises_502_when_response_is_not_valid_json(patch_httpx_transport):
-    patch_httpx_transport(lambda request: httpx.Response(200, text="<html>overloaded</html>"))
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_wayback_snapshots("example.com"))
-
-    assert exc_info.value.status_code == 502
-    assert exc_info.value.error_code == "WAYBACK_INVALID_RESPONSE"
-
-
-def test_raises_with_upstream_status_code_on_http_error(patch_httpx_transport):
-    patch_httpx_transport(lambda request: httpx.Response(500, text="server error"))
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_wayback_snapshots("example.com"))
-
-    assert exc_info.value.status_code == 500
-    assert exc_info.value.error_code == "WAYBACK_API_ERROR"
-
-
-def test_raises_504_on_timeout(patch_httpx_transport):
-    def handler(request):
-        raise httpx.TimeoutException("timed out", request=request)
-
-    patch_httpx_transport(handler)
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_wayback_snapshots("example.com"))
-
-    assert exc_info.value.status_code == 504
-    assert exc_info.value.error_code == "WAYBACK_TIMEOUT"
-
-
-def test_raises_503_on_connection_error(patch_httpx_transport):
-    def handler(request):
-        raise httpx.ConnectError("connection refused", request=request)
-
-    patch_httpx_transport(handler)
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_wayback_snapshots("example.com"))
-
-    assert exc_info.value.status_code == 503
-    assert exc_info.value.error_code == "WAYBACK_CONNECTION_ERROR"

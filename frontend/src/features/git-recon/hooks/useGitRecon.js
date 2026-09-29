@@ -7,14 +7,6 @@ import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('GitRecon');
 
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => gitReconApi.startScan(payload, { signal }),
-  fetchPersisted: (searchId) => gitReconApi.getHistory(searchId),
-  cancelScan: (searchId) => gitReconApi.cancelScan(searchId),
-};
-
 async function reduce(prev, event) {
   const { data } = event;
   if (event.type === 'started') {
@@ -50,8 +42,7 @@ export function useGitRecon() {
     state,
     setState,
     initialState: GIT_RECON_INITIAL_STATE,
-    terminalStatuses: TERMINAL_STATUSES,
-    api,
+    endpoint: { base: '/api/git-recon', runs: 'history' },
     reduce,
     reconcile,
   });

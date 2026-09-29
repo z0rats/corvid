@@ -13,91 +13,28 @@ from typing import Any
 
 import httpx
 
-from app.core.exceptions import AppHTTPException
+from app.features.ioc_tools.domain_finder.service.provider_http import Provider, provider_get
 
 logger = logging.getLogger(__name__)
 
-CRTSH_URL = "https://crt.sh/"
-CRTSH_TIMEOUT = 20.0
-DEFAULT_HEADERS: dict[str, str] = {
-    "User-Agent": "Corvid-Domain-Lookup/1.0",
-    "Accept": "application/json",
-}
+CRTSH = Provider(name="crt.sh", code="CRTSH", base_url="https://crt.sh/")
 
 
 async def fetch_crtsh_certificates(domain: str) -> list[dict[str, Any]]:
-    """
-    Fetch raw Certificate Transparency log entries for a domain (and its
-    subdomains) from crt.sh.
+    """Raw Certificate Transparency log entries for a domain (and its subdomains) from crt.sh.
+    Failures raise `AppHTTPException` (`provider_http`); crt.sh serves an HTML error page
+    (not JSON) when overloaded or the query is malformed -> `CRTSH_INVALID_RESPONSE`."""
 
-    Args:
-        domain: Domain name to search for
-
-    Returns:
-        List of raw crt.sh certificate entry dicts
-
-    Raises:
-        AppHTTPException: For request failures or an unparseable response
-    """
-    params = {"q": f"%.{domain}", "output": "json"}
-    logger.debug("Fetching crt.sh data for domain: %s", domain)
-
-    try:
-        async with httpx.AsyncClient(timeout=CRTSH_TIMEOUT, headers=DEFAULT_HEADERS) as client:
-            response = await client.get(CRTSH_URL, params=params)
-            response.raise_for_status()
-
-            if not response.content:
-                logger.info("crt.sh returned an empty response for domain: %s", domain)
-                return []
-
-            data = response.json()
-            logger.info(
-                "Retrieved %s certificate entries from crt.sh for domain: %s", len(data), domain
-            )
-            return data
-
-    except httpx.TimeoutException as e:
-        logger.error("Timeout while fetching crt.sh data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=504,
-            detail="Request timeout while connecting to crt.sh",
-            error_code="CRTSH_TIMEOUT",
-        ) from e
-    except httpx.RequestError as e:
-        logger.error("Request error while fetching crt.sh data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=503,
-            detail=f"Failed to connect to crt.sh: {str(e)}",
-            error_code="CRTSH_CONNECTION_ERROR",
-        ) from e
-    except httpx.HTTPStatusError as e:
-        logger.error(
-            "HTTP status error from crt.sh for domain %s: Status %s", domain, e.response.status_code
+    def parse(response: httpx.Response) -> list[dict[str, Any]]:
+        if not response.content:
+            logger.info("crt.sh returned an empty response for domain: %s", domain)
+            return []
+        data = response.json()
+        logger.info(
+            "Retrieved %s certificate entries from crt.sh for domain: %s", len(data), domain
         )
-        raise AppHTTPException(
-            status_code=e.response.status_code,
-            detail=f"crt.sh returned error: {e.response.status_code}",
-            error_code="CRTSH_API_ERROR",
-        ) from e
-    except ValueError as e:
-        # crt.sh serves an HTML error/status page (not JSON) when it's overloaded or the
-        # query is malformed
-        logger.error("Could not parse crt.sh JSON response for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=502,
-            detail="crt.sh returned an unexpected (non-JSON) response",
-            error_code="CRTSH_INVALID_RESPONSE",
-        ) from e
-    except Exception as e:
-        logger.error(
-            "Unexpected error while fetching crt.sh data for domain %s: %s",
-            domain,
-            e,
-            exc_info=True,
-        )
-        raise AppHTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while fetching crt.sh data",
-            error_code="CRTSH_UNEXPECTED_ERROR",
-        ) from e
+        return data
+
+    return await provider_get(
+        CRTSH, subject=domain, params={"q": f"%.{domain}", "output": "json"}, parse=parse
+    )

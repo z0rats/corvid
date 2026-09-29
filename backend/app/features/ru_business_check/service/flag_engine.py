@@ -8,9 +8,9 @@ unchecked sources are listed in the scan's `pending_sources`.
 """
 
 import datetime
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass, fields
-from typing import Literal
+from typing import Any, Literal
 
 from app.core.settings.ru_business_check.models import ru_business_check_settings_models as defaults
 from app.features.ru_business_check.config.ru_business_check_config import REQUIRED_SOURCES
@@ -61,6 +61,26 @@ class SourceResults:
     disqualified_dump: dict | None = None
     cbr_warning: dict | None = None
     ofac_sdn: dict | None = None
+
+    @classmethod
+    def from_source_data(cls, egrul: dict, data: Mapping[str, Any]) -> SourceResults:
+        """`data` is `{source key: recorded result}` (`source_runner.SourceResult.data`) -
+        the one place that knows which source key feeds which flag input."""
+        arbitration = data.get("arbitration")
+        rnp = data.get("zakupki_rnp")
+        return cls(
+            egrul=egrul,
+            disqualification=data["disqualified_persons"],
+            arbitration_cases=arbitration["cases"] if arbitration is not None else None,
+            fedresurs=data.get("fedresurs"),
+            pb_nalog=data.get("pb_nalog"),
+            fedsfm=data.get("fedsfm"),
+            rnp_entries=rnp["entries"] if rnp is not None else None,
+            gir_bo=data.get("gir_bo"),
+            disqualified_dump=data.get("disqualified_dump"),
+            cbr_warning=data.get("cbr_warning"),
+            ofac_sdn=data.get("ofac_sdn"),
+        )
 
 
 def _fresh_registration_flag(

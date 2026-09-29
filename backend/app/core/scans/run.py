@@ -133,14 +133,15 @@ OnEvent = Callable[[ScanEvent | None], None]
 
 class ScanRun:
     """Drives one scan's lifecycle end to end and tracks its `Cancellable` (if
-    any) in a process-local registry keyed by `(feature_name, search_id)`, so a
-    separate request can cancel it via `ScanRun.cancel()`. Namespacing the
-    registry by `feature_name` (not just `search_id`) matters because each
-    scan-style model has its own independently-incrementing primary key - two
-    different features can otherwise share the same numeric search_id at once.
+    any) in a process-local registry keyed by `(model, search_id)`, so a
+    separate request can cancel it via `ScanRun.cancel()`. Keyed by the row's
+    table (not a feature name) because a search_id is unique exactly per table:
+    two tables can share a numeric id at once, while several sources writing to
+    one table (username_search's three) never can - so cancelling a run needs
+    only its table and id, never which source started it.
     """
 
-    _registry: dict[tuple[str, int], Cancellable] = {}
+    _registry: dict[tuple[type, int], Cancellable] = {}
 
     @classmethod
     async def execute(
@@ -173,7 +174,7 @@ class ScanRun:
             search = await create_running(db, model, **create_fields)
             search_id = search.id
 
-        key = (feature_name, search_id)
+        key = (model, search_id)
         if cancellable is not None:
             cls._registry[key] = cancellable
 
@@ -269,14 +270,14 @@ class ScanRun:
             on_event(None)
 
     @classmethod
-    async def cancel(cls, feature_name: str, search_id: int) -> bool:
+    async def cancel(cls, model: type, search_id: int) -> bool:
         """Request cancellation of a currently-running scan. Returns False if no
-        scan with that (feature, id) is currently running (already finished, or
+        scan with that (table, id) is currently running (already finished, or
         never existed). Awaits the adapter's own `cancel()`, so this only
         returns once the underlying work has actually stopped (except
         git_recon's `GitCloneCancellable`, which deliberately doesn't wait for
         its worker thread to finish - see its own docstring)."""
-        cancellable = cls._registry.get((feature_name, search_id))
+        cancellable = cls._registry.get((model, search_id))
         if cancellable is None:
             return False
         await cancellable.cancel()

@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import register_exception_handlers
+from app.core.scans.run import ScanRun
 from app.features.steam_recon.models.steam_recon_models import SteamReconSearch
 from app.features.steam_recon.routers import steam_recon_routes
 
@@ -103,7 +104,7 @@ class TestStartScan:
 
 class TestCancelScan:
     def test_returns_404_when_no_scan_with_that_id_is_running(self, client, monkeypatch):
-        monkeypatch.setattr(steam_recon_routes, "cancel_scan", lambda search_id: _resolved(False))
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: _resolved(False))
 
         response = client.post("/api/steam-recon/history/999/cancel")
 
@@ -111,7 +112,7 @@ class TestCancelScan:
         assert response.json()["error_code"] == "STEAM_RECON_NOT_RUNNING"
 
     def test_returns_202_when_cancellation_is_accepted(self, client, monkeypatch):
-        monkeypatch.setattr(steam_recon_routes, "cancel_scan", lambda search_id: _resolved(True))
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: _resolved(True))
 
         response = client.post("/api/steam-recon/history/1/cancel")
 

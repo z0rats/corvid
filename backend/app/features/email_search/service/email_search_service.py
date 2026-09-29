@@ -6,22 +6,16 @@ from mailcat import simple_session, via_proxy, via_tor
 
 from app.core.database import managed_session
 from app.core.scans.cancellable import TaskCancellable
-from app.core.scans.run import ScanCancelled, ScanEvent, ScanOutcome, ScanRun
+from app.core.scans.run import ScanCancelled, ScanEvent, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.core.settings.email_search.crud.email_search_settings_crud import get_email_search_config
 from app.features.email_search.config.mailcat_config import get_active_checkers
-from app.features.email_search.crud.email_search_crud import SCAN_COLUMNS, add_provider_results
-from app.features.email_search.models.email_search_models import MailSearch
+from app.features.email_search.crud.email_search_crud import (
+    EMAIL_SEARCH_SCANS,
+    add_provider_results,
+)
 
 logger = logging.getLogger(__name__)
-
-FEATURE_NAME = "email_search"
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running scan. Returns False if
-    no scan with that id is currently running (already finished, or never existed)."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 _CHROMIUM_PROCESS_NAMES = {"chrome", "chromium", "headless_shell", "chrome-headless-shell"}
@@ -191,12 +185,9 @@ async def run_scan(username: str, queue: asyncio.Queue) -> None:
         )
 
     cancellable = TaskCancellable(asyncio.current_task())
-    await ScanRun.execute(
-        FEATURE_NAME,
-        MailSearch,
+    await EMAIL_SEARCH_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
         create_fields={"username": username},
         started_fields={"username": username, "total_providers": len(checkers)},
         cancellable=cancellable,

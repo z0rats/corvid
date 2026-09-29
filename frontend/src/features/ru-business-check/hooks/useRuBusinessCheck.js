@@ -7,14 +7,6 @@ import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('RuBusinessCheck');
 
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => ruBusinessCheckApi.startScan(payload, { signal }),
-  fetchPersisted: (searchId) => ruBusinessCheckApi.getHistory(searchId),
-  cancelScan: (searchId) => ruBusinessCheckApi.cancelScan(searchId),
-};
-
 async function reduce(prev, event) {
   const { data } = event;
   if (event.type === 'started') {
@@ -50,8 +42,7 @@ export function useRuBusinessCheck() {
     state,
     setState,
     initialState: RU_BUSINESS_CHECK_INITIAL_STATE,
-    terminalStatuses: TERMINAL_STATUSES,
-    api,
+    endpoint: { base: '/api/ru-business-check', runs: 'history' },
     reduce,
     reconcile,
   });

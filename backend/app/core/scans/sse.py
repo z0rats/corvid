@@ -1,5 +1,6 @@
 import asyncio
 import json
+from collections.abc import AsyncIterator
 
 from fastapi.responses import StreamingResponse
 
@@ -18,26 +19,18 @@ def queue_sink(queue: asyncio.Queue) -> OnEvent:
     return sink
 
 
-def sse_response(queue: asyncio.Queue) -> StreamingResponse:
-    """Stream dict events off `queue` as Server-Sent Events, one `data: {json}\\n\\n`
-    line per event, until a `None` sentinel is put on the queue.
+def sse_stream(events: AsyncIterator[dict | str]) -> StreamingResponse:
+    """Stream `events` as Server-Sent Events: one `data: <json>\n\n` frame per item (a `str`
+    is taken as already-serialized JSON), with the headers that keep a reverse proxy from
+    buffering the stream (nginx's `X-Accel-Buffering`). The one place the wire framing lives -
+    every SSE endpoint returns this, directly (an async generator) or via `sse_response`."""
 
-    Shared by every scan-style feature (username_search, email_search, git_recon):
-    each route handler starts its scan as a detached `asyncio.create_task()` and
-    hands this the queue that task reports progress on, so the request can stream
-    live progress for however long the scan takes rather than blocking behind a
-    reverse proxy's read timeout.
-    """
-
-    async def event_stream():
-        while True:
-            event = await queue.get()
-            if event is None:
-                break
-            yield f"data: {json.dumps(event)}\n\n"
+    async def frames() -> AsyncIterator[str]:
+        async for event in events:
+            yield f"data: {event if isinstance(event, str) else json.dumps(event)}\n\n"
 
     return StreamingResponse(
-        event_stream(),
+        frames(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -45,3 +38,22 @@ def sse_response(queue: asyncio.Queue) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         },
     )
+
+
+def sse_response(queue: asyncio.Queue) -> StreamingResponse:
+    """`sse_stream` over dict events put on `queue`, until a `None` sentinel.
+
+    Shared by every scan-style feature: each route handler starts its scan as a detached
+    `asyncio.create_task()` and hands this the queue that task reports progress on, so the
+    request can stream live progress for however long the scan takes rather than blocking
+    behind a reverse proxy's read timeout.
+    """
+
+    async def drain() -> AsyncIterator[dict]:
+        while True:
+            event = await queue.get()
+            if event is None:
+                break
+            yield event
+
+    return sse_stream(drain())

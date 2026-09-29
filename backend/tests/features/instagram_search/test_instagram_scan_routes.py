@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import register_exception_handlers
+from app.core.scans.run import ScanRun
 from app.features.instagram_search.models.instagram_search_models import InstagramSearch
 from app.features.instagram_search.routers import instagram_scan_routes
 
@@ -81,7 +82,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return False
 
-        monkeypatch.setattr(instagram_scan_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/instagram-search/history/999/cancel")
 
@@ -92,7 +93,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return True
 
-        monkeypatch.setattr(instagram_scan_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/instagram-search/history/1/cancel")
 

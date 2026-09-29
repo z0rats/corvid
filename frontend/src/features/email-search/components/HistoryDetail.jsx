@@ -2,15 +2,14 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundProvidersList from './FoundProvidersList';
 import { emailSearchApi } from '../services/api/emailSearchApi';
+import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 
 export default function HistoryDetail() {
   const { t } = useTranslation('emailSearch');
@@ -26,7 +25,7 @@ export default function HistoryDetail() {
       <HistoryDetailHeader
         onBack={() => navigate('/email-search/history')}
         title={run.username}
-        chips={<Chip size="small" label={t(`history.status.${run.status}`)} color={STATUS_COLORS[run.status] || 'default'} />}
+        chips={<ScanStatusChip status={run.status} label={t(`history.status.${run.status}`)} />}
         summary={t('history.summary', { checked: run.total_providers_checked, found: run.found_count })}
         error={run.status === 'failed' ? run.error_message : null}
       />

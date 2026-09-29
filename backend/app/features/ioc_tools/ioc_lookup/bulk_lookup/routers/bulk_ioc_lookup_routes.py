@@ -1,13 +1,12 @@
-import json
 import logging
 
 from fastapi import APIRouter, Request, status
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import SessionDep
 from app.core.exceptions import AppHTTPException
+from app.core.scans.sse import sse_stream
 from app.features.ioc_tools.ioc_lookup.bulk_lookup.service.bulk_ioc_lookup_service import (
     process_bulk_lookups_with_rate_limiting,
 )
@@ -69,28 +68,14 @@ async def bulk_ioc_lookup(
             error_code="BULK_LOOKUP_NO_SERVICES",
         )
 
-    async def event_stream():
-        """Generate Server-Sent Events stream for bulk lookup results."""
+    async def events():
         try:
             async for result in process_bulk_lookups_with_rate_limiting(
                 bulk_request.iocs, bulk_request.services, db
             ):
-                data = json.dumps(result)
-                yield f"data: {data}\n\n"
-
+                yield result
         except Exception as e:
             logger.error("Error in bulk lookup stream: %s", str(e), exc_info=True)
-            error_data = json.dumps(
-                {"error": "An internal error occurred during bulk lookup", "service": "system"}
-            )
-            yield f"data: {error_data}\n\n"
+            yield {"error": "An internal error occurred during bulk lookup", "service": "system"}
 
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+    return sse_stream(events())

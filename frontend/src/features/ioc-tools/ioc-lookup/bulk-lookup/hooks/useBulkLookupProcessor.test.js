@@ -95,7 +95,9 @@ describe('useBulkLookupProcessor — performLookup happy path', () => {
       await result.current.performLookup('1.2.3.4, 1.2.3.4\n5.6.7.8', ['abuseipdb']);
     });
 
-    expect(iocLookupApi.bulkLookup).toHaveBeenCalledWith(['1.2.3.4', '5.6.7.8'], ['abuseipdb']);
+    expect(iocLookupApi.bulkLookup).toHaveBeenCalledWith(['1.2.3.4', '5.6.7.8'], ['abuseipdb'], {
+      signal: expect.any(AbortSignal),
+    });
   });
 
   it('categorizes each ioc by its determined type', async () => {

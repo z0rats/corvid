@@ -1,9 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
+import baseApi from '../../../../core/services/baseApi';
 import { useSetAtom } from 'jotai';
 import { useInstagramScan } from './useInstagramScan';
 import { instagramScanStateAtom, INSTAGRAM_SCAN_INITIAL_STATE } from '../../state/instagramScanAtoms';
-import { instagramSearchApi } from '../../services/api/instagramSearchApi';
 
+vi.mock('../../../../core/services/baseApi', () => ({ default: { get: vi.fn(), post: vi.fn() }, baseURL: '' }));
 vi.mock('../../services/api/instagramSearchApi');
 
 // instagramScanStateAtom is module-scoped (see instagramScanAtoms.js), so it
@@ -21,8 +22,8 @@ describe('useInstagramScan — cancelScan', () => {
   // The running/searchId gate itself is exercised generically in
   // core/hooks/useResumableScan.test.js - this only checks useInstagramScan
   // wires its own instagramSearchApi.cancelScan into that gate.
-  it("wires cancelScan to instagramSearchApi.cancelScan with the running scan's searchId", async () => {
-    instagramSearchApi.cancelScan.mockResolvedValue(undefined);
+  it("cancels the running scan through this feature's endpoint", async () => {
+    baseApi.post.mockResolvedValue({});
     const { result } = renderHook(() => useTestHarness());
 
     act(() => {
@@ -33,6 +34,6 @@ describe('useInstagramScan — cancelScan', () => {
       result.current.cancelScan();
     });
 
-    expect(instagramSearchApi.cancelScan).toHaveBeenCalledWith(42);
+    expect(baseApi.post).toHaveBeenCalledWith('/api/instagram-search/history/42/cancel');
   });
 });

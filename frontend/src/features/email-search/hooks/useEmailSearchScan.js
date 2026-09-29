@@ -1,16 +1,7 @@
 import { useCallback } from 'react';
 import { useAtom } from 'jotai';
-import { emailSearchApi } from '../services/api/emailSearchApi';
 import { emailScanStateAtom, SCAN_INITIAL_STATE } from '../state/scanAtoms';
 import { useResumableScan, failedReduce, buildRunningSeed } from '../../../core/hooks/useResumableScan';
-
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => emailSearchApi.startScan(payload.username, { signal }),
-  fetchPersisted: (searchId) => emailSearchApi.getRun(searchId),
-  cancelScan: (searchId) => emailSearchApi.cancelScan(searchId),
-};
 
 export function reduce(prev, event) {
   const { data } = event;
@@ -62,8 +53,7 @@ export function useEmailSearchScan() {
     state,
     setState,
     initialState: SCAN_INITIAL_STATE,
-    terminalStatuses: TERMINAL_STATUSES,
-    api,
+    endpoint: { base: '/api/email-search', runs: 'runs' },
     reduce,
     reconcile,
   });

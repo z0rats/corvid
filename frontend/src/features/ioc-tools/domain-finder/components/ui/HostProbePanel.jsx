@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useHostProbe } from "../../hooks/api/useHostProbe";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
 
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -48,7 +48,7 @@ function HostResult({ t, result }) {
 
 export default function HostProbePanel({ domain }) {
   const { t } = useTranslation('iocTools');
-  const { data, loading, error, unsupported, run } = useHostProbe(domain);
+  const { data, loading, error, unsupported, run } = useDomainPanel('host-probe', domain, { auto: false });
 
   if (unsupported) return null;
 

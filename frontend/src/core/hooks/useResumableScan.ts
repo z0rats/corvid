@@ -1,4 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import api from '../services/baseApi';
+import { openSseStream, readSseEvents } from '../services/sseStream';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('ResumableScan');
@@ -45,18 +47,40 @@ const RECONCILE_POLL_BACKOFF_FACTOR = 1.5;
 const RECONCILE_POLL_TIMEOUT_MS = 5 * 60 * 1000; // give up waiting after ~5 minutes total
 
 // Keyed by `scopeKey` (one per feature) rather than a single module-level
-// variable: this hook is shared across every scan-style feature (username-search,
-// email-search, git-recon), so a flat `let` here would let starting one feature's
+// variable: this hook is shared across every scan-style feature, so a flat `let` here would let starting one feature's
 // scan abort another feature's in-flight one. Module-scoped (not a ref) so a scan
 // keeps running - and the abort controller stays reachable to cancel/reset it -
 // even after the component that started it unmounts (e.g. the user switches to
 // another feature tab and back).
 const activeControllers = new Map<string, AbortController>();
 
-export interface ResumableScanApi {
-  startScan: (payload: unknown, options: { signal: AbortSignal }) => Promise<ReadableStream<Uint8Array>>;
+// Every scan feature's backend mounts the same routes (backend `core/scans/routes.py`):
+// `POST <base>/scan` (SSE), `GET <base>/<runs>/<id>`, `POST <base>/<runs>/<id>/cancel`.
+export interface ScanEndpoint {
+  base: string;
+  runs: 'history' | 'runs';
+}
+
+const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
+
+interface ScanTransport {
+  startScan: (body: unknown, signal: AbortSignal) => Promise<ReadableStream<Uint8Array>>;
   fetchPersisted: (searchId: string | number) => Promise<{ status: string; [key: string]: unknown }>;
-  cancelScan?: (searchId: string | number) => Promise<unknown>;
+  cancelScan: (searchId: string | number) => Promise<unknown>;
+}
+
+function scanTransport({ base, runs }: ScanEndpoint): ScanTransport {
+  return {
+    startScan(body, signal) {
+      return openSseStream(`${base}/scan`, { body, signal });
+    },
+    async fetchPersisted(searchId) {
+      return (await api.get(`${base}/${runs}/${searchId}`)).data;
+    },
+    async cancelScan(searchId) {
+      await api.post(`${base}/${runs}/${searchId}/cancel`);
+    },
+  };
 }
 
 export interface UseResumableScanOptions<S extends PhaseScanState> {
@@ -64,8 +88,7 @@ export interface UseResumableScanOptions<S extends PhaseScanState> {
   state: S;
   setState: (state: S) => void;
   initialState: S;
-  terminalStatuses: string[];
-  api: ResumableScanApi;
+  endpoint: ScanEndpoint;
   reduce: (prev: S, event: ScanEvent) => S | Promise<S>;
   reconcile: (prev: S, record: { status: string; [key: string]: unknown }) => S | Promise<S>;
 }
@@ -94,56 +117,32 @@ export interface UseResumableScanOptions<S extends PhaseScanState> {
  * 'failed' event - `reduce`'s 'failed' branch should fall back to `prev.searchId`
  * when `event.data.search_id` is absent, so it doesn't clobber an already-known id.
  *
- * `cancelScan` is only exposed when `api.cancelScan` is provided. Every
- * cancel-capable feature state carries `searchId`, but not every one uses a
- * `phase` field (git-recon's state is `loading`/`result`/`error` instead) - the
- * "is a scan actually running right now" check below falls back to `loading`
- * when `phase` isn't present, so the gate works for both shapes.
+ * The transport (SSE `fetch`, persisted-record poll, cancel request) is owned
+ * here, derived from `endpoint` alone - a feature supplies only its `reduce`/
+ * `reconcile` and the request body it passes to `startScan`. Not every feature
+ * state uses a `phase` field (git-recon's is `loading`/`result`/`error`) - the
+ * "is a scan actually running right now" check behind `cancelScan` falls back
+ * to `loading` when `phase` isn't present, so it works for both shapes.
  */
 export function useResumableScan<S extends PhaseScanState>({
-  scopeKey, state, setState, initialState, terminalStatuses, api, reduce, reconcile,
+  scopeKey, state, setState, initialState, endpoint, reduce, reconcile,
 }: UseResumableScanOptions<S>) {
+  const { base, runs } = endpoint;
+  const transport = useMemo(() => scanTransport({ base, runs }), [base, runs]);
+
   const processStream = useCallback(async (
     stream: ReadableStream<Uint8Array>,
     signal: AbortSignal | undefined,
     searchIdRef: { current: string | number | null },
     stateRef: { current: S },
   ) => {
-    const reader = stream.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    try {
-      while (true) {
-        if (signal?.aborted) break;
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const chunks = buffer.split('\n\n');
-        buffer = chunks.pop() ?? '';
-
-        for (const chunk of chunks) {
-          if (!chunk.startsWith('data: ')) continue;
-
-          let event: ScanEvent;
-          try {
-            event = JSON.parse(chunk.substring(6));
-          } catch (err) {
-            logger.error('Failed to parse SSE event:', err, chunk);
-            continue;
-          }
-
-          if (event.type === 'started' && event.data?.search_id != null) {
-            searchIdRef.current = event.data.search_id as string | number;
-          }
-
-          stateRef.current = await reduce(stateRef.current, event);
-          setState(stateRef.current);
-        }
+    for await (const raw of readSseEvents(stream, signal)) {
+      const event = raw as ScanEvent;
+      if (event.type === 'started' && event.data?.search_id != null) {
+        searchIdRef.current = event.data.search_id as string | number;
       }
-    } finally {
-      reader.releaseLock();
+      stateRef.current = await reduce(stateRef.current, event);
+      setState(stateRef.current);
     }
   }, [reduce, setState]);
 
@@ -160,13 +159,13 @@ export function useResumableScan<S extends PhaseScanState>({
       if (signal.aborted) return;
       let record;
       try {
-        record = await api.fetchPersisted(searchId);
+        record = await transport.fetchPersisted(searchId);
       } catch (err) {
         logger.error('Failed to reconcile scan state after connection error:', err);
         break;
       }
 
-      if (terminalStatuses.includes(record.status)) {
+      if (TERMINAL_STATUSES.includes(record.status)) {
         setState(await reconcile(seedState, record));
         return;
       }
@@ -177,7 +176,7 @@ export function useResumableScan<S extends PhaseScanState>({
     // Gave up waiting - the scan may still genuinely be in progress server-side,
     // but there's no live connection left to keep watching it from here.
     setState(await reduce(seedState, { type: 'failed', data: { error: 'Lost connection to the server', search_id: searchId } }));
-  }, [api, reconcile, reduce, setState, terminalStatuses]);
+  }, [transport, reconcile, reduce, setState]);
 
   const startScan = useCallback(async (payload: unknown, seedState: S) => {
     const prevController = activeControllers.get(scopeKey);
@@ -192,7 +191,7 @@ export function useResumableScan<S extends PhaseScanState>({
     setState(seedState);
 
     try {
-      const stream = await api.startScan(payload, { signal });
+      const stream = await transport.startScan(payload, signal);
       await processStream(stream, signal, searchIdRef, stateRef);
     } catch (err) {
       if (signal.aborted) return;
@@ -204,18 +203,13 @@ export function useResumableScan<S extends PhaseScanState>({
         setState(await reduce(stateRef.current, { type: 'failed', data: { error: message } }));
       }
     }
-  }, [api, processStream, reconcileAfterStreamError, reduce, scopeKey, setState]);
+  }, [transport, processStream, reconcileAfterStreamError, reduce, scopeKey, setState]);
 
-  // useCallback must run unconditionally (Rules of Hooks) - the capability gate
-  // (only expose cancelScan when api.cancelScan exists) happens on the return
-  // value below, not on whether this hook call happens at all.
-  const cancelScanCallback = useCallback(() => {
-    if (!api.cancelScan) return;
+  const cancelScan = useCallback(() => {
     const isRunning = state.phase != null ? state.phase === 'running' : Boolean(state.loading);
     if (!isRunning || state.searchId == null) return;
-    api.cancelScan(state.searchId).catch((err: unknown) => logger.error('Cancel request failed:', err));
-  }, [api, state.phase, state.loading, state.searchId]);
-  const cancelScan = api.cancelScan ? cancelScanCallback : undefined;
+    transport.cancelScan(state.searchId).catch((err: unknown) => logger.error('Cancel request failed:', err));
+  }, [transport, state.phase, state.loading, state.searchId]);
 
   const reset = useCallback(() => {
     const controller = activeControllers.get(scopeKey);

@@ -1,27 +1,28 @@
 import asyncio
 import datetime
+import json
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+import httpx
+
 from app.core.database import managed_session
 from app.core.scans.cancellable import TaskCancellable
-from app.core.scans.run import ScanOutcome, ScanRun
+from app.core.scans.run import ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.core.settings.ru_business_check.crud.ru_business_check_settings_crud import (
     get_ru_business_check_settings,
 )
 from app.features.ru_business_check.config.ru_business_check_config import (
     AVAILABLE_SOURCES,
-    FEATURE_NAME,
     PLANNED_SOURCES,
     WALL_CLOCK_TIMEOUT_SECONDS,
 )
 from app.features.ru_business_check.crud.ru_business_check_crud import (
-    SCAN_COLUMNS,
+    RU_BUSINESS_CHECK_SCANS,
     find_recent_completed_search_by_query,
 )
-from app.features.ru_business_check.models.ru_business_check_models import RuBusinessCheckSearch
 from app.features.ru_business_check.service import flag_engine
 from app.features.ru_business_check.service.arbitration_service import (
     ArbitrationError,
@@ -68,6 +69,13 @@ from app.features.ru_business_check.service.pb_nalog_service import (
     fetch_pb_nalog_profile,
 )
 from app.features.ru_business_check.service.raw_digest import digest_payloads
+from app.features.ru_business_check.service.source_runner import (
+    Source,
+    SourceContext,
+    empty_fields,
+    run_source,
+    store_results,
+)
 from app.features.ru_business_check.service.zakupki_rnp_service import (
     ZakupkiRnpError,
     fetch_rnp_entries,
@@ -110,101 +118,129 @@ _CACHED_FIELDS = (
 )
 
 
-def _empty_source_fields() -> dict[str, Any]:
-    """The dedicated sources' "not checked" results - what a scan records for a source it
-    couldn't query (no ИНН/director, the source failed, or the query was ambiguous)."""
-    return {
-        "disqualification_result": {
-            "checked": False,
-            "matched": False,
-            "requires_manual_review": False,
-            "matches": [],
-        },
-        "disqualification_raw": "",
-        "arbitration_data": {"checked": False, "cases": []},
-        "arbitration_raw": "",
-        "fedresurs_data": {
-            "checked": False,
-            "found": False,
-            "status_text": None,
-            "is_active_bankruptcy": False,
-            "profile_url": None,
-        },
-        "fedresurs_raw": "",
-        "pb_nalog_data": {
-            "checked": False,
-            "found": False,
-            "mass_address_count": 0,
-            "mass_address_companies": [],
-            "profile_url": None,
-        },
-        "pb_nalog_raw": "",
-        "fedsfm_result": {
-            "checked": False,
-            "matched": False,
-            "requires_manual_review": False,
-            "matches": [],
-        },
-        "fedsfm_raw": "",
-        "rnp_data": {"checked": False, "entries": []},
-        "rnp_raw": "",
-        "extra_data": {},
-        "extra_raw": {},
-        "raw_sha256": {},
-    }
+def _checked_list(key: str) -> dict:
+    return {"checked": False, key: []}
 
 
-async def _attempt(
-    source: str,
-    call: Callable[[], Awaitable[Any]],
-    error: type[Exception],
-    *,
-    default: Any,
-    succeeded: list[str],
-    subject: str,
-) -> Any:
-    """Run one source. A failure (its own `error` class - rate-limited, blocked, schema
-    drift) is logged and yields `default` without discarding the other sources; only a
-    success adds `source` to `succeeded`, so `checked_sources` reflects what really ran."""
-    try:
-        result = await call()
-    except error as exc:
-        logger.warning("ru_business_check: %s lookup failed for %r: %s", source, subject, exc)
-        return default
-    succeeded.append(source)
-    return result
+def _not_checked_match() -> dict:
+    return {"checked": False, "matched": False, "requires_manual_review": False, "matches": []}
 
 
-def _extra_sources() -> list[tuple[str, Callable[..., Awaitable[tuple[dict, str]]], type]]:
-    """Remote sources kept in `extra_data`/`extra_raw` (docs/adr/0014-*.md): `(key, fetcher
-    taking (inn, is_individual=), error class)`. Resolved at call time so tests can
-    monkeypatch the fetchers by name."""
+def _with_list(fetch: Callable[[], Awaitable[tuple[list, str]]], key: str):
+    """Arbitration/РНП fetchers return a bare list; stored as `{checked, <key>}`."""
+
+    async def call() -> tuple[dict, str]:
+        items, raw = await fetch()
+        return {"checked": True, key: items}, raw
+
+    return call()
+
+
+async def _local(lookup: Callable[[Any], Awaitable[dict]]) -> tuple[dict, None]:
+    """A local dump lookup in its own session - it has no remote payload."""
+    async with managed_session() as db:
+        return await lookup(db), None
+
+
+def _sources() -> list[Source]:
+    """Every source after ЕГРЮЛ, in `AVAILABLE_SOURCES` order. Fetchers are resolved at call
+    time through this module's globals so tests can monkeypatch them by name."""
     return [
-        ("gir_bo", fetch_gir_bo_financials, GirBoError),
-        ("msp", fetch_msp_status, MspError),
-    ]
-
-
-def _local_lookups() -> list[tuple[str, Callable[..., Awaitable[dict]], type, bool]]:
-    """Matches against the locally cached dumps, `(key, lookup taking (db, inn, director),
-    error class, applies to an ИП)`. A dump that isn't loaded yet raises its error, so the
-    source lands in `pending_sources` rather than reading as "not listed"."""
-    return [
-        (
+        Source(
+            "disqualified_persons",
+            lambda director, ctx: check_disqualified(director),
+            DisqualifiedPersonsError,
+            needs="director",
+            data_column="disqualification_result",
+            raw_column="disqualification_raw",
+            empty=_not_checked_match,
+        ),
+        Source(
+            "arbitration",
+            lambda inn, ctx: _with_list(lambda: fetch_arbitration_cases(inn), "cases"),
+            ArbitrationError,
+            data_column="arbitration_data",
+            raw_column="arbitration_raw",
+            empty=lambda: _checked_list("cases"),
+        ),
+        Source(
+            "fedresurs",
+            lambda inn, ctx: fetch_fedresurs_status(inn, is_individual=ctx.is_individual),
+            FedresursError,
+            data_column="fedresurs_data",
+            raw_column="fedresurs_raw",
+            empty=lambda: {
+                "checked": False,
+                "found": False,
+                "status_text": None,
+                "is_active_bankruptcy": False,
+                "profile_url": None,
+            },
+            # Status read, publications not: the bankruptcy-intent/liquidation signals were
+            # never looked at, so the source doesn't count as checked (-> `incomplete`).
+            is_complete=lambda data, ctx: is_fully_checked(data, is_individual=ctx.is_individual),
+        ),
+        Source(
+            "pb_nalog",
+            lambda inn, ctx: fetch_pb_nalog_profile(inn, is_individual=ctx.is_individual),
+            PbNalogError,
+            data_column="pb_nalog_data",
+            raw_column="pb_nalog_raw",
+            empty=lambda: {
+                "checked": False,
+                "found": False,
+                "mass_address_count": 0,
+                "mass_address_companies": [],
+                "profile_url": None,
+            },
+        ),
+        Source(
+            "fedsfm",
+            lambda director, ctx: check_terrorist_list(director),
+            FedsfmError,
+            needs="director",
+            data_column="fedsfm_result",
+            raw_column="fedsfm_raw",
+            empty=_not_checked_match,
+        ),
+        Source(
+            "zakupki_rnp",
+            lambda inn, ctx: _with_list(lambda: fetch_rnp_entries(inn), "entries"),
+            ZakupkiRnpError,
+            data_column="rnp_data",
+            raw_column="rnp_raw",
+            empty=lambda: _checked_list("entries"),
+        ),
+        # Remote sources kept in `extra_data`/`extra_raw` (docs/adr/0014-*.md).
+        Source(
+            "gir_bo",
+            lambda inn, ctx: fetch_gir_bo_financials(inn, is_individual=ctx.is_individual),
+            GirBoError,
+        ),
+        Source(
+            "msp",
+            lambda inn, ctx: fetch_msp_status(inn, is_individual=ctx.is_individual),
+            MspError,
+        ),
+        # Local dumps. One that isn't loaded yet raises its error, so the source lands in
+        # `pending_sources` rather than reading as "not listed".
+        Source(
             "disqualified_dump",
-            lambda db, inn, director: lookup_dump(db, inn, director),
+            lambda inn, ctx: _local(lambda db: lookup_dump(db, inn, ctx.director)),
             DisqualifiedDumpError,
-            True,
         ),
         # SDN entries carry both 10-digit (entity) and 12-digit (individual) ИНН.
-        ("ofac_sdn", lambda db, inn, director: lookup_ofac_list(db, inn), OfacSdnError, True),
+        Source(
+            "ofac_sdn", lambda inn, ctx: _local(lambda db: lookup_ofac_list(db, inn)), OfacSdnError
+        ),
         # The ЦБ list carries only legal entities' ИНН.
-        ("cbr_warning", lambda db, inn, director: lookup_cbr_list(db, inn), CbrWarningError, False),
+        Source(
+            "cbr_warning",
+            lambda inn, ctx: _local(lambda db: lookup_cbr_list(db, inn)),
+            CbrWarningError,
+            not_applicable_to_individual=not_applicable_result,
+        ),
     ]
-
-
-async def cancel_scan(search_id: int) -> bool:
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 def _entity_type_from_ogrn(ogrn: str | None) -> str | None:
@@ -240,7 +276,7 @@ def _ambiguous_outcome(exc: EgrulAmbiguousMatch, website: str | None) -> ScanOut
     `candidates` populated (the UI offers a disambiguation list), not a failure."""
     return ScanOutcome(
         fields={
-            **_empty_source_fields(),
+            **empty_fields(_sources()),
             "resolved_inn": None,
             "entity_type": None,
             "risk_level": None,
@@ -255,118 +291,6 @@ def _ambiguous_outcome(exc: EgrulAmbiguousMatch, website: str | None) -> ScanOut
     )
 
 
-async def _run_live_sources(egrul_data: dict, succeeded: list[str]) -> dict[str, Any]:
-    """Query every dedicated live source and return their outcome fields (parsed result +
-    raw payload each), appending each success to `succeeded` in order."""
-    fields = _empty_source_fields()
-    inn = egrul_data.get("inn")
-    director = egrul_data.get("director_name")
-    is_individual = _entity_type_from_ogrn(egrul_data.get("ogrn")) == INDIVIDUAL
-
-    def attempt(source, call, error, default):
-        return _attempt(
-            source,
-            call,
-            error,
-            default=(default, ""),
-            succeeded=succeeded,
-            subject=director if source in ("disqualified_persons", "fedsfm") else inn,
-        )
-
-    if director:
-        fields["disqualification_result"], fields["disqualification_raw"] = await attempt(
-            "disqualified_persons",
-            lambda: check_disqualified(director),
-            DisqualifiedPersonsError,
-            fields["disqualification_result"],
-        )
-    if inn:
-        cases, fields["arbitration_raw"] = await attempt(
-            "arbitration",
-            lambda: fetch_arbitration_cases(inn),
-            ArbitrationError,
-            [],
-        )
-        fields["arbitration_data"] = {"checked": "arbitration" in succeeded, "cases": cases}
-        fields["fedresurs_data"], fields["fedresurs_raw"] = await attempt(
-            "fedresurs",
-            lambda: fetch_fedresurs_status(inn, is_individual=is_individual),
-            FedresursError,
-            fields["fedresurs_data"],
-        )
-        if "fedresurs" in succeeded and not is_fully_checked(
-            fields["fedresurs_data"], is_individual=is_individual
-        ):
-            # Status read, publications not: the bankruptcy-intent/liquidation signals were
-            # never looked at, so the source doesn't count as checked (-> `incomplete`).
-            succeeded.remove("fedresurs")
-        fields["pb_nalog_data"], fields["pb_nalog_raw"] = await attempt(
-            "pb_nalog",
-            lambda: fetch_pb_nalog_profile(inn, is_individual=is_individual),
-            PbNalogError,
-            fields["pb_nalog_data"],
-        )
-    if director:
-        fields["fedsfm_result"], fields["fedsfm_raw"] = await attempt(
-            "fedsfm",
-            lambda: check_terrorist_list(director),
-            FedsfmError,
-            fields["fedsfm_result"],
-        )
-    if inn:
-        entries, fields["rnp_raw"] = await attempt(
-            "zakupki_rnp",
-            lambda: fetch_rnp_entries(inn),
-            ZakupkiRnpError,
-            [],
-        )
-        fields["rnp_data"] = {"checked": "zakupki_rnp" in succeeded, "entries": entries}
-    return fields
-
-
-async def _run_extra_and_local_sources(
-    inn: str,
-    director: str | None,
-    is_individual: bool,
-    succeeded: list[str],
-    not_applicable: list[str],
-) -> tuple[dict, dict]:
-    """`extra_data`/`extra_raw` for the remote extra sources, then the local dump lookups
-    (which have no remote payload of their own). A lookup that can't apply to this entity
-    (the ЦБ list for an ИП) is neither checked nor pending: its key goes to
-    `not_applicable` and its explanation to `extra_data`."""
-    data: dict = {}
-    raw: dict = {}
-    for key, fetch, error in _extra_sources():
-        result = await _attempt(
-            key,
-            lambda fetch=fetch: fetch(inn, is_individual=is_individual),
-            error,
-            default=None,
-            succeeded=succeeded,
-            subject=inn,
-        )
-        if result is not None:
-            data[key], raw[key] = result
-    async with managed_session() as db:
-        for key, lookup, error, applies_to_individual in _local_lookups():
-            if is_individual and not applies_to_individual:
-                not_applicable.append(key)
-                data[key] = not_applicable_result()
-                continue
-            result = await _attempt(
-                key,
-                lambda lookup=lookup: lookup(db, inn, director),
-                error,
-                default=None,
-                succeeded=succeeded,
-                subject=inn,
-            )
-            if result is not None:
-                data[key] = result
-    return data, raw
-
-
 async def _scan(query: str, website: str | None) -> ScanOutcome:
     """One uncached scan: ЕГРЮЛ -> the live sources -> the extra and local sources -> flag
     engine."""
@@ -378,53 +302,31 @@ async def _scan(query: str, website: str | None) -> ScanOutcome:
             "ru_business_check: %d ambiguous ЕГРЮЛ match(es) for %r", len(exc.candidates), query
         )
         return _ambiguous_outcome(exc, website)
+    except (httpx.HTTPError, json.JSONDecodeError) as exc:
+        # Without ЕГРЮЛ there is nothing to check - an expected failure, not a bug.
+        raise EgrulError(f"ЕГРЮЛ недоступен: {exc}") from exc
 
-    succeeded = ["egrul"]
-    not_applicable: list[str] = []
-    fields = await _run_live_sources(egrul_data, succeeded)
     inn = egrul_data.get("inn")
     entity_type = _entity_type_from_ogrn(egrul_data.get("ogrn"))
-    if inn:
-        fields["extra_data"], fields["extra_raw"] = await _run_extra_and_local_sources(
-            inn,
-            egrul_data.get("director_name"),
-            entity_type == INDIVIDUAL,
-            succeeded,
-            not_applicable,
-        )
+    ctx = SourceContext(
+        inn=inn,
+        director=egrul_data.get("director_name"),
+        is_individual=entity_type == INDIVIDUAL,
+    )
+    sources = _sources()
+    results = [await run_source(source, ctx) for source in sources]
+    succeeded = ["egrul"] + [r.key for r in results if r.checked]
+    not_applicable = [r.key for r in results if r.status == "not_applicable"]
+    fields = store_results(sources, results)
 
-    extra = fields["extra_data"]
     flags, risk_level = flag_engine.evaluate(
-        flag_engine.SourceResults(
-            egrul=egrul_data,
-            disqualification=fields["disqualification_result"],
-            arbitration_cases=fields["arbitration_data"]["cases"],
-            fedresurs=fields["fedresurs_data"],
-            pb_nalog=fields["pb_nalog_data"],
-            fedsfm=fields["fedsfm_result"],
-            rnp_entries=fields["rnp_data"]["entries"],
-            gir_bo=extra.get("gir_bo"),
-            disqualified_dump=extra.get("disqualified_dump"),
-            cbr_warning=extra.get("cbr_warning"),
-            ofac_sdn=extra.get("ofac_sdn"),
-        ),
+        flag_engine.SourceResults.from_source_data(egrul_data, {r.key: r.data for r in results}),
         thresholds,
         succeeded,
     )
     logger.info("ru_business_check scan for %r: risk=%s, %d flag(s)", query, risk_level, len(flags))
 
-    fields["raw_sha256"] = digest_payloads(
-        {
-            "egrul": egrul_raw,
-            "disqualified_persons": fields["disqualification_raw"],
-            "arbitration": fields["arbitration_raw"],
-            "fedresurs": fields["fedresurs_raw"],
-            "pb_nalog": fields["pb_nalog_raw"],
-            "fedsfm": fields["fedsfm_raw"],
-            "zakupki_rnp": fields["rnp_raw"],
-            **fields["extra_raw"],
-        }
-    )
+    fields["raw_sha256"] = digest_payloads({"egrul": egrul_raw, **{r.key: r.raw for r in results}})
     return ScanOutcome(
         fields={
             **fields,
@@ -476,16 +378,13 @@ async def run_scan_task(
         except TimeoutError:
             raise TimeoutError("Проверка заняла слишком много времени и была прервана") from None
 
-    await ScanRun.execute(
-        FEATURE_NAME,
-        RuBusinessCheckSearch,
+    await RU_BUSINESS_CHECK_SCANS.execute(
         run_work_with_timeout,
         on_event,
-        columns=SCAN_COLUMNS,
         create_fields={"query": normalized_query},
         started_fields={"query": normalized_query},
         cancellable=cancellable,
-        # Every other source's failure is absorbed by `_attempt`; only ЕГРЮЛ (nothing to
+        # Every other source's failure is absorbed by `run_source`; only ЕГРЮЛ (nothing to
         # check without it) and the wall-clock timeout end a scan as an expected failure -
         # anything else is a bug and surfaces as one.
         expected_exceptions=(EgrulError, TimeoutError),

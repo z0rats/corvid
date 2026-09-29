@@ -258,7 +258,7 @@ class TestExecuteCancellation:
             search_id = events[0].data["search_id"]
             search_id_holder["id"] = search_id
 
-            cancelled = await ScanRun.cancel("username_search", search_id)
+            cancelled = await ScanRun.cancel(MaigretSearch, search_id)
             assert cancelled is True
             # cancel() only returned above once run_work had actually observed
             # the CancelledError and finished its own cleanup - TaskCancellable.
@@ -274,7 +274,7 @@ class TestExecuteCancellation:
         assert [e.type for e in events if e is not None] == ["started", "cancelled"]
 
     def test_cancel_returns_false_for_unknown_search(self):
-        assert _run(ScanRun.cancel("username_search", 999999)) is False
+        assert _run(ScanRun.cancel(MaigretSearch, 999999)) is False
 
     def test_cancel_awaits_the_registered_cancellable(self, session_factory):
         fake = FakeCancellable()
@@ -302,9 +302,9 @@ class TestExecuteCancellation:
                 await asyncio.sleep(0)
 
             search_id = events[0].data["search_id"]
-            assert ("email_search", search_id) in ScanRun._registry
+            assert (MailSearch, search_id) in ScanRun._registry
 
-            cancelled = await ScanRun.cancel("email_search", search_id)
+            cancelled = await ScanRun.cancel(MailSearch, search_id)
             assert cancelled is True
             assert fake.cancel_called is True
 
@@ -316,12 +316,12 @@ class TestExecuteCancellation:
         _run(_scenario())
 
 
-class TestFeatureNamespacing:
-    def test_same_search_id_across_two_features_does_not_collide(self, session_factory):
+class TestTableNamespacing:
+    def test_same_search_id_across_two_tables_does_not_collide(self, session_factory):
         """Two different scan-style models each have their own independently
         incrementing primary key, so it's entirely possible for username_search's
         search #1 and email_search's search #1 to be in flight at the same time -
-        the registry key must include feature_name, not just search_id."""
+        the registry key must include the table, not just search_id."""
         release_a = asyncio.Event()
         release_b = asyncio.Event()
 
@@ -365,9 +365,9 @@ class TestFeatureNamespacing:
 
             search_id_b = events_b[0].data["search_id"]
 
-            # Cancel only feature "email_search"'s scan; username_search's own
+            # Cancel only the MailSearch table's scan; username_search's own
             # scan (which may well share the same numeric id) must be unaffected.
-            cancelled = await ScanRun.cancel("email_search", search_id_b)
+            cancelled = await ScanRun.cancel(MailSearch, search_id_b)
             assert cancelled is True
             assert cancellable_b.cancel_called is True
             assert cancellable_a.cancel_called is False

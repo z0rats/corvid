@@ -1,30 +1,6 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
-import { getAccessToken } from '../../../../core/utils/accessToken';
+import api from '../../../../core/services/baseApi';
 
 export const ruBusinessCheckApi = {
-  async startScan(payload, { signal } = {}) {
-    const response = await fetch(`${baseURL}/api/ru-business-check/scan`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': `Bearer ${getAccessToken()}`,
-      },
-      body: JSON.stringify(payload),
-      signal,
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error(`Server error: ${response.statusText}`);
-    }
-
-    return response.body;
-  },
-
-  async cancelScan(searchId) {
-    await api.post(`/api/ru-business-check/history/${searchId}/cancel`);
-  },
-
   async listHistory(skip = 0, limit = 100) {
     const response = await api.get('/api/ru-business-check/history', { params: { skip, limit } });
     return response.data;

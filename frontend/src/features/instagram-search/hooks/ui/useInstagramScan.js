@@ -7,14 +7,6 @@ import { createLogger } from '../../../../core/utils/logger';
 
 const logger = createLogger('InstagramScan');
 
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => instagramSearchApi.startScan(payload, { signal }),
-  fetchPersisted: (searchId) => instagramSearchApi.getHistory(searchId),
-  cancelScan: (searchId) => instagramSearchApi.cancelScan(searchId),
-};
-
 async function reduce(prev, event) {
   const { data } = event;
   if (event.type === 'started') {
@@ -50,14 +42,13 @@ export function useInstagramScan() {
     state,
     setState,
     initialState: INSTAGRAM_SCAN_INITIAL_STATE,
-    terminalStatuses: TERMINAL_STATUSES,
-    api,
+    endpoint: { base: '/api/instagram-search', runs: 'history' },
     reduce,
     reconcile,
   });
 
-  const scan = useCallback((payload) => resumableStartScan(
-    payload,
+  const scan = useCallback(({ username, scanType }) => resumableStartScan(
+    { username, scan_type: scanType },
     { ...INSTAGRAM_SCAN_INITIAL_STATE, loading: true },
   ), [resumableStartScan]);
 

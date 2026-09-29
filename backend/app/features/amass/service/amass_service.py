@@ -21,7 +21,7 @@ import re
 from functools import lru_cache
 
 from app.core.scans.cancellable import ProcessCancellable
-from app.core.scans.run import ScanCancelled, ScanOutcome, ScanRun
+from app.core.scans.run import ScanCancelled, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.core.utils.cli_tool_version import get_cli_tool_version
 from app.features.amass.config.amass_config import (
@@ -30,14 +30,11 @@ from app.features.amass.config.amass_config import (
     SUBS_TIMEOUT_SECONDS,
     WALL_CLOCK_TIMEOUT_SECONDS,
 )
-from app.features.amass.crud.amass_crud import SCAN_COLUMNS
-from app.features.amass.models.amass_models import AmassSearch
+from app.features.amass.crud.amass_crud import AMASS_SCANS
 from app.features.amass.schemas.amass_schemas import AmassHost
 from app.features.amass.service.amass_engine_service import ensure_engine_ready
 
 logger = logging.getLogger(__name__)
-
-FEATURE_NAME = "amass"
 
 _VERSION_RE = re.compile(r"(v\d+\.\d+\.\d+)")
 
@@ -57,13 +54,6 @@ def get_amass_version() -> str | None:
     custom regex.
     """
     return get_cli_tool_version(BINARY_NAME, version_args=("-version",), version_regex=_VERSION_RE)
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running amass scan, keeping whatever
-    hosts were discovered before cancellation. Returns False if no scan with
-    that id is currently running."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 async def _run_subs(domain: str) -> list[AmassHost]:
@@ -128,12 +118,9 @@ async def run_scan_task(*, domain: str, brute_force: bool, queue: asyncio.Queue)
                 "check server logs)"
             )
 
-        await ScanRun.execute(
-            FEATURE_NAME,
-            AmassSearch,
+        await AMASS_SCANS.execute(
             run_work_unavailable,
             on_event,
-            columns=SCAN_COLUMNS,
             create_fields=create_fields,
             started_fields=create_fields,
             expected_exceptions=(AmassError,),
@@ -169,12 +156,9 @@ async def run_scan_task(*, domain: str, brute_force: bool, queue: asyncio.Queue)
             raise ScanCancelled(outcome)
         return outcome
 
-    await ScanRun.execute(
-        FEATURE_NAME,
-        AmassSearch,
+    await AMASS_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
         create_fields=create_fields,
         started_fields=create_fields,
         cancellable=cancellable,

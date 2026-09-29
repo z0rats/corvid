@@ -14,49 +14,46 @@ from typing import Any
 import httpx
 
 from app.core.config.settings import settings
-from app.core.exceptions import AppHTTPException
 from app.core.security.ssrf_guard import safe_get
+from app.features.ioc_tools.domain_finder.service.provider_http import (
+    USER_AGENT,
+    Provider,
+    provider_errors,
+)
 
 logger = logging.getLogger(__name__)
 
-RDAP_BOOTSTRAP_URL = "https://rdap.org/domain/"
-RDAP_TIMEOUT = 15.0
-DEFAULT_HEADERS: dict[str, str] = {
-    "User-Agent": "Corvid-Domain-Lookup/1.0",
-    "Accept": "application/rdap+json, application/json",
-}
+# Not fetched via `provider_get`: rdap.org answers with a redirect to whichever registry
+# server is authoritative, so the host actually contacted isn't fixed - it goes through
+# `safe_get`, and only the error mapping is shared.
+RDAP = Provider(
+    name="RDAP",
+    code="RDAP",
+    base_url="https://rdap.org/domain/",
+    timeout=15.0,
+    accept="application/rdap+json, application/json",
+)
 
 
 async def fetch_rdap_domain_data(domain: str) -> tuple[dict[str, Any], str]:
-    """
-    Fetch RDAP registration data for a domain, following the rdap.org bootstrap redirect.
-
-    Args:
-        domain: Domain name to look up
-
-    Returns:
-        Tuple of (raw RDAP response dict, the authoritative RDAP server host that answered)
-
-    Raises:
-        AppHTTPException: For lookup failures, unsupported TLDs, or API errors
-    """
-    url = f"{RDAP_BOOTSTRAP_URL}{domain}"
+    """RDAP registration data for a domain, following the rdap.org bootstrap redirect:
+    `(raw RDAP response, the authoritative RDAP server host that answered)`. Failures raise
+    `AppHTTPException` (`provider_http`), plus `RDAP_NOT_FOUND` for an unknown domain/TLD."""
+    url = f"{RDAP.base_url}{domain}"
     logger.debug("Fetching RDAP data from bootstrap: %s", url)
 
-    try:
+    async with provider_errors(RDAP, domain):
         async with httpx.AsyncClient(
-            timeout=RDAP_TIMEOUT, headers=DEFAULT_HEADERS, follow_redirects=False
+            timeout=RDAP.timeout,
+            headers={"User-Agent": USER_AGENT, "Accept": RDAP.accept or "application/json"},
+            follow_redirects=False,
         ) as client:
             response = await safe_get(
                 client, url, allow_private=settings.security.allow_private_network_targets
             )
 
             if response.status_code == 404:
-                raise AppHTTPException(
-                    status_code=404,
-                    detail=f"No RDAP record found for domain: {domain}",
-                    error_code="RDAP_NOT_FOUND",
-                )
+                raise RDAP.error(404, "NOT_FOUND", f"No RDAP record found for domain: {domain}")
 
             response.raise_for_status()
             data = response.json()
@@ -66,38 +63,3 @@ async def fetch_rdap_domain_data(domain: str) -> tuple[dict[str, Any], str]:
             rdap_server = response.request.headers.get("host", "unknown")
             logger.info("RDAP lookup succeeded for %s via %s", domain, rdap_server)
             return data, rdap_server
-
-    except AppHTTPException:
-        raise
-    except httpx.TimeoutException as e:
-        logger.error("Timeout while fetching RDAP data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=504,
-            detail="Request timeout while connecting to RDAP service",
-            error_code="RDAP_TIMEOUT",
-        ) from e
-    except httpx.RequestError as e:
-        logger.error("Request error while fetching RDAP data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=503,
-            detail=f"Failed to connect to RDAP service: {str(e)}",
-            error_code="RDAP_CONNECTION_ERROR",
-        ) from e
-    except httpx.HTTPStatusError as e:
-        logger.error(
-            "HTTP status error from RDAP for domain %s: Status %s", domain, e.response.status_code
-        )
-        raise AppHTTPException(
-            status_code=e.response.status_code,
-            detail=f"RDAP service returned error: {e.response.status_code}",
-            error_code="RDAP_API_ERROR",
-        ) from e
-    except Exception as e:
-        logger.error(
-            "Unexpected error while fetching RDAP data for domain %s: %s", domain, e, exc_info=True
-        )
-        raise AppHTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while fetching RDAP data",
-            error_code="RDAP_UNEXPECTED_ERROR",
-        ) from e

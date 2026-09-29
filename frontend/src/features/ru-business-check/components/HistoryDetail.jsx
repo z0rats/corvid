@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from 'react-router';
 import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
@@ -8,8 +7,8 @@ import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import ResultsView from './ResultsView';
 import ReportExportButtons from './ReportExportButtons';
 import { ruBusinessCheckApi } from '../services/api/ruBusinessCheckApi';
+import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 const STATUS_LABELS = { running: 'Выполняется', completed: 'Завершено', cancelled: 'Отменено', failed: 'Ошибка' };
 
 export default function HistoryDetail() {
@@ -25,7 +24,7 @@ export default function HistoryDetail() {
       <HistoryDetailHeader
         onBack={() => navigate('/ru-business-check/history')}
         title={search.query}
-        chips={<Chip size="small" label={STATUS_LABELS[search.status] || search.status} color={STATUS_COLORS[search.status] || 'default'} />}
+        chips={<ScanStatusChip status={search.status} label={STATUS_LABELS[search.status] || search.status} />}
         summary={`Проверено ${new Date(search.searched_at).toLocaleString()}`}
         error={search.status === 'failed' ? search.error : null}
       />

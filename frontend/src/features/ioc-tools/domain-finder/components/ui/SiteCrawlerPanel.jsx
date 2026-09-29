@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useSiteCrawler } from "../../hooks/api/useSiteCrawler";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
 
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -29,10 +29,6 @@ const IOC_CATEGORY_KEYS = [
   'domains', 'ips', 'urls', 'emails', 'md5', 'sha1', 'sha256', 'cves', 'secrets', 'js_endpoints'
 ];
 
-function isSearchPattern(domain) {
-  return domain.includes('*') || domain.includes('?');
-}
-
 function statusColor(statusCode) {
   if (statusCode >= 200 && statusCode < 300) return 'success';
   if (statusCode >= 300 && statusCode < 400) return 'info';
@@ -41,9 +37,9 @@ function statusColor(statusCode) {
 
 export default function SiteCrawlerPanel({ domain }) {
   const { t } = useTranslation('iocTools');
-  const { data, loading, error, crawl } = useSiteCrawler(domain);
+  const { data, loading, error, unsupported, run: crawl } = useDomainPanel('site-crawl', domain, { auto: false });
 
-  if (!domain || isSearchPattern(domain)) return null;
+  if (!domain || unsupported) return null;
 
   const nonEmptyCategories = data
     ? IOC_CATEGORY_KEYS.filter((key) => (data.iocs?.[key] || []).length > 0)

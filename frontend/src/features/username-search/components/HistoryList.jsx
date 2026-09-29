@@ -5,8 +5,8 @@ import Chip from '@mui/material/Chip';
 import HistoryTable from '../../../core/components/HistoryTable';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { sourceLabelKey } from '../utils/sourceLabels';
+import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 
 export default function HistoryList() {
   const { t } = useTranslation('usernameSearch');
@@ -29,7 +29,7 @@ export default function HistoryList() {
       key: 'status',
       header: t('history.headers.status'),
       render: (run) => (
-        <Chip size="small" label={t(`history.status.${run.status}`)} color={STATUS_COLORS[run.status] || 'default'} />
+        <ScanStatusChip status={run.status} label={t(`history.status.${run.status}`)} />
       ),
     },
     { key: 'found_count', header: t('history.headers.found') },

@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router';
-import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 
@@ -11,8 +10,8 @@ import CloseFriendsTable from './CloseFriendsTable';
 import FriendGraphSvg from './FriendGraphSvg';
 import GeolocationCard from './GeolocationCard';
 import { steamReconApi } from '../services/api/steamReconApi';
+import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 
 export default function HistoryDetail() {
   const { t } = useTranslation('steamRecon');
@@ -30,7 +29,7 @@ export default function HistoryDetail() {
       <HistoryDetailHeader
         onBack={() => navigate('/steam-recon/history')}
         title={search.persona_name || search.target}
-        chips={<Chip size="small" label={t(`history.status.${search.status}`)} color={STATUS_COLORS[search.status] || 'default'} />}
+        chips={<ScanStatusChip status={search.status} label={t(`history.status.${search.status}`)} />}
         summary={t('history.summary', { analyzed: search.friends_analyzed, total: search.friends_total })}
         error={search.status === 'failed' ? search.error_message : null}
       />

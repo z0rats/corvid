@@ -15,8 +15,8 @@ import HudsonRockStatusChip from './HudsonRockStatusChip';
 import { useHudsonRockCheck } from '../hooks/api/useHudsonRockCheck';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { sourceLabelKey } from '../utils/sourceLabels';
+import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
-const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 const EXPORT_FORMATS = ['csv', 'txt', 'json', 'html', 'pdf', 'xmind'];
 
 export default function HistoryDetail() {
@@ -37,7 +37,7 @@ export default function HistoryDetail() {
         chips={(
           <>
             <Chip size="small" variant="outlined" label={t(sourceLabelKey(run.source))} />
-            <Chip size="small" label={t(`history.status.${run.status}`)} color={STATUS_COLORS[run.status] || 'default'} />
+            <ScanStatusChip status={run.status} label={t(`history.status.${run.status}`)} />
           </>
         )}
         summary={t('history.summary', { checked: run.total_sites_checked, found: run.found_count })}

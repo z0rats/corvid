@@ -6,14 +6,6 @@ import { useResumableScan } from '../../../core/hooks/useResumableScan';
 import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('Amass');
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => amassApi.startScan(payload, { signal }),
-  fetchPersisted: (searchId) => amassApi.getHistory(searchId),
-  cancelScan: (searchId) => amassApi.cancelScan(searchId),
-};
-
 async function reduce(prev, event) {
   const { data } = event;
   if (event.type === 'started') {
@@ -46,8 +38,8 @@ export function useAmass() {
   const { startScan: resumableStartScan, cancelScan } = useResumableScan({
     scopeKey: 'amass',
     state, setState, initialState: AMASS_INITIAL_STATE,
-    terminalStatuses: TERMINAL_STATUSES,
-    api, reduce, reconcile,
+    endpoint: { base: '/api/amass', runs: 'history' },
+    reduce, reconcile,
   });
   const scan = useCallback((payload) => resumableStartScan(
     payload, { ...AMASS_INITIAL_STATE, loading: true },

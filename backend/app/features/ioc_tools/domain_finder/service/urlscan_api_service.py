@@ -7,94 +7,42 @@ from typing import Any
 
 import httpx
 
-from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.domain_finder.config.api_config import (
-    DEFAULT_HEADERS,
     URLSCAN_BASE_URL,
     URLSCAN_SEARCH_ENDPOINT,
     URLSCAN_TIMEOUT,
 )
+from app.features.ioc_tools.domain_finder.service.provider_http import Provider, provider_get
 
 logger = logging.getLogger(__name__)
 
+URLSCAN = Provider(
+    name="URLScan.io",
+    code="URLSCAN",
+    base_url=URLSCAN_BASE_URL,
+    timeout=URLSCAN_TIMEOUT,
+    accept=None,
+)
+
 
 async def fetch_domain_scan_results(domain: str) -> list[dict[str, Any]]:
-    """
-    Fetch scan results from URLScan.io API for a specific domain
+    """Raw URLScan.io search results for a domain. Failures raise `AppHTTPException`
+    (`provider_http`)."""
 
-    Args:
-        domain: Domain name to search for
-
-    Returns:
-        List of scan result dictionaries from URLScan.io API
-
-    Raises:
-        HTTPException: For API request failures or HTTP errors
-    """
-    url = f"{URLSCAN_BASE_URL}{URLSCAN_SEARCH_ENDPOINT}?q=domain:{domain}"
-    logger.debug("Fetching URLScan data from: %s", url)
-
-    try:
-        async with httpx.AsyncClient(timeout=URLSCAN_TIMEOUT, headers=DEFAULT_HEADERS) as client:
-            logger.debug("Making HTTP request to URLScan.io for domain: %s", domain)
-            response = await client.get(url)
-
-            logger.debug(
-                "URLScan.io response - Status: %s, Domain: %s", response.status_code, domain
-            )
-            response.raise_for_status()
-
-            data = response.json()
-            logger.debug("Successfully parsed URLScan.io JSON response for domain: %s", domain)
-
-            if "results" not in data:
-                logger.warning("No 'results' key in URLScan.io response for domain: %s", domain)
-                return []
-
-            raw_results = data["results"]
-            logger.info(
-                "Retrieved %s raw results from URLScan.io for domain: %s", len(raw_results), domain
-            )
-
-            return raw_results
-
-    except httpx.TimeoutException as e:
-        logger.error("Timeout while fetching URLScan.io data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=504,
-            detail="Request timeout while connecting to URLScan.io service",
-            error_code="URLSCAN_TIMEOUT",
-        ) from e
-    except httpx.RequestError as e:
-        logger.error("Request error while fetching URLScan.io data for domain %s: %s", domain, e)
-        raise AppHTTPException(
-            status_code=503,
-            detail=f"Failed to connect to URLScan.io service: {str(e)}",
-            error_code="URLSCAN_CONNECTION_ERROR",
-        ) from e
-    except httpx.HTTPStatusError as e:
-        logger.error(
-            "HTTP status error from URLScan.io for domain %s: Status %s",
-            domain,
-            e.response.status_code,
+    def parse(response: httpx.Response) -> list[dict[str, Any]]:
+        data = response.json()
+        if "results" not in data:
+            logger.warning("No 'results' key in URLScan.io response for domain: %s", domain)
+            return []
+        raw_results = data["results"]
+        logger.info(
+            "Retrieved %s raw results from URLScan.io for domain: %s", len(raw_results), domain
         )
-        raise AppHTTPException(
-            status_code=e.response.status_code,
-            detail=f"URLScan.io API returned error: {e.response.status_code}",
-            error_code="URLSCAN_API_ERROR",
-        ) from e
-    except Exception as e:
-        logger.error(
-            "Unexpected error while fetching URLScan.io data for domain %s: %s",
-            domain,
-            e,
-            exc_info=True,
-        )
-        raise AppHTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while fetching scan data",
-            error_code="URLSCAN_UNEXPECTED_ERROR",
-        ) from e
+        return raw_results
+
+    return await provider_get(
+        URLSCAN, f"{URLSCAN_SEARCH_ENDPOINT}?q=domain:{domain}", subject=domain, parse=parse
+    )
 
 
 def process_scan_result_for_response(raw_result: dict[str, Any]) -> dict[str, Any]:

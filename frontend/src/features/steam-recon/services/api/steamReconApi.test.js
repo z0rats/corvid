@@ -23,47 +23,6 @@ describe('steamReconApi.profile', () => {
   });
 });
 
-describe('steamReconApi.startScan', () => {
-  it('posts snake_case fields and returns the response body stream', async () => {
-    const body = new ReadableStream();
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, body });
-    vi.stubGlobal('fetch', fetchMock);
-
-    const result = await steamReconApi.startScan({
-      target: 'robinwalker',
-      maxFriends: 50,
-      includeCsReport: false,
-    });
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8000/api/steam-recon/scan',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ target: 'robinwalker', max_friends: 50, include_cs_report: false }),
-      }),
-    );
-    expect(result).toBe(body);
-  });
-
-  it('throws when the response is not ok', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, statusText: 'Bad Request' }));
-
-    await expect(
-      steamReconApi.startScan({ target: 'x', maxFriends: 1, includeCsReport: true }),
-    ).rejects.toThrow('Bad Request');
-  });
-});
-
-describe('steamReconApi.cancelScan', () => {
-  it('posts to the cancel endpoint', async () => {
-    api.post.mockResolvedValue({});
-
-    await steamReconApi.cancelScan(42);
-
-    expect(api.post).toHaveBeenCalledWith('/api/steam-recon/history/42/cancel');
-  });
-});
-
 describe('steamReconApi.listSearches', () => {
   it('passes skip/limit params', async () => {
     api.get.mockResolvedValue({ data: [] });

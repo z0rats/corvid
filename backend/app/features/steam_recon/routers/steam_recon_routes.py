@@ -4,14 +4,10 @@ import logging
 from fastapi import APIRouter, Request, status
 
 from app.core.config.rate_limit_config import limiter
-from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
-from app.core.exceptions import AppHTTPException
+from app.core.dependencies import ReadSessionDep
+from app.core.scans.routes import add_run_routes
 from app.core.scans.sse import sse_response
-from app.features.steam_recon.crud.steam_recon_crud import (
-    delete_search,
-    get_search_with_result,
-    list_searches,
-)
+from app.features.steam_recon.crud.steam_recon_crud import STEAM_RECON_SCANS
 from app.features.steam_recon.schemas.steam_recon_schemas import (
     ProfileRequest,
     ProfileResponse,
@@ -20,7 +16,7 @@ from app.features.steam_recon.schemas.steam_recon_schemas import (
     SearchSummary,
 )
 from app.features.steam_recon.service.steam_profile_service import perform_profile_lookup
-from app.features.steam_recon.service.steam_recon_scan_service import cancel_scan, run_scan
+from app.features.steam_recon.service.steam_recon_scan_service import run_scan
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/steam-recon", tags=["Steam Recon"])
@@ -64,67 +60,14 @@ async def scan(request: Request, scan_request: ScanRequest):
     return sse_response(queue)
 
 
-@router.post(
-    "/history/{search_id}/cancel",
-    status_code=status.HTTP_202_ACCEPTED,
-    summary="Cancel a running scan",
-    description="Cancel a currently-running Steam Recon scan",
-    responses={404: {"description": "No running scan with that ID"}},
+add_run_routes(
+    router,
+    STEAM_RECON_SCANS,
+    display_name="Steam Recon",
+    noun="scan",
+    summary_schema=SearchSummary,
+    detail_schema=SearchDetail,
+    not_found_code="STEAM_RECON_NOT_FOUND",
+    not_running_code="STEAM_RECON_NOT_RUNNING",
+    with_results=True,
 )
-async def cancel_scan_endpoint(search_id: int) -> None:
-    if not await cancel_scan(search_id):
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No running scan with that ID",
-            error_code="STEAM_RECON_NOT_RUNNING",
-        )
-    logger.info("Cancellation requested for Steam Recon scan %s", search_id)
-
-
-@router.get(
-    "/history",
-    response_model=list[SearchSummary],
-    summary="List past Steam Recon scans",
-    description="List past Steam Recon scans, most recent first",
-)
-async def read_searches(
-    db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100
-) -> list[SearchSummary]:
-    searches = await list_searches(db, skip=skip, limit=limit)
-    return [SearchSummary.model_validate(s) for s in searches]
-
-
-@router.get(
-    "/history/{search_id}",
-    response_model=SearchDetail,
-    summary="Get a past Steam Recon scan",
-    description="Get a past Steam Recon scan, including its full result",
-    responses={404: {"description": "Scan not found"}},
-)
-async def read_search(search_id: int, db: ReadSessionDep) -> SearchDetail:
-    search = await get_search_with_result(db, search_id)
-    if not search:
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Scan not found",
-            error_code="STEAM_RECON_NOT_FOUND",
-        )
-    return SearchDetail.model_validate(search)
-
-
-@router.delete(
-    "/history/{search_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a Steam Recon scan",
-    description="Permanently delete a past Steam Recon scan",
-    responses={404: {"description": "Scan not found"}},
-)
-async def delete_search_endpoint(search_id: int, db: SessionDep) -> None:
-    search = await delete_search(db, search_id)
-    if not search:
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Scan not found",
-            error_code="STEAM_RECON_NOT_FOUND",
-        )
-    logger.info("Deleted Steam Recon scan %s", search_id)

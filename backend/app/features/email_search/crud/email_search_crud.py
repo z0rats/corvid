@@ -1,20 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.scans.crud import ScanColumns, make_scan_history_crud
-from app.core.scans.reconciliation import mark_stale_running_as_failed
+from app.core.scans.crud import ScanColumns
+from app.core.scans.feature import ScanFeature
 from app.features.email_search.models.email_search_models import MailSearch, MailSearchResult
 
-# ScanRun.execute() now owns row create/complete/cancel/fail directly via
-# core/scans/crud.py, using this.
-SCAN_COLUMNS = ScanColumns(error_column="error_message", completed_at_column="completed_at")
-
-_history = make_scan_history_crud(
-    MailSearch, MailSearch.started_at, relation=MailSearch.provider_results
+EMAIL_SEARCH_SCANS = ScanFeature(
+    name="email_search",
+    model=MailSearch,
+    columns=ScanColumns(error_column="error_message", completed_at_column="completed_at"),
+    order_by=MailSearch.started_at,
+    relation=MailSearch.provider_results,
 )
-list_search_runs = _history.list
-get_search_run = _history.get
-get_search_run_with_results = _history.get_with_results
-delete_search_run = _history.delete
 
 
 async def add_provider_results(
@@ -34,16 +30,3 @@ async def add_provider_results(
             )
         )
     await db.flush()
-
-
-async def interrupt_running_searches(db: AsyncSession) -> int:
-    """Mark any run still 'running' as failed - see `mark_stale_running_as_failed`'s
-    docstring for why this is needed (an in-memory asyncio task doesn't survive
-    a process restart)."""
-    return await mark_stale_running_as_failed(
-        db,
-        MailSearch,
-        error_column=SCAN_COLUMNS.error_column,
-        error_message="Interrupted by server restart",
-        completed_at_column=SCAN_COLUMNS.completed_at_column,
-    )

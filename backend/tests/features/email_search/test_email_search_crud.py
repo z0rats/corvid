@@ -4,14 +4,16 @@ import datetime
 import pytest
 
 from app.features.email_search.crud.email_search_crud import (
+    EMAIL_SEARCH_SCANS,
     add_provider_results,
-    delete_search_run,
-    get_search_run,
-    get_search_run_with_results,
-    interrupt_running_searches,
-    list_search_runs,
 )
 from app.features.email_search.models.email_search_models import MailSearch, MailSearchResult
+
+list_search_runs = EMAIL_SEARCH_SCANS.history.list
+get_search_run = EMAIL_SEARCH_SCANS.history.get
+get_search_run_with_results = EMAIL_SEARCH_SCANS.history.get_with_results
+delete_search_run = EMAIL_SEARCH_SCANS.history.delete
+interrupt_running_searches = EMAIL_SEARCH_SCANS.interrupt_running
 
 
 def _run(coro):

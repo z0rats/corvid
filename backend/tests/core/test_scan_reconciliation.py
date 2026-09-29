@@ -2,8 +2,8 @@
 against real tables, covering the two call shapes it replaces: `username_search`/
 `email_search`'s shape (sets `completed_at`, error column named `error_message`)
 and `git_recon`'s shape (no `completed_at` column, error column named `error`).
-Every scan feature's own crud module exposes this as `interrupt_running_searches`
-(see `app/utils/scan_reconciliation_registry.py`). Same engine-fixture pattern as
+Every scan feature reaches it through `ScanFeature.interrupt_running` (see
+`app/utils/scan_reconciliation_registry.py`). Same engine-fixture pattern as
 test_fk_cascade_delete.py.
 """
 

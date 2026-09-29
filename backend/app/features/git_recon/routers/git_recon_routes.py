@@ -1,21 +1,21 @@
 import asyncio
 import logging
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.rate_limit_config import limiter
-from app.core.dependencies import LimitQuery, ReadSessionDep, SessionDep, SkipQuery
-from app.core.exceptions import AppHTTPException
+from app.core.dependencies import SessionDep
+from app.core.scans.routes import add_run_routes
 from app.core.scans.sse import sse_response
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
-from app.features.git_recon.crud.git_recon_crud import delete_search, get_search, list_searches
+from app.features.git_recon.crud.git_recon_crud import GIT_RECON_SCANS
 from app.features.git_recon.schemas.git_recon_schemas import (
     ScanRequest,
     SearchDetail,
     SearchSummary,
 )
-from app.features.git_recon.service.git_recon_service import cancel_scan, run_scan_task
+from app.features.git_recon.service.git_recon_service import run_scan_task
 
 logger = logging.getLogger(__name__)
 
@@ -60,70 +60,11 @@ async def scan(request: Request, db: SessionDep, scan_request: ScanRequest):
     return sse_response(queue)
 
 
-@router.post(
-    "/history/{search_id}/cancel",
-    status_code=status.HTTP_202_ACCEPTED,
-    summary="Cancel a running search",
-    description=(
-        "Cancel a currently-running git recon scan, keeping whatever repos were "
-        "cloned/analyzed before cancellation"
-    ),
-    responses={404: {"description": "No running search with that ID"}},
+add_run_routes(
+    router,
+    GIT_RECON_SCANS,
+    display_name="git recon",
+    summary_schema=SearchSummary,
+    detail_schema=SearchDetail,
+    not_found_code="GIT_RECON_NOT_FOUND",
 )
-async def cancel_scan_endpoint(search_id: int) -> None:
-    if not await cancel_scan(search_id):
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No running search with that ID",
-            error_code="GIT_RECON_NOT_FOUND",
-        )
-    logger.info("Cancellation requested for git recon search %s", search_id)
-
-
-@router.get(
-    "/history",
-    response_model=list[SearchSummary],
-    summary="List past git recon searches",
-    description="List past git/GitHub identity-correlation searches, most recent first",
-)
-async def read_searches(
-    db: ReadSessionDep, skip: SkipQuery = 0, limit: LimitQuery = 100
-) -> list[SearchSummary]:
-    searches = await list_searches(db, skip=skip, limit=limit)
-    return [SearchSummary.model_validate(s) for s in searches]
-
-
-@router.get(
-    "/history/{search_id}",
-    response_model=SearchDetail,
-    summary="Get a past git recon search",
-    description="Get a past git/GitHub identity-correlation search, including its full result",
-    responses={404: {"description": "Search not found"}},
-)
-async def read_search(search_id: int, db: ReadSessionDep) -> SearchDetail:
-    search = await get_search(db, search_id)
-    if not search:
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Search not found",
-            error_code="GIT_RECON_NOT_FOUND",
-        )
-    return SearchDetail.model_validate(search)
-
-
-@router.delete(
-    "/history/{search_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a git recon search",
-    description="Permanently delete a past git recon search",
-    responses={404: {"description": "Search not found"}},
-)
-async def delete_search_endpoint(search_id: int, db: SessionDep) -> None:
-    search = await delete_search(db, search_id)
-    if not search:
-        raise AppHTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Search not found",
-            error_code="GIT_RECON_NOT_FOUND",
-        )
-    logger.info("Deleted git recon search %s", search_id)

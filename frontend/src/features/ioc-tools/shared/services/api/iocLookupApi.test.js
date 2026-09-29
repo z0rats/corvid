@@ -81,14 +81,6 @@ describe('iocLookupApi.bulkLookup', () => {
     expect(result).toBe(body);
   });
 
-  it('throws when the response is not ok', async () => {
-    getAccessToken.mockReturnValue('tok123');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, statusText: 'Bad Gateway' }));
-
-    await expect(iocLookupApi.bulkLookup(['1.2.3.4'], ['virustotal'])).rejects.toThrow(
-      'Server error: Bad Gateway'
-    );
-  });
 });
 
 describe('iocLookupApi.fetchBulkLookupSettings', () => {

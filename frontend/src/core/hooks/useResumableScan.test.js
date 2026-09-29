@@ -1,6 +1,13 @@
 import { act, renderHook } from '@testing-library/react';
 import { useState } from 'react';
+import baseApi from '../services/baseApi';
 import { failedReduce, buildRunningSeed, useResumableScan } from './useResumableScan';
+
+vi.mock('../services/baseApi', () => ({
+  default: { get: vi.fn(), post: vi.fn() },
+  baseURL: 'http://backend.test',
+}));
+vi.mock('../utils/accessToken', () => ({ getAccessToken: () => 'tok' }));
 
 describe('failedReduce', () => {
   it('sets phase to failed and carries the event error', () => {
@@ -29,11 +36,13 @@ describe('buildRunningSeed', () => {
 });
 
 // The tests below drive `useResumableScan` itself through its real interface
-// (startScan/cancelScan/reset) with a fake SSE stream and a fake `api`, rather
-// than through one feature's hook - this is the shared module every scan
-// feature (username-search, email-search, git-recon, ru-business-check)
-// depends on, so its reconnect/abort/cancel-gate logic is tested once here
-// instead of being re-proven per feature.
+// (startScan/cancelScan/reset) against a faked network - `fetch` for the SSE
+// stream, `baseApi` for the persisted-record poll and the cancel request -
+// rather than through one feature's hook: this is the shared module every scan
+// feature depends on, so its transport/reconnect/abort/cancel-gate logic is
+// tested once here instead of being re-proven per feature. Each scenario
+// describes the backend as `{ startScan, fetchPersisted, cancelScan }`;
+// `installBackend` routes the real requests to it.
 
 function encodeSseFrames(events) {
   return events.map((event) => `data: ${JSON.stringify(event)}\n\n`);
@@ -84,16 +93,76 @@ const baseInitialState = { phase: 'idle', searchId: null, checked: 0 };
 // subsequent test's `act()` (React's scheduler relies on real timers too).
 afterEach(() => vi.useRealTimers());
 
+const ENDPOINT = { base: '/api/test', runs: 'history' };
+
+function installBackend(api) {
+  vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+    const body = await api.startScan(JSON.parse(init.body), { signal: init.signal, url, init });
+    return { ok: true, body };
+  }));
+  baseApi.get.mockImplementation(async (url) => ({
+    data: await api.fetchPersisted(Number(url.split('/').pop())),
+  }));
+  baseApi.post.mockImplementation(async (url) => {
+    await api.cancelScan?.(Number(url.split('/').at(-2)));
+  });
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+});
+
 function useHarness({
-  api, reduce = genericReduce, reconcile = genericReconcile, initialState = baseInitialState,
-  terminalStatuses = ['completed', 'failed', 'cancelled'], scopeKey,
+  api, reduce = genericReduce, reconcile = genericReconcile, initialState = baseInitialState, scopeKey,
 }) {
+  useState(() => installBackend(api)); // once per mount, not per render
   const [state, setState] = useState(initialState);
   const scan = useResumableScan({
-    scopeKey, state, setState, initialState, terminalStatuses, api, reduce, reconcile,
+    scopeKey, state, setState, initialState, endpoint: ENDPOINT, reduce, reconcile,
   });
   return { state, ...scan };
 }
+
+describe('useResumableScan — transport', () => {
+  it('POSTs the body to <base>/scan as an authenticated SSE request', async () => {
+    const api = { startScan: vi.fn().mockResolvedValue(makeSseStream([])), fetchPersisted: vi.fn() };
+    const { result } = renderHook(() => useHarness({ api, scopeKey: 'transport-1' }));
+
+    await act(async () => {
+      await result.current.startScan({ domain: 'example.com' }, buildRunningSeed(baseInitialState, {}));
+    });
+
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toBe('http://backend.test/api/test/scan');
+    expect(init.method).toBe('POST');
+    expect(init.headers).toMatchObject({ Accept: 'text/event-stream', Authorization: 'Bearer tok' });
+    expect(JSON.parse(init.body)).toEqual({ domain: 'example.com' });
+  });
+
+  it('turns a non-OK response into a failed event', async () => {
+    const { result } = renderHook(() => useHarness({ api: { startScan: vi.fn(), fetchPersisted: vi.fn() }, scopeKey: 'transport-2' }));
+    fetch.mockResolvedValueOnce({ ok: false, statusText: 'Forbidden', body: null });
+
+    await act(async () => {
+      await result.current.startScan({}, buildRunningSeed(baseInitialState, {}));
+    });
+
+    expect(result.current.state).toMatchObject({ phase: 'failed', error: 'Server error: Forbidden' });
+  });
+
+  it('polls <base>/<runs>/<id> and cancels via <base>/<runs>/<id>/cancel', () => {
+    const { result } = renderHook(() => useHarness({
+      api: { startScan: vi.fn(), fetchPersisted: vi.fn(), cancelScan: vi.fn() },
+      scopeKey: 'transport-3',
+      initialState: { phase: 'running', searchId: 42 },
+    }));
+
+    act(() => { result.current.cancelScan(); });
+
+    expect(baseApi.post).toHaveBeenCalledWith('/api/test/history/42/cancel');
+  });
+});
 
 describe('useResumableScan — processStream', () => {
   it('applies SSE events sequentially through reduce and tracks the search id', async () => {
@@ -255,15 +324,6 @@ describe('useResumableScan — per-scopeKey abort', () => {
 });
 
 describe('useResumableScan — cancelScan gate', () => {
-  afterEach(() => vi.clearAllMocks());
-
-  it('is not exposed at all when api.cancelScan is not provided', () => {
-    const api = { startScan: vi.fn(), fetchPersisted: vi.fn() };
-    const { result } = renderHook(() => useHarness({ api, scopeKey: 'gate-no-cancel', initialState: { phase: 'running', searchId: 1 } }));
-
-    expect(result.current.cancelScan).toBeUndefined();
-  });
-
   it('calls api.cancelScan with the running searchId when phase is "running"', () => {
     const api = { startScan: vi.fn(), fetchPersisted: vi.fn(), cancelScan: vi.fn().mockResolvedValue(undefined) };
     const { result } = renderHook(() => useHarness({ api, scopeKey: 'gate-phase', initialState: { phase: 'running', searchId: 42 } }));

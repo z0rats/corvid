@@ -1,40 +1,22 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useRapidDnsSubdomains } from "../../hooks/api/useRapidDnsSubdomains";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
+import { panelStatusView } from "./panelStatusView";
 
-import Alert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import DnsIcon from "@mui/icons-material/DnsOutlined";
-import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 export default function RapidDnsPanel({ domain, onScanSubdomain }) {
   const { t } = useTranslation('iocTools');
-  const { data, loading, error, unsupported } = useRapidDnsSubdomains(domain);
+  const panel = useDomainPanel('rapiddns-subdomains', domain);
+  const { data } = panel;
 
-  if (unsupported) return null;
-
-  if (loading) {
-    return (
-      <>
-        <LinearProgress />
-        <br />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="warning" variant="outlined" sx={{ borderRadius: 1, mb: 2 }}>
-        {t('domainFinder.rapidDns.errorPrefix')} {error}
-      </Alert>
-    );
-  }
-
-  if (!data) return null;
+  const status = panelStatusView(panel, t('domainFinder.rapidDns.errorPrefix'));
+  if (status !== undefined) return status;
 
   return (
     <Card sx={{ mb: 2, p: 1, borderRadius: 1, boxShadow: 0 }}>

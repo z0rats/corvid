@@ -66,39 +66,3 @@ def test_omits_ip_when_line_has_no_comma(patch_httpx_transport):
     patch_httpx_transport(lambda request: httpx.Response(200, text="www.example.com\n"))
 
     assert _run(fetch_hackertarget_hosts("example.com")) == [("www.example.com", None)]
-
-
-def test_raises_with_upstream_status_code_on_http_error(patch_httpx_transport):
-    patch_httpx_transport(lambda request: httpx.Response(500, text="server error"))
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_hackertarget_hosts("example.com"))
-
-    assert exc_info.value.status_code == 500
-    assert exc_info.value.error_code == "HACKERTARGET_API_ERROR"
-
-
-def test_raises_504_on_timeout(patch_httpx_transport):
-    def handler(request):
-        raise httpx.TimeoutException("timed out", request=request)
-
-    patch_httpx_transport(handler)
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_hackertarget_hosts("example.com"))
-
-    assert exc_info.value.status_code == 504
-    assert exc_info.value.error_code == "HACKERTARGET_TIMEOUT"
-
-
-def test_raises_503_on_connection_error(patch_httpx_transport):
-    def handler(request):
-        raise httpx.ConnectError("connection refused", request=request)
-
-    patch_httpx_transport(handler)
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_hackertarget_hosts("example.com"))
-
-    assert exc_info.value.status_code == 503
-    assert exc_info.value.error_code == "HACKERTARGET_CONNECTION_ERROR"

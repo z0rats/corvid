@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import register_exception_handlers
+from app.core.scans.run import ScanRun
 from app.features.amass.models.amass_models import AmassSearch
 from app.features.amass.routers import amass_routes
 
@@ -87,7 +88,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return False
 
-        monkeypatch.setattr(amass_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/amass/history/999/cancel")
 
@@ -98,7 +99,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return True
 
-        monkeypatch.setattr(amass_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/amass/history/1/cancel")
 

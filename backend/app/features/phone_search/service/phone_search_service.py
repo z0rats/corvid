@@ -5,16 +5,17 @@ import httpx
 
 from app.core.database import managed_session
 from app.core.scans.cancellable import TaskCancellable
-from app.core.scans.run import ScanCancelled, ScanEvent, ScanOutcome, ScanRun
+from app.core.scans.run import ScanCancelled, ScanEvent, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.core.settings.phone_search.crud.phone_search_settings_crud import get_phone_search_config
 from app.features.phone_search.config.checkers_config import get_active_checkers
-from app.features.phone_search.crud.phone_search_crud import SCAN_COLUMNS, add_provider_results
-from app.features.phone_search.models.phone_search_models import PhoneSearch
+from app.features.phone_search.crud.phone_search_crud import (
+    PHONE_SEARCH_SCANS,
+    add_provider_results,
+)
 
 logger = logging.getLogger(__name__)
 
-FEATURE_NAME = "phone_search"
 
 # A realistic desktop-browser User-Agent - best-effort only, no TLS/JA3
 # fingerprint spoofing, so these checkers are more easily bot-detected than a
@@ -23,12 +24,6 @@ _USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 )
-
-
-async def cancel_scan(search_id: int) -> bool:
-    """Request cancellation of a currently-running scan. Returns False if
-    no scan with that id is currently running (already finished, or never existed)."""
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 async def _run_checker(
@@ -114,12 +109,9 @@ async def run_scan(phone_number: str, queue: asyncio.Queue) -> None:
 
     cancellable = TaskCancellable(asyncio.current_task())
     try:
-        await ScanRun.execute(
-            FEATURE_NAME,
-            PhoneSearch,
+        await PHONE_SEARCH_SCANS.execute(
             run_work,
             on_event,
-            columns=SCAN_COLUMNS,
             create_fields={"phone_number": phone_number},
             started_fields={"phone_number": phone_number, "total_providers": len(checkers)},
             cancellable=cancellable,

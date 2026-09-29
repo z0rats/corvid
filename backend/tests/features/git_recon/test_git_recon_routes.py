@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import get_db, get_read_db
 from app.core.exceptions import register_exception_handlers
+from app.core.scans.run import ScanRun
 from app.core.settings.api_keys.models.api_keys_settings_models import Apikey
 from app.features.git_recon.models.git_recon_models import GitReconSearch
 from app.features.git_recon.routers import git_recon_routes
@@ -97,7 +98,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return False
 
-        monkeypatch.setattr(git_recon_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/git-recon/history/999/cancel")
 
@@ -108,7 +109,7 @@ class TestCancelScanEndpoint:
         async def fake_cancel(search_id):
             return True
 
-        monkeypatch.setattr(git_recon_routes, "cancel_scan", fake_cancel)
+        monkeypatch.setattr(ScanRun, "cancel", lambda model, search_id: fake_cancel(search_id))
 
         response = client.post("/api/git-recon/history/1/cancel")
 

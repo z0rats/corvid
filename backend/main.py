@@ -39,6 +39,7 @@ from app.features.sanctions_search.service.sanctions_search_scheduler_service im
     refresh_sanctions_search_dumps_if_stale,
 )
 from app.utils.router_registry import register_all_routers
+from app.utils.scan_reconciliation_registry import reconcile_stale_scans
 from app.utils.scheduler_registry import initialize_all_schedulers
 from app.utils.startup_service import initialize_application_defaults
 
@@ -79,74 +80,6 @@ async def _fetch_favicons_in_background() -> None:
             await bulk_fetch_favicons_parallel(db)
     except Exception as e:
         logger.error("Background favicon fetch failed: %s", e)
-
-
-async def _reconcile_stale_scans() -> None:
-    """Mark username/email/phone/git-recon/ru-business-check/amass/steam-recon/
-    instagram-search search runs still 'running' from a previous process as failed.
-
-    All eight scans are driven by a detached `asyncio.create_task()` (see their
-    `routers/*_routes.py` `scan`/`start_scan` handlers) that outlives the SSE request but
-    not the process itself, so a container stop/crash mid-scan leaves the row
-    stuck at 'running' with nothing to ever move it out of that state.
-    """
-    from app.features.amass.crud.amass_crud import (
-        interrupt_running_searches as interrupt_running_amass,
-    )
-    from app.features.email_search.crud.email_search_crud import (
-        interrupt_running_search_runs as interrupt_running_mail_runs,
-    )
-    from app.features.git_recon.crud.git_recon_crud import (
-        interrupt_running_searches as interrupt_running_git_recon,
-    )
-    from app.features.instagram_search.crud.instagram_search_crud import (
-        interrupt_running_searches as interrupt_running_instagram_search,
-    )
-    from app.features.phone_search.crud.phone_search_crud import (
-        interrupt_running_search_runs as interrupt_running_phone_runs,
-    )
-    from app.features.ru_business_check.crud.ru_business_check_crud import (
-        interrupt_running_searches as interrupt_running_ru_business_check,
-    )
-    from app.features.steam_recon.crud.steam_recon_crud import (
-        interrupt_running_searches as interrupt_running_steam_recon,
-    )
-    from app.features.username_search.crud.username_search_crud import interrupt_running_search_runs
-
-    async with managed_session() as db:
-        maigret_count = await interrupt_running_search_runs(db)
-        mail_count = await interrupt_running_mail_runs(db)
-        phone_count = await interrupt_running_phone_runs(db)
-        git_recon_count = await interrupt_running_git_recon(db)
-        ru_business_check_count = await interrupt_running_ru_business_check(db)
-        amass_count = await interrupt_running_amass(db)
-        steam_recon_count = await interrupt_running_steam_recon(db)
-        instagram_search_count = await interrupt_running_instagram_search(db)
-        if any(
-            (
-                maigret_count,
-                mail_count,
-                phone_count,
-                git_recon_count,
-                ru_business_check_count,
-                amass_count,
-                steam_recon_count,
-                instagram_search_count,
-            )
-        ):
-            logger.info(
-                "Reconciled stale scan runs left 'running' by a previous process: "
-                "%s username-search, %s email-search, %s phone-search, %s git-recon, "
-                "%s ru-business-check, %s amass, %s steam-recon, %s instagram-search",
-                maigret_count,
-                mail_count,
-                phone_count,
-                git_recon_count,
-                ru_business_check_count,
-                amass_count,
-                steam_recon_count,
-                instagram_search_count,
-            )
 
 
 async def _populate_blacklist_if_stale_in_background() -> None:
@@ -213,7 +146,7 @@ async def handle_application_startup() -> None:
         _check_disk_space()
         _register_keyless_providers()
         await _create_database_tables()
-        await _reconcile_stale_scans()
+        await reconcile_stale_scans()
         await _run_application_defaults()
         asyncio.create_task(_fetch_favicons_in_background())
         asyncio.create_task(_populate_blacklist_if_stale_in_background())

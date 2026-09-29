@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
-import { useWaybackLookup } from "../../hooks/api/useWaybackLookup";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
 import { domainUtils } from "../../utils/domainUtils";
 import { modeValue } from "../../../../../core/utils/themeUtils";
 
@@ -49,7 +49,9 @@ export default function WaybackPanel({ domain }) {
   const theme = useTheme();
   const [pathInput, setPathInput] = useState('');
   const [appliedPath, setAppliedPath] = useState(null);
-  const { data, loading, error, unsupported } = useWaybackLookup(domain, appliedPath);
+  const { data, loading, error, unsupported } = useDomainPanel('wayback', domain, {
+    params: appliedPath ? { path: appliedPath } : undefined
+  });
   const chartData = useMemo(() => capturesPerYear(data?.snapshots || []), [data]);
 
   if (unsupported) return null;

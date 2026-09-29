@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from 'react-i18next';
-import { useSubfinderSubdomains } from "../../hooks/api/useSubfinderSubdomains";
+import { useDomainPanel } from "../../hooks/useDomainPanel";
 
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
@@ -15,7 +15,7 @@ import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 
 export default function SubfinderPanel({ domain, onScanSubdomain }) {
   const { t } = useTranslation('iocTools');
-  const { data, loading, error, unsupported, run } = useSubfinderSubdomains(domain);
+  const { data, loading, error, unsupported, run } = useDomainPanel('subfinder-subdomains', domain, { auto: false });
 
   if (unsupported) return null;
 

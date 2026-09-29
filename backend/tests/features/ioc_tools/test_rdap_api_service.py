@@ -66,26 +66,6 @@ def test_raises_with_upstream_status_on_other_http_errors(monkeypatch):
     assert exc_info.value.error_code == "RDAP_API_ERROR"
 
 
-def test_raises_504_on_timeout(monkeypatch):
-    _patch_safe_get(monkeypatch, exc=httpx.TimeoutException("timed out"))
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_rdap_domain_data("example.com"))
-
-    assert exc_info.value.status_code == 504
-    assert exc_info.value.error_code == "RDAP_TIMEOUT"
-
-
-def test_raises_503_on_connection_error(monkeypatch):
-    _patch_safe_get(monkeypatch, exc=httpx.ConnectError("refused"))
-
-    with pytest.raises(AppHTTPException) as exc_info:
-        _run(fetch_rdap_domain_data("example.com"))
-
-    assert exc_info.value.status_code == 503
-    assert exc_info.value.error_code == "RDAP_CONNECTION_ERROR"
-
-
 def test_missing_host_header_falls_back_to_unknown(monkeypatch):
     response = _response(200, json={})
     del response.request.headers["host"]

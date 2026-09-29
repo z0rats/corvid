@@ -10,14 +10,13 @@ import logging
 from app.core.database import managed_session
 from app.core.exceptions import AppHTTPException
 from app.core.scans.cancellable import TaskCancellable
-from app.core.scans.run import ScanEvent, ScanOutcome, ScanRun
+from app.core.scans.run import ScanEvent, ScanOutcome
 from app.core.scans.sse import queue_sink
 from app.features.steam_recon.config.steam_recon_config import (
     CLOSE_FRIENDS_TOP_N,
     build_quick_links,
 )
-from app.features.steam_recon.crud.steam_recon_crud import SCAN_COLUMNS
-from app.features.steam_recon.models.steam_recon_models import SteamReconSearch
+from app.features.steam_recon.crud.steam_recon_crud import STEAM_RECON_SCANS
 from app.features.steam_recon.schemas.steam_recon_schemas import (
     CheaterReport as CheaterReportSchema,
 )
@@ -60,17 +59,11 @@ from app.features.steam_recon.service.steam_profile_service import (
 
 logger = logging.getLogger(__name__)
 
-FEATURE_NAME = "steam_recon"
-
 
 class SteamReconError(Exception):
     """A scan-domain validation failure (bad target, unknown profile, no key configured) - an
     "expected" failure surfaced via the normal running -> failed transition (warning-logged, no
     traceback), not an application error."""
-
-
-async def cancel_scan(search_id: int) -> bool:
-    return await ScanRun.cancel(FEATURE_NAME, search_id)
 
 
 async def _resolve_steamid64_for_scan(client: SteamApiClient, raw_target: str) -> str:
@@ -269,12 +262,9 @@ async def run_scan(request: ScanRequest, queue: asyncio.Queue) -> None:
         return ScanOutcome(fields=fields, db_only_fields={"result": result.model_dump(mode="json")})
 
     cancellable = TaskCancellable(asyncio.current_task())
-    await ScanRun.execute(
-        FEATURE_NAME,
-        SteamReconSearch,
+    await STEAM_RECON_SCANS.execute(
         run_work,
         on_event,
-        columns=SCAN_COLUMNS,
         create_fields={
             "target": request.target,
             "max_friends": request.max_friends,

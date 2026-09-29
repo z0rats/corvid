@@ -1,62 +1,50 @@
 """Regression guard for scan-reconciliation coverage. `reconcile_stale_scans` in
-`app.utils.scan_reconciliation_registry` is the single place that knows about every
-scan-style feature's `interrupt_running_searches` crud function (see that module's
-docstring, and router_registry.py/scheduler_registry.py for the same pattern applied
-to routers/scheduler jobs).
+`app.utils.scan_reconciliation_registry` is the single place that knows about every scan
+feature (see that module's docstring, and router_registry.py/scheduler_registry.py for the
+same pattern applied to routers/scheduler jobs).
 
-This walks every `app/features/*/crud/*.py` file for a `def interrupt_running_searches`
-and fails if the module defining it isn't imported by the registry - so a new scan
-feature that adds the function but forgets to register it fails a test instead of
-silently leaving its stale runs stuck at 'running' forever after a restart.
+Every `ScanFeature` declared anywhere under `app/features/` must be in its `_SCAN_FEATURES`
+- otherwise a new scan feature's runs interrupted by a restart stay 'running' forever.
+Checked on the live objects (imported, not grepped), so a renamed constant can't slip by.
 """
 
-import re
+import importlib
 from pathlib import Path
 
+from app.core.scans.feature import ScanFeature
+from app.utils.scan_reconciliation_registry import _SCAN_FEATURES
+
 APP_ROOT = Path(__file__).resolve().parents[2] / "app"
-REGISTRY_PATH = APP_ROOT / "utils" / "scan_reconciliation_registry.py"
-
-_INTERRUPT_FN_RE = re.compile(r"async def interrupt_running_searches\(")
 
 
-def _iter_crud_files():
-    for path in APP_ROOT.glob("features/*/crud/*.py"):
-        yield path.relative_to(APP_ROOT).as_posix(), path
-
-
-def _module_path(rel: str) -> str:
-    return "app." + rel[: -len(".py")].replace("/", ".")
-
-
-def test_every_interrupt_running_searches_is_registered():
-    registry_source = REGISTRY_PATH.read_text(encoding="utf-8")
-
-    unregistered = []
-    for rel, path in _iter_crud_files():
-        if not _INTERRUPT_FN_RE.search(path.read_text(encoding="utf-8")):
+def _declared_scan_features() -> dict[str, ScanFeature]:
+    found = {}
+    for path in APP_ROOT.glob("features/**/*.py"):
+        if "ScanFeature(" not in path.read_text(encoding="utf-8"):
             continue
-        if _module_path(rel) not in registry_source:
-            unregistered.append(rel)
+        module_name = "app." + path.relative_to(APP_ROOT).with_suffix("").as_posix().replace(
+            "/", "."
+        )
+        module = importlib.import_module(module_name)
+        for attr, value in vars(module).items():
+            if isinstance(value, ScanFeature):
+                found[f"{module_name}.{attr}"] = value
+    return found
 
+
+def test_every_declared_scan_feature_is_registered():
+    declared = _declared_scan_features()
+    assert declared, "no ScanFeature found under app/features - the walk itself is broken"
+    unregistered = [name for name, feature in declared.items() if feature not in _SCAN_FEATURES]
     assert not unregistered, (
-        f"crud module(s) define interrupt_running_searches but aren't imported by "
-        f"{REGISTRY_PATH.relative_to(APP_ROOT.parent)}: {unregistered}. Add them to "
-        "_SCAN_FEATURES there, or stale runs from that feature will never be reconciled "
+        f"ScanFeature(s) not in app/utils/scan_reconciliation_registry.py's _SCAN_FEATURES: "
+        f"{unregistered}. Add them, or stale runs from that feature will never be reconciled "
         "after a restart."
     )
 
 
-def test_registry_entries_still_exist_and_still_expose_the_function():
-    """Keeps the registry itself honest: an entry pointing at a module that no longer
-    defines interrupt_running_searches (renamed/removed) should be caught here."""
-    registry_source = REGISTRY_PATH.read_text(encoding="utf-8")
-
-    stale = []
-    for rel, path in _iter_crud_files():
-        module_path = _module_path(rel)
-        if module_path not in registry_source:
-            continue
-        if not _INTERRUPT_FN_RE.search(path.read_text(encoding="utf-8")):
-            stale.append(rel)
-
-    assert not stale, f"Registry references module(s) that no longer define the function: {stale}"
+def test_one_scan_feature_per_table():
+    """`ScanRun`'s cancel registry and reconciliation are keyed by table - two
+    `ScanFeature`s over one model would split them."""
+    models = [feature.model for feature in _SCAN_FEATURES]
+    assert len(models) == len(set(models))

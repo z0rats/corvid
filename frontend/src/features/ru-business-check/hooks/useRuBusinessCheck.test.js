@@ -1,9 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
+import baseApi from '../../../core/services/baseApi';
 import { useSetAtom } from 'jotai';
 import { useRuBusinessCheck } from './useRuBusinessCheck';
 import { ruBusinessCheckStateAtom, RU_BUSINESS_CHECK_INITIAL_STATE } from '../state/ruBusinessCheckAtoms';
-import { ruBusinessCheckApi } from '../services/api/ruBusinessCheckApi';
 
+vi.mock('../../../core/services/baseApi', () => ({ default: { get: vi.fn(), post: vi.fn() }, baseURL: '' }));
 vi.mock('../services/api/ruBusinessCheckApi');
 
 // ruBusinessCheckStateAtom is module-scoped (see ruBusinessCheckAtoms.js), so it doesn't
@@ -22,8 +23,8 @@ describe('useRuBusinessCheck — cancelScan', () => {
   // `loading`-vs-`phase` state-shape fallback) is exercised generically in
   // core/hooks/useResumableScan.test.js - this only checks useRuBusinessCheck
   // wires its own ruBusinessCheckApi.cancelScan into that gate.
-  it("wires cancelScan to ruBusinessCheckApi.cancelScan with the running scan's searchId", async () => {
-    ruBusinessCheckApi.cancelScan.mockResolvedValue(undefined);
+  it("cancels the running scan through this feature's endpoint", async () => {
+    baseApi.post.mockResolvedValue({});
     const { result } = renderHook(() => useTestHarness());
 
     act(() => {
@@ -34,6 +35,6 @@ describe('useRuBusinessCheck — cancelScan', () => {
       result.current.cancelScan();
     });
 
-    expect(ruBusinessCheckApi.cancelScan).toHaveBeenCalledWith(42);
+    expect(baseApi.post).toHaveBeenCalledWith('/api/ru-business-check/history/42/cancel');
   });
 });

@@ -1,9 +1,11 @@
 """Domain lookup API routes"""
 
 import logging
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fastapi import APIRouter, Request, status
+from pydantic import BaseModel
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep
@@ -84,287 +86,151 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/domain", tags=["Domain Lookup"])
 
 
-@router.post(
+def _add_panel_routes(
+    path: str,
+    *,
+    name: str,
+    request_model: type[BaseModel],
+    response_model: type[BaseModel],
+    service: Callable[..., Awaitable[Any]],
+    summary: str,
+    description: str,
+    limit: str = "30/minute",
+    with_db: bool = False,
+) -> None:
+    """Mount one panel's `POST {path}` (JSON body) + `GET {path}/{domain}` pair - both build
+    `request_model` (its validator normalizes the domain) and return `service(request)`
+    (`service(request, db)` when `with_db`). `service` is called through a lambda so it's
+    resolved at request time, not bound here. Each endpoint gets its own `__name__` before
+    `limiter.limit` wraps it, since slowapi keys its per-route counters by function name."""
+
+    async def run(panel_request: Any, db: Any, method: str) -> Any:
+        logger.info("%s %s request - Domain: %s", method, path, panel_request.domain)
+        extra = (db,) if with_db else ()
+        result = await service(panel_request, *extra)
+        logger.info("%s %s completed - Domain: %s", method, path, panel_request.domain)
+        return result
+
+    if with_db:
+
+        async def post_endpoint(request: Request, body: request_model, db: ReadSessionDep):  # type: ignore[valid-type]
+            return await run(body, db, "POST")
+
+        async def get_endpoint(request: Request, domain: str, db: ReadSessionDep):
+            return await run(request_model(domain=domain), db, "GET")
+
+    else:
+
+        async def post_endpoint(request: Request, body: request_model):  # type: ignore[valid-type,misc]
+            return await run(body, None, "POST")
+
+        async def get_endpoint(request: Request, domain: str):  # type: ignore[misc]
+            return await run(request_model(domain=domain), None, "GET")
+
+    for endpoint, suffix in ((post_endpoint, "post"), (get_endpoint, "get")):
+        endpoint.__name__ = endpoint.__qualname__ = f"{name}_{suffix}"
+
+    router.post(
+        path,
+        response_model=response_model,
+        status_code=status.HTTP_200_OK,
+        summary=summary,
+        description=description,
+    )(limiter.limit(limit)(post_endpoint))
+    router.get(
+        f"{path}/{{domain}}",
+        response_model=response_model,
+        status_code=status.HTTP_200_OK,
+        summary=f"{summary} via URL parameter",
+        description=f"{description} (domain taken from the URL path)",
+    )(limiter.limit(limit)(get_endpoint))
+
+
+_add_panel_routes(
     "/lookup",
+    name="lookup_domain",
+    request_model=DomainLookupRequest,
     response_model=DomainLookupResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_domain_lookup(*args),
     summary="Perform domain lookup using URLScan.io",
     description=(
         "Lookup domain information using the URLScan.io API to find scan "
         "results and security information"
     ),
 )
-@limiter.limit("30/minute")
-async def lookup_domain_post(
-    request: Request, domain_request: DomainLookupRequest
-) -> DomainLookupResponse:
-    """Perform comprehensive domain lookup using URLScan.io API via POST request"""
-    logger.info("POST domain lookup request - Domain: %s", domain_request.domain)
-    result = await perform_domain_lookup(domain_request)
-    logger.info(
-        "POST domain lookup completed - Domain: %s, Results: %s",
-        domain_request.domain,
-        result.total_results,
-    )
-    return result
 
-
-@router.get(
-    "/lookup/{domain}",
-    response_model=DomainLookupResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Perform domain lookup via URL parameter",
-    description="Lookup domain information using URL parameter for simple GET requests",
-)
-@limiter.limit("30/minute")
-async def lookup_domain_get(request: Request, domain: str) -> DomainLookupResponse:
-    """Perform domain lookup using domain from URL path via GET request"""
-    logger.info("GET domain lookup request - Domain: %s", domain)
-    domain_request = DomainLookupRequest(domain=domain)
-    result = await perform_domain_lookup(domain_request)
-    logger.info(
-        "GET domain lookup completed - Domain: %s, Results: %s", domain, result.total_results
-    )
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/whois",
+    name="whois_lookup",
+    request_model=WhoisLookupRequest,
     response_model=WhoisLookupResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_whois_lookup(*args),
     summary="Perform WHOIS lookup via RDAP",
     description=(
         "Look up domain registration data (registrar, creation/expiry/updated "
         "dates, registrant org, nameservers) via RDAP"
     ),
 )
-@limiter.limit("30/minute")
-async def whois_lookup_post(
-    request: Request, whois_request: WhoisLookupRequest
-) -> WhoisLookupResponse:
-    """Perform WHOIS/RDAP lookup for a domain via POST request"""
-    logger.info("POST WHOIS lookup request - Domain: %s", whois_request.domain)
-    result = await perform_whois_lookup(whois_request)
-    logger.info("POST WHOIS lookup completed - Domain: %s", whois_request.domain)
-    return result
 
-
-@router.get(
-    "/whois/{domain}",
-    response_model=WhoisLookupResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Perform WHOIS lookup via URL parameter",
-    description="Look up domain registration data via RDAP using domain from URL path",
-)
-@limiter.limit("30/minute")
-async def whois_lookup_get(request: Request, domain: str) -> WhoisLookupResponse:
-    """Perform WHOIS/RDAP lookup for a domain via GET request"""
-    logger.info("GET WHOIS lookup request - Domain: %s", domain)
-    whois_request = WhoisLookupRequest(domain=domain)
-    result = await perform_whois_lookup(whois_request)
-    logger.info("GET WHOIS lookup completed - Domain: %s", domain)
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/ct-subdomains",
+    name="ct_subdomains_lookup",
+    request_model=CtSubdomainsRequest,
     response_model=CtSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_ct_subdomains_lookup(*args),
     summary="Enumerate subdomains via Certificate Transparency logs",
     description=(
         "Query crt.sh's Certificate Transparency log mirror to enumerate "
         "subdomains and cert issuance history for a domain"
     ),
 )
-@limiter.limit("30/minute")
-async def ct_subdomains_lookup_post(
-    request: Request, ct_request: CtSubdomainsRequest
-) -> CtSubdomainsResponse:
-    """Perform a Certificate Transparency subdomain lookup via POST request"""
-    logger.info("POST CT subdomains lookup request - Domain: %s", ct_request.domain)
-    result = await perform_ct_subdomains_lookup(ct_request)
-    logger.info(
-        "POST CT subdomains lookup completed - Domain: %s, Subdomains: %s",
-        ct_request.domain,
-        len(result.subdomains),
-    )
-    return result
 
-
-@router.get(
-    "/ct-subdomains/{domain}",
-    response_model=CtSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Enumerate subdomains via Certificate Transparency logs via URL parameter",
-    description="Query crt.sh using domain from URL path for simple GET requests",
-)
-@limiter.limit("30/minute")
-async def ct_subdomains_lookup_get(request: Request, domain: str) -> CtSubdomainsResponse:
-    """Perform a Certificate Transparency subdomain lookup using domain from URL path via GET
-    request"""
-    logger.info("GET CT subdomains lookup request - Domain: %s", domain)
-    ct_request = CtSubdomainsRequest(domain=domain)
-    result = await perform_ct_subdomains_lookup(ct_request)
-    logger.info(
-        "GET CT subdomains lookup completed - Domain: %s, Subdomains: %s",
-        domain,
-        len(result.subdomains),
-    )
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/hackertarget-subdomains",
+    name="hackertarget_subdomains_lookup",
+    request_model=HackerTargetSubdomainsRequest,
     response_model=HackerTargetSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_hackertarget_lookup(*args),
     summary="Enumerate subdomains via HackerTarget's hostsearch API",
     description=(
         "Query HackerTarget's free hostsearch API to enumerate subdomains and their "
         "resolved IPs for a domain"
     ),
 )
-@limiter.limit("30/minute")
-async def hackertarget_subdomains_lookup_post(
-    request: Request, hackertarget_request: HackerTargetSubdomainsRequest
-) -> HackerTargetSubdomainsResponse:
-    """Perform a HackerTarget subdomain lookup via POST request"""
-    logger.info(
-        "POST HackerTarget subdomains lookup request - Domain: %s", hackertarget_request.domain
-    )
-    result = await perform_hackertarget_lookup(hackertarget_request)
-    logger.info(
-        "POST HackerTarget subdomains lookup completed - Domain: %s, Subdomains: %s",
-        hackertarget_request.domain,
-        len(result.subdomains),
-    )
-    return result
 
-
-@router.get(
-    "/hackertarget-subdomains/{domain}",
-    response_model=HackerTargetSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Enumerate subdomains via HackerTarget's hostsearch API via URL parameter",
-    description="Query HackerTarget's hostsearch API using domain from URL path for simple GET "
-    "requests",
-)
-@limiter.limit("30/minute")
-async def hackertarget_subdomains_lookup_get(
-    request: Request, domain: str
-) -> HackerTargetSubdomainsResponse:
-    """Perform a HackerTarget subdomain lookup using domain from URL path via GET request"""
-    logger.info("GET HackerTarget subdomains lookup request - Domain: %s", domain)
-    hackertarget_request = HackerTargetSubdomainsRequest(domain=domain)
-    result = await perform_hackertarget_lookup(hackertarget_request)
-    logger.info(
-        "GET HackerTarget subdomains lookup completed - Domain: %s, Subdomains: %s",
-        domain,
-        len(result.subdomains),
-    )
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/rapiddns-subdomains",
+    name="rapiddns_subdomains_lookup",
+    request_model=RapidDnsSubdomainsRequest,
     response_model=RapidDnsSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_rapiddns_lookup(*args),
     summary="Enumerate subdomains via RapidDNS",
     description=(
         "Query RapidDNS's public subdomain lookup page to enumerate subdomains and their "
         "DNS records for a domain"
     ),
 )
-@limiter.limit("30/minute")
-async def rapiddns_subdomains_lookup_post(
-    request: Request, rapiddns_request: RapidDnsSubdomainsRequest
-) -> RapidDnsSubdomainsResponse:
-    """Perform a RapidDNS subdomain lookup via POST request"""
-    logger.info("POST RapidDNS subdomains lookup request - Domain: %s", rapiddns_request.domain)
-    result = await perform_rapiddns_lookup(rapiddns_request)
-    logger.info(
-        "POST RapidDNS subdomains lookup completed - Domain: %s, Subdomains: %s",
-        rapiddns_request.domain,
-        len(result.subdomains),
-    )
-    return result
 
-
-@router.get(
-    "/rapiddns-subdomains/{domain}",
-    response_model=RapidDnsSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Enumerate subdomains via RapidDNS via URL parameter",
-    description="Query RapidDNS's subdomain lookup page using domain from URL path for simple "
-    "GET requests",
-)
-@limiter.limit("30/minute")
-async def rapiddns_subdomains_lookup_get(
-    request: Request, domain: str
-) -> RapidDnsSubdomainsResponse:
-    """Perform a RapidDNS subdomain lookup using domain from URL path via GET request"""
-    logger.info("GET RapidDNS subdomains lookup request - Domain: %s", domain)
-    rapiddns_request = RapidDnsSubdomainsRequest(domain=domain)
-    result = await perform_rapiddns_lookup(rapiddns_request)
-    logger.info(
-        "GET RapidDNS subdomains lookup completed - Domain: %s, Subdomains: %s",
-        domain,
-        len(result.subdomains),
-    )
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/subfinder-subdomains",
+    name="subfinder_subdomains_lookup",
+    request_model=SubfinderSubdomainsRequest,
     response_model=SubfinderSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_subfinder_lookup(*args),
     summary="Enumerate subdomains via subfinder",
     description=(
         "Run subfinder (shelled out to as a subprocess) to passively enumerate subdomains "
         "across its ~55 built-in sources, using only keyless ones"
     ),
+    limit="10/minute",  # heavier than other domain_finder checks: spawns a subprocess
 )
-@limiter.limit("10/minute")  # heavier than other domain_finder checks: spawns a subprocess
-async def subfinder_subdomains_lookup_post(
-    request: Request, subfinder_request: SubfinderSubdomainsRequest
-) -> SubfinderSubdomainsResponse:
-    """Perform a subfinder subdomain lookup via POST request"""
-    logger.info("POST subfinder subdomains lookup request - Domain: %s", subfinder_request.domain)
-    result = await perform_subfinder_lookup(subfinder_request)
-    logger.info(
-        "POST subfinder subdomains lookup completed - Domain: %s, Subdomains: %s",
-        subfinder_request.domain,
-        len(result.subdomains),
-    )
-    return result
 
-
-@router.get(
-    "/subfinder-subdomains/{domain}",
-    response_model=SubfinderSubdomainsResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Enumerate subdomains via subfinder via URL parameter",
-    description="Run subfinder using domain from URL path for simple GET requests",
-)
-@limiter.limit("10/minute")
-async def subfinder_subdomains_lookup_get(
-    request: Request, domain: str
-) -> SubfinderSubdomainsResponse:
-    """Perform a subfinder subdomain lookup using domain from URL path via GET request"""
-    logger.info("GET subfinder subdomains lookup request - Domain: %s", domain)
-    subfinder_request = SubfinderSubdomainsRequest(domain=domain)
-    result = await perform_subfinder_lookup(subfinder_request)
-    logger.info(
-        "GET subfinder subdomains lookup completed - Domain: %s, Subdomains: %s",
-        domain,
-        len(result.subdomains),
-    )
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/host-probe",
+    name="host_probe",
+    request_model=HostProbeRequest,
     response_model=HostProbeResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_host_probe(*args),
     summary="Probe a domain for a live http/https host via httpx",
     description=(
         "Run httpx (shelled out to as a subprocess) to detect which of http/https is live "
@@ -372,43 +238,15 @@ async def subfinder_subdomains_lookup_get(
         "TLS certificate data - useful after subdomain enumeration to see which discovered "
         "hosts are worth a closer look"
     ),
+    limit="10/minute",  # heavier than other domain_finder checks: spawns a subprocess
 )
-@limiter.limit("10/minute")  # heavier than other domain_finder checks: spawns a subprocess
-async def host_probe_post(
-    request: Request, host_probe_request: HostProbeRequest
-) -> HostProbeResponse:
-    """Perform a host probe via POST request"""
-    logger.info("POST host probe request - Domain: %s", host_probe_request.domain)
-    result = await perform_host_probe(host_probe_request)
-    logger.info(
-        "POST host probe completed - Domain: %s, Reachable: %s",
-        host_probe_request.domain,
-        result.reachable,
-    )
-    return result
 
-
-@router.get(
-    "/host-probe/{domain}",
-    response_model=HostProbeResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Probe a domain for a live http/https host via httpx via URL parameter",
-    description="Run httpx using domain from URL path for simple GET requests",
-)
-@limiter.limit("10/minute")
-async def host_probe_get(request: Request, domain: str) -> HostProbeResponse:
-    """Perform a host probe using domain from URL path via GET request"""
-    logger.info("GET host probe request - Domain: %s", domain)
-    host_probe_request = HostProbeRequest(domain=domain)
-    result = await perform_host_probe(host_probe_request)
-    logger.info("GET host probe completed - Domain: %s, Reachable: %s", domain, result.reachable)
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/ssl-info",
+    name="ssl_info_lookup",
+    request_model=SslInfoRequest,
     response_model=SslInfoResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_ssl_info_lookup(*args),
     summary="Inspect a domain's TLS certificate",
     description=(
         "Connect to a domain on port 443 and parse the TLS certificate it presents "
@@ -416,242 +254,84 @@ async def host_probe_get(request: Request, domain: str) -> HostProbeResponse:
         "deliberately skipped so self-signed/expired/mismatched certificates are still shown"
     ),
 )
-@limiter.limit("30/minute")
-async def ssl_info_lookup_post(request: Request, ssl_request: SslInfoRequest) -> SslInfoResponse:
-    """Perform a TLS certificate inspection via POST request"""
-    logger.info("POST SSL info request - Domain: %s", ssl_request.domain)
-    result = await perform_ssl_info_lookup(ssl_request)
-    logger.info(
-        "POST SSL info completed - Domain: %s, Expired: %s", ssl_request.domain, result.is_expired
-    )
-    return result
 
-
-@router.get(
-    "/ssl-info/{domain}",
-    response_model=SslInfoResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Inspect a domain's TLS certificate via URL parameter",
-    description="Inspect a domain's TLS certificate using domain from URL path for simple GET "
-    "requests",
-)
-@limiter.limit("30/minute")
-async def ssl_info_lookup_get(request: Request, domain: str) -> SslInfoResponse:
-    """Perform a TLS certificate inspection using domain from URL path via GET request"""
-    logger.info("GET SSL info request - Domain: %s", domain)
-    ssl_request = SslInfoRequest(domain=domain)
-    result = await perform_ssl_info_lookup(ssl_request)
-    logger.info("GET SSL info completed - Domain: %s, Expired: %s", domain, result.is_expired)
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/security-headers",
+    name="security_headers_lookup",
+    request_model=SecurityHeadersRequest,
     response_model=SecurityHeadersResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_security_headers_lookup(*args),
     summary="Audit a domain's HTTPS security headers",
     description=(
         "Fetch a domain over HTTPS and check for baseline security response headers "
         "(HSTS, CSP, X-Frame-Options, etc.), with a dedicated HSTS directive parse"
     ),
 )
-@limiter.limit("30/minute")
-async def security_headers_lookup_post(
-    request: Request, headers_request: SecurityHeadersRequest
-) -> SecurityHeadersResponse:
-    """Perform a security headers audit via POST request"""
-    logger.info("POST security headers request - Domain: %s", headers_request.domain)
-    result = await perform_security_headers_lookup(headers_request)
-    logger.info(
-        "POST security headers completed - Domain: %s, Present: %s, Missing: %s",
-        headers_request.domain,
-        len(result.present_headers),
-        len(result.missing_headers),
-    )
-    return result
 
-
-@router.get(
-    "/security-headers/{domain}",
-    response_model=SecurityHeadersResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Audit a domain's HTTPS security headers via URL parameter",
-    description="Audit a domain's HTTPS security headers using domain from URL path for simple "
-    "GET requests",
-)
-@limiter.limit("30/minute")
-async def security_headers_lookup_get(request: Request, domain: str) -> SecurityHeadersResponse:
-    """Perform a security headers audit using domain from URL path via GET request"""
-    logger.info("GET security headers request - Domain: %s", domain)
-    headers_request = SecurityHeadersRequest(domain=domain)
-    result = await perform_security_headers_lookup(headers_request)
-    logger.info(
-        "GET security headers completed - Domain: %s, Present: %s, Missing: %s",
-        domain,
-        len(result.present_headers),
-        len(result.missing_headers),
-    )
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/dnssec",
+    name="dnssec_lookup",
+    request_model=DnssecRequest,
     response_model=DnssecResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_dnssec_lookup(*args),
     summary="Check whether a domain publishes DNSSEC records",
     description="Check a domain for published DNSKEY/DS records as a quick DNSSEC signal",
 )
-@limiter.limit("30/minute")
-async def dnssec_lookup_post(request: Request, dnssec_request: DnssecRequest) -> DnssecResponse:
-    """Perform a DNSSEC signal check via POST request"""
-    logger.info("POST DNSSEC request - Domain: %s", dnssec_request.domain)
-    result = await perform_dnssec_lookup(dnssec_request)
-    logger.info(
-        "POST DNSSEC completed - Domain: %s, Enabled: %s",
-        dnssec_request.domain,
-        result.dnssec_enabled,
-    )
-    return result
 
-
-@router.get(
-    "/dnssec/{domain}",
-    response_model=DnssecResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Check whether a domain publishes DNSSEC records via URL parameter",
-    description="Check a domain for published DNSKEY/DS records using domain from URL path",
-)
-@limiter.limit("30/minute")
-async def dnssec_lookup_get(request: Request, domain: str) -> DnssecResponse:
-    """Perform a DNSSEC signal check using domain from URL path via GET request"""
-    logger.info("GET DNSSEC request - Domain: %s", domain)
-    dnssec_request = DnssecRequest(domain=domain)
-    result = await perform_dnssec_lookup(dnssec_request)
-    logger.info("GET DNSSEC completed - Domain: %s, Enabled: %s", domain, result.dnssec_enabled)
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/blocklist",
+    name="blocklist_check",
+    request_model=BlocklistRequest,
     response_model=BlocklistResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_blocklist_check(*args),
     summary="Check a domain against public DNS-filtering resolvers",
     description=(
         "Query a domain via several public providers' security-filtering DNS resolver and "
         "compare against that provider's plain resolver to detect DNS-level blocking/sinkholing"
     ),
 )
-@limiter.limit("30/minute")
-async def blocklist_check_post(
-    request: Request, blocklist_request: BlocklistRequest
-) -> BlocklistResponse:
-    """Perform a DNS blocklist check via POST request"""
-    logger.info("POST blocklist check request - Domain: %s", blocklist_request.domain)
-    result = await perform_blocklist_check(blocklist_request)
-    logger.info(
-        "POST blocklist check completed - Domain: %s, Flagged: %s",
-        blocklist_request.domain,
-        result.flagged_count,
-    )
-    return result
 
-
-@router.get(
-    "/blocklist/{domain}",
-    response_model=BlocklistResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Check a domain against public DNS-filtering resolvers via URL parameter",
-    description="Check a domain against public DNS-filtering resolvers using domain from URL path",
-)
-@limiter.limit("30/minute")
-async def blocklist_check_get(request: Request, domain: str) -> BlocklistResponse:
-    """Perform a DNS blocklist check using domain from URL path via GET request"""
-    logger.info("GET blocklist check request - Domain: %s", domain)
-    blocklist_request = BlocklistRequest(domain=domain)
-    result = await perform_blocklist_check(blocklist_request)
-    logger.info(
-        "GET blocklist check completed - Domain: %s, Flagged: %s", domain, result.flagged_count
-    )
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/dns",
+    name="dns_lookup",
+    request_model=DnsLookupRequest,
     response_model=DnsLookupResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_dns_lookup(*args),
     summary="Perform DNS record lookup",
     description=(
         "Resolve A/AAAA/MX/TXT/NS/CNAME records for a domain, plus reverse DNS "
         "(PTR) for any resolved IPs"
     ),
 )
-@limiter.limit("30/minute")
-async def dns_lookup_post(request: Request, dns_request: DnsLookupRequest) -> DnsLookupResponse:
-    """Perform a DNS record lookup via POST request"""
-    logger.info("POST DNS lookup request - Domain: %s", dns_request.domain)
-    result = await perform_dns_lookup(dns_request)
-    logger.info("POST DNS lookup completed - Domain: %s", dns_request.domain)
-    return result
 
-
-@router.get(
-    "/dns/{domain}",
-    response_model=DnsLookupResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Perform DNS record lookup via URL parameter",
-    description="Resolve DNS records for a domain from URL path via GET request",
-)
-@limiter.limit("30/minute")
-async def dns_lookup_get(request: Request, domain: str) -> DnsLookupResponse:
-    """Perform a DNS record lookup using domain from URL path via GET request"""
-    logger.info("GET DNS lookup request - Domain: %s", domain)
-    dns_request = DnsLookupRequest(domain=domain)
-    result = await perform_dns_lookup(dns_request)
-    logger.info("GET DNS lookup completed - Domain: %s", domain)
-    return result
-
-
-@router.post(
+_add_panel_routes(
     "/dnsdumpster",
+    name="dnsdumpster_lookup",
+    request_model=DnsDumpsterRequest,
     response_model=DnsDumpsterResponse,
-    status_code=status.HTTP_200_OK,
+    service=lambda *args: perform_dnsdumpster_lookup(*args),
     summary="Perform a DNSDumpster domain lookup",
     description=(
         "Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a "
         "domain via the DNSDumpster API. Requires a DNSDumpster API key "
         "configured under Settings > API Keys."
     ),
+    with_db=True,
 )
-@limiter.limit("30/minute")
-async def dnsdumpster_lookup_post(
-    request: Request, dnsdumpster_request: DnsDumpsterRequest, db: ReadSessionDep
-) -> DnsDumpsterResponse:
-    """Perform a DNSDumpster domain lookup via POST request"""
-    logger.info("POST DNSDumpster lookup request - Domain: %s", dnsdumpster_request.domain)
-    result = await perform_dnsdumpster_lookup(dnsdumpster_request, db)
-    logger.info("POST DNSDumpster lookup completed - Domain: %s", dnsdumpster_request.domain)
-    return result
 
-
-@router.get(
-    "/dnsdumpster/{domain}",
-    response_model=DnsDumpsterResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Perform a DNSDumpster domain lookup via URL parameter",
+_add_panel_routes(
+    "/temporal-analysis",
+    name="temporal_analysis",
+    request_model=TemporalAnalysisRequest,
+    response_model=TemporalAnalysisResponse,
+    service=lambda *args: perform_temporal_analysis(*args),
+    summary="Build an aggregated temporal-analysis timeline for a domain",
     description=(
-        "Look up DNS records, ASN/geo, reverse DNS, and HTTP(S) banners for a domain via URL path"
+        "Aggregate WHOIS registration/expiry dates, the live TLS certificate's validity "
+        "window, Wayback Machine first/last capture, and the homepage's schema.org "
+        "JSON-LD dates into one chronological timeline"
     ),
 )
-@limiter.limit("30/minute")
-async def dnsdumpster_lookup_get(
-    request: Request, domain: str, db: ReadSessionDep
-) -> DnsDumpsterResponse:
-    """Perform a DNSDumpster domain lookup using domain from URL path via GET request"""
-    logger.info("GET DNSDumpster lookup request - Domain: %s", domain)
-    dnsdumpster_request = DnsDumpsterRequest(domain=domain)
-    result = await perform_dnsdumpster_lookup(dnsdumpster_request, db)
-    logger.info("GET DNSDumpster lookup completed - Domain: %s", domain)
-    return result
 
 
 @router.post(
@@ -699,51 +379,6 @@ async def wayback_lookup_get(
     result = await perform_wayback_lookup(wayback_request)
     logger.info(
         "GET Wayback lookup completed - Domain: %s, Snapshots: %s", domain, result.total_snapshots
-    )
-    return result
-
-
-@router.post(
-    "/temporal-analysis",
-    response_model=TemporalAnalysisResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Build an aggregated temporal-analysis timeline for a domain",
-    description=(
-        "Aggregate WHOIS registration/expiry dates, the live TLS certificate's validity "
-        "window, Wayback Machine first/last capture, and the homepage's schema.org "
-        "JSON-LD dates into one chronological timeline"
-    ),
-)
-@limiter.limit("30/minute")
-async def temporal_analysis_post(
-    request: Request, temporal_request: TemporalAnalysisRequest
-) -> TemporalAnalysisResponse:
-    """Perform an aggregated temporal analysis via POST request"""
-    logger.info("POST temporal analysis request - Domain: %s", temporal_request.domain)
-    result = await perform_temporal_analysis(temporal_request)
-    logger.info(
-        "POST temporal analysis completed - Domain: %s, Events: %s",
-        temporal_request.domain,
-        len(result.events),
-    )
-    return result
-
-
-@router.get(
-    "/temporal-analysis/{domain}",
-    response_model=TemporalAnalysisResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Build an aggregated temporal-analysis timeline for a domain via URL parameter",
-    description="Build the aggregated temporal-analysis timeline using domain from URL path",
-)
-@limiter.limit("30/minute")
-async def temporal_analysis_get(request: Request, domain: str) -> TemporalAnalysisResponse:
-    """Perform an aggregated temporal analysis using domain from URL path via GET request"""
-    logger.info("GET temporal analysis request - Domain: %s", domain)
-    temporal_request = TemporalAnalysisRequest(domain=domain)
-    result = await perform_temporal_analysis(temporal_request)
-    logger.info(
-        "GET temporal analysis completed - Domain: %s, Events: %s", domain, len(result.events)
     )
     return result
 

@@ -6,14 +6,6 @@ import { useResumableScan, failedReduce, buildRunningSeed } from '../../../core/
 import { createLogger } from '../../../core/utils/logger';
 
 const logger = createLogger('SteamReconScan');
-const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
-
-const api = {
-  startScan: (payload, { signal }) => steamReconApi.startScan(payload, { signal }),
-  fetchPersisted: (searchId) => steamReconApi.getSearch(searchId),
-  cancelScan: (searchId) => steamReconApi.cancelScan(searchId),
-};
-
 // `completed`/`cancelled` events only carry scalar summary fields (see ScanOutcome's
 // `db_only_fields` - the full result blob is never echoed on the wire), so this fetches the
 // persisted record for its `result` the same way git_recon's reduce does.
@@ -61,8 +53,7 @@ export function useSteamReconScan() {
     state,
     setState,
     initialState: SCAN_INITIAL_STATE,
-    terminalStatuses: TERMINAL_STATUSES,
-    api,
+    endpoint: { base: '/api/steam-recon', runs: 'history' },
     reduce,
     reconcile,
   });
@@ -70,7 +61,7 @@ export function useSteamReconScan() {
   const startScan = useCallback(
     (target, { maxFriends, includeCsReport }) =>
       resumableStartScan(
-        { target, maxFriends, includeCsReport },
+        { target, max_friends: maxFriends, include_cs_report: includeCsReport },
         buildRunningSeed(SCAN_INITIAL_STATE, { target }),
       ),
     [resumableStartScan],

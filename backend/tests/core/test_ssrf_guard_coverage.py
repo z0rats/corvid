@@ -34,12 +34,9 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "core/utils/pypi_version_check.py",
     # Fixed third-party API hosts; only path/query values (IOC, username) are
     # user-supplied, never the host itself
-    "features/ioc_tools/domain_finder/service/urlscan_api_service.py",
-    "features/ioc_tools/domain_finder/service/crtsh_api_service.py",
-    "features/ioc_tools/domain_finder/service/wayback_api_service.py",
-    "features/ioc_tools/domain_finder/service/hackertarget_api_service.py",
-    "features/ioc_tools/domain_finder/service/rapiddns_api_service.py",
-    "features/ioc_tools/domain_finder/service/dnsdumpster_api_service.py",
+    # domain_finder's provider panels (crt.sh/RapidDNS/HackerTarget/Wayback/URLScan/
+    # DNSDumpster): `provider_get` only ever requests a `Provider`'s own hardcoded base_url
+    "features/ioc_tools/domain_finder/service/provider_http.py",
     "features/ioc_tools/ioc_lookup/single_lookup/service/client_base.py",
     "features/reddit_search/service/reddit_search_service.py",
     "features/username_search/service/threat_actor_usernames_service.py",
