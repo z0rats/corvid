@@ -26,7 +26,15 @@ search ids never collide) and awaits its `cancel()` — real cancellation, not j
 ## Restart reconciliation
 
 `core/scans/reconciliation.py`'s `mark_stale_running_as_failed` cleans up rows stuck in
-`running` state after a process restart interrupted them mid-scan.
+`running` state after a process restart interrupted them mid-scan. Each feature's crud module
+wraps it as `interrupt_running_searches(db) -> int`; `utils/scan_reconciliation_registry.py` is
+the single place that knows every feature's version of that function (mirrors
+`router_registry.py`/`scheduler_registry.py`'s "one place knows about every feature" pattern) and
+exposes `reconcile_stale_scans()`, called once from `main.py`'s startup lifespan. Adding a new
+scan feature to that registry's `_SCAN_FEATURES` list is mandatory, not optional -
+`tests/core/test_scan_reconciliation_coverage.py` fails if a crud module defines
+`interrupt_running_searches` without being registered, since an unregistered feature's stale
+`running` rows are never cleaned up after a restart.
 
 ## Frontend: `core/hooks/useResumableScan.js`
 

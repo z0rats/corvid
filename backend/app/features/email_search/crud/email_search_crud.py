@@ -36,7 +36,7 @@ async def add_provider_results(
     await db.flush()
 
 
-async def interrupt_running_search_runs(db: AsyncSession) -> int:
+async def interrupt_running_searches(db: AsyncSession) -> int:
     """Mark any run still 'running' as failed - see `mark_stale_running_as_failed`'s
     docstring for why this is needed (an in-memory asyncio task doesn't survive
     a process restart)."""

@@ -8,7 +8,7 @@ from app.features.email_search.crud.email_search_crud import (
     delete_search_run,
     get_search_run,
     get_search_run_with_results,
-    interrupt_running_search_runs,
+    interrupt_running_searches,
     list_search_runs,
 )
 from app.features.email_search.models.email_search_models import MailSearch, MailSearchResult
@@ -81,7 +81,7 @@ class TestInterruptRunningSearchRuns:
                 await db.commit()
 
             async with session_factory() as db:
-                count = await interrupt_running_search_runs(db)
+                count = await interrupt_running_searches(db)
                 await db.commit()
 
             async with session_factory() as db:
