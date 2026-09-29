@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { detectIocType, IOC_TYPES, isSteamProfileTarget, isYoutubeVideoUrl } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, isYoutubeVideoUrl } from './iocTypeDetection';
 
 // Shared with the backend's test_ioc_type_detection.py via
 // testdata/ioc-type-detection-cases.json at the repo root, so the two implementations
@@ -131,5 +131,30 @@ describe('isSteamProfileTarget', () => {
   it('stays plain URL/unknown in detectIocType, same treatment as YouTube', () => {
     expect(detectIocType(`https://steamcommunity.com/profiles/${ID64}`)).toBe(IOC_TYPES.URL);
     expect(detectIocType(ID64)).toBe(IOC_TYPES.UNKNOWN);
+  });
+});
+
+describe('isPhoneNumberTarget', () => {
+  it.each(['+15551234567', '+442071838750', '+79991234567', '  +15551234567  '])(
+    'accepts %s',
+    (value) => {
+      expect(isPhoneNumberTarget(value)).toBe(true);
+    },
+  );
+
+  it.each([
+    '',
+    '   ',
+    '15551234567', // missing leading '+'
+    '+0551234567', // leading zero after '+'
+    '+1555123', // too short
+    'not-a-number',
+    '+1 555 123 4567', // formatting punctuation not accepted
+  ])('rejects %s', (value) => {
+    expect(isPhoneNumberTarget(value)).toBe(false);
+  });
+
+  it('stays unknown in detectIocType, same treatment as SteamID64', () => {
+    expect(detectIocType('+15551234567')).toBe(IOC_TYPES.UNKNOWN);
   });
 });

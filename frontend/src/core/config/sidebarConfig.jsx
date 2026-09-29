@@ -37,6 +37,8 @@ import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import RadarIcon from "@mui/icons-material/RadarOutlined";
 import InstagramIcon from "@mui/icons-material/Instagram";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
 // aliases/tags/accepts/acceptsRouting power the command palette's registry
@@ -235,6 +237,29 @@ const MAIN_MENU_ITEMS_CONFIG = [
     tags: ["identity", "recon"],
     accepts: [],
   },
+  {
+    i18nKey: "nav.phoneSearch",
+    icon: <PhoneOutlinedIcon />,
+    path: "/phone-search",
+    moduleId: "phone_search",
+    aliases: ["phone", "phone search", "phone number", "gophoner"],
+    tags: ["recon", "identity"],
+    // Not reachable via detectIocType's own priority chain (an E.164 number has no pattern
+    // there) - commandParser.ts's parseQuery injects this match itself via
+    // isPhoneNumberTarget(input), see iocTypeDetection.ts's PHONE_NUMBER comment.
+    accepts: [IOC_TYPES.PHONE_NUMBER],
+  },
+  {
+    i18nKey: "nav.sanctionsSearch",
+    icon: <GavelOutlinedIcon />,
+    path: "/sanctions-search",
+    moduleId: "sanctions_search",
+    aliases: ["sanctions", "ofac", "sdn", "sanctions list", "sanctions check"],
+    tags: ["compliance", "identity"],
+    // Free-text person/org/vessel name, not a regex-detectable IOC type - reachable via
+    // rankIdentityFallback's "identity" tag instead of a matched accepts[] type.
+    accepts: [],
+  },
 ];
 
 const AI_TEMPLATES_TABS_CONFIG = [
@@ -405,6 +430,12 @@ const INSTAGRAM_SEARCH_TABS_CONFIG = [
   { i18nKey: "nav.instagramSearchTabs.history", path: "/instagram-search/history", icon: <HistoryIcon /> },
 ];
 
+const PHONE_SEARCH_TABS_CONFIG = [
+  { i18nKey: "nav.phoneSearchTabs.newSearch", path: "/phone-search/new", icon: <PhoneOutlinedIcon /> },
+  { i18nKey: "nav.phoneSearchTabs.history", path: "/phone-search/history", icon: <HistoryIcon /> },
+  { i18nKey: "nav.phoneSearchTabs.settings", path: "/phone-search/settings", icon: <SettingsIcon /> },
+];
+
 const translateItem = (t, { i18nKey, children, ...rest }) => ({
   ...rest,
   label: t(i18nKey),
@@ -427,6 +458,7 @@ export const getAmassTabs = (t) => AMASS_TABS_CONFIG.map(item => translateItem(t
 export const getRuBusinessCheckTabs = (t) => RU_BUSINESS_CHECK_TABS_CONFIG.map(item => translateItem(t, item));
 export const getSteamReconTabs = (t) => STEAM_RECON_TABS_CONFIG.map(item => translateItem(t, item));
 export const getInstagramSearchTabs = (t) => INSTAGRAM_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
+export const getPhoneSearchTabs = (t) => PHONE_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 
 // Which sidebar tab set to show for the current route, keyed by path prefix — the single place
 // Layout.jsx needs to consult (`TAB_ROUTES.find(...)`) instead of growing its own if-chain. A
@@ -448,6 +480,7 @@ export const TAB_ROUTES = [
   { prefix: "/cvss-calculator", getTabs: (t) => getCvssTabs(t) },
   { prefix: "/username-search", getTabs: (t) => getUsernameSearchTabs(t) },
   { prefix: "/email-search", getTabs: (t) => getEmailSearchTabs(t) },
+  { prefix: "/phone-search", getTabs: (t) => getPhoneSearchTabs(t) },
   { prefix: "/reddit-search", getTabs: (t) => getRedditSearchTabs(t) },
   { prefix: "/git-recon", getTabs: (t) => getGitReconTabs(t) },
   { prefix: "/amass", getTabs: (t) => getAmassTabs(t) },

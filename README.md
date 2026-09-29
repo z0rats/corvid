@@ -96,6 +96,11 @@ Find accounts and mail providers registered to a username, across hundreds of si
 [Username Search docs](https://z0rats.github.io/corvid/features/username-search/) /
 [Email Search docs](https://z0rats.github.io/corvid/features/email-search/)
 
+### Phone Search
+Check whether a phone number is registered with Amazon, Microsoft, or Facebook, no API key
+required. One number per search, not built for bulk enumeration. →
+[Docs](https://z0rats.github.io/corvid/features/phone-search/)
+
 ### Git Recon
 Correlate names, emails, and GitHub logins from commit history via
 [gitcolombo](https://github.com/Soxoj/gitcolombo). →
@@ -115,6 +120,11 @@ Due-diligence check on a Russian legal entity or sole proprietor by ИНН/name 
 extract, bankruptcy (Федресурс), disqualified persons, arbitration, financial statements (ГИР БО),
 and the Банк России and OFAC lists, no API key required. A source that fails is reported as "not
 checked", never as clean. Russian-only UI. → [Docs](https://z0rats.github.io/corvid/features/ru-business-check/)
+
+### Sanctions Search
+Free-text search by person, organization, vessel, or aircraft name against the full OFAC SDN
+sanctions list (~20k entities), matched locally against a cached copy — no API key, name never
+sent to a third party. → [Docs](https://z0rats.github.io/corvid/features/sanctions-search/)
 
 ### Steam Recon
 Steam profile lookup, plus a friends-graph scan: close-friends ranking by mutual-connection

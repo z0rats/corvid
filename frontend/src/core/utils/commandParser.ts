@@ -1,4 +1,4 @@
-import { detectIocType, IOC_TYPES, isSteamProfileTarget, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
 
 /**
  * Pure, framework-free parsing of the command palette's input grammar (see
@@ -45,6 +45,7 @@ export const TYPE_TOKEN_ALIASES: Record<string, IocType[]> = {
   hash: [IOC_TYPES.MD5, IOC_TYPES.SHA1, IOC_TYPES.SHA256],
   youtube: [IOC_TYPES.YOUTUBE_VIDEO_URL],
   steam: [IOC_TYPES.STEAM_PROFILE],
+  phone: [IOC_TYPES.PHONE_NUMBER],
   md5: [IOC_TYPES.MD5],
   sha1: [IOC_TYPES.SHA1],
   sha256: [IOC_TYPES.SHA256],
@@ -379,6 +380,16 @@ export function parseQuery(rawInput?: string | null, ctx: Partial<ParserContext>
     const matches = rankToolsForValue(IOC_TYPES.STEAM_PROFILE, context.registry);
     if (matches.length > 0) {
       return { kind: 'value', value: input, iocType: IOC_TYPES.STEAM_PROFILE, matches };
+    }
+  }
+
+  // Same reasoning as the bare SteamID64 case above: an E.164 phone number (e.g. +15551234567)
+  // matches nothing in detectIocType's own chain (no '+'-prefixed pattern exists there), so it
+  // needs its own primary classification rather than falling through to the identity-fallback.
+  if (isPhoneNumberTarget(input)) {
+    const matches = rankToolsForValue(IOC_TYPES.PHONE_NUMBER, context.registry);
+    if (matches.length > 0) {
+      return { kind: 'value', value: input, iocType: IOC_TYPES.PHONE_NUMBER, matches };
     }
   }
 

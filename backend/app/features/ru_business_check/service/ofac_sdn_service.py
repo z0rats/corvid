@@ -39,13 +39,13 @@ from urllib.parse import urlparse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.ru_business_check.models.ru_business_check_models import OfacSdnRecord
-from app.features.ru_business_check.service.registry_dump_common import (
+from app.core.registry_dumps.common import (
     DumpSource,
     freshness,
     loaded_meta,
     refresh_published_list,
 )
+from app.features.ru_business_check.models.ru_business_check_models import OfacSdnRecord
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +133,7 @@ SOURCE = DumpSource(
 
 async def refresh_list(db: AsyncSession) -> dict:
     """Download the SDN list and replace the local copy all-or-nothing, in the caller's
-    transaction (call under `registry_dump_common.refresh_lock(SOURCE_KEY)`); raises
+    transaction (call under `registry_dumps.common.refresh_lock(SOURCE_KEY)`); raises
     `OfacSdnError` (old data untouched) on any failure."""
     summary = await refresh_published_list(db, SOURCE, url=LIST_URL, parse=parse_sdn)
     logger.info("OFAC SDN list refreshed: %s", summary)

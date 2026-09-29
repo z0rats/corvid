@@ -16,6 +16,7 @@ from app.core.settings.email_search.routers import email_search_settings_routes
 from app.core.settings.general.routers import general_settings_routes
 from app.core.settings.keywords.routers import keywords_settings_routes
 from app.core.settings.modules.routers import modules_settings_routes
+from app.core.settings.phone_search.routers import phone_search_settings_routes
 from app.core.settings.ru_business_check.routers import ru_business_check_settings_routes
 from app.core.settings.telegram.routers import telegram_settings_routes
 from app.core.settings.username_search.routers import (
@@ -48,8 +49,10 @@ from app.features.newsfeed.routers import (
     newsfeed_settings_routes,
     trends_blacklist_routes,
 )
+from app.features.phone_search.routers import phone_search_routes
 from app.features.reddit_search.routers import reddit_search_routes
 from app.features.ru_business_check.routers import ru_business_check_routes
+from app.features.sanctions_search.routers import sanctions_search_routes
 from app.features.steam_recon.routers import steam_recon_routes
 from app.features.username_search.routers import username_search_routes
 from app.features.youtube.routers import youtube_routes
@@ -95,6 +98,7 @@ def get_settings_routers() -> list[APIRouter]:
         username_search_settings_routes.router,
         social_analyzer_settings_routes.router,
         email_search_settings_routes.router,
+        phone_search_settings_routes.router,
         ru_business_check_settings_routes.router,
         telegram_settings_routes.router,
     ]
@@ -122,9 +126,11 @@ def get_feature_routers() -> list[APIRouter]:
         lookup_history_routes.router,
         username_search_routes.router,
         email_search_routes.router,
+        phone_search_routes.router,
         reddit_search_routes.router,
         git_recon_routes.router,
         ru_business_check_routes.router,
+        sanctions_search_routes.router,
         youtube_routes.router,
         amass_routes.router,
         steam_recon_routes.router,

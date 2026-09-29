@@ -1,7 +1,8 @@
-"""Plumbing shared by the locally cached registry dumps (`disqualified_dump_service`,
-`cbr_warning_service`, `ofac_sdn_service`): a size-capped download from a fixed host, the
-all-or-nothing table replacement, the `RegistryDump` provenance row, and the per-source
-refresh lock - so each dump service holds only its own parsing and lookup."""
+"""Plumbing shared by every locally cached registry dump (`ru_business_check`'s
+disqualified-persons dump, ЦБ warning list, OFAC SDN; `sanctions_search`'s OpenSanctions
+mirror; ...): a size-capped download from a fixed host, the all-or-nothing table replacement,
+the `RegistryDump` provenance row, and the per-source refresh lock - so each dump service holds
+only its own parsing and lookup."""
 
 import asyncio
 import datetime
@@ -14,7 +15,7 @@ from sqlalchemy import delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import Base
-from app.features.ru_business_check.models.ru_business_check_models import RegistryDump
+from app.core.models.registry_dump import RegistryDump
 
 USER_AGENT = "Corvid-OSINT (self-hosted analyst tool)"
 DOWNLOAD_TIMEOUT_SECONDS = 120.0

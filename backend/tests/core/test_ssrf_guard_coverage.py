@@ -92,11 +92,15 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # `dump_client()`: each caller passes a fixed URL and an allowed prefix that the URL -
     # and, for OFAC, every redirect hop - is checked against; nothing user-supplied reaches
     # the request
-    "features/ru_business_check/service/registry_dump_common.py",
+    "core/registry_dumps/common.py",
     # Telegram Bot API notification delivery + inbound bot command polling: fixed
     # api.telegram.org host; only the user's own bot token (path segment) and
     # chat_id/text (body) are user-supplied
     "core/settings/telegram/service/telegram_client.py",
+    # Phone Search: shared httpx.AsyncClient handed to each checker module, which only
+    # ever requests its own hardcoded vendor host (login.live.com/amazon.com/facebook.com);
+    # only the searched phone number (query/body) is user-supplied, never the host
+    "features/phone_search/service/phone_search_service.py",
 }
 
 # Implementation module itself, and its own tests

@@ -127,6 +127,28 @@ erDiagram
 
 ```mermaid
 erDiagram
+    phone_search_results {
+        int id PK "NOT NULL. Surrogate primary key"
+        int search_id FK "NOT NULL. Owning PhoneSearch.id"
+        string(100) provider_name "NOT NULL. Provider/service where the number was found registered"
+        json extra "Provider-specific extras not worth their own columns"
+    }
+    phone_searches {
+        int id PK "NOT NULL. Surrogate primary key"
+        string(20) phone_number "NOT NULL. E.164 phone number searched across providers"
+        string(20) status "NOT NULL. running, completed, cancelled, or failed"
+        int total_providers_checked "NOT NULL. Providers checked so far"
+        int found_count "NOT NULL. Providers where the number was found registered"
+        string(1000) error_message "Error detail if status is failed"
+        datetime started_at "NOT NULL. When the search run started"
+        datetime completed_at "When the search run finished, if it has"
+    }
+
+    phone_searches ||--|{ phone_search_results : "search_id -> id, ondelete=CASCADE"
+```
+
+```mermaid
+erDiagram
     reddit_search_results {
         int id PK "NOT NULL. Surrogate primary key"
         int search_id FK "NOT NULL. Owning RedditSearch.id"
@@ -474,6 +496,40 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `last_success_at` | datetime | yes | — | — | When this feed was last polled successfully |
 | `last_error` | string(500) | yes | — | — | Error message from the last failed fetch, if any |
 
+### `phone_search_config`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Singleton row id, always 1 |
+| `timeout_seconds` | int | no | 10 | — | Per-provider check timeout, in seconds |
+| `proxy_url` | string(500) | yes | — | — | Optional HTTP(S) proxy URL for provider checks |
+| `created_at` | datetime | no | server: now() | — | When this row was created |
+| `updated_at` | datetime | no | server: now() | — | When this row was last updated |
+
+### `phone_search_results`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `search_id` | int | no | — | FK | Owning PhoneSearch.id |
+| `provider_name` | string(100) | no | — | — | Provider/service where the number was found registered |
+| `extra` | json | yes | — | — | Provider-specific extras not worth their own columns |
+
+### `phone_searches`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `phone_number` | string(20) | no | — | — | E.164 phone number searched across providers |
+| `status` | string(20) | no | 'running' | — | running, completed, cancelled, or failed |
+| `total_providers_checked` | int | no | 0 | — | Providers checked so far |
+| `found_count` | int | no | 0 | — | Providers where the number was found registered |
+| `error_message` | string(1000) | yes | — | — | Error detail if status is failed |
+| `started_at` | datetime | no | server: now() | — | When the search run started |
+| `completed_at` | datetime | yes | — | — | When the search run finished, if it has |
+
+- CHECK `ck_phone_searches_status`: `status IN ('running', 'completed', 'cancelled', 'failed')`
+
 ### `reddit_search_results`
 
 | Column | Type | Nullable | Default | Key | Comment |
@@ -505,6 +561,17 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `date_to` | int | yes | — | — | unix timestamp, not DateTime - Arctic Shift/PullPush take unix cursors |
 | `include_nsfw` | boolean | no | True | — | Whether NSFW-flagged content is included |
 | `searched_at` | datetime | no | server: now() | — | When the search ran |
+
+### `registry_dumps`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `source` | string(50) | no | — | PK | Dump source id, e.g. 'disqualified' |
+| `dump_date` | date | no | — | — | Date of the published dataset version (the publisher's meta.csv), or the download date for a list published without one |
+| `valid_until` | date | yes | — | — | The publisher's stated validity end (meta.csv `valid`), if given |
+| `row_count` | int | no | — | — | Rows loaded from that version |
+| `url` | string(500) | no | — | — | Where this version was downloaded |
+| `refreshed_at` | datetime | no | — | — | When this instance last loaded the dump |
 
 ### `ru_business_check_cbr_warning_records`
 
@@ -545,17 +612,6 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `name` | string(500) | no | — | — | SDN name (transliterated) |
 | `kind` | string(20) | no | — | — | 'entity' (SDN type -0-) or 'individual' |
 | `programs` | string(500) | yes | — | — | Sanctions programs, e.g. 'UKRAINE-EO13661] [RUSSIA-EO14024' |
-
-### `ru_business_check_registry_dumps`
-
-| Column | Type | Nullable | Default | Key | Comment |
-|---|---|---|---|---|---|
-| `source` | string(50) | no | — | PK | Dump source id, e.g. 'disqualified' |
-| `dump_date` | date | no | — | — | Date of the published dataset version (the publisher's meta.csv), or the download date for a list published without one |
-| `valid_until` | date | yes | — | — | The publisher's stated validity end (meta.csv `valid`), if given |
-| `row_count` | int | no | — | — | Rows loaded from that version |
-| `url` | string(500) | no | — | — | Where this version was downloaded |
-| `refreshed_at` | datetime | no | — | — | When this instance last loaded the dump |
 
 ### `ru_business_check_searches`
 
@@ -607,6 +663,21 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `equity_ratio_threshold` | float | no | 0.1 | — | ГИР БО equity ratio (строка 1300 / строка 1600) below which the soft 'low equity ratio' flag fires |
 | `current_ratio_threshold` | float | no | 1.0 | — | ГИР БО current ratio (строка 1200 / строка 1500) below which the soft 'low current liquidity' flag fires |
 | `revenue_drop_threshold` | float | no | 0.5 | — | Year-over-year ГИР БО revenue drop (0-1 fraction) above which the soft 'revenue drop' flag fires |
+
+### `sanctions_entries`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `opensanctions_id` | string(64) | no | — | — | OpenSanctions' own entity id (CSV `id`), e.g. 'NK-xxxx' |
+| `schema` | string(30) | no | — | — | OpenSanctions entity schema (CSV `schema`): Person, Organization, Vessel, Airplane, Company, Security, LegalEntity, CryptoWallet, ... |
+| `name` | string(500) | no | — | — | Primary/caption name (CSV `name`) |
+| `aliases` | json | no | — | — | Alternate names/aka's (CSV `aliases`, ;-separated), as a list |
+| `countries` | json | no | — | — | Country/jurisdiction codes (CSV `countries`), as a list |
+| `programs` | json | no | — | — | Sanctions program ids (CSV `program_ids`), as a list |
+| `sanctions` | text | yes | — | — | Free-text sanction designation description(s) (CSV `sanctions`) |
+| `first_seen` | date | yes | — | — | First time OpenSanctions observed this entity (CSV `first_seen`) |
+| `last_seen` | date | yes | — | — | Last time OpenSanctions confirmed this entity (CSV `last_seen`) |
 
 ### `single_lookup_results`
 

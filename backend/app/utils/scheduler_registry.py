@@ -9,6 +9,9 @@ from app.features.ru_business_check.service.registry_dump_scheduler_service impo
 from app.features.ru_business_check.service.ru_business_check_retention_service import (
     register_ru_business_check_retention_scheduler,
 )
+from app.features.sanctions_search.service.sanctions_search_scheduler_service import (
+    register_sanctions_search_scheduler,
+)
 from app.features.username_search.service.db_refresh_scheduler_service import (
     register_maigret_db_scheduler,
 )
@@ -26,4 +29,5 @@ async def initialize_all_schedulers() -> None:
     await blacklist_refresh_scheduler_service.register_blacklist_scheduler()
     await register_ru_business_check_retention_scheduler()
     await register_registry_dump_schedulers()
+    await register_sanctions_search_scheduler()
     start_scheduler()

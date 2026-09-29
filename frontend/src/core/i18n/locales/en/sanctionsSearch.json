@@ -1,0 +1,41 @@
+{
+  "page": {
+    "title": "Sanctions Search",
+    "description": "Search a locally cached mirror of the OFAC SDN sanctions list by person, organization, or vessel name."
+  },
+
+  "welcomeScreen": {
+    "title": "OFAC SDN Sanctions Search",
+    "intro": "Enter a person, organization, vessel, or aircraft name above to search the sanctions list.",
+    "description": "Matching is by exact and substring name/alias comparison. Substring matches on common names are expected and should be reviewed, not treated as confirmed hits."
+  },
+
+  "form": {
+    "queryLabel": "Name",
+    "queryPlaceholder": "e.g. Jane Doe, Acme Holdings",
+    "searchButton": "Search",
+    "allSchemas": "All types"
+  },
+
+  "results": {
+    "summary": "Found {{count}} matches",
+    "asOf": "list as of {{date}}",
+    "outdated": "Outdated",
+    "empty": "No matches found",
+    "truncated": "Showing {{shown}} of {{total}} matches - refine your search to narrow results",
+    "columns": {
+      "name": "Name",
+      "schema": "Type",
+      "countries": "Countries",
+      "programs": "Programs",
+      "sanctions": "Designation",
+      "lastSeen": "Last seen"
+    },
+    "matchedOn": {
+      "exact_name": "Exact name",
+      "exact_alias": "Exact alias",
+      "substring_name": "Partial name",
+      "substring_alias": "Partial alias"
+    }
+  }
+}

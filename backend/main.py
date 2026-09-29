@@ -35,6 +35,9 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import 
 from app.features.ru_business_check.service.registry_dump_scheduler_service import (
     refresh_dumps_if_stale,
 )
+from app.features.sanctions_search.service.sanctions_search_scheduler_service import (
+    refresh_sanctions_search_dumps_if_stale,
+)
 from app.utils.router_registry import register_all_routers
 from app.utils.scheduler_registry import initialize_all_schedulers
 from app.utils.startup_service import initialize_application_defaults
@@ -79,10 +82,10 @@ async def _fetch_favicons_in_background() -> None:
 
 
 async def _reconcile_stale_scans() -> None:
-    """Mark username/email/git-recon/ru-business-check/amass/steam-recon/instagram-search
-    search runs still 'running' from a previous process as failed.
+    """Mark username/email/phone/git-recon/ru-business-check/amass/steam-recon/
+    instagram-search search runs still 'running' from a previous process as failed.
 
-    All seven scans are driven by a detached `asyncio.create_task()` (see their
+    All eight scans are driven by a detached `asyncio.create_task()` (see their
     `routers/*_routes.py` `scan`/`start_scan` handlers) that outlives the SSE request but
     not the process itself, so a container stop/crash mid-scan leaves the row
     stuck at 'running' with nothing to ever move it out of that state.
@@ -99,6 +102,9 @@ async def _reconcile_stale_scans() -> None:
     from app.features.instagram_search.crud.instagram_search_crud import (
         interrupt_running_searches as interrupt_running_instagram_search,
     )
+    from app.features.phone_search.crud.phone_search_crud import (
+        interrupt_running_search_runs as interrupt_running_phone_runs,
+    )
     from app.features.ru_business_check.crud.ru_business_check_crud import (
         interrupt_running_searches as interrupt_running_ru_business_check,
     )
@@ -110,6 +116,7 @@ async def _reconcile_stale_scans() -> None:
     async with managed_session() as db:
         maigret_count = await interrupt_running_search_runs(db)
         mail_count = await interrupt_running_mail_runs(db)
+        phone_count = await interrupt_running_phone_runs(db)
         git_recon_count = await interrupt_running_git_recon(db)
         ru_business_check_count = await interrupt_running_ru_business_check(db)
         amass_count = await interrupt_running_amass(db)
@@ -119,6 +126,7 @@ async def _reconcile_stale_scans() -> None:
             (
                 maigret_count,
                 mail_count,
+                phone_count,
                 git_recon_count,
                 ru_business_check_count,
                 amass_count,
@@ -128,10 +136,11 @@ async def _reconcile_stale_scans() -> None:
         ):
             logger.info(
                 "Reconciled stale scan runs left 'running' by a previous process: "
-                "%s username-search, %s email-search, %s git-recon, %s ru-business-check, "
-                "%s amass, %s steam-recon, %s instagram-search",
+                "%s username-search, %s email-search, %s phone-search, %s git-recon, "
+                "%s ru-business-check, %s amass, %s steam-recon, %s instagram-search",
                 maigret_count,
                 mail_count,
+                phone_count,
                 git_recon_count,
                 ru_business_check_count,
                 amass_count,
@@ -209,6 +218,7 @@ async def handle_application_startup() -> None:
         asyncio.create_task(_fetch_favicons_in_background())
         asyncio.create_task(_populate_blacklist_if_stale_in_background())
         asyncio.create_task(refresh_dumps_if_stale())
+        asyncio.create_task(refresh_sanctions_search_dumps_if_stale())
         await initialize_all_schedulers()
         start_bot_polling()
         start_engine_in_background()

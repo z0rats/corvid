@@ -27,6 +27,8 @@ const RuBusinessCheck = lazy(() => import("../../features/ru-business-check/RuBu
 const YoutubeLookup = lazy(() => import("../../features/youtube/YoutubeLookup"));
 const SteamRecon = lazy(() => import("../../features/steam-recon/SteamRecon"));
 const InstagramSearch = lazy(() => import("../../features/instagram-search/InstagramSearch"));
+const PhoneSearch = lazy(() => import("../../features/phone-search/PhoneSearch"));
+const SanctionsSearch = lazy(() => import("../../features/sanctions-search/SanctionsSearch"));
 
 const LoadingFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -65,6 +67,8 @@ export const AppRoutes = () => {
           <Route path="youtube/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><YoutubeLookup /></Suspense></ErrorBoundary>} />
           <Route path="steam-recon/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><SteamRecon /></Suspense></ErrorBoundary>} />
           <Route path="instagram-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><InstagramSearch /></Suspense></ErrorBoundary>} />
+          <Route path="phone-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><PhoneSearch /></Suspense></ErrorBoundary>} />
+          <Route path="sanctions-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><SanctionsSearch /></Suspense></ErrorBoundary>} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

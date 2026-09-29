@@ -41,6 +41,10 @@ const registry = [
     id: 'steam_recon', label: 'Steam Recon', path: '/steam-recon',
     aliases: ['steam', 'steam recon'], tags: ['recon', 'identity'], accepts: [IOC_TYPES.STEAM_PROFILE], acceptsRouting: {},
   },
+  {
+    id: 'phone_search', label: 'Phone Search', path: '/phone-search',
+    aliases: ['phone', 'phone search'], tags: ['recon', 'identity'], accepts: [IOC_TYPES.PHONE_NUMBER], acceptsRouting: {},
+  },
 ];
 
 const playbooks = [
@@ -134,13 +138,20 @@ describe('parseQuery — recognized value', () => {
     const result = parseQuery('robinwalker', { registry });
     expect(result.kind).not.toBe('value');
   });
+
+  it('a bare E.164 phone number is classified as PhoneNumber directly', () => {
+    const result = parseQuery('+15551234567', { registry });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.PHONE_NUMBER);
+    expect(result.matches.map((m) => m.id)).toEqual(['phone_search']);
+  });
 });
 
 describe('parseQuery — #tag filter', () => {
   it('filters the registry by tag', () => {
     const result = parseQuery('#identity', { registry });
     expect(result.kind).toBe('tag');
-    expect(result.matches.map((m) => m.id).sort()).toEqual(['reddit_search', 'steam_recon', 'username_search']);
+    expect(result.matches.map((m) => m.id).sort()).toEqual(['phone_search', 'reddit_search', 'steam_recon', 'username_search']);
   });
 
   it('is case-insensitive on the tag name', () => {
@@ -297,7 +308,7 @@ describe('parseQuery — identity-tool fallback for an unrecognized bare value',
     expect(result.kind).toBe('fallback');
     expect(result.value).toBe('z0rats');
     expect(result.matches.map((m) => m.id).sort()).toEqual([
-      'email_search', 'reddit_search', 'steam_recon', 'username_search',
+      'email_search', 'phone_search', 'reddit_search', 'steam_recon', 'username_search',
     ]);
   });
 
@@ -405,6 +416,7 @@ describe('mergeEmptyStateResults', () => {
     });
     expect(merged.map((r) => r.entry.id)).toEqual([
       'dork_runner', 'youtube', 'reddit_search', 'username_search', 'ioc_tools', 'steam_recon',
+      'phone_search',
     ]);
     expect(merged.every((r) => r.type === 'entry')).toBe(true);
   });

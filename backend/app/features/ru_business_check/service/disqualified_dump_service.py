@@ -16,7 +16,7 @@ G5 organization, G6 organization ИНН (present on 2 947 rows = 36%), G7 positi
 article, G9 protocol body, G10 judge, G11 judge's position, G12 term, G13 start, G14 end
 (`DD.MM.YYYY`). G3/G4/G9-G11 are deliberately not stored.
 
-The refresh replaces the whole table in one transaction (`registry_dump_common.replace_dump`);
+The refresh replaces the whole table in one transaction (`registry_dumps.common.replace_dump`);
 a new version with fewer than half the previous row count is rejected as suspected
 truncation/drift and the old data stays.
 Fixed host (`PORTAL`), every URL taken from `meta.csv` is checked to be under it, so nothing
@@ -33,8 +33,7 @@ import re
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.ru_business_check.models.ru_business_check_models import DisqualifiedRecord
-from app.features.ru_business_check.service.registry_dump_common import (
+from app.core.registry_dumps.common import (
     INN_RE,
     DumpSource,
     download_text,
@@ -42,6 +41,7 @@ from app.features.ru_business_check.service.registry_dump_common import (
     loaded_meta,
     replace_dump,
 )
+from app.features.ru_business_check.models.ru_business_check_models import DisqualifiedRecord
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ SOURCE = DumpSource(
 async def refresh_dump(db: AsyncSession) -> dict:
     """Download the newest dataset version and replace the local copy, all-or-nothing, in
     the caller's transaction. Raises `DisqualifiedDumpError` (old data untouched) on any
-    failure. Call under `registry_dump_common.refresh_lock(SOURCE_KEY)`."""
+    failure. Call under `registry_dumps.common.refresh_lock(SOURCE_KEY)`."""
     async with dump_client() as client:
         meta_text = await download_text(
             client, f"{PORTAL}/meta.csv", SOURCE, limit=META_LIMIT_BYTES

@@ -110,7 +110,16 @@
       "profile": "Profile Lookup",
       "newScan": "New Scan",
       "history": "History"
-    }
+    },
+
+    "phoneSearch": "Phone Search",
+    "phoneSearchTabs": {
+      "newSearch": "New Search",
+      "history": "History",
+      "settings": "Settings"
+    },
+
+    "sanctionsSearch": "Sanctions Search"
   },
 
   "layout": {

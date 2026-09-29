@@ -1,0 +1,61 @@
+{
+  "page": {
+    "title": "Phone Search",
+    "description": "Check whether a phone number is registered with Amazon, Microsoft, or Facebook."
+  },
+
+  "toolInfo": {
+    "providerCount": "{{count}} providers checked"
+  },
+
+  "form": {
+    "phoneNumberLabel": "Phone number",
+    "phoneNumberPlaceholder": "e.g. +15551234567",
+    "phoneNumberHelp": "E.164 format: a leading '+' followed by the country code and number",
+    "searchButton": "Search"
+  },
+
+  "scan": {
+    "progress": "Checked {{checked}} of {{total}} providers",
+    "checking": "checking {{provider}}",
+    "failed": "Search failed: {{error}}",
+    "completed": "Checked {{checked}} providers, found {{found}}",
+    "cancelled": "Cancelled after checking {{checked}} providers, found {{found}}",
+    "cancelButton": "Cancel"
+  },
+
+  "results": {
+    "empty": "No registered providers found",
+    "foundCount": "{{count}} provider(s) found"
+  },
+
+  "history": {
+    "empty": "No past searches yet",
+    "notFound": "Search run not found",
+    "summary": "Checked {{checked}} providers, found {{found}}",
+    "headers": {
+      "phoneNumber": "Phone number",
+      "status": "Status",
+      "found": "Found",
+      "started": "Started",
+      "actions": "Actions"
+    },
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    }
+  },
+
+  "settings": {
+    "title": "Phone Search Settings",
+    "description": "Configure how phone-search checks providers.",
+    "timeoutSeconds": "Timeout (seconds)",
+    "timeoutSecondsHelp": "Per-provider request timeout",
+    "proxyUrl": "Proxy URL",
+    "proxyUrlHelp": "Optional HTTP(S) proxy used for provider checks (e.g. http://127.0.0.1:8080) - SOCKS is not supported here",
+    "updateSuccess": "Settings updated successfully",
+    "updateError": "Failed to update settings"
+  }
+}

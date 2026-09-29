@@ -8,10 +8,9 @@ import datetime
 import httpx
 import pytest
 
-from app.features.ru_business_check.models.ru_business_check_models import (
-    DisqualifiedRecord,
-    RegistryDump,
-)
+from app.core.models.registry_dump import RegistryDump
+from app.core.registry_dumps.common import is_stale, refresh_lock
+from app.features.ru_business_check.models.ru_business_check_models import DisqualifiedRecord
 from app.features.ru_business_check.service import disqualified_dump_service as svc_module
 from app.features.ru_business_check.service.disqualified_dump_service import (
     PORTAL,
@@ -22,7 +21,6 @@ from app.features.ru_business_check.service.disqualified_dump_service import (
     parse_meta,
     refresh_dump,
 )
-from app.features.ru_business_check.service.registry_dump_common import is_stale, refresh_lock
 
 META_CSV = f"""property,value
 standardversion,http://opendata.gosmonitor.ru/standard/3.0

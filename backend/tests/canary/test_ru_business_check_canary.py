@@ -188,7 +188,7 @@ def test_cbr_warning_list_shape_and_inn_coverage():
 def test_ofac_sdn_redirect_chain_and_tax_id_coverage():
     import httpx
 
-    from app.features.ru_business_check.service.registry_dump_common import USER_AGENT
+    from app.core.registry_dumps.common import USER_AGENT
 
     try:
         with httpx.Client(timeout=90, follow_redirects=False) as client:

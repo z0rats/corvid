@@ -11,10 +11,9 @@ import httpx
 import pytest
 from sqlalchemy import func, select
 
-from app.features.ru_business_check.models.ru_business_check_models import (
-    CbrWarningRecord,
-    RegistryDump,
-)
+from app.core.models.registry_dump import RegistryDump
+from app.core.registry_dumps.common import is_stale, refresh_lock
+from app.features.ru_business_check.models.ru_business_check_models import CbrWarningRecord
 from app.features.ru_business_check.service import cbr_warning_service as svc
 from app.features.ru_business_check.service import cbr_warning_service as svc_module
 from app.features.ru_business_check.service.cbr_warning_service import (
@@ -23,7 +22,6 @@ from app.features.ru_business_check.service.cbr_warning_service import (
     parse_list,
     refresh_list,
 )
-from app.features.ru_business_check.service.registry_dump_common import is_stale, refresh_lock
 
 LIST_TEXT = (Path(__file__).parent / "fixtures" / "cbr_warning_list.json").read_text()
 LIST = json.loads(LIST_TEXT)

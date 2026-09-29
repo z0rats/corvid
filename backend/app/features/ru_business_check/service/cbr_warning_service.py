@@ -36,14 +36,14 @@ import re
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.ru_business_check.models.ru_business_check_models import CbrWarningRecord
-from app.features.ru_business_check.service.registry_dump_common import (
+from app.core.registry_dumps.common import (
     INN_RE,
     DumpSource,
     freshness,
     loaded_meta,
     refresh_published_list,
 )
+from app.features.ru_business_check.models.ru_business_check_models import CbrWarningRecord
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,7 @@ SOURCE = DumpSource(
 
 async def refresh_list(db: AsyncSession) -> dict:
     """Download the list and replace the local copy all-or-nothing, in the caller's
-    transaction (call under `registry_dump_common.refresh_lock(SOURCE_KEY)`); raises
+    transaction (call under `registry_dumps.common.refresh_lock(SOURCE_KEY)`); raises
     `CbrWarningError` (old data untouched) on any failure."""
     summary = await refresh_published_list(db, SOURCE, url=LIST_URL, parse=parse_list)
     logger.info("ЦБ warning list refreshed: %s", summary)

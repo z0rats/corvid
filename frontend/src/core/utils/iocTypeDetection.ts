@@ -38,6 +38,11 @@ export const IOC_TYPES = {
   // backend fixture, since Steam Recon isn't an ioc_lookup provider). commandParser.ts's
   // isSteamProfileTarget() injects this type itself.
   STEAM_PROFILE: 'SteamProfile',
+  // Same treatment as YOUTUBE_VIDEO_URL/STEAM_PROFILE above: an E.164 phone number has no shape
+  // any pattern above would recognize (it isn't an IOC type ioc_lookup handles, so it's not part
+  // of the backend-synced fixture either) - commandParser.ts's isPhoneNumberTarget() injects this
+  // type itself, the same way isSteamProfileTarget() does for a bare SteamID64.
+  PHONE_NUMBER: 'PhoneNumber',
   UNKNOWN: 'unknown',
 } as const;
 
@@ -185,6 +190,19 @@ function isSteamProfileUrl(value: string): boolean {
   if (kind.toLowerCase() === 'profiles') return isValidSteamId64(target);
   if (kind.toLowerCase() === 'id') return STEAM_VANITY_RE.test(target);
   return false;
+}
+
+// Mirrors backend/app/features/phone_search/schemas/phone_search_schemas.py's _E164_RE exactly:
+// a leading '+', then 8-15 digits, the first of which is 1-9 (no leading zero).
+const E164_RE = /^\+[1-9]\d{7,14}$/;
+
+/**
+ * Whether `value` is an E.164 phone number (e.g. `+15551234567`) - a JS mirror of
+ * phone_search's own ScanRequest validator. See the PHONE_NUMBER comment above for why this
+ * stays a standalone detector rather than a real entry in IOC_TYPE_PATTERNS.
+ */
+export function isPhoneNumberTarget(value?: string | null): boolean {
+  return E164_RE.test((value ?? '').trim());
 }
 
 /**

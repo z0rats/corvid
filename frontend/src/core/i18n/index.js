@@ -36,6 +36,8 @@ import enYoutube from './locales/en/youtube.json';
 import enAmass from './locales/en/amass.json';
 import enSteamRecon from './locales/en/steamRecon.json';
 import enInstagramSearch from './locales/en/instagramSearch.json';
+import enPhoneSearch from './locales/en/phoneSearch.json';
+import enSanctionsSearch from './locales/en/sanctionsSearch.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -60,6 +62,8 @@ export const NAMESPACES = [
   'amass',
   'steamRecon',
   'instagramSearch',
+  'phoneSearch',
+  'sanctionsSearch',
 ];
 
 i18n
@@ -87,6 +91,8 @@ i18n
         amass: enAmass,
         steamRecon: enSteamRecon,
         instagramSearch: enInstagramSearch,
+        phoneSearch: enPhoneSearch,
+        sanctionsSearch: enSanctionsSearch,
       },
       ru: {
         common: ruCommon,

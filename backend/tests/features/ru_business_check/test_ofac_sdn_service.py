@@ -11,10 +11,9 @@ import httpx
 import pytest
 from sqlalchemy import func, select
 
-from app.features.ru_business_check.models.ru_business_check_models import (
-    OfacSdnRecord,
-    RegistryDump,
-)
+from app.core.models.registry_dump import RegistryDump
+from app.core.registry_dumps.common import is_stale, refresh_lock
+from app.features.ru_business_check.models.ru_business_check_models import OfacSdnRecord
 from app.features.ru_business_check.service import ofac_sdn_service as svc
 from app.features.ru_business_check.service import ofac_sdn_service as svc_module
 from app.features.ru_business_check.service.ofac_sdn_service import (
@@ -24,7 +23,6 @@ from app.features.ru_business_check.service.ofac_sdn_service import (
     parse_sdn,
     refresh_list,
 )
-from app.features.ru_business_check.service.registry_dump_common import is_stale, refresh_lock
 
 
 def _row(num, name, kind="-0- ", program="RUSSIA-EO14024", remarks="-0- "):

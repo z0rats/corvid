@@ -251,26 +251,3 @@ class OfacSdnRecord(Base):
     programs: Mapped[str | None] = mapped_column(
         String(500), comment="Sanctions programs, e.g. 'UKRAINE-EO13661] [RUSSIA-EO14024'"
     )
-
-
-class RegistryDump(Base):
-    """Provenance of a locally cached registry dump - one row per source."""
-
-    __tablename__ = "ru_business_check_registry_dumps"
-
-    source: Mapped[str] = mapped_column(
-        String(50), primary_key=True, comment="Dump source id, e.g. 'disqualified'"
-    )
-    dump_date: Mapped[datetime.date] = mapped_column(
-        Date,
-        comment="Date of the published dataset version (the publisher's meta.csv), or the "
-        "download date for a list published without one",
-    )
-    valid_until: Mapped[datetime.date | None] = mapped_column(
-        Date, comment="The publisher's stated validity end (meta.csv `valid`), if given"
-    )
-    row_count: Mapped[int] = mapped_column(Integer, comment="Rows loaded from that version")
-    url: Mapped[str] = mapped_column(String(500), comment="Where this version was downloaded")
-    refreshed_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), comment="When this instance last loaded the dump"
-    )
