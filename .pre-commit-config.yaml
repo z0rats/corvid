@@ -27,3 +27,10 @@ repos:
         language: system
         pass_filenames: false
         files: ^backend/app/features/ioc_tools/ioc_lookup/single_lookup/service/service_registry\.py$
+      - id: extension-ioc-patterns
+        name: Regenerate extension/generated-ioc-patterns.js
+        description: Mirrors CI's staleness check - regenerates the file from iocTypeDetection.ts; if that changes it, `git add` it and commit again.
+        entry: bash -c 'cd frontend && ([ -d node_modules ] || { echo "frontend/node_modules missing - run yarn install first" >&2; exit 1; }) && node scripts/generate-extension-ioc-patterns.js'
+        language: system
+        pass_filenames: false
+        files: ^frontend/src/core/utils/iocTypeDetection\.ts$

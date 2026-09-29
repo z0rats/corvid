@@ -1,32 +1,17 @@
-// Compact hand-rolled port of frontend/src/core/utils/iocTypeDetection.ts's detectIocType,
+// Wrapper around the shared IOC-type regex table in generated-ioc-patterns.js (generated from
+// frontend/src/core/utils/iocTypeDetection.ts's IOC_TYPE_PATTERNS — see that file's own header),
 // extended with a Phone type for the selection-based context menu (Corvid's own IOC vocabulary
-// has no phone lookups, but labeling the match is still useful — the item still opens IOC
-// lookup like everything else). Duplicated by hand, not shared code — the extension has no
-// build step to import from frontend/, and isn't covered by the testdata/ioc-type-detection-cases.json
-// fixture the backend/frontend copies share (see docs/architecture/command-palette.md) — re-check
-// this against iocTypeDetection.ts's IOC_TYPE_PATTERNS by hand when that file changes.
+// has no phone lookups, but labeling the match is still useful — the item still opens IOC lookup
+// like everything else) and trailing-punctuation stripping (needed for text selected on a page).
+// generated-ioc-patterns.js loads first everywhere ioc-type-detection.js does (manifest.json's
+// content_scripts, sidepanel.html, background.js's importScripts), so IOC_PATTERNS below is
+// just that file's GENERATED_IOC_TYPE_PATTERNS global; the require() branch only runs under
+// Node/Vitest, which has no shared script scope to read a preceding <script> tag's globals from.
 
-const IOC_PATTERNS = {
-  MD5: /^[a-f0-9]{32}$/i,
-  SHA1: /^[a-f0-9]{40}$/i,
-  SHA256: /^[a-f0-9]{64}$/i,
-  EVMAddress: /^0x[a-f0-9]{40}$/i,
-  BitcoinAddress: /^(1[a-zA-Z0-9]{25,34}|3[a-zA-Z0-9]{25,34}|bc1[a-zA-HJ-NP-Z0-9]{25,90})$/,
-  TronAddress: /^T[a-zA-Z0-9]{33}$/,
-  XRPAddress: /^r[a-zA-Z0-9]{24,34}$/,
-  DogecoinAddress: /^D[a-zA-Z0-9]{25,33}$/,
-  CardanoAddress: /^Ddz[a-zA-Z0-9]{90,110}$/,
-  LitecoinAddress: /^L[a-zA-Z0-9]{25,34}$/,
-  StellarAddress: /^[GS][A-Z2-7]{54,58}$/,
-  BinanceChainAddress: /^bnb1[a-z0-9]{38}$/,
-  LiskAddress: /^[0-9]{1,20}L$/,
-  IPv4: /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-  IPv6: /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/i,
-  CVE: /^CVE-[0-9]{4}-[0-9]{4,}$/i,
-  URL: /^(?:https?|ftp):\/\/\S+$/i,
-  Domain: /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/,
-  Email: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
-};
+let IOC_PATTERNS = typeof GENERATED_IOC_TYPE_PATTERNS !== 'undefined' ? GENERATED_IOC_TYPE_PATTERNS : undefined;
+if (typeof module !== 'undefined' && module.exports) {
+  IOC_PATTERNS = require('./generated-ioc-patterns.js').GENERATED_IOC_TYPE_PATTERNS;
+}
 
 const PHONE_PATTERN = /^\+?[1-9]\d{6,14}$/;
 
@@ -62,4 +47,8 @@ function detectIocType(rawValue) {
   if (IOC_PATTERNS.Domain.test(value)) return 'Domain';
   if (IOC_PATTERNS.Email.test(value)) return 'Email';
   return null;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { detectIocType };
 }

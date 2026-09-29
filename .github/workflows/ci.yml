@@ -160,6 +160,15 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Check extension/generated-ioc-patterns.js is in sync with iocTypeDetection.ts
+        run: |
+          node scripts/generate-extension-ioc-patterns.js
+          if [ -n "$(git status --porcelain -- ../extension/generated-ioc-patterns.js)" ]; then
+            echo "::error::extension/generated-ioc-patterns.js is stale or not committed - run 'node frontend/scripts/generate-extension-ioc-patterns.js' from the repo root and commit the result."
+            git diff -- ../extension/generated-ioc-patterns.js
+            exit 1
+          fi
+
       # Disabled while localization is paused for new features (English-only
       # additions expected to fail this check until translation work resumes).
       # - name: Check i18n locale keys are in sync

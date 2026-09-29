@@ -3,9 +3,9 @@
 Deep-dive referenced from AGENTS.md. Setup and troubleshooting: `extension/README.md`.
 
 `extension/` is a minimal MV3 Chrome extension ("Quick Send") built around IOC-type detection
-(`ioc-type-detection.js`, a hand-rolled port of `frontend`'s `iocTypeDetection.js`, shared by all
-three surfaces below) gating three ways in to `<base_url>/ioc-tools/lookup?q=...` — the only
-Corvid backend/token interaction anywhere in the extension.
+(`ioc-type-detection.js`, shared by all three surfaces below) gating three ways in to
+`<base_url>/ioc-tools/lookup?q=...` — the only Corvid backend/token interaction anywhere in the
+extension.
 
 ## Content script
 
@@ -37,9 +37,18 @@ open always lands on Home.
 
 ## Other notes
 
-No build step, load unpacked. Separate from `frontend/`, not part of any build/test pipeline.
-`ioc-type-detection.js` and the reverse-search engine list are hand-duplicated (not shared code)
-from `frontend`'s `iocTypeDetection.ts`/`imageConstants.js` — not covered by the
-`testdata/ioc-type-detection-cases.json` fixture those two share, so re-check by hand when either
-frontend file's patterns change. See `extension/README.md` for setup (including where to look
-when the EXIF panel silently fails — its own service-worker console, not the page's).
+No build step, load unpacked. Separate from `frontend/`, not part of any build/test pipeline, with
+one exception: `generated-ioc-patterns.js` — loaded before `ioc-type-detection.js` everywhere the
+latter is (`manifest.json`'s `content_scripts`, `sidepanel.html`, `background.js`'s
+`importScripts`) — is regenerated from `frontend/src/core/utils/iocTypeDetection.ts`'s
+`IOC_TYPE_PATTERNS` by `frontend/scripts/generate-extension-ioc-patterns.js` (via
+`ts.transpileModule`, no bundler needed since that source has no imports of its own). A pre-commit
+hook regenerates it automatically when `iocTypeDetection.ts` changes; CI fails if the committed
+file is stale. `ioc-type-detection.js` itself stays hand-written on top of that generated table —
+it adds a `Phone` type spliced into the priority chain and trailing-punctuation stripping, neither
+of which the frontend's own `detectIocType` needs — and is cross-checked against the shared
+`testdata/ioc-type-detection-cases.json` fixture the same way `frontend`'s copy is (see
+`frontend/src/core/utils/extensionIocPatterns.test.js`). The reverse-search engine list is still
+hand-duplicated (not shared code) from `frontend`'s `imageConstants.js` — re-check by hand when
+that changes. See `extension/README.md` for setup (including where to look when the EXIF panel
+silently fails — its own service-worker console, not the page's).

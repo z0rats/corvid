@@ -1,4 +1,4 @@
-importScripts('exif-parser.js', 'ioc-type-detection.js');
+importScripts('exif-parser.js', 'generated-ioc-patterns.js', 'ioc-type-detection.js');
 
 const DEFAULT_BASE_URL = 'http://localhost:4000';
 
