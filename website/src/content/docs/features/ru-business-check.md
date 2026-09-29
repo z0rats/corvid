@@ -1,44 +1,71 @@
 ---
 title: RU Business Check
-description: Due-diligence check on a Russian legal entity or sole proprietor by ИНН/name.
+description: Due-diligence check on a Russian legal entity or sole proprietor by ИНН/name, across official registries and published lists.
 sidebar:
   order: 150
 ---
 
 Collapses the manual "check a Russian counterparty" workflow — normally 30–40 minutes across
-several official government registries — into a single ИНН or company/IP name query.
+several official registries — into a single ИНН or company/IP name query. No API keys.
 
-The in-app interface and generated reports are Russian-only by design, since every source this
-feature queries is a Russian government registry and its output is inherently in Russian.
+The in-app interface and generated reports are Russian-only by design, since the sources are
+Russian registries and their output is inherently in Russian.
 
-## Stage 1
+## What it checks
 
-- **ЕГРЮЛ/ЕГРИП extract** — company/individual-entrepreneur registration data (name, ОГРН/ИНН/КПП,
-  registration date, address, director, founders, ОКВЭД codes, capital), scraped from the
-  official `egrul.nalog.ru` registry service (no API, no key required).
-- **Disqualified-persons registry (РДЛ)** — checks the resolved director's full name against
-  `service.nalog.ru`'s disqualified-persons registry. A name-only match is always surfaced as
-  requiring manual review, never as an automatically confirmed fact — the registry gives no
-  disambiguating identifier beyond full name, so a same-name collision is a real risk.
+Live lookups (each result keeps the source's raw payload, with a SHA-256 recorded when it was
+captured, for independent verification):
 
-## Stage 2 (current)
+- **ЕГРЮЛ/ЕГРИП extract** — name, ОГРН/ИНН/КПП, registration date, address, director, founders,
+  ОКВЭД, capital, from `egrul.nalog.ru`.
+- **Bankruptcy (Федресурс)** — an active bankruptcy stage is a hard flag; an unrecognized status
+  text is a soft "check manually" flag (never read as clean). For legal entities, the latest
+  publications add soft signals: creditor's or debtor's intent to file for bankruptcy, a
+  liquidation decision, a "недостоверность сведений" notice, a reorganization in the last year.
+  A message only counts when the company is its *subject* — a bank that publishes hundreds of
+  creditor notices about other companies isn't flagged for them.
+- **РНП** (`zakupki.gov.ru`) — an active record for the exact ИНН is a hard flag.
+- **Disqualified persons (РДЛ)** — the director's ФИО against the online registry; a name-only
+  match is always a soft "check manually" flag, with the registry's birth date shown to help.
+- **Arbitration cases** (`kad.arbitr.ru`) — case history as plaintiff/defendant, soft flags only.
+  This site often refuses automated access from outside Russia; the check then reports "not
+  checked" rather than an empty history.
+- **Прозрачный бизнес** — mass-registration-address indicator, soft flag.
+- **ФедСФМ** — the director against the terrorism/WMD-financing list, soft flag (name-only).
+- **Financial statements (ГИР БО)** — revenue, profit, balance for the last 3 years. Soft flags
+  for a low equity ratio, low current liquidity and a sharp revenue drop (thresholds in
+  Settings). Banks, insurers and sole proprietors have no statements there — shown as such.
+- **МСП register** — whether it's a registered micro/small/medium business (informational).
 
-- **Arbitration case history** — arbitration cases involving the resolved ИНН, from
-  `kad.arbitr.ru`'s public case registry ("Картотека арбитражных дел"), including case status,
-  court, role (plaintiff/defendant), claim amount where available, and a direct link to each
-  case. Only soft flags fire from arbitration data (a single small resolved case as defendant,
-  or several/large-value cases as defendant) — the checklist this feature is built from never
-  puts arbitration in the automatic-high-risk tier on its own.
+Local copies of published lists, refreshed in the background and matched by exact ИНН — the ИНН
+is never sent to a third party, and the checks work when the source site is slow:
 
-**Risk-flag engine** — hard/soft flags computed only from whichever sources are checked so far
-(confirmed disqualification is the only hard flag right now; everything else is soft). The
-result always states which sources were checked and which weren't — a risk verdict never implies
-more than what was actually checked, since ФССП and Федресурс (Stage 3) aren't wired up yet.
+- **ФНС disqualified-persons register** (weekly) — a record matching the director's ФИО **and**
+  this company's ИНН, in force today, is a *hard* flag; other in-force records of the company's
+  officers are a soft signal. Birth dates and places are not stored.
+- **Банк России warning list** (every 2 days) — soft flag, worded as the regulator's statement
+  ("signs of illegal activity"), not a court finding. Entries that misuse a legitimate firm's
+  data are shown but never counted against the ИНН owner.
+- **OFAC SDN list** (every 2 days) — a match on the ИНН is a hard flag, worded as a US-list status.
+  **No match is not proof of no sanctions**: OFAC records an ИНН for only part of its Russian
+  entries (some large banks are listed without one), and the EU list isn't checked.
 
-Results (including each source's raw scraped payload, for independent verification) are saved to
-a searchable history with a configurable retention period — see **Settings → RU Business Check**.
+Until a list has been downloaded for the first time (right after install), its check shows as
+"not checked".
 
-## Planned (later stages)
+## How the verdict works
 
-Enforcement proceedings (ФССП) and bankruptcy/pledge filings (Федресурс) — each its own stage,
-since neither has an official API and needs its own scraper.
+- **Hard flags** (confirmed disqualification, active bankruptcy, РНП, OFAC match) make the level
+  **High**. Soft flags raise it to **Medium**; three *independent sources* with soft flags make it
+  **High**.
+- **"Проверка неполная"** — if ЕГРЮЛ, Федресурс or РНП couldn't be checked and no hard flag was
+  found, the level is *incomplete*, not Low: the missing check could have found one. The result
+  always lists which sources were checked and which weren't.
+- A source that fails or whose site changed its format is reported as not checked, never as
+  "nothing found".
+- ФССП (enforcement proceedings) isn't automated — its search demands a CAPTCHA on every query, so
+  the result offers a manual-check link.
+
+Results are saved to a searchable history (retention configurable in **Settings → RU Business
+Check**), repeat lookups within 24 hours reuse the saved result unless refreshed, and any result
+exports as an HTML or PDF report with per-source links and the payload fingerprints.

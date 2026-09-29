@@ -5,24 +5,33 @@ Fixed host, only the searched full name is user-supplied - never the host - so t
 intentionally does NOT go through app.core.security.ssrf_guard.safe_get (see
 backend/tests/core/test_ssrf_guard_coverage.py's ALLOWLISTED_FIXED_HOST_FILES).
 
-**Unverified against a live capture** (same caveat as egrul_service.py): the exact form
-field name isn't hardcoded here for that reason - `_discover_search_field` reads the
-live search page's own `<form>` markup to find it, rather than guessing a name that may
-be wrong. If the page ever has more than one plausible text input, that heuristic (first
-non-hidden text input) is the one thing likely to need adjusting.
+**Verified against a live capture - 2026-09-28.** The search page's own `<form>` posts to
+`disqualified-proc.json`, which answers with **JSON**, not an HTML table:
+`{"data": [row...], "rowCount": N, "pageSize": 25, ...}` with Russian-keyed rows
+(`ФИО`, `ДатаРожд`, `МестоРожд`, `НомЗап`, `НаимОрг`, `Должность`, `КвалификацияТекст`,
+`НаимОргПрот`, `ФИОСуд`, `ДисквСрок`, `ДатаНачДискв`, `ДатаКонДискв`); `data: []` is the
+"no matches" answer. `parse_results` reads that JSON, still accepts an HTML results table,
+and treats any other answer as a `DisqualifiedPersonsError` - never as an empty result. The
+form field name isn't hardcoded: `_discover_search_field` reads the live search page's own
+`<form>` markup.
 
 Per project decision, a name-only match here is NEVER treated as a confirmed hard flag -
-the registry's result rows (based on a WebFetch summary of the page, not a live capture)
-show no field beyond full name to disambiguate a same-name collision, so every match is
-surfaced as `requires_manual_review`. If a live capture later shows a disambiguating
-field (DOB etc.), `parse_results_html` is the only place that needs to change.
+even with the registry's date of birth shown, the ЕГРЮЛ extract carries no director birth
+date to compare it with, so a same-name collision can't be ruled out here; every match is
+surfaced as `requires_manual_review`, with the registry's birth date to help the analyst.
 """
 
+import json
 import logging
 from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
+
+from app.features.ru_business_check.service.source_contract import (
+    require_fields,
+    require_list_field,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +123,79 @@ def parse_results_html(html: str) -> list[dict]:
     return rows
 
 
+def _date_part(value: object) -> str | None:
+    """`DD.MM.YYYY HH:MM:SS` -> `DD.MM.YYYY`; anything else is dropped rather than shown."""
+    if isinstance(value, str) and len(value) >= 10 and value[2] == "." and value[5] == ".":
+        return value[:10]
+    return None
+
+
+def parse_results_json(payload: dict) -> list[dict]:
+    """Pure function: the `disqualified-proc.json` payload -> match rows (same shape as
+    `parse_results_html`, plus `birth_date`). Raises `DisqualifiedPersonsError` on drift."""
+    rows = require_list_field(
+        payload,
+        "data",
+        error=DisqualifiedPersonsError,
+        label="РДЛ",
+    )
+    matches: list[dict] = []
+    for row in rows:
+        require_fields(
+            row,
+            ("ФИО", "НомЗап"),
+            error=DisqualifiedPersonsError,
+            label="РДЛ",
+            where="записи реестра",
+        )
+        if not row["ФИО"]:
+            continue
+        term = " ".join(
+            part
+            for part in (
+                f"срок: {row['ДисквСрок']}" if row.get("ДисквСрок") else "",
+                f"с {_date_part(row.get('ДатаНачДискв'))}"
+                if _date_part(row.get("ДатаНачДискв"))
+                else "",
+                f"по {_date_part(row.get('ДатаКонДискв'))}"
+                if _date_part(row.get("ДатаКонДискв"))
+                else "",
+            )
+            if part
+        )
+        matches.append(
+            {
+                "full_name": row["ФИО"],
+                "record_number": str(row["НомЗап"]) if row.get("НомЗап") else None,
+                "organization": row.get("НаимОрг") or None,
+                "position": row.get("Должность") or None,
+                "article": row.get("КвалификацияТекст") or None,
+                "issuing_authority": row.get("НаимОргПрот") or None,
+                "judge": row.get("ФИОСуд") or None,
+                "details": term or None,
+                "birth_date": _date_part(row.get("ДатаРожд")),
+            }
+        )
+    return matches
+
+
+def parse_results(text: str) -> list[dict]:
+    """The registry's answer -> match rows. JSON first (what the live site returns), an HTML
+    table as a fallback; anything else is drift - an empty list means "the registry said
+    no matches", never "I couldn't read the answer"."""
+    try:
+        payload = json.loads(text)
+    except ValueError:
+        payload = None
+    if isinstance(payload, dict):
+        return parse_results_json(payload)
+    if "<table" in text:
+        return parse_results_html(text)
+    raise DisqualifiedPersonsError(
+        "РДЛ: схема ответа изменилась — ответ не JSON и без таблицы результатов"
+    )
+
+
 async def check_disqualified(full_name: str) -> tuple[dict, str]:
     """Search the disqualified-persons registry for `full_name` and return
     `(result, raw_payload)`, where `result` is `{checked, matched, requires_manual_review,
@@ -140,7 +222,7 @@ async def check_disqualified(full_name: str) -> tuple[dict, str]:
             response = await client.get(action, params=request_params)
         response.raise_for_status()
 
-    matches = parse_results_html(response.text)
+    matches = parse_results(response.text)
     result = {
         "checked": True,
         "matched": bool(matches),

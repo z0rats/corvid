@@ -131,6 +131,9 @@ class ImageGeolocationResponse(ImageGeolocationAIResult):
     """AI-generated location hypothesis for a photo, with supporting reasoning."""
 
     model_used: str = Field(..., description="ID of the LLM model that produced this analysis")
+    history_id: int | None = Field(
+        default=None, description="ID of the persisted history record for this analysis"
+    )
 
 
 class MarkerSegment(BaseModel):

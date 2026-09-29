@@ -130,8 +130,14 @@ def parse_rss_entries(xml_text: str) -> list[dict]:
     for us, but the surrounding `<item>`/`<link>` extraction is simple and fixed enough
     that a second dependency (or `ElementTree` plus a follow-up HTML unescape pass) isn't
     worth it for a well-known, narrow shape."""
+    if "<channel" not in xml_text:
+        raise ZakupkiRnpError(
+            "zakupki.gov.ru: схема ответа изменилась — в ответе нет RSS-канала "
+            "(возможна страница-заглушка)"
+        )
     entries: list[dict] = []
-    for item_xml in _ITEM_RE.findall(xml_text):
+    items = _ITEM_RE.findall(xml_text)
+    for item_xml in items:
         link_match = _LINK_RE.search(item_xml)
         description_match = _DESCRIPTION_RE.search(item_xml)
         if not description_match:
@@ -145,6 +151,13 @@ def parse_rss_entries(xml_text: str) -> list[dict]:
         detail_path = html.unescape(link_match.group(1)) if link_match else None
         fields["detail_url"] = f"{ZAKUPKI_BASE_URL}{detail_path}" if detail_path else None
         entries.append(fields)
+
+    if items and not entries:
+        # Items exist but none yielded an ИНН: the `<strong>Label: </strong>` shape (or
+        # the ИНН label) changed - reading that as "no entries" would be a false clean.
+        raise ZakupkiRnpError(
+            "zakupki.gov.ru: схема ответа изменилась — в записях RSS не найдено поле ИНН"
+        )
 
     return entries
 

@@ -9,11 +9,16 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import Link from '@mui/material/Link';
 
+import FieldRow from './FieldRow';
 import RawResponsePanel from './RawResponsePanel';
+import GirBoPanel from './GirBoPanel';
+import MspPanel from './MspPanel';
+import DisqualifiedDumpPanel from './DisqualifiedDumpPanel';
+import CbrWarningPanel from './CbrWarningPanel';
+import OfacSdnPanel from './OfacSdnPanel';
+import { RISK_LABELS, RISK_COLORS } from '../constants/risk';
 import { buildPrefillUrl } from '../../../core/utils/crossFeatureNav';
 
-const RISK_LABELS = { low: 'Низкий', medium: 'Средний', high: 'Высокий' };
-const RISK_COLORS = { low: 'success', medium: 'warning', high: 'error' };
 const SOURCE_LABELS = {
   egrul: 'ЕГРЮЛ/ЕГРИП',
   disqualified_persons: 'Реестр дисквалифицированных лиц (РДЛ)',
@@ -23,6 +28,11 @@ const SOURCE_LABELS = {
   pb_nalog: 'Прозрачный бизнес (ФНС)',
   fedsfm: 'Перечень терроризм/ОМУ (ФедСФМ)',
   zakupki_rnp: 'Реестр недобросовестных поставщиков (РНП)',
+  gir_bo: 'Бухгалтерская отчётность (ГИР БО)',
+  msp: 'Реестр МСП',
+  disqualified_dump: 'Реестр дисквалифицированных лиц (выгрузка ФНС)',
+  cbr_warning: 'Список ЦБ: признаки нелегальной деятельности',
+  ofac_sdn: 'Санкционный список OFAC SDN (США)',
 };
 // ФССП's own API is dead and its public search demands a CAPTCHA on every query
 // (confirmed live, see docs/adr/0006-*.md's addendum), so it can't be automated -
@@ -69,20 +79,17 @@ function zakupkiRnpSearchUrl(inn) {
   return `https://zakupki.gov.ru/epz/dishonestsupplier/search/results.html?${params}`;
 }
 
-function Field({ label, value }) {
-  if (!value) return null;
-  return (
-    <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 200 }}>{label}</Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Box>
-  );
+// Sources that don't apply to this entity (e.g. the ЦБ list for an ИП) - neither checked nor
+// pending; their `extra_data` entry says why.
+function notApplicableSources(extra) {
+  return Object.entries(extra || {}).filter(([, v]) => v?.not_applicable).map(([k]) => k);
 }
 
 export default function ResultsView({ result }) {
   if (!result) return null;
 
-  const { egrul_data: egrul, disqualification_result: disq, arbitration_data: arb, fedresurs_data: fedresurs, pb_nalog_data: pbNalog, fedsfm_result: fedsfm, rnp_data: rnp, flags = [], checked_sources: checked = [], pending_sources: pending = [], candidates = [] } = result;
+  const { egrul_data: egrul, disqualification_result: disq, arbitration_data: arb, fedresurs_data: fedresurs, pb_nalog_data: pbNalog, fedsfm_result: fedsfm, rnp_data: rnp, extra_data: extra, extra_raw: extraRaw, raw_sha256: sha, flags = [], checked_sources: checked = [], pending_sources: pending = [], candidates = [] } = result;
+  const notApplicable = notApplicableSources(extra);
 
   return (
     <Box>
@@ -103,10 +110,10 @@ export default function ResultsView({ result }) {
               sx={{ mb: 1.5, pb: 1.5, borderBottom: i < candidates.length - 1 ? 1 : 0, borderColor: 'divider' }}
             >
               <Typography variant="body2" fontWeight="bold">{c.name || 'Без названия'}</Typography>
-              <Field label="ИНН" value={c.inn} />
-              <Field label="ОГРН" value={c.ogrn} />
-              <Field label="Адрес" value={c.address} />
-              <Field label="Статус" value={c.status} />
+              <FieldRow label="ИНН" value={c.inn} />
+              <FieldRow label="ОГРН" value={c.ogrn} />
+              <FieldRow label="Адрес" value={c.address} />
+              <FieldRow label="Статус" value={c.status} />
               <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                 {(c.ogrn || c.inn) && (
                   <Button
@@ -147,9 +154,21 @@ export default function ResultsView({ result }) {
         </Box>
       )}
 
+      {result.risk_level === 'incomplete' && (
+        // Grey, like the verdict chip: it's neither a finding nor a clean result.
+        <Alert
+          severity="info"
+          sx={{ mb: 2, bgcolor: 'action.hover', color: 'text.primary', '& .MuiAlert-icon': { color: 'text.secondary' } }}
+        >
+          Вердикт не выдан: не удалось проверить обязательные источники (
+          {(result.missing_required_sources || []).map((s) => SOURCE_LABELS[s] || s).join(', ')}
+          ). Отсутствие флагов по ним ничего не означает — повторите проверку позже или проверьте вручную.
+        </Alert>
+      )}
+
       {pending.length > 0 && candidates.length === 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Проверены только: {checked.map((s) => SOURCE_LABELS[s] || s).join(', ')}. Ещё не подключены:{' '}
+          Проверены только: {checked.map((s) => SOURCE_LABELS[s] || s).join(', ')}. Не проверены (сбой источника или ещё не подключены):{' '}
           {pending.map((s, i) => {
             const separator = i > 0 ? ', ' : '';
             if (s === 'fssp') {
@@ -165,6 +184,9 @@ export default function ResultsView({ result }) {
             return `${separator}${SOURCE_LABELS[s] || s}`;
           })}
           . Уровень риска основан только на проверенных источниках — не считайте его полной оценкой.
+          {notApplicable.length > 0 && (
+            <> Не применимо к этому субъекту: {notApplicable.map((s) => SOURCE_LABELS[s] || s).join(', ')}.</>
+          )}
         </Alert>
       )}
 
@@ -189,24 +211,24 @@ export default function ResultsView({ result }) {
       {egrul && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Typography variant="subtitle1" gutterBottom>ЕГРЮЛ/ЕГРИП</Typography>
-          <Field label="Полное наименование" value={egrul.full_name} />
-          <Field label="ОГРН" value={egrul.ogrn} />
-          <Field label="ИНН" value={egrul.inn} />
-          <Field label="КПП" value={egrul.kpp} />
-          <Field label="Дата регистрации" value={egrul.registration_date} />
-          <Field label="Адрес" value={egrul.address} />
-          <Field label="Статус" value={egrul.registry_status} />
-          <Field label="Директор" value={egrul.director_name && `${egrul.director_name}${egrul.director_position ? ` (${egrul.director_position})` : ''}`} />
+          <FieldRow label="Полное наименование" value={egrul.full_name} />
+          <FieldRow label="ОГРН" value={egrul.ogrn} />
+          <FieldRow label="ИНН" value={egrul.inn} />
+          <FieldRow label="КПП" value={egrul.kpp} />
+          <FieldRow label="Дата регистрации" value={egrul.registration_date} />
+          <FieldRow label="Адрес" value={egrul.address} />
+          <FieldRow label="Статус" value={egrul.registry_status} />
+          <FieldRow label="Директор" value={egrul.director_name && `${egrul.director_name}${egrul.director_position ? ` (${egrul.director_position})` : ''}`} />
           {egrul.founders?.length > 0 && (
-            <Field label="Учредители" value={egrul.founders.map((f) => `${f.name}${f.share ? ` — ${f.share}` : ''}`).join('; ')} />
+            <FieldRow label="Учредители" value={egrul.founders.map((f) => `${f.name}${f.share ? ` — ${f.share}` : ''}`).join('; ')} />
           )}
-          <Field label="Основной ОКВЭД" value={egrul.okved_main} />
+          <FieldRow label="Основной ОКВЭД" value={egrul.okved_main} />
           {egrul.okved_additional?.length > 0 && (
-            <Field label="Доп. ОКВЭД" value={egrul.okved_additional.join('; ')} />
+            <FieldRow label="Доп. ОКВЭД" value={egrul.okved_additional.join('; ')} />
           )}
-          <Field label="Уставный капитал" value={egrul.capital} />
+          <FieldRow label="Уставный капитал" value={egrul.capital} />
 
-          <RawResponsePanel label="Сырые данные ЕГРЮЛ" raw={result.egrul_raw} />
+          <RawResponsePanel label="Сырые данные ЕГРЮЛ" raw={result.egrul_raw} sha256={sha?.egrul} />
         </Paper>
       )}
 
@@ -227,19 +249,20 @@ export default function ResultsView({ result }) {
               )}
               {disq.matches.map((m, i) => (
                 <Box key={i} sx={{ mb: 1 }}>
-                  <Field label="ФИО" value={m.full_name} />
-                  <Field label="Номер записи РДЛ" value={m.record_number} />
-                  <Field label="Организация, должность" value={[m.organization, m.position].filter(Boolean).join(', ')} />
-                  <Field label="Статья КоАП РФ" value={m.article} />
-                  <Field label="Орган" value={m.issuing_authority} />
-                  <Field label="Сведения" value={m.details} />
+                  <FieldRow label="ФИО" value={m.full_name} />
+                  <FieldRow label="Номер записи РДЛ" value={m.record_number} />
+                  <FieldRow label="Дата рождения (по реестру)" value={m.birth_date} />
+                  <FieldRow label="Организация, должность" value={[m.organization, m.position].filter(Boolean).join(', ')} />
+                  <FieldRow label="Статья КоАП РФ" value={m.article} />
+                  <FieldRow label="Орган" value={m.issuing_authority} />
+                  <FieldRow label="Сведения" value={m.details} />
                   <Divider sx={{ my: 1 }} />
                 </Box>
               ))}
             </Box>
           )}
 
-          <Field
+          <FieldRow
             label="Проверить вручную"
             value={
               <Link href={DISQUALIFIED_PERSONS_SEARCH_URL} target="_blank" rel="noopener noreferrer">
@@ -247,7 +270,7 @@ export default function ResultsView({ result }) {
               </Link>
             }
           />
-          <RawResponsePanel label="Сырые данные РДЛ" raw={result.disqualification_raw} />
+          <RawResponsePanel label="Сырые данные РДЛ" raw={result.disqualification_raw} sha256={sha?.disqualified_persons} />
         </Paper>
       )}
 
@@ -259,20 +282,20 @@ export default function ResultsView({ result }) {
           )}
           {arb.cases.map((c, i) => (
             <Box key={i} sx={{ mb: 1 }}>
-              <Field
+              <FieldRow
                 label="Дело"
                 value={c.case_url ? <Link href={c.case_url} target="_blank" rel="noopener noreferrer">{c.case_number}</Link> : c.case_number}
               />
-              <Field label="Роль" value={ARBITRATION_ROLE_LABELS[c.role] || c.role} />
-              <Field label="Статус" value={c.status} />
-              <Field label="Суд" value={c.court} />
-              <Field label="Дата регистрации" value={c.date_registered} />
-              <Field label="Сумма иска" value={formatAmount(c.claim_amount)} />
+              <FieldRow label="Роль" value={ARBITRATION_ROLE_LABELS[c.role] || c.role} />
+              <FieldRow label="Статус" value={c.status} />
+              <FieldRow label="Суд" value={c.court} />
+              <FieldRow label="Дата регистрации" value={c.date_registered} />
+              <FieldRow label="Сумма иска" value={formatAmount(c.claim_amount)} />
               <Divider sx={{ my: 1 }} />
             </Box>
           ))}
 
-          <RawResponsePanel label="Сырые данные арбитража" raw={result.arbitration_raw} />
+          <RawResponsePanel label="Сырые данные арбитража" raw={result.arbitration_raw} sha256={sha?.arbitration} />
         </Paper>
       )}
 
@@ -287,14 +310,19 @@ export default function ResultsView({ result }) {
               Найдено активное дело о банкротстве
             </Alert>
           )}
-          {fedresurs.found && !fedresurs.is_active_bankruptcy && (
+          {fedresurs.found && !fedresurs.is_active_bankruptcy && fedresurs.status_recognized !== false && (
             <Typography variant="body2" color="success.main">Признаков активного банкротства не найдено</Typography>
+          )}
+          {fedresurs.found && fedresurs.status_recognized === false && (
+            <Alert severity="warning" sx={{ mb: 1 }}>
+              Статус «{fedresurs.status_text || '—'}» не входит в известные — проверьте карточку вручную
+            </Alert>
           )}
           {fedresurs.found && (
             <>
-              <Field label="Статус" value={fedresurs.status_text} />
+              <FieldRow label="Статус" value={fedresurs.status_text} />
               {fedresurs.profile_url && (
-                <Field
+                <FieldRow
                   label="Карточка"
                   value={<Link href={fedresurs.profile_url} target="_blank" rel="noopener noreferrer">Открыть на fedresurs.ru</Link>}
                 />
@@ -302,7 +330,25 @@ export default function ResultsView({ result }) {
             </>
           )}
 
-          <RawResponsePanel label="Сырые данные Федресурс" raw={result.fedresurs_raw} />
+          {fedresurs.publications_note && (
+            <Alert severity={fedresurs.publications_checked ? 'info' : 'warning'} sx={{ my: 1 }}>
+              {fedresurs.publications_note}
+            </Alert>
+          )}
+          {fedresurs.messages?.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>Сообщения о фактах деятельности</Typography>
+              {fedresurs.messages.map((m) => (
+                <Typography key={m.url || `${m.date}-${m.number}`} variant="body2" color={m.signal ? 'warning.main' : 'text.secondary'}>
+                  {m.date} —{' '}
+                  {m.url ? <Link href={m.url} target="_blank" rel="noopener noreferrer">{m.type}</Link> : m.type}
+                  {m.signal ? ' (учтено как признак)' : ''}
+                </Typography>
+              ))}
+            </Box>
+          )}
+
+          <RawResponsePanel label="Сырые данные Федресурс" raw={result.fedresurs_raw} sha256={sha?.fedresurs} />
         </Paper>
       )}
 
@@ -314,7 +360,7 @@ export default function ResultsView({ result }) {
           )}
           {pbNalog.found && (
             <>
-              <Field label="Компаний по этому адресу" value={String(pbNalog.mass_address_count ?? 0)} />
+              <FieldRow label="Компаний по этому адресу" value={String(pbNalog.mass_address_count ?? 0)} />
               {pbNalog.mass_address_companies?.length > 0 && (
                 <Box sx={{ ml: 1, mb: 1 }}>
                   {pbNalog.mass_address_companies.map((c, i) => (
@@ -330,7 +376,7 @@ export default function ResultsView({ result }) {
                 </Box>
               )}
               {pbNalog.profile_url && (
-                <Field
+                <FieldRow
                   label="Карточка"
                   value={<Link href={pbNalog.profile_url} target="_blank" rel="noopener noreferrer">Открыть на pb.nalog.ru</Link>}
                 />
@@ -338,7 +384,7 @@ export default function ResultsView({ result }) {
             </>
           )}
 
-          <RawResponsePanel label="Сырые данные Прозрачный бизнес" raw={result.pb_nalog_raw} />
+          <RawResponsePanel label="Сырые данные Прозрачный бизнес" raw={result.pb_nalog_raw} sha256={sha?.pb_nalog} />
         </Paper>
       )}
 
@@ -360,16 +406,16 @@ export default function ResultsView({ result }) {
               )}
               {fedsfm.matches.map((m, i) => (
                 <Box key={i} sx={{ mb: 1 }}>
-                  <Field label="ФИО" value={m.full_name} />
-                  <Field label="Тип" value={m.terrorist_type} />
-                  <Field label="Статус" value={m.status} />
+                  <FieldRow label="ФИО" value={m.full_name} />
+                  <FieldRow label="Тип" value={m.terrorist_type} />
+                  <FieldRow label="Статус" value={m.status} />
                   <Divider sx={{ my: 1 }} />
                 </Box>
               ))}
             </Box>
           )}
 
-          <Field
+          <FieldRow
             label="Проверить вручную"
             value={
               <Link href={FEDSFM_SEARCH_URL} target="_blank" rel="noopener noreferrer">
@@ -377,7 +423,7 @@ export default function ResultsView({ result }) {
               </Link>
             }
           />
-          <RawResponsePanel label="Сырые данные ФедСФМ" raw={result.fedsfm_raw} />
+          <RawResponsePanel label="Сырые данные ФедСФМ" raw={result.fedsfm_raw} sha256={sha?.fedsfm} />
         </Paper>
       )}
 
@@ -394,20 +440,20 @@ export default function ResultsView({ result }) {
           )}
           {rnp.entries.map((e, i) => (
             <Box key={i} sx={{ mb: 1 }}>
-              <Field
+              <FieldRow
                 label="Запись"
                 value={e.detail_url ? <Link href={e.detail_url} target="_blank" rel="noopener noreferrer">№{e.registry_number}</Link> : e.registry_number}
               />
-              <Field label="Относится к" value={e.law} />
-              <Field label="Наименование" value={e.name} />
-              <Field label="Включено" value={e.included_date} />
-              <Field label="Планируемая дата исключения" value={e.planned_exclusion_date} />
+              <FieldRow label="Относится к" value={e.law} />
+              <FieldRow label="Наименование" value={e.name} />
+              <FieldRow label="Включено" value={e.included_date} />
+              <FieldRow label="Планируемая дата исключения" value={e.planned_exclusion_date} />
               <Divider sx={{ my: 1 }} />
             </Box>
           ))}
 
           {result.resolved_inn && (
-            <Field
+            <FieldRow
               label="Проверить вручную"
               value={
                 <Link href={zakupkiRnpSearchUrl(result.resolved_inn)} target="_blank" rel="noopener noreferrer">
@@ -416,14 +462,24 @@ export default function ResultsView({ result }) {
               }
             />
           )}
-          <RawResponsePanel label="Сырые данные РНП" raw={result.rnp_raw} />
+          <RawResponsePanel label="Сырые данные РНП" raw={result.rnp_raw} sha256={sha?.zakupki_rnp} />
         </Paper>
       )}
+
+      <DisqualifiedDumpPanel data={extra?.disqualified_dump} />
+
+      <OfacSdnPanel data={extra?.ofac_sdn} />
+
+      <CbrWarningPanel data={extra?.cbr_warning} />
+
+      <GirBoPanel data={extra?.gir_bo} raw={extraRaw?.gir_bo} sha256={sha?.gir_bo} inn={result.resolved_inn} />
+
+      <MspPanel data={extra?.msp} raw={extraRaw?.msp} sha256={sha?.msp} />
 
       {result.website && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Typography variant="subtitle1" gutterBottom>Домен компании</Typography>
-          <Field label="Сайт" value={result.website} />
+          <FieldRow label="Сайт" value={result.website} />
           <Button
             size="small"
             variant="outlined"

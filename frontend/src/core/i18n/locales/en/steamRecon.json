@@ -1,0 +1,158 @@
+{
+  "page": {
+    "title": "Steam Recon",
+    "description": "Look up a Steam profile by SteamID, profile URL or vanity name."
+  },
+
+  "welcomeScreen": {
+    "title": "Steam Recon",
+    "intro": "Enter a SteamID64, SteamID3/2, a steamcommunity.com profile URL, or a vanity name and look it up.",
+    "description": "Shows the profile summary, ban record, Steam level and game count, plus deep-links to external lookups. Requires a Steam Web API key under Settings > API Keys."
+  },
+
+  "form": {
+    "targetLabel": "Steam ID, profile URL or vanity name",
+    "targetPlaceholder": "e.g. 76561197960435530 or https://steamcommunity.com/id/robinwalker",
+    "lookupButton": "Look up"
+  },
+
+  "apiKey": {
+    "addKeyAction": "Add API key",
+    "notConfigured": "Steam Recon needs a Steam Web API key. Add one under Settings > API Keys (free, but the Steam account must not be limited)."
+  },
+
+  "profile": {
+    "unnamed": "Unnamed profile",
+    "openOnSteam": "Open on Steam",
+    "steamId": "SteamID64",
+    "level": "Level",
+    "games": "Games",
+    "gamesPrivate": "Private",
+    "created": "Account created",
+    "lastLogoff": "Last online",
+    "location": "Location (self-declared)",
+    "unknown": "Unknown",
+    "visibility": {
+      "public": "Public profile",
+      "friends_only": "Friends only",
+      "private": "Private profile",
+      "unknown": "Visibility unknown"
+    },
+    "bans": {
+      "title": "Bans",
+      "none": "No bans on record",
+      "vac": "VAC ban ({{count}})",
+      "game": "Game ban ({{count}})",
+      "community": "Community ban",
+      "economy": "Trade ban: {{state}}",
+      "daysSince": "Last ban {{count}} days ago"
+    },
+    "quickLinks": "External lookups"
+  },
+
+  "scan": {
+    "pageTitle": "New Steam Recon scan",
+    "pageDescription": "Collects the target's friends graph, ranks close friends by mutual-connection weight, aggregates a geolocation hypothesis, and optionally scores a CS2 cheater-probability report.",
+    "form": {
+      "targetLabel": "Steam ID, profile URL or vanity name",
+      "targetPlaceholder": "e.g. 76561197960435530 or https://steamcommunity.com/id/robinwalker",
+      "maxFriendsLabel": "Friends to analyze",
+      "maxFriendsHelper": "Oldest connections first. Roughly {{count}} Steam API calls at this setting.",
+      "includeCsReportLabel": "CS2 cheater-probability report",
+      "includeCsReportHelper": "Also scores bans, account investment, CS2 stats and profile comments. Adds a few more calls and reads the target's public comments.",
+      "startButton": "Start scan"
+    },
+    "progress": {
+      "resolving": "Resolving target...",
+      "friends": "Fetched {{count}} friends",
+      "profiles": "Selected {{count}} candidates to analyze",
+      "mutual": "Analyzing mutual connections ({{analyzed}}/{{total}})",
+      "scoring": "Scoring cheater-probability signals...",
+      "cancelButton": "Cancel"
+    },
+    "failed": "Scan failed: {{error}}",
+    "cancelled": "Scan cancelled - showing partial results",
+    "completed": "Scan completed"
+  },
+
+  "closeFriends": {
+    "title": "Close friends",
+    "subtitle": "Ranked by mutual-connection weight with the target, not just friends-list order.",
+    "empty": "No connected friends found.",
+    "headers": {
+      "friend": "Friend",
+      "mutual": "Mutual friends",
+      "friendSince": "Friends since",
+      "location": "Location",
+      "bans": "Bans"
+    },
+    "friendsPrivate": "Friends list private",
+    "vacBan": "VAC",
+    "gameBan": "Game ban"
+  },
+
+  "geolocation": {
+    "title": "Geolocation hypothesis",
+    "subtitle": "Weighted vote of connected friends' self-declared locations - a hypothesis, not a fact.",
+    "confidence": {
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "low": "Low confidence"
+    },
+    "coverage": "{{voters}} connected friends voted, {{coverage}} had a usable location",
+    "selfDeclared": "Target's own profile location",
+    "noHypothesis": "Not enough data to form a location hypothesis",
+    "levels": {
+      "country": "Country",
+      "state": "Region",
+      "city": "City"
+    }
+  },
+
+  "cheaterReport": {
+    "title": "CS2 cheater-probability report",
+    "disclaimer": "This is a transparent heuristic estimate based on public signals, not a verdict or proof of cheating.",
+    "alreadyBanned": "This account already has a VAC or game ban on record.",
+    "coverage": "{{percent}} of signals had usable data",
+    "level": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "signals": {
+      "title": "Signals",
+      "noData": "No usable data for this signal",
+      "own_vac_or_game_ban": "Own VAC/game ban",
+      "friend_ban_density": "Friend ban density",
+      "low_account_investment": "Low account investment",
+      "stat_outliers": "CS2 stat outliers",
+      "accusatory_comments": "Accusatory comments"
+    }
+  },
+
+  "friendGraph": {
+    "title": "Friends graph",
+    "subtitle": "The target and its top {{count}} close friends, sized and connected by mutual-connection weight.",
+    "empty": "No connected friends to draw a graph from."
+  },
+
+  "history": {
+    "empty": "No past scans yet",
+    "notFound": "Scan not found",
+    "headers": {
+      "target": "Target",
+      "status": "Status",
+      "friends": "Friends analyzed",
+      "cheaterProbability": "Cheater probability",
+      "started": "Started",
+      "actions": "Actions"
+    },
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "summary": "{{analyzed}}/{{total}} friends analyzed"
+  }
+}

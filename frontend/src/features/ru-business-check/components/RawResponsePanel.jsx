@@ -11,9 +11,10 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUpOutlined';
  * so the analyst can always verify what a source actually returned - not just what the
  * parser extracted from it. Styled after ioc-tools' ServiceResultRow raw-JSON fallback,
  * but standalone rather than table-row-embedded since it's reused for both ЕГРЮЛ and
- * РДЛ payloads here.
+ * РДЛ payloads here. `sha256` is the digest recorded when the payload was captured
+ * (see raw_digest.py), shown so the copy can be checked against an independent export.
  */
-export default function RawResponsePanel({ label, raw }) {
+export default function RawResponsePanel({ label, raw, sha256 }) {
   const [open, setOpen] = useState(false);
 
   if (!raw) return null;
@@ -27,6 +28,11 @@ export default function RawResponsePanel({ label, raw }) {
         <Typography variant="caption" color="text.secondary">{label}</Typography>
       </Box>
       <Collapse in={open} timeout="auto" unmountOnExit>
+        {sha256 && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, wordBreak: 'break-all' }}>
+            SHA-256 при получении: {sha256}
+          </Typography>
+        )}
         <Box
           component="pre"
           sx={{

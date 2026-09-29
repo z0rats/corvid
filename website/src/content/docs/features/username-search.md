@@ -22,6 +22,10 @@ Both tools expose their installed version and whether a newer release is availab
 respective settings tabs; installing an update still requires a container rebuild, since both are
 pinned in `requirements.txt` at image-build time.
 
+If a username search turns up an Instagram profile, see
+[Instagram Search](/corvid/features/instagram-search/) for profile metadata plus follower/followee/post
+scans.
+
 ## Report export
 
 Maigret-sourced scans can export using Maigret's own report writers (see

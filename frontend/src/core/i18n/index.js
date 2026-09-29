@@ -33,6 +33,9 @@ import ruGitRecon from './locales/ru/gitRecon.json';
 import enCommandPalette from './locales/en/commandPalette.json';
 import ruCommandPalette from './locales/ru/commandPalette.json';
 import enYoutube from './locales/en/youtube.json';
+import enAmass from './locales/en/amass.json';
+import enSteamRecon from './locales/en/steamRecon.json';
+import enInstagramSearch from './locales/en/instagramSearch.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ru'];
 export const DEFAULT_LANGUAGE = 'en';
@@ -54,6 +57,9 @@ export const NAMESPACES = [
   'gitRecon',
   'commandPalette',
   'youtube',
+  'amass',
+  'steamRecon',
+  'instagramSearch',
 ];
 
 i18n
@@ -78,6 +84,9 @@ i18n
         gitRecon: enGitRecon,
         commandPalette: enCommandPalette,
         youtube: enYoutube,
+        amass: enAmass,
+        steamRecon: enSteamRecon,
+        instagramSearch: enInstagramSearch,
       },
       ru: {
         common: ruCommon,

@@ -7,7 +7,10 @@ here rather than only in production.
 
 from pathlib import Path
 
+import pytest
+
 from app.features.ru_business_check.service.zakupki_rnp_service import (
+    ZakupkiRnpError,
     _parse_description,
     _pick_exact_matches,
     parse_rss_entries,
@@ -77,7 +80,27 @@ class TestParseRssEntries:
             "<description>&lt;strong&gt;Реестровый номер: &lt;/strong&gt;1&lt;br/&gt;</description>"
             "</item></channel></rss>"
         )
-        assert parse_rss_entries(xml_text) == []
+        # Every item lacking an ИНН means the label/shape changed - that must not read as
+        # "nothing in the registry".
+        with pytest.raises(ZakupkiRnpError, match="схема ответа изменилась"):
+            parse_rss_entries(xml_text)
+
+    def test_an_item_without_an_inn_is_dropped_next_to_valid_ones(self):
+        good = (
+            "<item><link>/a</link><description>"
+            "&lt;strong&gt;ИНН (аналог ИНН): &lt;/strong&gt;7707083893&lt;br/&gt;"
+            "</description></item>"
+        )
+        bad = (
+            "<item><link>/b</link><description>"
+            "&lt;strong&gt;Реестровый номер: &lt;/strong&gt;1&lt;br/&gt;</description></item>"
+        )
+        entries = parse_rss_entries(f"<rss><channel>{good}{bad}</channel></rss>")
+        assert [e["inn"] for e in entries] == ["7707083893"]
+
+    def test_response_without_an_rss_channel_is_schema_drift(self):
+        with pytest.raises(ZakupkiRnpError, match="нет RSS-канала"):
+            parse_rss_entries("<html><body>Доступ ограничен</body></html>")
 
     def test_no_items_produces_an_empty_list(self):
         assert parse_rss_entries("<rss><channel><description /></channel></rss>") == []

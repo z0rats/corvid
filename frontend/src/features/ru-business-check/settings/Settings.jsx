@@ -123,6 +123,42 @@ export default function Settings() {
 
         <Divider sx={{ my: 3 }} />
 
+        <Typography variant="subtitle1" gutterBottom>Бухгалтерская отчётность (ГИР БО)</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+            type="number"
+            label="Порог автономии (капитал / баланс)"
+            helperText="Ниже этой доли собственного капитала в балансе — мягкий флаг (по умолчанию 0.1)"
+            value={config.equity_ratio_threshold}
+            onChange={(e) => handleChange('equity_ratio_threshold', Number(e.target.value))}
+            disabled={saving}
+            size="small"
+            slotProps={{ htmlInput: { min: 0, max: 1, step: 0.05 } }}
+          />
+          <TextField
+            type="number"
+            label="Порог текущей ликвидности (оборотные / краткосрочные обязательства)"
+            helperText="Ниже этого значения — мягкий флаг (по умолчанию 1.0)"
+            value={config.current_ratio_threshold}
+            onChange={(e) => handleChange('current_ratio_threshold', Number(e.target.value))}
+            disabled={saving}
+            size="small"
+            slotProps={{ htmlInput: { min: 0, max: 100, step: 0.1 } }}
+          />
+          <TextField
+            type="number"
+            label="Порог падения выручки за год (доля от 0 до 1)"
+            helperText="Падение выручки больше этой доли — мягкий флаг (по умолчанию 0.5 = 50%)"
+            value={config.revenue_drop_threshold}
+            onChange={(e) => handleChange('revenue_drop_threshold', Number(e.target.value))}
+            disabled={saving}
+            size="small"
+            slotProps={{ htmlInput: { min: 0, max: 1, step: 0.05 } }}
+          />
+        </Box>
+
+        <Divider sx={{ my: 3 }} />
+
         <Typography variant="subtitle1" gutterBottom>Возраст домена</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField

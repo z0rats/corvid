@@ -3,6 +3,9 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service import (
     blacklist_refresh_scheduler_service,
 )
 from app.features.newsfeed.service.newsfeed_scheduler_service import register_newsfeed_scheduler
+from app.features.ru_business_check.service.registry_dump_scheduler_service import (
+    register_registry_dump_schedulers,
+)
 from app.features.ru_business_check.service.ru_business_check_retention_service import (
     register_ru_business_check_retention_scheduler,
 )
@@ -22,4 +25,5 @@ async def initialize_all_schedulers() -> None:
     await register_maigret_db_scheduler()
     await blacklist_refresh_scheduler_service.register_blacklist_scheduler()
     await register_ru_business_check_retention_scheduler()
+    await register_registry_dump_schedulers()
     start_scheduler()

@@ -270,6 +270,15 @@ def register_services(ioc_lookup_service_module) -> None:
             func=ioc_lookup_service_module.check_urlhaus,
             name="URLhaus",
             supported_ioc_types=_supported_ioc_types("urlhaus"),
+            api_key=ApiKeySpec(setting_name="urlhaus"),
+            type_mapping=TypeMapping(
+                param="ioc_type",
+                values={
+                    IOC_TYPES["URL"]: "url",
+                    IOC_TYPES["DOMAIN"]: "host",
+                    IOC_TYPES["IPV4"]: "host",
+                },
+            ),
         ),
         "urlscanio": ProviderSpec(
             func=ioc_lookup_service_module.check_urlscan,

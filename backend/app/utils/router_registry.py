@@ -22,12 +22,14 @@ from app.core.settings.username_search.routers import (
     social_analyzer_settings_routes,
     username_search_settings_routes,
 )
+from app.features.amass.routers import amass_routes
 from app.features.cvss_calculator.routers import cvss_routes
 from app.features.dork_runner.routers import dork_routes
 from app.features.email_analyzer.routers import email_routes
 from app.features.email_search.routers import email_search_routes
 from app.features.git_recon.routers import git_recon_routes
-from app.features.image_tools.routers import image_routes
+from app.features.image_tools.routers import geolocation_history_routes, image_routes
+from app.features.instagram_search.routers import instagram_scan_routes, instagram_search_routes
 from app.features.ioc_tools.domain_finder.routers import domain_routes
 from app.features.ioc_tools.ioc_defanger.routers import internal_defang_routes
 from app.features.ioc_tools.ioc_extractor.routers import internal_ioc_extractor_routes
@@ -48,6 +50,7 @@ from app.features.newsfeed.routers import (
 )
 from app.features.reddit_search.routers import reddit_search_routes
 from app.features.ru_business_check.routers import ru_business_check_routes
+from app.features.steam_recon.routers import steam_recon_routes
 from app.features.username_search.routers import username_search_routes
 from app.features.youtube.routers import youtube_routes
 
@@ -106,6 +109,7 @@ def get_feature_routers() -> list[APIRouter]:
         domain_routes.router,
         email_routes.router,
         image_routes.router,
+        geolocation_history_routes.router,
         internal_ioc_extractor_routes.router,
         internal_defang_routes.router,
         cvss_routes.router,
@@ -122,6 +126,10 @@ def get_feature_routers() -> list[APIRouter]:
         git_recon_routes.router,
         ru_business_check_routes.router,
         youtube_routes.router,
+        amass_routes.router,
+        steam_recon_routes.router,
+        instagram_search_routes.router,
+        instagram_scan_routes.router,
     ]
 
 

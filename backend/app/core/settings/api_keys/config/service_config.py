@@ -422,11 +422,11 @@ SERVICE_DEFINITIONS = {
         key="urlhaus",
         description=(
             "Free malicious URL repository by abuse.ch for tracking and analyzing "
-            "malicious websites."
+            "malicious websites. Needs a free abuse.ch Auth-Key (the same one ThreatFox uses)."
         ),
         documentation_url="https://urlhaus-api.abuse.ch/",
         supported_ioc_types=["URL", "Domain", "IPv4"],
-        required_keys=[],
+        required_keys=["urlhaus"],
         tier=ServiceTier.FREE,
         category=ServiceCategory.THREAT_INTELLIGENCE,
         icon="urlhaus_logo_small",
@@ -470,6 +470,37 @@ SERVICE_DEFINITIONS = {
         documentation_url="https://developers.google.com/youtube/v3/getting-started",
         supported_ioc_types=["URL"],
         required_keys=["youtube"],
+        tier=ServiceTier.FREE,
+        category=ServiceCategory.SOCIAL_MEDIA,
+        icon="default_icon",
+    ),
+    "instagram_session": ServiceDefinition(
+        name="Instagram Session",
+        key="instagram_session",
+        description=(
+            "Optional imported browser-session cookies (sessionid/csrftoken/ds_user_id) "
+            "unlocking Instagram profile data anonymous lookups can't see. Never a "
+            "password - Instagram ToS forbids automated access, so use a disposable "
+            "account and expect it may get rate-limited or banned."
+        ),
+        documentation_url="https://github.com/instaloader/instaloader#quick-start",
+        supported_ioc_types=["Instagram Profile"],
+        required_keys=["instagram_session"],
+        tier=ServiceTier.FREE,
+        category=ServiceCategory.SOCIAL_MEDIA,
+        icon="default_icon",
+    ),
+    "steam": ServiceDefinition(
+        name="Steam Web API",
+        key="steam",
+        description=(
+            "Required key for Steam Recon: profile, friends list, bans and CS2 stats. "
+            "Free, but the Steam account must not be limited (at least $5 spent). "
+            "Roughly 100k requests/day per key."
+        ),
+        documentation_url="https://steamcommunity.com/dev/apikey",
+        supported_ioc_types=["Steam Profile"],
+        required_keys=["steam"],
         tier=ServiceTier.FREE,
         category=ServiceCategory.SOCIAL_MEDIA,
         icon="default_icon",

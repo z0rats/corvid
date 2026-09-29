@@ -1,12 +1,16 @@
-"""Concrete `Cancellable` adapters (see `run.py`) for the three ways a scan's
+"""Concrete `Cancellable` adapters (see `run.py`) for the ways a scan's
 underlying work can actually be stopped in this codebase: an asyncio task, a
-subprocess, or (for git_recon, which has neither) killing the worker thread's
-own child processes out from under it.
+subprocess, killing the worker thread's own child processes out from under it
+(git_recon, which has neither of the above), or a cooperative flag a worker
+thread polls itself between loop iterations (instagram_search's follower/
+followee/post scan, which has no subprocess or asyncio-cancellation point
+either, but - unlike git_recon - checks in frequently enough for a flag to work).
 """
 
 import asyncio
 import contextlib
 import logging
+import threading
 
 import psutil
 
@@ -99,3 +103,28 @@ class GitCloneCancellable:
                     )
             except psutil.NoSuchProcess:
                 pass
+
+
+class CooperativeCancellable:
+    """A `threading.Event` a worker thread's loop polls itself between items -
+    for scans that iterate a blocking generator (Instaloader's `NodeIterator`)
+    inside `asyncio.to_thread`, one item at a time, with no subprocess or
+    asyncio-cancellation point to hook into (unlike `TaskCancellable`/
+    `ProcessCancellable`) and no child OS process to kill either (unlike
+    `GitCloneCancellable`) - the only way to stop early is for the loop itself
+    to notice and break.
+
+    `cancel()` sets the flag and returns immediately without waiting for the
+    thread to actually finish, same rationale as `GitCloneCancellable`: an
+    HTTP request already in flight for the current item still has to
+    complete either way, so blocking the cancel request on the thread's
+    eventual return has nothing to gain. The caller's own loop notices via
+    `stop_event.is_set()` and reports whatever it collected so far through
+    `ScanCancelled`.
+    """
+
+    def __init__(self) -> None:
+        self.stop_event = threading.Event()
+
+    async def cancel(self) -> None:
+        self.stop_event.set()

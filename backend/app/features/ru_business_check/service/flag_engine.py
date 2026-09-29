@@ -1,19 +1,66 @@
-"""Risk-flag engine: hard/soft flags computable from ЕГРЮЛ + РДЛ + арбитраж +
-банкротство/Федресурс + Прозрачный бизнес + ФедСФМ + РНП alone.
+"""Risk-flag engine: hard/soft flags from whichever sources a scan checked, and one risk
+level (`evaluate`).
 
-Everything else in the full methodology (ФССП debts, movable-property pledges, sanctions,
-blocked accounts, missing financial filings, ...) needs sources that don't exist yet - this
-deliberately does not stub those out as false negatives. Per project decision, `risk_level`
-must never be read as a full-methodology verdict while `pending_sources` is non-empty;
-callers are responsible for surfacing that alongside it.
+Sources that aren't automated (ФССП, movable-property pledges, ...) are never stubbed out as
+false negatives. The verdict can't look clean when a source able to rule out a hard flag
+didn't run - that is `incomplete` (see `REQUIRED_SOURCES`, `docs/adr/0014-*.md`); the other
+unchecked sources are listed in the scan's `pending_sources`.
 """
 
 import datetime
+from collections.abc import Collection
+from dataclasses import dataclass, fields
 from typing import Literal
 
-RiskLevel = Literal["low", "medium", "high"]
+from app.core.settings.ru_business_check.models import ru_business_check_settings_models as defaults
+from app.features.ru_business_check.config.ru_business_check_config import REQUIRED_SOURCES
+
+# "incomplete": no hard flag was found, but a source that could have raised one was not
+# checked (see `REQUIRED_SOURCES`) - the absence of flags means nothing there.
+RiskLevel = Literal["low", "medium", "high", "incomplete"]
 
 _RESOLVED_STATUS_KEYWORDS = ("заверш", "прекращ")
+
+
+@dataclass(frozen=True)
+class Thresholds:
+    """The tunable flag thresholds - field names match the `RuBusinessCheckSettings`
+    columns, defaults match that model's defaults."""
+
+    fresh_registration_threshold_days: int = defaults.FRESH_REGISTRATION_THRESHOLD_DAYS_DEFAULT
+    small_claim_amount_threshold: int = defaults.SMALL_CLAIM_AMOUNT_THRESHOLD_DEFAULT
+    large_claim_amount_threshold: int = defaults.LARGE_CLAIM_AMOUNT_THRESHOLD_DEFAULT
+    multiple_claims_defendant_threshold: int = defaults.MULTIPLE_CLAIMS_DEFENDANT_THRESHOLD_DEFAULT
+    mass_address_threshold: int = defaults.MASS_ADDRESS_THRESHOLD_DEFAULT
+    equity_ratio_threshold: float = defaults.EQUITY_RATIO_THRESHOLD_DEFAULT
+    current_ratio_threshold: float = defaults.CURRENT_RATIO_THRESHOLD_DEFAULT
+    revenue_drop_threshold: float = defaults.REVENUE_DROP_THRESHOLD_DEFAULT
+
+    @classmethod
+    def from_settings(cls, settings_row: object) -> Thresholds:
+        return cls(**{f.name: getattr(settings_row, f.name) for f in fields(cls)})
+
+
+DEFAULT_THRESHOLDS = Thresholds()
+
+
+@dataclass(frozen=True)
+class SourceResults:
+    """One scan's parsed source results. `None` = the source wasn't queried (its flags are
+    skipped, never assumed clean); whether it *completed* is `evaluate`'s
+    `checked_sources`."""
+
+    egrul: dict
+    disqualification: dict
+    arbitration_cases: list[dict] | None = None
+    fedresurs: dict | None = None
+    pb_nalog: dict | None = None
+    fedsfm: dict | None = None
+    rnp_entries: list[dict] | None = None
+    gir_bo: dict | None = None
+    disqualified_dump: dict | None = None
+    cbr_warning: dict | None = None
+    ofac_sdn: dict | None = None
 
 
 def _fresh_registration_flag(
@@ -69,6 +116,112 @@ def _disqualification_flags(disqualification_result: dict) -> list[dict]:
             "severity": "hard",
             "title": "Директор дисквалифицирован",
             "detail": f"Подтверждено совпадение в реестре дисквалифицированных лиц: {names}",
+        }
+    ]
+
+
+def _disqualified_dump_flags(dump_result: dict) -> list[dict]:
+    """Flags from the local ФНС dump (`disqualified_dump_service.lookup_dump`). Unlike the
+    online search's name-only hit, a dump record carries the organization's ИНН, so a record
+    that matches the director's ФИО **and** this company's ИНН and is in force today
+    identifies the person well enough for a hard flag. Any other record carrying the
+    company's ИНН - in force or expired - is a soft "look at this" signal with its dates
+    (the person may be a former officer). Third parties' names stay in the panel, not in the
+    flag text."""
+    if not dump_result.get("checked"):
+        return []
+
+    if dump_result.get("director_confirmed"):
+        # `lookup_dump` lists the confirming records first, so this is one of them.
+        record = (dump_result.get("director_records") or [{}])[0]
+        return [
+            {
+                "code": "disqualified_confirmed",
+                "severity": "hard",
+                "title": "Директор дисквалифицирован",
+                "detail": (
+                    f"В реестре дисквалифицированных лиц (выгрузка ФНС от "
+                    f"{dump_result.get('dump_date')}) есть действующая запись "
+                    f"№{record.get('record_number')} на {record.get('full_name')} — совпали ФИО "
+                    f"и ИНН организации; срок {record.get('start_date')} — {record.get('end_date')}"
+                ),
+            }
+        ]
+
+    company_records = dump_result.get("company_records") or []
+    if not company_records:
+        return []
+    active = sum(1 for r in company_records if r.get("active"))
+    listed = "; ".join(
+        f"запись №{r.get('record_number')}, {r.get('start_date')} — {r.get('end_date')} "
+        f"({'действует' if r.get('active') else 'истекла'})"
+        for r in company_records
+    )
+    return [
+        {
+            "code": "company_disqualified_officer",
+            "severity": "soft",
+            "title": (
+                "У компании есть дисквалифицированное должностное лицо"
+                if active
+                else "У компании были дисквалифицированные должностные лица"
+            ),
+            "detail": (
+                f"В реестре дисквалифицированных лиц записи с ИНН этой организации: {listed}. "
+                "Это могут быть бывшие руководители — проверьте, не занимает ли лицо "
+                "должность сейчас"
+            ),
+        }
+    ]
+
+
+def _cbr_warning_flags(cbr_result: dict) -> list[dict]:
+    """Soft, and worded as the regulator's *statement* - the list gives "signs" (of a
+    pyramid, illegal lending, ...), not a court finding. A "clone" entry (the note says it
+    misuses a legitimate participant's data) means the ИНН owner is the impersonated party,
+    so it raises nothing against them."""
+    if not cbr_result.get("checked"):
+        return []
+    records = [r for r in cbr_result.get("records") or [] if not r.get("is_clone")]
+    if not records:
+        return []
+    signs = "; ".join(sorted({r.get("sign") or "признаки не указаны" for r in records}))
+    since = min((r["listed_at"] for r in records if r.get("listed_at")), default=None)
+    return [
+        {
+            "code": "cbr_warning_list",
+            "severity": "soft",
+            "title": "Банк России включил компанию в список признаков нелегальной деятельности",
+            "detail": (
+                f"Банк России сообщает о признаках: {signs}"
+                + (f"; в списке с {since}" if since else "")
+                + ". Это заявление регулятора, а не решение суда — сверьте карточку на cbr.ru"
+            ),
+        }
+    ]
+
+
+def _ofac_sdn_flags(ofac_result: dict) -> list[dict]:
+    """Hard: an exact-ИНН match on a published sanctions list is a fact about that list
+    (worded as such - it is a US designation, not a Russian-law prohibition). Only a match is
+    reported; the list's coverage of ИНН is partial, so *no* match says nothing."""
+    if not ofac_result.get("checked"):
+        return []
+    records = ofac_result.get("records") or []
+    if not records:
+        return []
+    listed = "; ".join(
+        f"{r.get('name')} ({r.get('programs') or 'программа не указана'})" for r in records
+    )
+    return [
+        {
+            "code": "ofac_sdn_listed",
+            "severity": "hard",
+            "title": "Включена в санкционный список OFAC SDN (США)",
+            "detail": (
+                f"Точное совпадение по ИНН с записью списка OFAC SDN: {listed}. Это статус в "
+                "американском перечне (со стороны США), не запрет по российскому праву"
+            ),
         }
     ]
 
@@ -187,22 +340,67 @@ def _arbitration_flags(
     return flags
 
 
+_FEDRESURS_SIGNAL_TITLES = {
+    "creditor_bankruptcy_intent": "Кредитор намерен обратиться в суд с заявлением о банкротстве",
+    "debtor_bankruptcy_intent": "Компания намерена обратиться в суд с заявлением о банкротстве",
+    "liquidation_decision": "Опубликовано решение о ликвидации",
+    "unreliable_information": "Сообщение о недостоверности сведений в ЕГРЮЛ",
+    "reorganization": "Сообщение о реорганизации (за последний год)",
+}
+
+
 def _fedresurs_flags(fedresurs_result: dict) -> list[dict]:
     """Active bankruptcy is a hard flag - the guide's methodology puts it in the same
     tier as confirmed disqualification, not the softer arbitration treatment. A resolved/
-    absent bankruptcy record (`is_active_bankruptcy: False`) produces no flag."""
-    if not fedresurs_result.get("is_active_bankruptcy"):
-        return []
+    absent bankruptcy record (`is_active_bankruptcy: False`) produces no flag.
 
-    return [
-        {
-            "code": "active_bankruptcy",
-            "severity": "hard",
-            "title": "Активное дело о банкротстве",
-            "detail": fedresurs_result.get("status_text")
-            or "Найдено активное дело о банкротстве на Федресурсе",
-        }
-    ]
+    Everything softer is a *signal*: an unrecognized `status` text (never silently read as
+    clean) and the publication-message signals `fedresurs_service.parse_publications`
+    already role-checked (a message only becomes a signal when the searched company is its
+    subject, not merely a participant of someone else's)."""
+    flags: list[dict] = []
+
+    if fedresurs_result.get("is_active_bankruptcy"):
+        flags.append(
+            {
+                "code": "active_bankruptcy",
+                "severity": "hard",
+                "title": "Активное дело о банкротстве",
+                "detail": fedresurs_result.get("status_text")
+                or "Найдено активное дело о банкротстве на Федресурсе",
+            }
+        )
+    elif fedresurs_result.get("found") and fedresurs_result.get("status_recognized") is False:
+        flags.append(
+            {
+                "code": "fedresurs_status_unrecognized",
+                "severity": "soft",
+                "title": "Нераспознанный статус на Федресурсе",
+                "detail": (
+                    f"Федресурс вернул статус «{fedresurs_result.get('status_text') or '—'}», "
+                    "которого нет среди известных — требуется ручная проверка карточки"
+                ),
+            }
+        )
+
+    by_code: dict[str, list[dict]] = {}
+    for signal in fedresurs_result.get("signals") or []:
+        by_code.setdefault(signal["code"], []).append(signal)
+    for code, title in _FEDRESURS_SIGNAL_TITLES.items():
+        signals = by_code.get(code)
+        if not signals:
+            continue
+        dates = ", ".join(sorted({s["date"] for s in signals}, reverse=True)[:3])
+        flags.append(
+            {
+                "code": code,
+                "severity": "soft",
+                "title": title,
+                "detail": f"Сообщений на Федресурсе: {len(signals)} (последние даты: {dates})",
+            }
+        )
+
+    return flags
 
 
 def _pb_nalog_flags(pb_nalog_result: dict, *, mass_address_threshold: int) -> list[dict]:
@@ -236,69 +434,170 @@ def _pb_nalog_flags(pb_nalog_result: dict, *, mass_address_threshold: int) -> li
     return flags
 
 
-def _compute_risk_level(flags: list[dict]) -> RiskLevel:
-    if any(f["severity"] == "hard" for f in flags):
+def _gir_bo_flags(
+    gir_bo_result: dict,
+    *,
+    equity_ratio_threshold: float,
+    current_ratio_threshold: float,
+    revenue_drop_threshold: float,
+) -> list[dict]:
+    """Soft flags from the latest filed statements (`years`, newest first). Ratios are
+    scale-free, so ГИР БО's thousand-rubles unit doesn't matter. A ratio is only computed
+    when both its lines are present and the denominator is positive - a missing line is
+    "not assessed", never a pass or a fail. The revenue comparison needs the two
+    consecutive years (a gap in filings isn't a year-over-year drop)."""
+    years = gir_bo_result.get("years") or []
+    if not (gir_bo_result.get("checked") and years):
+        return []
+
+    latest = years[0]
+    year = latest.get("year")
+    flags: list[dict] = []
+
+    equity, assets = latest.get("equity"), latest.get("assets")
+    if equity is not None and assets is not None and assets > 0:
+        ratio = equity / assets
+        if ratio < equity_ratio_threshold:
+            flags.append(
+                {
+                    "code": "low_equity_ratio",
+                    "severity": "soft",
+                    "title": "Низкая доля собственного капитала",
+                    "detail": (
+                        f"Капитал и резервы / итог баланса = {ratio:.2f} "
+                        f"(порог {equity_ratio_threshold:g}) по отчётности за {year} г."
+                        + (" Капитал отрицательный." if equity < 0 else "")
+                    ),
+                }
+            )
+
+    current_assets, current_liabilities = (
+        latest.get("current_assets"),
+        latest.get("current_liabilities"),
+    )
+    if current_assets is not None and current_liabilities is not None and current_liabilities > 0:
+        ratio = current_assets / current_liabilities
+        if ratio < current_ratio_threshold:
+            flags.append(
+                {
+                    "code": "low_current_liquidity",
+                    "severity": "soft",
+                    "title": "Низкая текущая ликвидность",
+                    "detail": (
+                        f"Оборотные активы / краткосрочные обязательства = {ratio:.2f} "
+                        f"(порог {current_ratio_threshold:g}) по отчётности за {year} г."
+                    ),
+                }
+            )
+
+    previous = years[1] if len(years) > 1 else None
+    if previous is not None and previous.get("year") == (year or 0) - 1:
+        cur_revenue, prev_revenue = latest.get("revenue"), previous.get("revenue")
+        if cur_revenue is not None and prev_revenue is not None and prev_revenue > 0:
+            drop = (prev_revenue - cur_revenue) / prev_revenue
+            if drop > revenue_drop_threshold:
+                flags.append(
+                    {
+                        "code": "revenue_drop",
+                        "severity": "soft",
+                        "title": "Резкое падение выручки",
+                        "detail": (
+                            f"Выручка упала на {drop:.0%} за {year} г. по сравнению с "
+                            f"{previous['year']} г. (порог {revenue_drop_threshold:.0%})"
+                        ),
+                    }
+                )
+
+    return flags
+
+
+def _compute_risk_level(
+    flags_by_source: dict[str, list[dict]], checked_sources: Collection[str] | None
+) -> RiskLevel:
+    """`checked_sources=None` means the caller asserts every required source ran (only
+    unit tests of a single source's flags do this) - the scan (`_scan`) always passes the
+    real list, so a failed required source can never yield a clean-looking verdict."""
+    all_flags = [f for source_flags in flags_by_source.values() for f in source_flags]
+    if any(f["severity"] == "hard" for f in all_flags):
         return "high"
-    soft_count = sum(1 for f in flags if f["severity"] == "soft")
-    if soft_count >= 3:
+
+    # Each source counts at most once toward the "3+ soft flags -> high" escalation: one
+    # source with several related signals (or a new source emitting many) must not
+    # single-handedly reach "high" - it takes independent sources agreeing.
+    soft_sources = sum(
+        1
+        for source_flags in flags_by_source.values()
+        if any(f["severity"] == "soft" for f in source_flags)
+    )
+    if soft_sources >= 3:
         return "high"
-    if soft_count >= 1:
+
+    if checked_sources is not None and not REQUIRED_SOURCES.issubset(checked_sources):
+        return "incomplete"
+
+    if soft_sources >= 1:
         return "medium"
     return "low"
 
 
 def evaluate(
-    egrul_data: dict,
-    disqualification_result: dict,
-    arbitration_cases: list[dict] | None = None,
-    fedresurs_result: dict | None = None,
-    pb_nalog_result: dict | None = None,
-    fedsfm_result: dict | None = None,
-    rnp_entries: list[dict] | None = None,
-    *,
-    fresh_registration_threshold_days: int,
-    small_claim_amount_threshold: int = 100_000,
-    large_claim_amount_threshold: int = 1_000_000,
-    multiple_claims_defendant_threshold: int = 3,
-    mass_address_threshold: int = 10,
+    results: SourceResults,
+    thresholds: Thresholds = DEFAULT_THRESHOLDS,
+    checked_sources: Collection[str] | None = None,
 ) -> tuple[list[dict], RiskLevel]:
-    """Pure function: combine ЕГРЮЛ + РДЛ + арбитраж + Федресурс + Прозрачный бизнес +
-    ФедСФМ + РНП results into a flag list and a risk level. `risk_level` reflects only
-    what the passed-in sources can see - a caller that doesn't have a given source's data
-    yet simply omits that parameter (defaults to none checked, not a false "clean"
-    result)."""
-    flags: list[dict] = []
+    """Pure function: flags from every queried source plus one risk level. `checked_sources`
+    (the source keys that actually completed) keeps `low`/`medium` from being reported when
+    a `REQUIRED_SOURCES` member is missing - see `_compute_risk_level`."""
+    flags_by_source: dict[str, list[dict]] = {}
 
     fresh = _fresh_registration_flag(
-        egrul_data, fresh_registration_threshold_days=fresh_registration_threshold_days
+        results.egrul,
+        fresh_registration_threshold_days=thresholds.fresh_registration_threshold_days,
     )
     if fresh:
-        flags.append(fresh)
+        flags_by_source["egrul"] = [fresh]
 
-    flags.extend(_disqualification_flags(disqualification_result))
+    online_flags = _disqualification_flags(results.disqualification)
+    if results.disqualified_dump is not None:
+        dump_flags = _disqualified_dump_flags(results.disqualified_dump)
+        if any(f["code"] == "disqualified_confirmed" for f in dump_flags):
+            # The dump's ФИО+ИНН match supersedes the online search's name-only hit.
+            online_flags = [
+                f
+                for f in online_flags
+                if f["code"] not in ("disqualified_possible_match", "disqualified_confirmed")
+            ]
+        flags_by_source["disqualified_dump"] = dump_flags
+    flags_by_source["disqualified_persons"] = online_flags
 
-    if arbitration_cases is not None:
-        flags.extend(
-            _arbitration_flags(
-                arbitration_cases,
-                small_claim_amount_threshold=small_claim_amount_threshold,
-                large_claim_amount_threshold=large_claim_amount_threshold,
-                multiple_claims_defendant_threshold=multiple_claims_defendant_threshold,
-            )
+    if results.arbitration_cases is not None:
+        flags_by_source["arbitration"] = _arbitration_flags(
+            results.arbitration_cases,
+            small_claim_amount_threshold=thresholds.small_claim_amount_threshold,
+            large_claim_amount_threshold=thresholds.large_claim_amount_threshold,
+            multiple_claims_defendant_threshold=thresholds.multiple_claims_defendant_threshold,
+        )
+    if results.fedresurs is not None:
+        flags_by_source["fedresurs"] = _fedresurs_flags(results.fedresurs)
+    if results.pb_nalog is not None:
+        flags_by_source["pb_nalog"] = _pb_nalog_flags(
+            results.pb_nalog, mass_address_threshold=thresholds.mass_address_threshold
+        )
+    if results.fedsfm is not None:
+        flags_by_source["fedsfm"] = _fedsfm_flags(results.fedsfm)
+    if results.rnp_entries is not None:
+        flags_by_source["zakupki_rnp"] = _zakupki_rnp_flags(results.rnp_entries)
+    if results.ofac_sdn is not None:
+        flags_by_source["ofac_sdn"] = _ofac_sdn_flags(results.ofac_sdn)
+    if results.cbr_warning is not None:
+        flags_by_source["cbr_warning"] = _cbr_warning_flags(results.cbr_warning)
+    if results.gir_bo is not None:
+        flags_by_source["gir_bo"] = _gir_bo_flags(
+            results.gir_bo,
+            equity_ratio_threshold=thresholds.equity_ratio_threshold,
+            current_ratio_threshold=thresholds.current_ratio_threshold,
+            revenue_drop_threshold=thresholds.revenue_drop_threshold,
         )
 
-    if fedresurs_result is not None:
-        flags.extend(_fedresurs_flags(fedresurs_result))
-
-    if pb_nalog_result is not None:
-        flags.extend(
-            _pb_nalog_flags(pb_nalog_result, mass_address_threshold=mass_address_threshold)
-        )
-
-    if fedsfm_result is not None:
-        flags.extend(_fedsfm_flags(fedsfm_result))
-
-    if rnp_entries is not None:
-        flags.extend(_zakupki_rnp_flags(rnp_entries))
-
-    return flags, _compute_risk_level(flags)
+    flags = [f for source_flags in flags_by_source.values() for f in source_flags]
+    return flags, _compute_risk_level(flags_by_source, checked_sources)

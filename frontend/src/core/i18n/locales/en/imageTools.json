@@ -41,7 +41,18 @@
     "candidates": "Candidate locations",
     "clues": "Visual clues",
     "caveats": "Caveats",
-    "noKeyHint": "Configure an LLM API key in Settings to enable AI location analysis."
+    "noKeyHint": "Configure an LLM API key in Settings to enable AI location analysis.",
+    "historyButton": "History",
+    "hideHistoryButton": "Hide history",
+    "history": {
+      "empty": "No past analyses yet.",
+      "headers": {
+        "filename": "File",
+        "topCandidate": "Top candidate",
+        "searched": "Analyzed",
+        "actions": "Actions"
+      }
+    }
   },
   "fileMetadata": {
     "fileProperties": "File properties",

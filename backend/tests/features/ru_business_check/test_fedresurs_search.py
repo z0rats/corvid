@@ -46,6 +46,21 @@ class TestBlockedDetection:
             _run(fetch_fedresurs_status("7707083893", is_individual=False))
 
 
+EMPTY_PUBLICATIONS = {"pageData": [], "found": 0}
+
+
+def _routed(search_payload, publications_payload=EMPTY_PUBLICATIONS):
+    """One handler for both requests a scan makes: the search, then (legal entities only)
+    the found company's publications."""
+
+    def handler(request):
+        if request.url.path.endswith("/publications"):
+            return httpx.Response(200, json=publications_payload)
+        return httpx.Response(200, json=search_payload)
+
+    return handler
+
+
 class TestSuccessPath:
     def test_returns_clean_result_and_raw_payload_when_status_is_not_bankrupt(
         self, patch_httpx_transport
@@ -61,17 +76,20 @@ class TestSuccessPath:
             ],
             "found": 1,
         }
-        patch_httpx_transport(lambda request: httpx.Response(200, json=payload))
+        patch_httpx_transport(_routed(payload))
 
         result, raw = _run(fetch_fedresurs_status("7707083893", is_individual=False))
 
-        assert result == {
-            "checked": True,
-            "found": True,
-            "status_text": "Действующее",
-            "is_active_bankruptcy": False,
-            "profile_url": "https://fedresurs.ru/company/9348548a-30a3-4344-8cf0-fb1f45c54dfb",
-        }
+        assert result["checked"] is True
+        assert result["found"] is True
+        assert result["status_text"] == "Действующее"
+        assert result["is_active_bankruptcy"] is False
+        assert result["status_recognized"] is True
+        assert result["profile_url"] == (
+            "https://fedresurs.ru/company/9348548a-30a3-4344-8cf0-fb1f45c54dfb"
+        )
+        assert result["publications_checked"] is True
+        assert result["signals"] == []
         assert "СБЕРБАНК" in raw
 
     def test_returns_active_bankruptcy_flag_when_status_indicates_it(self, patch_httpx_transport):
@@ -88,7 +106,7 @@ class TestSuccessPath:
             ],
             "found": 1,
         }
-        patch_httpx_transport(lambda request: httpx.Response(200, json=payload))
+        patch_httpx_transport(_routed(payload))
 
         result, _ = _run(fetch_fedresurs_status("7731103741", is_individual=False))
 
@@ -101,13 +119,11 @@ class TestSuccessPath:
 
         result, _ = _run(fetch_fedresurs_status("7707083893", is_individual=False))
 
-        assert result == {
-            "checked": True,
-            "found": False,
-            "status_text": None,
-            "is_active_bankruptcy": False,
-            "profile_url": None,
-        }
+        assert result["checked"] is True
+        assert result["found"] is False
+        assert result["status_text"] is None
+        assert result["is_active_bankruptcy"] is False
+        assert result["profile_url"] is None
 
     def test_uses_the_persons_endpoint_for_individuals(self, patch_httpx_transport):
         requested_paths = []
@@ -120,6 +136,7 @@ class TestSuccessPath:
 
         _run(fetch_fedresurs_status("771234567890", is_individual=True))
 
+        # Only the persons search - individuals never trigger a publications request.
         assert requested_paths == ["/backend/persons"]
 
     def test_empty_inn_short_circuits_without_a_network_call(self, patch_httpx_transport):

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import ResultsView from './ResultsView';
 
@@ -22,13 +22,13 @@ describe('ResultsView', () => {
     }} />);
 
     expect(screen.getByText(/Низкий/)).toBeInTheDocument();
-    expect(screen.getByText(/Ещё не подключены/)).toBeInTheDocument();
+    expect(screen.getByText(/Не проверены \(сбой источника или ещё не подключены\)/)).toBeInTheDocument();
   });
 
   it('does not show the pending-sources notice once nothing is pending', () => {
     render(<ResultsView result={{ risk_level: 'low', checked_sources: ['egrul'], pending_sources: [], flags: [] }} />);
 
-    expect(screen.queryByText(/Ещё не подключены/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Не проверены \(сбой источника или ещё не подключены\)/)).not.toBeInTheDocument();
   });
 
   it('flags a disqualification match requiring manual review as a warning, not a confirmed fact', () => {
@@ -410,6 +410,184 @@ describe('ResultsView', () => {
       candidates: [{ name: 'ООО Ромашка', inn: '7712345678' }],
     }} />);
 
-    expect(screen.queryByText(/Ещё не подключены/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Не проверены \(сбой источника или ещё не подключены\)/)).not.toBeInTheDocument();
+  });
+  it('shows an incomplete verdict as a warning naming the unchecked required sources, never as low', () => {
+    render(<ResultsView result={{
+      risk_level: 'incomplete',
+      checked_sources: ['egrul', 'fedresurs'],
+      pending_sources: ['zakupki_rnp', 'fssp'],
+      missing_required_sources: ['zakupki_rnp'],
+      flags: [],
+    }} />);
+
+    expect(screen.getByText('Проверка неполная')).toBeInTheDocument();
+    expect(screen.queryByText('Низкий')).not.toBeInTheDocument();
+    expect(screen.getByText(/Вердикт не выдан/)).toHaveTextContent(/Реестр недобросовестных поставщиков/);
+  });
+
+  it('warns about an unrecognized Fedresurs status instead of reading it as clean', () => {
+    render(<ResultsView result={{
+      risk_level: 'medium',
+      checked_sources: ['egrul', 'fedresurs'],
+      pending_sources: [],
+      flags: [],
+      fedresurs_data: { checked: true, found: true, is_active_bankruptcy: false, status_recognized: false, status_text: 'Ликвидировано' },
+    }} />);
+
+    expect(screen.getByText(/не входит в известные/)).toBeInTheDocument();
+    expect(screen.queryByText('Признаков активного банкротства не найдено')).not.toBeInTheDocument();
+  });
+
+  it('lists Fedresurs messages, marking those counted as signals, and shows the truncation note', () => {
+    render(<ResultsView result={{
+      risk_level: 'medium',
+      checked_sources: ['egrul', 'fedresurs'],
+      pending_sources: [],
+      flags: [],
+      fedresurs_data: {
+        checked: true, found: true, is_active_bankruptcy: false, status_recognized: true, status_text: 'Действующее',
+        publications_checked: true, publications_truncated: true,
+        publications_note: 'Показана первая страница публикаций (15 из 1001)',
+        messages: [
+          { date: '2026-09-20', type: 'Реорганизация юридического лица', number: '1', signal: 'reorganization', url: 'https://fedresurs.ru/sfactmessages/x' },
+          { date: '2026-09-01', type: 'Стоимость чистых активов', number: '2', signal: null, url: 'https://fedresurs.ru/sfactmessages/y' },
+        ],
+      },
+    }} />);
+
+    expect(screen.getByText(/15 из 1001/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Реорганизация юридического лица' })).toHaveAttribute('href', 'https://fedresurs.ru/sfactmessages/x');
+    expect(screen.getAllByText(/учтено как признак/)).toHaveLength(1);
+  });
+  it('renders ГИР БО statements as reported and explains an organization that is absent', () => {
+    const { rerender } = render(<ResultsView result={{
+      risk_level: 'low',
+      resolved_inn: '5036045205',
+      checked_sources: ['egrul', 'gir_bo'],
+      pending_sources: [],
+      flags: [],
+      extra_data: { gir_bo: {
+        checked: true, found: true, has_reports: true, unit: 'тыс. руб.', note: null,
+        years: [{ year: 2025, revenue: 396350822, net_profit: 4137844, assets: 242547340, equity: 79368565 }],
+      } },
+    }} />);
+
+    expect(screen.getByText('Бухгалтерская отчётность (ГИР БО)')).toBeInTheDocument();
+    expect(screen.getByText(/Суммы в тыс\. руб\./)).toBeInTheDocument();
+    expect(screen.getByText('2025')).toBeInTheDocument();
+
+    rerender(<ResultsView result={{
+      risk_level: 'low',
+      checked_sources: ['egrul', 'gir_bo'],
+      pending_sources: [],
+      flags: [],
+      extra_data: { gir_bo: { checked: true, found: false, years: [], note: 'Организации нет в ГИР БО (банк, страховщик)' } },
+    }} />);
+    expect(screen.getByText(/банк, страховщик/)).toBeInTheDocument();
+  });
+  it('shows the capture-time SHA-256 of a source payload next to its raw data', () => {
+    render(<ResultsView result={{
+      risk_level: 'low',
+      checked_sources: ['egrul', 'fedresurs'],
+      pending_sources: [],
+      flags: [],
+      fedresurs_data: { checked: true, found: false },
+      fedresurs_raw: '{"search": {}}',
+      raw_sha256: { fedresurs: 'abc123def456' },
+    }} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Показать сырые данные' }));
+    expect(screen.getByText(/SHA-256 при получении: abc123def456/)).toBeInTheDocument();
+  });
+  it('shows a confirmed dump match as an error and a namesake of another company only as info', () => {
+    const record = { record_number: '1', full_name: 'ИВАНОВ ИВАН ИВАНОВИЧ', start_date: '2025-01-01', end_date: '2027-01-01', active: true };
+    const { rerender } = render(<ResultsView result={{
+      risk_level: 'high', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { disqualified_dump: {
+        checked: true, dump_date: '2026-09-20', director_confirmed: true,
+        director_records: [{ ...record, same_company: true }], company_records: [{ ...record, same_company: true }],
+      } },
+    }} />);
+    expect(screen.getByText(/Директор дисквалифицирован: действующая запись совпала и по ФИО, и по ИНН/)).toBeInTheDocument();
+
+    rerender(<ResultsView result={{
+      risk_level: 'medium', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { disqualified_dump: {
+        checked: true, dump_date: '2026-09-20', director_confirmed: false,
+        director_records: [{ ...record, same_company: false }], company_records: [],
+      } },
+    }} />);
+    expect(screen.queryByText(/Директор дисквалифицирован: действующая/)).not.toBeInTheDocument();
+    expect(screen.getByText(/вероятно, тёзка/)).toBeInTheDocument();
+  });
+  it('words a listed ЦБ entry as the regulator\'s statement and never accuses the owner of a clone entry', () => {
+    const { rerender } = render(<ResultsView result={{
+      risk_level: 'medium', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { cbr_warning: { checked: true, as_of: '2026-09-28', records: [
+        { cbr_id: 1, name: 'ООО "ПИРАМИДА"', sign: 'Признаки нелегального кредитора', listed_at: '2025-01-01', closed: false, is_clone: false },
+      ] } },
+    }} />);
+    expect(screen.getByText(/ЦБ сообщает о признаках: Признаки нелегального кредитора, в списке с 2025-01-01/)).toBeInTheDocument();
+
+    rerender(<ResultsView result={{
+      risk_level: 'low', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { cbr_warning: { checked: true, as_of: '2026-09-28', records: [
+        { cbr_id: 2, name: 'ООО "КЛОН"', sign: 'x', listed_at: '2025-01-01', closed: false, is_clone: true },
+      ] } },
+    }} />);
+    expect(screen.queryByText(/ЦБ сообщает о признаках/)).not.toBeInTheDocument();
+    expect(screen.getByText(/против самой компании это не сигнал/)).toBeInTheDocument();
+  });
+
+  it('says an empty ЦБ match is not proof of absence from the list', () => {
+    render(<ResultsView result={{
+      risk_level: 'low', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { cbr_warning: { checked: true, as_of: '2026-09-28', records: [] } },
+    }} />);
+    expect(screen.getByText(/Это не значит, что компании нет в списке/)).toBeInTheDocument();
+  });
+  it('shows an OFAC SDN match as an error worded as a US list status, and always warns that no match is not proof', () => {
+    const { rerender } = render(<ResultsView result={{
+      risk_level: 'high', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { ofac_sdn: { checked: true, as_of: '2026-09-28', records: [
+        { ent_num: 1, name: 'OOO TRANSOIL', kind: 'entity', programs: 'RUSSIA-EO14024' },
+      ] } },
+    }} />);
+    expect(screen.getByText(/В списке OFAC SDN: OOO TRANSOIL/)).toHaveTextContent(/не запрет по российскому праву/);
+
+    rerender(<ResultsView result={{
+      risk_level: 'low', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { ofac_sdn: { checked: true, as_of: '2026-09-28', records: [] } },
+    }} />);
+    expect(screen.getByText('Совпадений по ИНН нет.')).toBeInTheDocument();
+    expect(screen.getByText(/не значит «нет санкций»/)).toBeInTheDocument();
+  });
+  it('shows the ЦБ list as not applicable for an individual entrepreneur instead of an empty match', () => {
+    render(<ResultsView result={{
+      risk_level: 'low', checked_sources: ['egrul', 'cbr_warning'], pending_sources: [], flags: [],
+      extra_data: { cbr_warning: {
+        checked: true, as_of: null, records: [],
+        not_applicable: 'Список ЦБ содержит ИНН только юридических лиц — для ИП сверка не применяется',
+      } },
+    }} />);
+    expect(screen.getByText(/для ИП сверка не применяется/)).toBeInTheDocument();
+    expect(screen.queryByText(/Записей с этим ИНН нет/)).not.toBeInTheDocument();
+  });
+
+  it('lists a not-applicable source apart from the checked and pending ones', () => {
+    render(<ResultsView result={{
+      risk_level: 'low', checked_sources: ['egrul'], pending_sources: ['fssp'], flags: [],
+      extra_data: { cbr_warning: { checked: true, records: [], not_applicable: 'для ИП не применяется' } },
+    }} />);
+    expect(screen.getByText(/Не применимо к этому субъекту: Список ЦБ/)).toBeInTheDocument();
+  });
+
+  it('warns that a local list copy is outdated without hard-coding the threshold', () => {
+    render(<ResultsView result={{
+      risk_level: 'low', checked_sources: ['egrul'], pending_sources: [], flags: [],
+      extra_data: { ofac_sdn: { checked: true, as_of: '2026-09-01', outdated: true, records: [] } },
+    }} />);
+    expect(screen.getByText(/Локальная копия устарела/)).toBeInTheDocument();
   });
 });

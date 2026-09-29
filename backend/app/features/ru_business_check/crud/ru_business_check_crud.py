@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.scans.crud import ScanColumns
@@ -51,7 +51,8 @@ async def find_recent_completed_search_by_query(
     force-refreshed). Matches on the raw `query` string rather than a resolved ИНН,
     since resolving it requires the very ЕГРЮЛ call the cache exists to avoid - querying
     once by name and again by ИНН for the same entity is a known miss, acceptable for
-    Stage 1's simplicity."""
+    Stage 1's simplicity. An `incomplete` scan (a required source failed) is never served
+    from cache - a transient outage would otherwise stick for the whole TTL."""
     cutoff = datetime.datetime.now(datetime.UTC) - max_age
     result = await db.execute(
         select(RuBusinessCheckSearch)
@@ -59,6 +60,10 @@ async def find_recent_completed_search_by_query(
             RuBusinessCheckSearch.query == query,
             RuBusinessCheckSearch.status == "completed",
             RuBusinessCheckSearch.searched_at >= cutoff,
+            or_(
+                RuBusinessCheckSearch.risk_level.is_(None),
+                RuBusinessCheckSearch.risk_level != "incomplete",
+            ),
         )
         .order_by(RuBusinessCheckSearch.searched_at.desc())
         .limit(1)

@@ -38,6 +38,8 @@ import logging
 
 import httpx
 
+from app.features.ru_business_check.service.source_contract import require_list_field
+
 logger = logging.getLogger(__name__)
 
 FEDSFM_SEARCH_URL = "https://fedsfm.ru/TerroristSearch"
@@ -89,8 +91,13 @@ async def _search(full_name: str) -> dict:
 def _parse_matches(data: dict) -> list[dict]:
     """Pure function: extract match rows from the search response, kept separate from
     the network code above so it's independently unit-testable."""
+    # `data: []` is the live "no matches" answer (confirmed 2026-09-28); a missing/non-list
+    # `data` is drift and must not read as "no matches".
+    rows = require_list_field(data, "data", error=FedsfmError, label="ФедСФМ")
     matches: list[dict] = []
-    for row in data.get("data") or []:
+    for row in rows:
+        if not isinstance(row, dict):
+            raise FedsfmError("ФедСФМ: схема ответа изменилась — запись перечня не объект")
         full_name = row.get("FullName")
         if not full_name:
             continue

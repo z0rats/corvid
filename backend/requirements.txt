@@ -246,6 +246,8 @@ idna==3.18
     #   yarl
 iniconfig==2.3.0
     # via pytest
+instaloader==4.15.3
+    # via -r requirements.in
 ipython==9.15.0
     # via pyvis
 ipython-pygments-lexers==1.1.1
@@ -512,6 +514,7 @@ requests==2.34.2
     #   galeodes
     #   google-auth
     #   google-genai
+    #   instaloader
     #   maigret
     #   mitreattack-python
     #   newspaper4k

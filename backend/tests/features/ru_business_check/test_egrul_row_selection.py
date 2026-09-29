@@ -13,19 +13,30 @@ from app.features.ru_business_check.service.egrul_service import (
 )
 
 
+def _row(name):
+    # The live search-result row's contract fields (`t` token, `i` ИНН, `o` ОГРН, `n` name).
+    return {"t": "row-token", "i": "7712345678", "o": "1234567890123", "n": name}
+
+
 class TestSelectRow:
     def test_no_rows_raises_a_clean_not_found_error(self):
         with pytest.raises(EgrulError, match="Ничего не найдено"):
             _select_row({"rows": []})
-        with pytest.raises(EgrulError, match="Ничего не найдено"):
+
+    def test_a_missing_rows_list_is_schema_drift_not_not_found(self):
+        with pytest.raises(EgrulError, match="схема ответа изменилась"):
             _select_row({})
 
+    def test_a_row_missing_a_contract_field_is_schema_drift(self):
+        with pytest.raises(EgrulError, match="нет поля «i»"):
+            _select_row({"rows": [{"t": "row-token", "n": "ООО Ромашка", "o": "1"}]})
+
     def test_single_row_is_returned_directly(self):
-        row = {"t": "row-token", "n": "ООО Ромашка"}
+        row = _row("ООО Ромашка")
         assert _select_row({"rows": [row]}) is row
 
     def test_multiple_rows_raise_ambiguous_match_with_one_candidate_per_row(self):
-        rows = [{"n": "ООО Ромашка №1"}, {"n": "ООО Ромашка №2"}]
+        rows = [_row("ООО Ромашка №1"), _row("ООО Ромашка №2")]
         with pytest.raises(EgrulAmbiguousMatch) as exc_info:
             _select_row({"rows": rows})
 
@@ -75,3 +86,22 @@ class TestRowToCandidate:
             "address": None,
             "status": None,
         }
+
+
+def test_a_poll_answer_that_is_not_an_object_is_schema_drift(patch_httpx_transport):
+    import asyncio
+
+    import httpx
+
+    from app.features.ru_business_check.service.egrul_service import _poll_json
+
+    patch_httpx_transport(lambda request: httpx.Response(200, json=["not", "an", "object"]))
+
+    async def go():
+        async with httpx.AsyncClient() as client:
+            await _poll_json(
+                client, "https://egrul.nalog.ru/x", interval=0, max_attempts=1, ready=bool
+            )
+
+    with pytest.raises(EgrulError, match="схема ответа изменилась"):
+        asyncio.run(go())

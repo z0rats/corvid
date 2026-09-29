@@ -67,6 +67,12 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "features/youtube/service/youtube_oembed_service.py",
     "features/youtube/service/youtube_page_service.py",
     "features/youtube/service/youtube_api_service.py",
+    # Steam Recon: fixed api.steampowered.com / steamcommunity.com hosts; only a validated
+    # SteamID64/vanity value (and the user's own Steam Web API key) is ever user-derived,
+    # never the host - a user-supplied profile URL is parsed for its ID, not fetched
+    "features/steam_recon/service/steam_api_client.py",
+    "features/steam_recon/service/steam_locations_service.py",
+    "features/steam_recon/service/steam_comments_service.py",
     # RU Business Check: fixed egrul.nalog.ru / service.nalog.ru / kad.arbitr.ru hosts
     # (official registry/court-case services); only the ИНН/name/ФИО query value is
     # user-supplied, never the host
@@ -78,6 +84,15 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "features/ru_business_check/service/fedsfm_service.py",
     # zakupki.gov.ru РНП: fixed host; only the ИНН is user-supplied, never the host
     "features/ru_business_check/service/zakupki_rnp_service.py",
+    # bo.nalog.gov.ru ГИР БО: fixed host; only the ИНН is user-supplied, never the host
+    "features/ru_business_check/service/gir_bo_service.py",
+    # rmsp.nalog.ru МСП register: fixed host; only the ИНН is user-supplied, never the host
+    "features/ru_business_check/service/msp_service.py",
+    # Registry dump downloads (ФНС disqualified dump, ЦБ warning list, OFAC SDN) - the single
+    # `dump_client()`: each caller passes a fixed URL and an allowed prefix that the URL -
+    # and, for OFAC, every redirect hop - is checked against; nothing user-supplied reaches
+    # the request
+    "features/ru_business_check/service/registry_dump_common.py",
     # Telegram Bot API notification delivery + inbound bot command polling: fixed
     # api.telegram.org host; only the user's own bot token (path segment) and
     # chat_id/text (body) are user-supplied

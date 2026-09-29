@@ -231,6 +231,19 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `timestamp` | datetime | no | server: now() | — | When the alert was raised |
 | `timestamp_read` | datetime | yes | — | — | When the alert was marked as read, if it has been |
 
+### `amass_searches`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `domain` | string(255) | no | — | — | Domain that was scanned |
+| `brute_force` | boolean | no | False | — | Whether wordlist brute-forcing was enabled for this scan |
+| `status` | string(20) | no | 'completed' | — | running, completed, cancelled, or failed |
+| `error` | text | yes | — | — | Error detail if status is failed |
+| `hosts_found` | int | no | 0 | — | Distinct hosts found for this domain at scan completion |
+| `searched_at` | datetime | no | server: now() | — | When the search ran |
+| `result` | json | yes | — | — | Full {'hosts': [{'hostname', 'ip'}, ...]} result - amass's engine accumulates findings for a domain across every scan ever run against it (see docs/architecture/amass.md), so this reflects everything currently known at the time this scan completed, not only what changed during this specific run |
+
 ### `apikeys`
 
 | Column | Type | Nullable | Default | Key | Comment |
@@ -311,6 +324,37 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `persons_found` | int | no | 0 | — | Distinct identities correlated |
 | `searched_at` | datetime | no | server: now() | — | When the search ran |
 | `result` | json | yes | — | — | Full gitcolombo result blob - no normalized result table, see database-schema-audit.md #12 |
+
+### `image_geolocation_searches`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `filename` | string(500) | no | — | — | Original uploaded filename |
+| `image_sha256` | string(64) | no | — | — | SHA256 of the analyzed image content |
+| `model_used` | string(200) | no | — | — | ID of the LLM model that produced this analysis |
+| `top_candidate` | string(500) | yes | — | — | Location of the top-ranked candidate, if any |
+| `top_confidence` | float | yes | — | — | Confidence of the top-ranked candidate, if any |
+| `result` | json | no | — | — | Full candidates/clues/caveats payload (ImageGeolocationAIResult) |
+| `searched_at` | datetime | no | server: now() | — | When the analysis ran |
+
+### `instagram_searches`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `scan_type` | string(20) | no | — | — | 'followers', 'followees', or 'posts' |
+| `username` | string(60) | no | — | — | Instagram username that was scanned |
+| `mode` | string(20) | no | — | — | 'anonymous' or 'session' - which one the scan actually ran as |
+| `status` | string(20) | no | 'completed' | — | running, completed, cancelled, or failed |
+| `error` | text | yes | — | — | Error detail if status is failed |
+| `item_count` | int | no | 0 | — | Items actually collected before stopping |
+| `total_count` | int | yes | — | — | Instagram-reported total count, when the API exposed one |
+| `truncated` | boolean | no | False | — | Hit the per-scan item cap or wall-clock deadline before exhausting the list |
+| `searched_at` | datetime | no | server: now() | — | When the scan ran |
+| `result` | json | yes | — | — | Full items list blob (shape depends on scan_type) - no normalized child table, same pattern as GitReconSearch.result |
+
+- CHECK `ck_instagram_searches_status`: `status IN ('running', 'completed', 'cancelled', 'failed')`
 
 ### `keywords`
 
@@ -462,6 +506,57 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `include_nsfw` | boolean | no | True | — | Whether NSFW-flagged content is included |
 | `searched_at` | datetime | no | server: now() | — | When the search ran |
 
+### `ru_business_check_cbr_warning_records`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `cbr_id` | int | no | — | — | The list's own entry id (`Id`) |
+| `inn` | string(10) | no | — | — | 10-digit ИНН of the listed legal entity |
+| `name` | string(500) | yes | — | — | Listed name (`Name`) |
+| `sign` | string(500) | yes | — | — | The regulator's stated sign of illegal activity (`Sign`) |
+| `listed_at` | date | yes | — | — | Date the entry was added to the list (`DT`) |
+| `closed` | boolean | no | — | — | The regulator marks the organization as liquidated (`Closed`) |
+| `comment` | string(1000) | yes | — | — | Regulator's note |
+| `is_clone` | boolean | no | — | — | Note says the entry misuses a legitimate market participant's data: the ИНН owner is the impersonated party, not the offender |
+
+### `ru_business_check_disqualified_records`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `record_number` | string(20) | no | — | — | Register record number (CSV column G1) |
+| `full_name` | string(300) | no | — | — | ФИО normalized for matching: upper case, ё->е, single spaces (column G2) |
+| `org_name` | string(500) | yes | — | — | Organization the person was disqualified in (column G5) |
+| `org_inn` | string(12) | yes | — | — | That organization's ИНН (column G6) - only ~36% of records carry it |
+| `position` | string(300) | yes | — | — | Position held (column G7) |
+| `article` | string(300) | yes | — | — | КоАП article (column G8) |
+| `term` | string(50) | yes | — | — | Disqualification term as written, e.g. '2 г 0 м 0 д' (column G12) |
+| `start_date` | date | no | — | — | Disqualification start (column G13) |
+| `end_date` | date | no | — | — | Disqualification end (column G14) |
+
+### `ru_business_check_ofac_sdn_records`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `ent_num` | int | no | — | — | The SDN list's own entry number |
+| `inn` | string(12) | no | — | — | Russian ИНН from the entry's remarks (10 digits = legal entity, 12 = person) |
+| `name` | string(500) | no | — | — | SDN name (transliterated) |
+| `kind` | string(20) | no | — | — | 'entity' (SDN type -0-) or 'individual' |
+| `programs` | string(500) | yes | — | — | Sanctions programs, e.g. 'UKRAINE-EO13661] [RUSSIA-EO14024' |
+
+### `ru_business_check_registry_dumps`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `source` | string(50) | no | — | PK | Dump source id, e.g. 'disqualified' |
+| `dump_date` | date | no | — | — | Date of the published dataset version (the publisher's meta.csv), or the download date for a list published without one |
+| `valid_until` | date | yes | — | — | The publisher's stated validity end (meta.csv `valid`), if given |
+| `row_count` | int | no | — | — | Rows loaded from that version |
+| `url` | string(500) | no | — | — | Where this version was downloaded |
+| `refreshed_at` | datetime | no | — | — | When this instance last loaded the dump |
+
 ### `ru_business_check_searches`
 
 | Column | Type | Nullable | Default | Key | Comment |
@@ -489,6 +584,9 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `website` | string(255) | yes | — | — | Optional company website, user-supplied - display-only, not analyzed by this feature itself; the UI links it out to domain_finder's own WHOIS/DNS/CT analysis instead of duplicating it here |
 | `rnp_data` | json | yes | — | — | РНП (реестр недобросовестных поставщиков) check result: {checked, entries: [{registry_number, law, name, inn, included_date, updated_date, planned_exclusion_date, status, eruz_number, detail_url}]} |
 | `rnp_raw` | text | yes | — | — | Verbatim RSS payload as received from zakupki.gov.ru |
+| `extra_data` | json | yes | — | — | Parsed results of sources added after the dedicated *_data columns, keyed by source id (e.g. {gir_bo: {...}}) - new sources land here instead of costing two columns and a migration each, see docs/adr/0014-*.md |
+| `extra_raw` | json | yes | — | — | Verbatim payloads for extra_data's sources, keyed the same way: {source: text} |
+| `raw_sha256` | json | yes | — | — | SHA-256 of each source's verbatim payload as captured at scan time, keyed by source id: {source: hex digest}; sources with no payload are omitted |
 | `flags` | json | yes | — | — | List of {code, severity, title, detail} risk flags |
 | `risk_level` | string(10) | yes | — | — | low, medium, or high - based only on checked_sources, never implies full-methodology coverage |
 | `checked_sources` | json | yes | — | — | Source keys actually queried this scan, snapshotted at scan time |
@@ -506,6 +604,9 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `large_claim_amount_threshold` | int | no | 1000000 | — | Claim amount (RUB) above which any arbitration case as defendant triggers the 'significant claims' soft flag |
 | `multiple_claims_defendant_threshold` | int | no | 3 | — | Number of arbitration cases as defendant at/above which the 'multiple claims' soft flag fires |
 | `mass_address_threshold` | int | no | 10 | — | Number of other entities registered at the same address (pb.nalog.ru) at/above which the 'mass registration address' soft flag fires |
+| `equity_ratio_threshold` | float | no | 0.1 | — | ГИР БО equity ratio (строка 1300 / строка 1600) below which the soft 'low equity ratio' flag fires |
+| `current_ratio_threshold` | float | no | 1.0 | — | ГИР БО current ratio (строка 1200 / строка 1500) below which the soft 'low current liquidity' flag fires |
+| `revenue_drop_threshold` | float | no | 0.5 | — | Year-over-year ГИР БО revenue drop (0-1 fraction) above which the soft 'revenue drop' flag fires |
 
 ### `single_lookup_results`
 
@@ -540,6 +641,29 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `pypi_checked_at` | datetime | yes | — | — | When latest_pypi_version was last refreshed |
 | `created_at` | datetime | no | server: now() | — | When this row was created |
 | `updated_at` | datetime | no | server: now() | — | When this row was last updated |
+
+### `steam_recon_searches`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `target` | string(512) | no | — | — | Raw target input (SteamID/URL/vanity) as the user entered it |
+| `steamid64` | string(20) | yes | — | — | Resolved target SteamID64, once resolution succeeds |
+| `persona_name` | string(200) | yes | — | — | Target's persona name at scan time |
+| `status` | string(20) | no | 'running' | — | running, completed, cancelled, or failed |
+| `error_message` | string(1000) | yes | — | — | Error detail if status is failed |
+| `max_friends` | int | no | — | — | Friend cap requested for this scan |
+| `include_cs_report` | boolean | no | — | — | Whether the CS2 cheater-probability report was requested |
+| `friends_total` | int | no | 0 | — | Total friends on the target's friend list |
+| `friends_analyzed` | int | no | 0 | — | Friends whose own friend list was successfully fetched |
+| `friends_located` | int | no | 0 | — | Analyzed friends with a usable location |
+| `top_country_code` | string(8) | yes | — | — | Leading country hypothesis's ISO code, for the history list |
+| `cheater_probability` | float | yes | — | — | CS2 cheater-probability estimate (0-1), when include_cs_report was set |
+| `started_at` | datetime | no | server: now() | — | When the scan started |
+| `completed_at` | datetime | yes | — | — | When the scan finished, if it has |
+| `result` | json | yes | — | — | Full scan result blob: profile, close_friends, geolocation, cheater_report |
+
+- CHECK `ck_steam_recon_searches_status`: `status IN ('running', 'completed', 'cancelled', 'failed')`
 
 ### `telegram_settings`
 

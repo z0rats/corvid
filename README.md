@@ -37,12 +37,13 @@ Pulls pre-built images and starts the app at http://localhost:4000 — no auto-u
 
 IOC lookups auto-route to the right services based on the type you paste in:
 
-- **IPs** — AbuseIPDB, AlienVault, CheckPhish.ai, CrowdSec, GitHub, IPQualityScore, LeakIX, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, VirusTotal
-- **Domains** — AlienVault, CheckPhish.ai, GitHub, Library of Leaks, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
-- **URLs** — AlienVault, CheckPhish.ai, GitHub, Google Safe Browsing, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLScan, VirusTotal
+- **IPs** — AbuseIPDB, AlienVault, CheckPhish.ai, CrowdSec, GitHub, IPQualityScore, LeakIX, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLhaus, VirusTotal
+- **Domains** — AlienVault, CheckPhish.ai, GitHub, Library of Leaks, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLhaus, URLScan, VirusTotal
+- **URLs** — AlienVault, CheckPhish.ai, GitHub, Google Safe Browsing, Maltiverse, Pulsedive, Reddit, Shodan, ThreatFox, Twitter/X, URLhaus, URLScan, VirusTotal
 - **Emails** — Emailrep.io, GitHub, Have I Been Pwned, Hunter.io, Library of Leaks, Reddit, Twitter/X
 - **Hashes** — AlienVault, GitHub, Maltiverse, Pulsedive, Reddit, ThreatFox, Twitter/X, VirusTotal
 - **CVEs** — GitHub, NIST NVD
+- ThreatFox and URLhaus share one free [abuse.ch Auth-Key](https://auth.abuse.ch/); enter it under Settings → API Keys for each (URLhaus used to be keyless — existing installs need to add the key)
 - **Crypto addresses** (EVM & Bitcoin) — screened against a self-hosted blacklist built from the OFAC SDN sanctions list and ScamSniffer's open phishing-address dataset, refreshed daily in the background; no API key or third-party calls required
 
 ## Features
@@ -104,10 +105,29 @@ Correlate names, emails, and GitHub logins from commit history via
 Run parameterized search-engine dorks against a domain, username, or email. →
 [Docs](https://z0rats.github.io/corvid/features/dork-runner/)
 
+### Amass
+Active DNS enumeration and ASN/netblock discovery for a domain via
+[OWASP Amass](https://github.com/owasp-amass/amass), with optional wordlist brute-forcing;
+cancellable, with persisted scan history. → [Docs](https://z0rats.github.io/corvid/features/amass/)
+
 ### RU Business Check
 Due-diligence check on a Russian legal entity or sole proprietor by ИНН/name — ЕГРЮЛ/ЕГРИП
-extract, disqualified-persons registry check, and arbitration case history, no API key required.
-Russian-only UI. → [Docs](https://z0rats.github.io/corvid/features/ru-business-check/)
+extract, bankruptcy (Федресурс), disqualified persons, arbitration, financial statements (ГИР БО),
+and the Банк России and OFAC lists, no API key required. A source that fails is reported as "not
+checked", never as clean. Russian-only UI. → [Docs](https://z0rats.github.io/corvid/features/ru-business-check/)
+
+### Steam Recon
+Steam profile lookup, plus a friends-graph scan: close-friends ranking by mutual-connection
+weight, a geolocation-by-social-graph hypothesis, a friends-graph diagram, and an optional CS2
+cheater-probability heuristic. Needs a free Steam Web API key. →
+[Docs](https://z0rats.github.io/corvid/features/steam-recon/)
+
+### Instagram Search
+Look up a public Instagram profile's metadata (bio, links, followers, verified/business/private
+flags) by username, anonymously by default, plus a separate scan of its followers, followees, or
+posts with persisted history. An optional imported browser-session cookie unlocks more — never a
+password, and required for followers/followees; automated access violates Instagram's ToS either
+way, so use a disposable account. → [Docs](https://z0rats.github.io/corvid/features/instagram-search/)
 
 ### Browser Extension
 A minimal Chrome extension ("Corvid Quick Send") lets you select text on any page and send it
@@ -213,8 +233,8 @@ researchers investigating abuse, and similar authorized work. It is not built fo
 harassment, unauthorized surveillance, or investigating people without a lawful basis for
 doing so.
 
-Several modules (Reddit Search, Git Recon, Image Tools' reverse-search, email/username
-lookups) pull together data that's technically public but can still identify or locate a
+Several modules (Reddit Search, Git Recon, Instagram Search, Image Tools' reverse-search,
+email/username lookups) pull together data that's technically public but can still identify or locate a
 real person when combined. Before running them against an individual rather than an IOC or
 organization, make sure you have a legitimate basis to do so and that it complies with the
 laws of your jurisdiction and the target's (data protection/privacy law, computer-misuse

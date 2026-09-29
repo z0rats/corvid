@@ -13,6 +13,7 @@ gitcolombo
 greenlet
 html2text
 httpx
+instaloader==4.15.3
 lxml[html-clean]
 maigret[pdf]
 mailcat-osint

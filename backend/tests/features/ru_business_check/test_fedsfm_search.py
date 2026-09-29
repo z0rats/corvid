@@ -50,8 +50,10 @@ class TestParseMatches:
         data = {"data": [{"Id": "x", "TerroristTypeName": "Национальный", "StatusName": "..."}]}
         assert _parse_matches(data) == []
 
-    def test_missing_data_key_is_an_empty_list(self):
-        assert _parse_matches({}) == []
+    def test_missing_data_key_is_schema_drift_not_an_empty_list(self):
+        # `data: []` is the live no-match answer; an absent key must not read as one.
+        with pytest.raises(FedsfmError, match="схема ответа изменилась"):
+            _parse_matches({})
 
 
 class TestBlockedDetection:

@@ -33,7 +33,10 @@ import LinkIcon from "@mui/icons-material/LinkOutlined";
 import KeyboardCommandKeyIcon from "@mui/icons-material/KeyboardCommandKeyOutlined";
 import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestoreOutlined";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import TelegramIcon from "@mui/icons-material/Telegram";
+import RadarIcon from "@mui/icons-material/RadarOutlined";
+import InstagramIcon from "@mui/icons-material/Instagram";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
 // aliases/tags/accepts/acceptsRouting power the command palette's registry
@@ -202,6 +205,36 @@ const MAIN_MENU_ITEMS_CONFIG = [
     // isYoutubeVideoUrl(input) is true, see iocTypeDetection.ts's YOUTUBE_VIDEO_URL comment.
     accepts: [IOC_TYPES.YOUTUBE_VIDEO_URL],
   },
+  {
+    i18nKey: "nav.amass",
+    icon: <RadarIcon />,
+    path: "/amass",
+    moduleId: "amass",
+    aliases: ["amass", "owasp amass", "attack surface mapping", "asn", "netblock"],
+    tags: ["recon", "identity"],
+    accepts: [IOC_TYPES.DOMAIN],
+  },
+  {
+    i18nKey: "nav.steamRecon",
+    icon: <SportsEsportsIcon />,
+    path: "/steam-recon",
+    moduleId: "steam_recon",
+    aliases: ["steam", "steam recon", "steamid", "steam profile", "steamreveal"],
+    tags: ["recon", "identity"],
+    // Not reachable via detectIocType's own priority chain (a SteamID64/profile URL is still
+    // typed as plain URL/unknown there) - commandParser.ts's parseQuery injects this match
+    // itself via isSteamProfileTarget(input), see iocTypeDetection.ts's STEAM_PROFILE comment.
+    accepts: [IOC_TYPES.STEAM_PROFILE],
+  },
+  {
+    i18nKey: "nav.instagramSearch",
+    icon: <InstagramIcon />,
+    path: "/instagram-search",
+    moduleId: "instagram_search",
+    aliases: ["instagram", "insta", "instagram search", "instagram profile"],
+    tags: ["identity", "recon"],
+    accepts: [],
+  },
 ];
 
 const AI_TEMPLATES_TABS_CONFIG = [
@@ -348,11 +381,28 @@ const GIT_RECON_TABS_CONFIG = [
   { i18nKey: "nav.gitReconTabs.history", path: "/git-recon/history", icon: <HistoryIcon /> },
 ];
 
+const AMASS_TABS_CONFIG = [
+  { i18nKey: "nav.amassTabs.newScan", path: "/amass/new", icon: <RadarIcon /> },
+  { i18nKey: "nav.amassTabs.history", path: "/amass/history", icon: <HistoryIcon /> },
+];
+
 const RU_BUSINESS_CHECK_TABS_CONFIG = [
   { i18nKey: "nav.ruBusinessCheckTabs.newSearch", path: "/ru-business-check/new", icon: <ApartmentIcon /> },
   { i18nKey: "nav.ruBusinessCheckTabs.history", path: "/ru-business-check/history", icon: <HistoryIcon /> },
   { i18nKey: "nav.ruBusinessCheckTabs.sources", path: "/ru-business-check/sources", icon: <LinkIcon /> },
   { i18nKey: "nav.ruBusinessCheckTabs.settings", path: "/ru-business-check/settings", icon: <SettingsIcon /> },
+];
+
+const STEAM_RECON_TABS_CONFIG = [
+  { i18nKey: "nav.steamReconTabs.newScan", path: "/steam-recon/new", icon: <SportsEsportsIcon /> },
+  { i18nKey: "nav.steamReconTabs.profile", path: "/steam-recon/profile", icon: <PersonSearchIcon /> },
+  { i18nKey: "nav.steamReconTabs.history", path: "/steam-recon/history", icon: <HistoryIcon /> },
+];
+
+const INSTAGRAM_SEARCH_TABS_CONFIG = [
+  { i18nKey: "nav.instagramSearchTabs.profile", path: "/instagram-search/profile", icon: <InstagramIcon /> },
+  { i18nKey: "nav.instagramSearchTabs.newScan", path: "/instagram-search/new", icon: <SearchIcon /> },
+  { i18nKey: "nav.instagramSearchTabs.history", path: "/instagram-search/history", icon: <HistoryIcon /> },
 ];
 
 const translateItem = (t, { i18nKey, children, ...rest }) => ({
@@ -373,7 +423,10 @@ export const getUsernameSearchTabs = (t) => USERNAME_SEARCH_TABS_CONFIG.map(item
 export const getEmailSearchTabs = (t) => EMAIL_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getRedditSearchTabs = (t) => REDDIT_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getGitReconTabs = (t) => GIT_RECON_TABS_CONFIG.map(item => translateItem(t, item));
+export const getAmassTabs = (t) => AMASS_TABS_CONFIG.map(item => translateItem(t, item));
 export const getRuBusinessCheckTabs = (t) => RU_BUSINESS_CHECK_TABS_CONFIG.map(item => translateItem(t, item));
+export const getSteamReconTabs = (t) => STEAM_RECON_TABS_CONFIG.map(item => translateItem(t, item));
+export const getInstagramSearchTabs = (t) => INSTAGRAM_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 
 // Which sidebar tab set to show for the current route, keyed by path prefix — the single place
 // Layout.jsx needs to consult (`TAB_ROUTES.find(...)`) instead of growing its own if-chain. A
@@ -397,5 +450,8 @@ export const TAB_ROUTES = [
   { prefix: "/email-search", getTabs: (t) => getEmailSearchTabs(t) },
   { prefix: "/reddit-search", getTabs: (t) => getRedditSearchTabs(t) },
   { prefix: "/git-recon", getTabs: (t) => getGitReconTabs(t) },
+  { prefix: "/amass", getTabs: (t) => getAmassTabs(t) },
   { prefix: "/ru-business-check", getTabs: (t) => getRuBusinessCheckTabs(t) },
+  { prefix: "/steam-recon", getTabs: (t) => getSteamReconTabs(t) },
+  { prefix: "/instagram-search", getTabs: (t) => getInstagramSearchTabs(t) },
 ];

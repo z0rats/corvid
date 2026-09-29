@@ -1,0 +1,52 @@
+name: Source canaries
+
+# Weekly live check of ru_business_check's external sources: not "does our code work" but
+# "did a site change its response shape". A failure means a scraper's parser needs a fix (the
+# production scan already reports such a source as not-checked rather than clean). Sources
+# unreachable from a GitHub runner (non-RU IP, anti-bot) are skipped, not failed - see the
+# outcome policy in backend/tests/canary/test_ru_business_check_canary.py.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Install system build dependencies (lxml compiles from source on cp314)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libxml2-dev libxslt-dev liblzma-dev zlib1g-dev
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/requirements.txt
+
+      - name: Install dependencies
+        run: uv pip install --system -r requirements.txt
+
+      - name: Run source canaries
+        run: pytest -m canary -o addopts= -q -rs

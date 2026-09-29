@@ -40,6 +40,11 @@ import logging
 
 import httpx
 
+from app.features.ru_business_check.service.source_contract import (
+    require_dict,
+    require_list_field,
+)
+
 logger = logging.getLogger(__name__)
 
 PB_NALOG_BASE_URL = "https://pb.nalog.ru"
@@ -118,8 +123,20 @@ def _pick_matching_row(search_result: dict, inn: str, *, is_individual: bool) ->
     """Pure function: `queryAll` is a general search, not an exact filter - the row must be
     picked by exact ИНН match from the bucket matching the entity type, rather than assumed
     to be the only/first result."""
-    bucket = search_result.get("ip" if is_individual else "ul") or {}
-    for row in bucket.get("data") or []:
+    # Both buckets are present in every live response, empty ones as `{"data": []}` -
+    # confirmed live 2026-09-28, including for an ИНН pb.nalog.ru has no record of. A
+    # missing bucket or a non-list `data` is drift, not "no result".
+    require_dict(search_result, error=PbNalogError, label="Прозрачный бизнес")
+    key = "ip" if is_individual else "ul"
+    bucket = search_result.get(key)
+    rows = require_list_field(
+        bucket if isinstance(bucket, dict) else None,
+        "data",
+        error=PbNalogError,
+        label="Прозрачный бизнес",
+        where=f"результатах поиска ({key})",
+    )
+    for row in rows:
         if row.get("inn") == inn:
             return row
     return None
@@ -128,7 +145,14 @@ def _pick_matching_row(search_result: dict, inn: str, *, is_individual: bool) ->
 def parse_detail(detail: dict) -> dict:
     """Pure function: normalize pb.nalog.ru's raw detail payload into a stable shape. Kept
     separate from the network code so it's independently unit-testable."""
-    mass_address = detail.get("masaddress") or []
+    require_dict(detail, error=PbNalogError, label="Прозрачный бизнес", where="профиль")
+    # `masaddress` is absent when nothing shares the address (live-observed), so a missing
+    # key is legitimately empty; a present non-list value is drift.
+    mass_address = detail.get("masaddress")
+    if mass_address is None:
+        mass_address = []
+    elif not isinstance(mass_address, list):
+        raise PbNalogError("Прозрачный бизнес: схема ответа изменилась — masaddress не список")
     companies = [
         {"inn": row.get("massinn"), "name": row.get("massnamep") or row.get("massnamec")}
         for row in mass_address[:MASS_ADDRESS_DISPLAY_LIMIT]

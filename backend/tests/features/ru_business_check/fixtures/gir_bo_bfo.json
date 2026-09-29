@@ -1,0 +1,37 @@
+[
+  {
+    "id": 21912564,
+    "period": "2023",
+    "actualBfoDate": "2024-03-29",
+    "gainSum": 306296683,
+    "actives": 197802072.0
+  },
+  {
+    "id": 14471946,
+    "period": "2021",
+    "actualBfoDate": "2022-03-28",
+    "gainSum": 315656830,
+    "actives": 99236719.0
+  },
+  {
+    "id": 24650083,
+    "period": "2024",
+    "actualBfoDate": "2025-05-26",
+    "gainSum": 343973748,
+    "actives": 219012814.0
+  },
+  {
+    "id": 19018333,
+    "period": "2022",
+    "actualBfoDate": "2023-03-30",
+    "gainSum": 328779381,
+    "actives": 173635750.0
+  },
+  {
+    "id": 28978475,
+    "period": "2025",
+    "actualBfoDate": "2026-03-30",
+    "gainSum": 396350822,
+    "actives": 242547340.0
+  }
+]

@@ -1,0 +1,85 @@
+{
+  "welcomeScreen": {
+    "title": "Instagram Profile Lookup",
+    "intro": "Enter an Instagram username above to look up its public profile metadata.",
+    "description": "Works anonymously by default. Configure an imported browser session under Settings > API Keys to see data anonymous lookups can't reach - Instagram's ToS forbids automated access either way, so use a disposable account and expect it may get rate-limited or banned."
+  },
+
+  "form": {
+    "usernameLabel": "Instagram username",
+    "usernamePlaceholder": "e.g. instagram or @instagram",
+    "lookupButton": "Look up"
+  },
+
+  "docs": {
+    "viewDocs": "View documentation"
+  },
+
+  "mode": {
+    "anonymousInfo": "Anonymous lookup - some data (followers/following lists, private-profile details) isn't visible without a session.",
+    "sessionWarning": "Using a configured Instagram session. Automated access violates Instagram's ToS - use a disposable account.",
+    "configureSessionAction": "Configure session"
+  },
+
+  "overview": {
+    "verified": "Verified account",
+    "private": "Private",
+    "business": "Business account",
+    "viewProfilePicture": "View profile picture",
+    "posts": "Posts",
+    "followers": "Followers",
+    "following": "Following",
+    "igtv": "IGTV"
+  },
+
+  "scanForm": {
+    "page": {
+      "title": "Scan followers, followees, or posts",
+      "description": "Followers and followees need a session configured under Settings > API Keys - Instagram only shows either list to a logged-in request. Posts work anonymously too. Capped on item count and wall-clock time, and cancellable once running."
+    },
+    "types": {
+      "followers": "Followers",
+      "followees": "Followees",
+      "posts": "Posts"
+    },
+    "sessionRequiredNote": "Needs a configured Instagram session (Settings > API Keys) - Instagram requires being logged in to see this list, regardless of the profile's own privacy setting.",
+    "scanButton": "Scan",
+    "cancelButton": "Cancel",
+    "limitsNote": "Capped on item count and time - a large list is sampled, not walked in full."
+  },
+
+  "results": {
+    "summary": "{{count}} of {{total}} collected",
+    "truncatedNotice": "Stopped before the full list was exhausted (item cap or time limit hit) - what was collected so far is shown below.",
+    "empty": "No items collected.",
+    "headers": {
+      "username": "Username",
+      "fullName": "Full name",
+      "post": "Post",
+      "date": "Date",
+      "likes": "Likes",
+      "comments": "Comments",
+      "caption": "Caption"
+    }
+  },
+
+  "history": {
+    "headers": {
+      "scanType": "Type",
+      "username": "Username",
+      "status": "Status",
+      "items": "Items",
+      "searched": "Searched",
+      "actions": "Actions"
+    },
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "empty": "No past scans yet",
+    "notFound": "Scan not found",
+    "summary": "{{scanType}} scan, searched {{date}}"
+  }
+}

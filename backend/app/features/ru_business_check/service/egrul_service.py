@@ -28,9 +28,16 @@ from datetime import datetime
 import httpx
 import pdfplumber
 
+from app.features.ru_business_check.service.source_contract import (
+    require_dict,
+    require_fields,
+    require_list_field,
+)
+
 logger = logging.getLogger(__name__)
 
 EGRUL_BASE_URL = "https://egrul.nalog.ru"
+SOURCE_LABEL = "ЕГРЮЛ"
 REQUEST_TIMEOUT_SECONDS = 20.0
 
 SEARCH_POLL_INTERVAL_SECONDS = 1.5
@@ -68,7 +75,7 @@ async def _poll_json(
     for _attempt in range(max_attempts):
         response = await client.get(url)
         response.raise_for_status()
-        payload = response.json()
+        payload = require_dict(response.json(), error=EgrulError, label=SOURCE_LABEL)
         if ready(payload):
             return payload
         await asyncio.sleep(interval)
@@ -87,7 +94,7 @@ async def _search(client: httpx.AsyncClient, query: str) -> dict:
         },
     )
     response.raise_for_status()
-    payload = response.json()
+    payload = require_dict(response.json(), error=EgrulError, label=SOURCE_LABEL)
 
     if payload.get("captchaRequired") or payload.get("captcha"):
         raise EgrulCaptchaRequired(
@@ -132,8 +139,20 @@ def _row_to_candidate(row: dict) -> dict:
     }
 
 
+# Fields every search-result row must carry (confirmed live): `t` the row's PDF token, `i`
+# ИНН, `o` ОГРН, `n` name. A row without them is drift - reading around it would request a
+# PDF for nothing or build a candidate list of blanks.
+_ROW_CONTRACT = ("t", "i", "o", "n")
+
+
 def _select_row(search_result: dict) -> dict:
-    rows = search_result.get("rows") or []
+    rows = require_list_field(
+        search_result, "rows", error=EgrulError, label=SOURCE_LABEL, where="результатах поиска"
+    )
+    for row in rows:
+        require_fields(
+            row, _ROW_CONTRACT, error=EgrulError, label=SOURCE_LABEL, where="строке поиска"
+        )
     if not rows:
         raise EgrulError("Ничего не найдено в ЕГРЮЛ/ЕГРИП по этому запросу")
     if len(rows) > 1:
@@ -158,7 +177,7 @@ async def _request_pdf(client: httpx.AsyncClient, row_token: str, search_token: 
     )
     kickoff.raise_for_status()
     if kickoff.headers.get("content-type", "").startswith("application/json"):
-        payload = kickoff.json()
+        payload = require_dict(kickoff.json(), error=EgrulError, label=SOURCE_LABEL)
         if payload.get("captchaRequired") or payload.get("captcha"):
             raise EgrulCaptchaRequired(
                 "egrul.nalog.ru запросил капчу — автоматическая проверка недоступна, "

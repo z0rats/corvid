@@ -4,6 +4,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.features.ioc_tools.ioc_extractor.schemas.extractor_schemas import ExtractionResponse
+
 logger = logging.getLogger(__name__)
 
 
@@ -561,6 +563,105 @@ class RapidDnsSubdomainsResponse(BaseModel):
     )
 
 
+class SubfinderSubdomainsRequest(BaseModel):
+    """Request model for subfinder passive subdomain enumeration"""
+
+    domain: str = Field(
+        ...,
+        description="Domain name to enumerate subdomains for via subfinder (e.g., 'example.com')",
+        min_length=1,
+        max_length=255,
+    )
+
+    @field_validator("domain")
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        return _validate_plain_domain(v)
+
+
+class SubfinderRecord(BaseModel):
+    """A single subdomain result from subfinder, with the passive source(s) that found it"""
+
+    hostname: str = Field(..., description="Discovered hostname")
+    sources: list[str] = Field(
+        default_factory=list, description="Passive sources that reported this hostname"
+    )
+
+
+class SubfinderSubdomainsResponse(BaseModel):
+    """Response model for subfinder passive subdomain enumeration"""
+
+    domain: str = Field(..., description="The domain that was looked up")
+    subdomains: list[str] = Field(
+        default_factory=list, description="Deduplicated, sorted subdomains found"
+    )
+    records: list[SubfinderRecord] = Field(
+        default_factory=list, description="Each subdomain with its contributing source(s)"
+    )
+    total_records: int = Field(..., description="Total number of unique subdomains found", ge=0)
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the lookup was performed",
+    )
+
+
+class HostProbeRequest(BaseModel):
+    """Request model for the httpx live-host probe"""
+
+    domain: str = Field(
+        ...,
+        description="Domain to probe for a live HTTP(S) host (e.g., 'example.com')",
+        min_length=1,
+        max_length=255,
+    )
+
+    @field_validator("domain")
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        return _validate_plain_domain(v)
+
+
+class HostProbeResult(BaseModel):
+    """A single live scheme (http or https) found for the probed domain"""
+
+    url: str = Field(..., description="The probed URL")
+    final_url: str | None = Field(
+        default=None, description="URL after following redirects, if it differs from `url`"
+    )
+    scheme: str = Field(..., description="Scheme that responded ('http' or 'https')")
+    status_code: int = Field(..., description="Final HTTP status code")
+    title: str | None = Field(default=None, description="Page title, if present")
+    webserver: str | None = Field(default=None, description="Server header value")
+    content_type: str | None = Field(default=None, description="Response Content-Type header")
+    content_length: int | None = Field(default=None, description="Response body length in bytes")
+    technologies: list[str] = Field(
+        default_factory=list, description="Technologies detected via Wappalyzer fingerprinting"
+    )
+    favicon_hash: str | None = Field(
+        default=None, description="mmh3 hash of '/favicon.ico', for pivoting to related hosts"
+    )
+    chain_status_codes: list[int] = Field(
+        default_factory=list, description="Status codes for each hop in the redirect chain"
+    )
+    tls: dict[str, Any] | None = Field(
+        default=None, description="Raw TLS certificate data, if grabbed over HTTPS"
+    )
+
+
+class HostProbeResponse(BaseModel):
+    """Response model for the httpx live-host probe"""
+
+    domain: str = Field(..., description="The domain that was probed")
+    reachable: bool = Field(..., description="Whether any scheme responded")
+    results: list[HostProbeResult] = Field(
+        default_factory=list, description="One entry per live scheme found (http and/or https)"
+    )
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the probe was performed",
+    )
+
+
 class SslInfoRequest(BaseModel):
     """Request model for TLS certificate inspection"""
 
@@ -784,4 +885,60 @@ class TemporalAnalysisResponse(BaseModel):
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         description="Timestamp when the analysis was performed",
+    )
+
+
+class SiteCrawlRequest(BaseModel):
+    """Request model for the bounded same-host site crawler"""
+
+    domain: str = Field(
+        ...,
+        description="Domain to crawl, starting from its HTTPS homepage (e.g., 'example.com')",
+        min_length=1,
+        max_length=255,
+    )
+    max_pages: int = Field(
+        default=15, ge=1, le=30, description="Maximum number of pages/assets to fetch"
+    )
+    max_depth: int = Field(
+        default=2, ge=0, le=3, description="Maximum link-following depth from the homepage"
+    )
+
+    @field_validator("domain")
+    @classmethod
+    def validate_domain_format(cls, v: str) -> str:
+        return _validate_plain_domain(v)
+
+
+class CrawledPage(BaseModel):
+    """A single page (or same-host script asset) fetched during the crawl"""
+
+    url: str = Field(..., description="The URL that was fetched")
+    status_code: int = Field(..., description="HTTP status code of the response")
+    content_type: str | None = Field(default=None, description="Response Content-Type header")
+    title: str | None = Field(default=None, description="Parsed <title>, for HTML pages only")
+    depth: int = Field(..., description="Link-following depth at which this page was reached", ge=0)
+
+
+class SiteCrawlResponse(BaseModel):
+    """Response model for the bounded same-host site crawler"""
+
+    domain: str = Field(..., description="The domain that was crawled")
+    pages: list[CrawledPage] = Field(
+        default_factory=list, description="Pages/assets fetched, in crawl order"
+    )
+    total_pages_crawled: int = Field(..., description="Total number of pages/assets fetched", ge=0)
+    iocs: ExtractionResponse = Field(
+        ...,
+        description="IOCs aggregated across every fetched page, run through the same extractor "
+        "engine as the standalone IOC Extractor tool",
+    )
+    errors: list[str] = Field(
+        default_factory=list,
+        description="Per-URL fetch errors encountered after the entry page (the entry page "
+        "failing raises an error instead of being recorded here)",
+    )
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="Timestamp when the crawl was performed",
     )

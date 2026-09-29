@@ -17,6 +17,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models imp
 from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import normalize_address
 
 from .client_base import (
+    ServiceAuthError,
     ServiceError,
     ServiceUnavailableError,
     _authenticate_oauth,
@@ -552,7 +553,7 @@ async def check_threatfox(ioc: str, apikey: str) -> dict[str, Any]:
     client = get_client()
     response = await client.post(
         url="https://threatfox-api.abuse.ch/api/v1/",
-        headers={"API-KEY": apikey},
+        headers={"Auth-Key": apikey},
         json={"query": "search_ioc", "search_term": ioc},
     )
     return await handle_response("ThreatFox", response)
@@ -572,12 +573,23 @@ async def search_twitter(ioc: str, apikey: str) -> dict[str, Any]:
     return await handle_response("Twitter/X", response)
 
 
-async def check_urlhaus(ioc: str) -> dict[str, Any]:
-    """Perform URL lookup using URLhaus API"""
-    logger.debug("Checking URL %s with URLhaus", ioc)
+async def check_urlhaus(ioc: str, ioc_type: str, apikey: str) -> dict[str, Any]:
+    """Look up a URL (`/v1/url/`) or a host - domain or IPv4 (`/v1/host/`) - in URLhaus.
+
+    `ioc_type` is the endpoint selector: "url" or "host". The abuse.ch Auth-Key goes in a
+    header (the same key ThreatFox takes); a 401/403 means it is missing, invalid or revoked.
+    """
+    _require_apikey("URLhaus", apikey)
+    logger.debug("Checking %s %s with URLhaus", ioc_type, ioc)
 
     client = get_client()
-    response = await client.post(url="https://urlhaus-api.abuse.ch/v1/url/", data={"url": ioc})
+    response = await client.post(
+        url=f"https://urlhaus-api.abuse.ch/v1/{ioc_type}/",
+        headers={"Auth-Key": apikey},
+        data={ioc_type: ioc},
+    )
+    if response.status_code in (401, 403):
+        raise ServiceAuthError("URLhaus", "URLhaus rejected the abuse.ch Auth-Key.")
     return await handle_response("URLhaus", response)
 
 

@@ -23,13 +23,19 @@ The `/` route renders `StartScreen.jsx` (a lighter, non-modal subset of the same
 Settings → Command Palette's `start_screen` is set to `newsfeed` — three `GeneralSettings`
 columns (`auto_open_on_single_match`, `start_screen`, `always_tiles`) back that settings tab.
 
-## YouTube URL special-case
+## YouTube URL / Steam profile special-cases
 
-`IOC_TYPES.YOUTUBE_VIDEO_URL` is deliberately excluded from `detectIocType`'s own priority chain
-(a YouTube link is still typed plain `URL` there, so `ioc_lookup`'s provider routing for it is
-unaffected) — `commandParser.js`'s `parseQuery` injects the `youtube` module's match itself via a
-separate `isYoutubeVideoUrl()` check, layered on top of the normal `URL` match rather than
-replacing it.
+`IOC_TYPES.YOUTUBE_VIDEO_URL` and `IOC_TYPES.STEAM_PROFILE` are both deliberately excluded from
+`detectIocType`'s own priority chain (a YouTube or steamcommunity.com link is still typed plain
+`URL` there, so `ioc_lookup`'s provider routing for either is unaffected) — `commandParser.ts`'s
+`parseQuery` injects the matching module's match itself, layered on top of the normal `URL`
+match rather than replacing it, via `isYoutubeVideoUrl()`/`isSteamProfileTarget()`. Steam's case
+additionally has a second injection point: a bare SteamID64/SteamID3/SteamID2 (no URL wrapper)
+matches nothing in `detectIocType`'s chain at all, so `isSteamProfileTarget()` is checked a
+second time as a primary classification once `detectIocType` returns `UNKNOWN` - otherwise it
+would fall through to the generic identity-tool fallback and lose its dedicated match.
+`isSteamProfileTarget()` deliberately excludes a bare vanity name (too ambiguous for global
+detection - it's still typeable directly into Steam Recon's own form, just not auto-detected).
 
 ## Cross-feature "send to X"
 

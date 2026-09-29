@@ -12,11 +12,14 @@ import WhoisPanel from './components/ui/WhoisPanel';
 import CtSubdomainsPanel from './components/ui/CtSubdomainsPanel';
 import HackertargetPanel from './components/ui/HackertargetPanel';
 import RapidDnsPanel from './components/ui/RapidDnsPanel';
+import SubfinderPanel from './components/ui/SubfinderPanel';
+import HostProbePanel from './components/ui/HostProbePanel';
 import WebCheckPanel from './components/ui/WebCheckPanel';
 import DnsRecordsPanel from './components/ui/DnsRecordsPanel';
 import DnsDumpsterPanel from './components/ui/DnsDumpsterPanel';
 import WaybackPanel from './components/ui/WaybackPanel';
 import TemporalAnalysisPanel from './components/ui/TemporalAnalysisPanel';
+import SiteCrawlerPanel from './components/ui/SiteCrawlerPanel';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 import { domainUtils } from './utils/domainUtils';
 
@@ -74,8 +77,11 @@ export default function DomainMonitoring() {
             <CtSubdomainsPanel key={`ct_${searchDomain}`} domain={searchDomain} onScanSubdomain={handleSearch} />
             <HackertargetPanel key={`hackertarget_${searchDomain}`} domain={searchDomain} onScanSubdomain={handleSearch} />
             <RapidDnsPanel key={`rapiddns_${searchDomain}`} domain={searchDomain} onScanSubdomain={handleSearch} />
+            <SubfinderPanel key={`subfinder_${searchDomain}`} domain={searchDomain} onScanSubdomain={handleSearch} />
+            <HostProbePanel key={`hostprobe_${searchDomain}`} domain={searchDomain} />
             <WaybackPanel key={`wayback_${searchDomain}`} domain={searchDomain} />
             <TemporalAnalysisPanel key={`temporal_${searchDomain}`} domain={searchDomain} />
+            <SiteCrawlerPanel key={`sitecrawler_${searchDomain}`} domain={searchDomain} />
             <ResultTable key={searchDomain} domain={searchDomain} />
           </>
         ) : (

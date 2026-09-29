@@ -10,7 +10,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import psutil
 
-from app.core.scans.cancellable import GitCloneCancellable, ProcessCancellable, TaskCancellable
+from app.core.scans.cancellable import (
+    CooperativeCancellable,
+    GitCloneCancellable,
+    ProcessCancellable,
+    TaskCancellable,
+)
 
 
 def _run(coro):
@@ -135,3 +140,31 @@ class TestGitCloneCancellable:
             _run(cancellable.cancel())  # should not raise
 
         assert cancellable.cancelled is True
+
+
+class TestCooperativeCancellable:
+    def test_cancel_sets_the_flag_the_worker_thread_polls(self):
+        cancellable = CooperativeCancellable()
+        assert cancellable.stop_event.is_set() is False
+
+        _run(cancellable.cancel())
+
+        assert cancellable.stop_event.is_set() is True
+
+    def test_a_worker_loop_stops_once_the_flag_is_set(self):
+        """Simulates the shape instagram_scan_service's sync loop actually uses -
+        a plain `for` loop checking `stop_event.is_set()` between items."""
+        cancellable = CooperativeCancellable()
+        collected = []
+
+        def worker():
+            for item in range(1000):
+                if cancellable.stop_event.is_set():
+                    break
+                collected.append(item)
+            return collected
+
+        _run(cancellable.cancel())
+        result = worker()
+
+        assert result == []

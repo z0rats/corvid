@@ -519,13 +519,18 @@ export const SERVICE_DEFINITIONS = {
     icon: 'urlhaus_logo_small',
     detailComponent: UrlHausDetails,
     requiredKeys: ['urlhaus'],
-    supportedIocTypes: ['URL', 'Domain'],
+    supportedIocTypes: ['URL', 'Domain', 'IPv4'],
     lookupEndpoint: createSingleEndpoint('urlhaus'),
     getSummaryAndTlp: withErrorHandling((responseData) => {
         if (responseData.query_status === 'no_results') return { summary: "Not found", tlp: 'GREEN' };
         if (responseData.query_status === 'ok') {
-            const status = responseData.url_status || responseData.urls[0].url_status;
-            return { summary: `Found, status: ${status}`, tlp: status === 'online' ? 'RED' : 'AMBER', keyMetric: status };
+            // /v1/host/ returns a `urls` list (host is 'online' if any of its URLs is); /v1/url/ a single status.
+            const urls = responseData.urls;
+            const status = urls
+                ? (urls.some((entry) => entry.url_status === 'online') ? 'online' : 'offline')
+                : responseData.url_status;
+            const summary = urls ? `Found, ${responseData.url_count ?? urls.length} URL(s), status: ${status}` : `Found, status: ${status}`;
+            return { summary, tlp: status === 'online' ? 'RED' : 'AMBER', keyMetric: status };
         }
         return { summary: `Status: ${responseData.query_status}`, tlp: 'WHITE' };
     }),

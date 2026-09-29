@@ -1,11 +1,15 @@
+from collections.abc import AsyncGenerator
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.rate_limit_config import limiter
-from app.core.dependencies import get_read_db
+from app.core.dependencies import get_db, get_read_db
+from app.features.image_tools.models.geolocation_history_models import ImageGeolocationSearch
 from app.features.image_tools.routers import image_routes
 from app.features.image_tools.schemas.image_schemas import (
     ChronoverifyResponse,
@@ -16,19 +20,30 @@ from app.features.image_tools.schemas.image_schemas import (
 
 
 @pytest.fixture
-def client():
+def client(make_session_factory):
     """A minimal FastAPI app exposing only the image_tools router.
 
     Avoids spinning up the full application (database, scheduler, other
     feature routers) so this test only exercises the image_tools API contract.
-    get_read_db is overridden with a no-op since none of these tests hit a real
-    database - /geolocate's service call is monkeypatched per-test instead.
+    get_read_db is overridden with a no-op since most of these tests don't hit
+    a real database - the underlying service call is monkeypatched per-test
+    instead. get_db is backed by a real in-memory session (only
+    ImageGeolocationSearch's table exists) since /geolocate persists a history
+    row after each analysis.
     """
+    session_factory = make_session_factory([ImageGeolocationSearch.__table__])
+
+    async def _get_db() -> AsyncGenerator[AsyncSession]:
+        async with session_factory() as db:
+            yield db
+            await db.commit()
+
     app = FastAPI()
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.include_router(image_routes.router)
     app.dependency_overrides[get_read_db] = lambda: None
+    app.dependency_overrides[get_db] = _get_db
     return TestClient(app)
 
 
@@ -203,6 +218,7 @@ class TestGeolocateEndpoint:
         assert body["model_used"] == "claude-sonnet-4-6"
         assert body["candidates"][0]["location"] == "Serbia"
         assert body["clues"][0]["category"] == "signage_language"
+        assert isinstance(body["history_id"], int)
 
     def test_rejects_disallowed_extension(self, client, stub_analysis):
         response = client.post(

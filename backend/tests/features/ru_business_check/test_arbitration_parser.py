@@ -2,7 +2,10 @@
 response shape described in the module docstring - unverified against a live capture, so
 this fixture is the thing to update first if a real capture shows a different structure."""
 
+import pytest
+
 from app.features.ru_business_check.service.arbitration_service import (
+    ArbitrationError,
     _coerce_amount,
     parse_response,
 )
@@ -76,7 +79,13 @@ class TestParseResponse:
 
     def test_empty_items_returns_empty_list(self):
         assert parse_response({"Result": {"Items": []}}, INN) == []
-        assert parse_response({}, INN) == []
+
+    def test_missing_result_or_items_is_schema_drift_not_an_empty_history(self):
+        # An unverified response shape (see arbitration_service's docstring) must never
+        # silently read as "no cases".
+        for drifted in ({}, {"Result": None}, {"Result": {}}, {"Result": {"Items": "x"}}):
+            with pytest.raises(ArbitrationError, match="схема ответа изменилась"):
+                parse_response(drifted, INN)
 
 
 class TestCoerceAmount:

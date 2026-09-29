@@ -1,5 +1,25 @@
 FROM ghcr.io/astral-sh/uv:0.12.19@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea90c8573340950a0ac2d1aef424 AS uv
 
+# Compiles this repo's Go-based OSINT tools (subfinder, httpx, amass) from source
+# rather than pulling prebuilt release binaries, since none of these projects
+# publish per-arch checksums convenient to pin here and this repo's release images
+# are multi-arch (amd64/arm64) - `go install` resolves the right arch for whichever
+# platform buildx is building. Each pinned to an exact tag, like every other
+# dependency in this repo (amass/httpx need a newer Go toolchain than subfinder's
+# own go.mod requires, but a toolchain happily builds an older-declared module, so
+# one stage/image covers all three). CGO_ENABLED=0 produces fully static binaries
+# with no runtime dependency on this stage's (musl-based) libc, so they drop
+# straight into the glibc-based runtime stage below.
+FROM golang:1.26-alpine@sha256:ce864e7223ac17b1775e6fd0b4c0db580c2eb50e7953a427916379e4b92a1628 AS go-tools-builder
+ENV CGO_ENABLED=0 GOBIN=/go/bin
+RUN apk add --no-cache git ca-certificates
+RUN --mount=type=cache,target=/root/.cache/go-build,id=go-build-cache \
+    --mount=type=cache,target=/go/pkg/mod,id=go-mod-cache \
+    go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@v2.16.0 && \
+    go install -v github.com/projectdiscovery/httpx/cmd/httpx@v1.12.0 && \
+    go install -v github.com/owasp-amass/amass/v5/cmd/amass@v5.1.1 && \
+    go install -v github.com/owasp-amass/amass/v5/cmd/ae_isready@v5.1.1
+
 FROM python:3.14-slim@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6 AS builder
 WORKDIR /backend
 
@@ -56,6 +76,24 @@ RUN --mount=type=cache,target=/var/cache/apt,id=apt-cache-runtime,sharing=locked
 
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+
+# subfinder/httpx (domain_finder's passive-subdomain-enumeration and live-host-probe
+# panels), statically built in the go-tools-builder stage above - needed at runtime
+# as subprocesses by subfinder_service.py/host_probe_service.py. The Go httpx binary
+# is installed as `httpx-probe`, not `httpx`: the Python `httpx` package (already a
+# dependency, requirements.in) registers its own `httpx` console-script in
+# /opt/venv/bin, which is earlier on PATH than /usr/local/bin - installing under the
+# same name would silently shell out to the wrong tool.
+COPY --from=go-tools-builder /go/bin/subfinder /usr/local/bin/subfinder
+COPY --from=go-tools-builder /go/bin/httpx /usr/local/bin/httpx-probe
+
+# amass (active DNS brute-forcing / ASN-netblock discovery, the amass feature) +
+# ae_isready (its readiness-check companion) - needed at runtime as subprocesses by
+# amass_engine_service.py/amass_service.py. amass v5's `enum`/`subs` subcommands are
+# HTTP clients to a separate `amass engine` process (SQLite-backed by default, no
+# Postgres needed) that this app starts as a background subprocess at startup.
+COPY --from=go-tools-builder /go/bin/amass /usr/local/bin/amass
+COPY --from=go-tools-builder /go/bin/ae_isready /usr/local/bin/ae_isready
 
 # Non-root app user. `-m` gives it a real home dir, needed at runtime for
 # maigret's site-database auto-update cache (~/.maigret) and, if headless

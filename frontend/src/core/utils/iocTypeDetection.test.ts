@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { detectIocType, IOC_TYPES, isYoutubeVideoUrl } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isSteamProfileTarget, isYoutubeVideoUrl } from './iocTypeDetection';
 
 // Shared with the backend's test_ioc_type_detection.py via
 // testdata/ioc-type-detection-cases.json at the repo root, so the two implementations
@@ -84,5 +84,52 @@ describe('isYoutubeVideoUrl', () => {
     'https://www.youtube.com/channel/UC123456789',
   ])('rejects %s', (url) => {
     expect(isYoutubeVideoUrl(url)).toBe(false);
+  });
+});
+
+describe('isSteamProfileTarget', () => {
+  // Robin Walker's public profile: account id 169802 == STEAM_0:0:84901 == [U:1:169802]
+  const ID64 = '76561197960435530';
+
+  it.each([
+    ID64,
+    `  ${ID64}  `,
+    '[U:1:169802]',
+    'U:1:169802',
+    'STEAM_0:0:84901',
+    'STEAM_1:0:84901',
+    'steam_0:0:84901',
+    `https://steamcommunity.com/profiles/${ID64}`,
+    `https://steamcommunity.com/profiles/${ID64}/`,
+    `http://www.steamcommunity.com/profiles/${ID64}/friends?foo=bar`,
+    `steamcommunity.com/profiles/${ID64}`,
+    'https://steamcommunity.com/id/robinwalker',
+    'https://www.steamcommunity.com/id/robinwalker/games',
+  ])('accepts %s', (value) => {
+    expect(isSteamProfileTarget(value)).toBe(true);
+  });
+
+  it.each([
+    '',
+    '   ',
+    'robinwalker', // a bare vanity name is intentionally not auto-detected - see the JSDoc
+    '12345',
+    'not a steam id',
+    '12345678901234567', // 17 digits but outside the individual-account SteamID64 range
+    '[U:1:0]',
+    'STEAM_0:0:0',
+    'STEAM_9:0:84901',
+    `https://evil.example/profiles/${ID64}`,
+    `https://steamcommunity.com.evil.example/profiles/${ID64}`,
+    'https://steamcommunity.com/',
+    'https://steamcommunity.com/groups/valve',
+    'https://steamcommunity.com/id/bad!vanity',
+  ])('rejects %s', (value) => {
+    expect(isSteamProfileTarget(value)).toBe(false);
+  });
+
+  it('stays plain URL/unknown in detectIocType, same treatment as YouTube', () => {
+    expect(detectIocType(`https://steamcommunity.com/profiles/${ID64}`)).toBe(IOC_TYPES.URL);
+    expect(detectIocType(ID64)).toBe(IOC_TYPES.UNKNOWN);
   });
 });

@@ -1,0 +1,29 @@
+{
+  "content": [
+    {
+      "id": 4087926,
+      "inn": "<strong>5036045205</strong>",
+      "shortName": "АО \"ДИКСИ ЮГ\"",
+      "ogrn": "1035007202460",
+      "region": "МОСКОВСКАЯ",
+      "okved2": "47.11",
+      "statusCode": "ACTIVE",
+      "statusDate": "2015-05-06",
+      "bfo": {
+        "period": "2025",
+        "actualBfoDate": "2026-03-30",
+        "gainSum": 396350822,
+        "knd": "0710099",
+        "hasAz": true,
+        "hasKs": false,
+        "actualCorrectionNumber": 1,
+        "actualCorrectionDate": "2026-03-30",
+        "isCb": false,
+        "bfoPeriodTypes": [
+          12
+        ]
+      }
+    }
+  ],
+  "totalElements": 1
+}

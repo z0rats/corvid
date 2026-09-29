@@ -25,12 +25,19 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     DnssecResponse,
     DomainLookupResponse,
     HackerTargetSubdomainsResponse,
+    HostProbeResponse,
     RapidDnsSubdomainsResponse,
     SecurityHeadersResponse,
+    SiteCrawlResponse,
     SslInfoResponse,
+    SubfinderSubdomainsResponse,
     TemporalAnalysisResponse,
     WaybackLookupResponse,
     WhoisLookupResponse,
+)
+from app.features.ioc_tools.ioc_extractor.schemas.extractor_schemas import (
+    ExtractionResponse,
+    IOCStatistics,
 )
 
 
@@ -140,6 +147,38 @@ class TestRapiddnsSubdomainsLookup:
             "/api/domain/rapiddns-subdomains", json={"domain": "example.com"}
         )
         get_response = client.get("/api/domain/rapiddns-subdomains/example.com")
+
+        assert post_response.status_code == 200
+        assert get_response.status_code == 200
+        assert len(captured) == 2
+
+
+class TestSubfinderSubdomainsLookup:
+    def test_post_and_get_both_delegate_to_the_service(self, client, monkeypatch):
+        captured = []
+        result = SubfinderSubdomainsResponse(domain="example.com", total_records=0)
+        monkeypatch.setattr(
+            domain_routes, "perform_subfinder_lookup", _fake_service(captured, result)
+        )
+
+        post_response = client.post(
+            "/api/domain/subfinder-subdomains", json={"domain": "example.com"}
+        )
+        get_response = client.get("/api/domain/subfinder-subdomains/example.com")
+
+        assert post_response.status_code == 200
+        assert get_response.status_code == 200
+        assert len(captured) == 2
+
+
+class TestHostProbe:
+    def test_post_and_get_both_delegate_to_the_service(self, client, monkeypatch):
+        captured = []
+        result = HostProbeResponse(domain="example.com", reachable=False)
+        monkeypatch.setattr(domain_routes, "perform_host_probe", _fake_service(captured, result))
+
+        post_response = client.post("/api/domain/host-probe", json={"domain": "example.com"})
+        get_response = client.get("/api/domain/host-probe/example.com")
 
         assert post_response.status_code == 200
         assert get_response.status_code == 200
@@ -295,6 +334,38 @@ class TestTemporalAnalysis:
         assert len(captured) == 2
 
 
+class TestSiteCrawl:
+    def test_post_and_get_both_delegate_to_the_service(self, client, monkeypatch):
+        captured = []
+        result = SiteCrawlResponse(
+            domain="example.com",
+            total_pages_crawled=0,
+            iocs=ExtractionResponse(statistics=IOCStatistics()),
+        )
+        monkeypatch.setattr(domain_routes, "perform_site_crawl", _fake_service(captured, result))
+
+        post_response = client.post("/api/domain/site-crawl", json={"domain": "example.com"})
+        get_response = client.get("/api/domain/site-crawl/example.com")
+
+        assert post_response.status_code == 200
+        assert get_response.status_code == 200
+        assert len(captured) == 2
+
+    def test_get_passes_through_max_pages_and_max_depth_query_params(self, client, monkeypatch):
+        captured = []
+        result = SiteCrawlResponse(
+            domain="example.com",
+            total_pages_crawled=0,
+            iocs=ExtractionResponse(statistics=IOCStatistics()),
+        )
+        monkeypatch.setattr(domain_routes, "perform_site_crawl", _fake_service(captured, result))
+
+        client.get("/api/domain/site-crawl/example.com", params={"max_pages": 5, "max_depth": 1})
+
+        assert captured[0].max_pages == 5
+        assert captured[0].max_depth == 1
+
+
 class TestHealthCheck:
     def test_reports_every_panels_endpoints(self, client):
         response = client.get("/api/domain/health")
@@ -305,3 +376,10 @@ class TestHealthCheck:
         assert body["status"] == "healthy"
         assert "/api/domain/whois" in body["endpoints"]
         assert "/api/domain/temporal-analysis" in body["endpoints"]
+        assert "/api/domain/site-crawl" in body["endpoints"]
+        assert "/api/domain/subfinder-subdomains" in body["endpoints"]
+        assert "/api/domain/host-probe" in body["endpoints"]
+        assert "subfinder_installed" in body
+        assert "subfinder_version" in body
+        assert "httpx_installed" in body
+        assert "httpx_version" in body

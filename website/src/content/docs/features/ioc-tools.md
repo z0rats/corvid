@@ -23,6 +23,10 @@ A set of tools for working with indicators of compromise:
 - **OpenPhish** — checks a domain or URL against OpenPhish's free, keyless community phishing
   feed (a flat list, no per-URL endpoint, so the full feed is cached in-process for up to an
   hour rather than re-downloaded per lookup — same pattern as the CISA KEV catalog above).
+- **URLhaus** — abuse.ch's malware-URL database, queried by URL, domain, or IPv4: a URL returns
+  its own status, tags, blacklist flags, and dropped payloads; a domain or IP returns every
+  malware URL URLhaus has seen on that host (first 10 shown). Needs a free abuse.ch Auth-Key,
+  the same one ThreatFox uses.
 - **Library of Leaks** — checks a domain or email against a public, keyless Aleph instance
   (run by DDoSecrets/investigativedata.io) indexing tens of millions of records across dozens of
   breach/leak collections. Only per-collection hit counts are shown — never the matching
@@ -56,6 +60,15 @@ A set of tools for working with indicators of compromise:
 - **RapidDNS subdomains** — passive subdomain enumeration via RapidDNS's public lookup page
   (DNS records aggregated from public passive-DNS sources), same one-click re-scan. No API key
   needed.
+- **subfinder subdomains** — passive subdomain enumeration via subfinder (shelled out to as a
+  subprocess), aggregating results across its keyless sources with per-subdomain source
+  attribution. Unlike the other subdomain panels this runs on an explicit click rather than
+  automatically, since a scan can take up to a minute. No API key needed.
+- **Host Probe** — detects which of http/https is live for a domain via httpx (also shelled
+  out to as a subprocess), reporting page title, server, detected technologies, favicon hash,
+  and TLS certificate data - a useful next step after enumerating subdomains. Runs on an
+  explicit click, since it connects directly to the domain rather than a third-party API.
+  No API key needed.
 - **Web Check** — four keyless site-hardening checks: TLS certificate inspection (issuer,
   validity, SAN, hostname match — verification is skipped so self-signed/expired/mismatched
   certificates are shown rather than refused), HTTPS security response headers (HSTS, CSP,
@@ -76,3 +89,8 @@ A set of tools for working with indicators of compromise:
   list below it. Reuses the WHOIS/SSL/Wayback panels' own lookups rather than a separate API; a
   single source failing (e.g. no TLS listener) is shown as unavailable rather than failing the
   whole timeline. No API key needed.
+- **Site Crawler** — crawls a domain's same-host pages/scripts (default up to 15 pages, depth 2)
+  starting from its HTTPS homepage, following only same-host links, and runs every fetched page
+  through the same IOC extraction engine as the standalone IOC Extractor above. Unlike the other
+  Domain Finder panels this doesn't run automatically on every search — it makes several outbound
+  requests per crawl, so it only starts on an explicit click. No API key needed.

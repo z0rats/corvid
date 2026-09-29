@@ -21,9 +21,11 @@ which provider handles which type.
 - **Needs an API key** (Settings → API Keys): AbuseIPDB, AlienVault OTX, CheckPhish, CrowdSec,
   CrowdStrike, EmailRep.io, GitHub (optional — raises an otherwise-anonymous rate limit, not
   required), Have I Been Pwned, Hunter.io, IPQualityScore, LeakIX, Maltiverse, Mandiant, NIST NVD,
-  Pulsedive, Reddit, Google Safe Browsing, Shodan, ThreatFox, Twitter/X, VirusTotal.
+  Pulsedive, Reddit, Google Safe Browsing, Shodan, ThreatFox, Twitter/X, URLhaus, VirusTotal.
+  ThreatFox and URLhaus both take the same free abuse.ch Auth-Key (get one at
+  [auth.abuse.ch](https://auth.abuse.ch/)) — paste it into each service's field.
 - **Fully keyless**: Address Blacklist (resolved locally, see below), CISA KEV, FFraud, FIRST.org
-  EPSS, Hudson Rock, Library of Leaks, MalwareBazaar, OpenPhish, URLhaus, URLScan.io.
+  EPSS, Hudson Rock, Library of Leaks, MalwareBazaar, OpenPhish, URLScan.io.
 - **Address Blacklist** resolves instantly from a local table, refreshed daily rather than called
   per lookup, from three free keyless feeds: OFAC's `sanctionslistservice.ofac.treas.gov` (SDN
   digital-currency addresses), ScamSniffer's GitHub-hosted phishing-address database, and
@@ -92,6 +94,14 @@ which provider handles which type.
 - Thumbnail URLs (`i.ytimg.com`) are constructed directly, not fetched server-side at all — the
   browser loads them.
 
+## Instagram Search
+
+- **Instagram** (`instagram.com`, via the `instaloader` library) — public profile metadata
+  (bio, links, counters, verified/business/private flags) by username. Keyless by default;
+  Instagram rate-limits anonymous requests aggressively. An optional imported browser-session
+  cookie (`instagram_session` key, a JSON object, never a password) unlocks data anonymous
+  lookups can't reach. Automated access violates Instagram's ToS either way.
+
 ## Newsfeed
 
 - RSS feeds and full-article text are fetched from whatever feed/article URLs are configured —
@@ -103,13 +113,15 @@ which provider handles which type.
 
 ## RU Business Check
 
-Seven Russian government sources, all keyless, all fixed hosts (only the ИНН/name query is
-user-supplied): `egrul.nalog.ru` (ЕГРЮЛ/ЕГРИП registry), `service.nalog.ru` (РДЛ disqualified
-persons), `kad.arbitr.ru` (arbitration case registry), `fedresurs.ru` (bankruptcy register),
-`pb.nalog.ru` (mass-registration-address risk indicators), `fedsfm.ru` (terrorism/WMD-financing
-list), `zakupki.gov.ru` (barred-supplier registry). See
-[RU Business Check](/corvid/features/ru-business-check/) for what each source contributes to a
-verdict.
+Keyless, fixed hosts only (just the ИНН/name query is user-supplied). Live lookups:
+`egrul.nalog.ru` (ЕГРЮЛ/ЕГРИП), `service.nalog.ru` (РДЛ), `kad.arbitr.ru` (arbitration cases),
+`fedresurs.ru` (bankruptcy and company publications), `pb.nalog.ru` (mass-registration address),
+`fedsfm.ru` (terrorism/WMD-financing list), `zakupki.gov.ru` (barred suppliers), `bo.nalog.gov.ru`
+(ГИР БО statements), `rmsp.nalog.ru` (МСП register). Downloaded on a schedule and matched locally
+by exact ИНН: the ФНС disqualified-persons open-data set (`data.nalog.ru`), the Банк России
+warning list (`cbr.ru`) and the US Treasury OFAC SDN list (`treasury.gov`, following its redirect to
+OFAC's published-file storage). See [RU Business Check](/corvid/features/ru-business-check/) for what
+each source contributes to a verdict.
 
 ## Image Tools
 

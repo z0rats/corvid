@@ -37,6 +37,10 @@ const registry = [
     id: 'youtube', label: 'YouTube', path: '/youtube',
     aliases: ['youtube', 'yt'], tags: ['recon'], accepts: [IOC_TYPES.YOUTUBE_VIDEO_URL], acceptsRouting: {},
   },
+  {
+    id: 'steam_recon', label: 'Steam Recon', path: '/steam-recon',
+    aliases: ['steam', 'steam recon'], tags: ['recon', 'identity'], accepts: [IOC_TYPES.STEAM_PROFILE], acceptsRouting: {},
+  },
 ];
 
 const playbooks = [
@@ -104,13 +108,39 @@ describe('parseQuery — recognized value', () => {
     expect(result.iocType).toBe(IOC_TYPES.URL);
     expect(result.matches.map((m) => m.id)).toEqual(['youtube']);
   });
+
+  it('a steamcommunity.com profile URL is still typed as URL but surfaces steam_recon first', () => {
+    const result = parseQuery('https://steamcommunity.com/id/robinwalker', { registry });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.URL);
+    expect(result.matches.map((m) => m.id)).toEqual(['steam_recon']);
+  });
+
+  it('a bare SteamID64 (no URL) is classified as SteamProfile directly', () => {
+    const result = parseQuery('76561197960435530', { registry });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.STEAM_PROFILE);
+    expect(result.matches.map((m) => m.id)).toEqual(['steam_recon']);
+  });
+
+  it('a SteamID3 shorthand is classified as SteamProfile', () => {
+    const result = parseQuery('[U:1:169802]', { registry });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.STEAM_PROFILE);
+    expect(result.matches.map((m) => m.id)).toEqual(['steam_recon']);
+  });
+
+  it('a bare vanity name is not auto-classified as SteamProfile (too ambiguous)', () => {
+    const result = parseQuery('robinwalker', { registry });
+    expect(result.kind).not.toBe('value');
+  });
 });
 
 describe('parseQuery — #tag filter', () => {
   it('filters the registry by tag', () => {
     const result = parseQuery('#identity', { registry });
     expect(result.kind).toBe('tag');
-    expect(result.matches.map((m) => m.id).sort()).toEqual(['reddit_search', 'username_search']);
+    expect(result.matches.map((m) => m.id).sort()).toEqual(['reddit_search', 'steam_recon', 'username_search']);
   });
 
   it('is case-insensitive on the tag name', () => {
@@ -266,7 +296,9 @@ describe('parseQuery — identity-tool fallback for an unrecognized bare value',
     const result = parseQuery('z0rats', { registry: registryWithEmail });
     expect(result.kind).toBe('fallback');
     expect(result.value).toBe('z0rats');
-    expect(result.matches.map((m) => m.id).sort()).toEqual(['email_search', 'reddit_search', 'username_search']);
+    expect(result.matches.map((m) => m.id).sort()).toEqual([
+      'email_search', 'reddit_search', 'steam_recon', 'username_search',
+    ]);
   });
 
   it('promotes email-tagged tools to the front when the value looks email-shaped', () => {
@@ -372,7 +404,7 @@ describe('mergeEmptyStateResults', () => {
       registry,
     });
     expect(merged.map((r) => r.entry.id)).toEqual([
-      'dork_runner', 'youtube', 'reddit_search', 'username_search', 'ioc_tools',
+      'dork_runner', 'youtube', 'reddit_search', 'username_search', 'ioc_tools', 'steam_recon',
     ]);
     expect(merged.every((r) => r.type === 'entry')).toBe(true);
   });

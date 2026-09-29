@@ -1,0 +1,44 @@
+{
+  "page": {
+    "title": "Amass",
+    "description": "Active DNS enumeration and ASN/netblock discovery via OWASP Amass. Findings accumulate across every scan of the same domain, so a repeat scan reflects everything known so far, not just this run.",
+    "poweredBy": "Powered by OWASP Amass"
+  },
+
+  "form": {
+    "targetLabel": "Domain",
+    "targetPlaceholder": "e.g. example.com",
+    "scanButton": "Scan",
+    "cancelButton": "Cancel",
+    "bruteForceLabel": "Wordlist brute-forcing (slower, noisier)"
+  },
+
+  "results": {
+    "empty": "No hosts found for this domain yet.",
+    "hostsFound": "{{count}} host(s) known",
+    "headers": {
+      "hostname": "Hostname",
+      "ip": "IP"
+    }
+  },
+
+  "history": {
+    "empty": "No past scans yet",
+    "notFound": "Scan not found",
+    "summary": "Scanned {{date}}",
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "headers": {
+      "domain": "Domain",
+      "status": "Status",
+      "hosts": "Hosts",
+      "bruteForce": "Brute-force",
+      "searched": "Searched",
+      "actions": "Actions"
+    }
+  }
+}

@@ -91,7 +91,26 @@
       "settings": "Настройки"
     },
 
-    "youtube": "YouTube"
+    "youtube": "YouTube",
+    "steamRecon": "Steam Recon",
+    "steamReconTabs": {
+      "newScan": "New Scan",
+      "profile": "Profile Lookup",
+      "history": "History"
+    },
+
+    "amass": "Amass",
+    "amassTabs": {
+      "newScan": "New Scan",
+      "history": "History"
+    },
+
+    "instagramSearch": "Instagram Search",
+    "instagramSearchTabs": {
+      "profile": "Profile Lookup",
+      "newScan": "New Scan",
+      "history": "History"
+    }
   },
 
   "layout": {

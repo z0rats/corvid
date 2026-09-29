@@ -1,4 +1,4 @@
-from sqlalchemy import Integer
+from sqlalchemy import Float, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -9,6 +9,11 @@ SMALL_CLAIM_AMOUNT_THRESHOLD_DEFAULT = 100_000
 LARGE_CLAIM_AMOUNT_THRESHOLD_DEFAULT = 1_000_000
 MULTIPLE_CLAIMS_DEFENDANT_THRESHOLD_DEFAULT = 3
 MASS_ADDRESS_THRESHOLD_DEFAULT = 10
+# ГИР БО financial-ratio thresholds, calibrated by inn-check-ru on 2022-2024 bankruptcies
+# (references/kalibrovka.md there) - a per-flag estimate, not a verdict's accuracy.
+EQUITY_RATIO_THRESHOLD_DEFAULT = 0.1
+CURRENT_RATIO_THRESHOLD_DEFAULT = 1.0
+REVENUE_DROP_THRESHOLD_DEFAULT = 0.5
 
 
 class RuBusinessCheckSettings(Base):
@@ -62,4 +67,22 @@ class RuBusinessCheckSettings(Base):
         default=MASS_ADDRESS_THRESHOLD_DEFAULT,
         comment="Number of other entities registered at the same address (pb.nalog.ru) "
         "at/above which the 'mass registration address' soft flag fires",
+    )
+    equity_ratio_threshold: Mapped[float] = mapped_column(
+        Float,
+        default=EQUITY_RATIO_THRESHOLD_DEFAULT,
+        comment="ГИР БО equity ratio (строка 1300 / строка 1600) below which the soft "
+        "'low equity ratio' flag fires",
+    )
+    current_ratio_threshold: Mapped[float] = mapped_column(
+        Float,
+        default=CURRENT_RATIO_THRESHOLD_DEFAULT,
+        comment="ГИР БО current ratio (строка 1200 / строка 1500) below which the soft "
+        "'low current liquidity' flag fires",
+    )
+    revenue_drop_threshold: Mapped[float] = mapped_column(
+        Float,
+        default=REVENUE_DROP_THRESHOLD_DEFAULT,
+        comment="Year-over-year ГИР БО revenue drop (0-1 fraction) above which the soft "
+        "'revenue drop' flag fires",
     )

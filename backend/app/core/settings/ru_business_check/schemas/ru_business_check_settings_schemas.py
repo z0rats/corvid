@@ -36,6 +36,19 @@ class RuBusinessCheckSettingsSchema(BaseModel):
         "at/above which the 'mass registration address' soft flag fires",
     )
 
+    equity_ratio_threshold: float = Field(
+        ...,
+        description="ГИР БО equity ratio (строка 1300 / 1600) below which the soft flag fires",
+    )
+    current_ratio_threshold: float = Field(
+        ...,
+        description="ГИР БО current ratio (строка 1200 / 1500) below which the soft flag fires",
+    )
+    revenue_drop_threshold: float = Field(
+        ...,
+        description="Year-over-year ГИР БО revenue drop (0-1) above which the soft flag fires",
+    )
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -82,4 +95,22 @@ class RuBusinessCheckSettingsUpdateSchema(BaseModel):
         le=1000,
         description="Number of other entities at the same address (pb.nalog.ru) "
         "at/above which the 'mass registration address' soft flag fires",
+    )
+    equity_ratio_threshold: float | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+        description="ГИР БО equity ratio (строка 1300 / 1600) below which the soft flag fires",
+    )
+    current_ratio_threshold: float | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description="ГИР БО current ratio (строка 1200 / 1500) below which the soft flag fires",
+    )
+    revenue_drop_threshold: float | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+        description="Year-over-year ГИР БО revenue drop (0-1) above which the soft flag fires",
     )

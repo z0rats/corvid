@@ -249,6 +249,28 @@
       "scanSubdomain": "Scan this subdomain",
       "recordCount": "{{count}} DNS record(s) found via RapidDNS"
     },
+    "subfinder": {
+      "title": "subfinder subdomains",
+      "description": "Runs subfinder across its keyless passive sources. Can take up to a minute, so it starts on click rather than automatically.",
+      "startButton": "Run subfinder",
+      "rescanButton": "Re-run",
+      "loadingHint": "Running passive sources, this can take up to a minute...",
+      "errorPrefix": "subfinder lookup failed:",
+      "noSubdomains": "No subdomains found via subfinder.",
+      "scanSubdomain": "Scan this subdomain",
+      "recordCount": "{{count}} subdomain(s) found via subfinder"
+    },
+    "hostProbe": {
+      "title": "Host Probe",
+      "description": "Probes the domain for a live http/https host (title, server, detected technologies, favicon hash, TLS certificate). Starts on click, not automatically, since it makes outbound requests directly to the domain.",
+      "startButton": "Probe host",
+      "rescanButton": "Re-probe",
+      "errorPrefix": "Host probe failed:",
+      "notReachable": "No live http/https host found for this domain.",
+      "redirectsTo": "Redirects to:",
+      "faviconHash": "Favicon hash:",
+      "tlsIssuer": "TLS issuer:"
+    },
     "webCheck": {
       "title": "Web Check",
       "checkedAt": "Checked at",
@@ -302,6 +324,30 @@
       "categories": {
         "server": "Server",
         "page": "Page"
+      }
+    },
+    "siteCrawler": {
+      "title": "Site Crawler",
+      "description": "Crawls up to {{maxPages}} same-host pages (depth {{maxDepth}}) starting from the homepage over HTTPS, following only same-host links, and scans every fetched page for IOCs - secrets, JS API endpoints, emails, URLs, and more.",
+      "startButton": "Start crawl",
+      "recrawlButton": "Re-crawl",
+      "errorPrefix": "Site crawl failed:",
+      "summary": "{{pages}} page(s) crawled, {{iocs}} IOC(s) found",
+      "errorsSummary": "{{count}} page(s) could not be fetched",
+      "pagesTitle": "Pages crawled",
+      "iocsTitle": "Extracted IOCs",
+      "noIocs": "No IOCs found across the crawled pages.",
+      "iocCategories": {
+        "domains": "Domains",
+        "ips": "IP addresses",
+        "urls": "URLs",
+        "emails": "Email addresses",
+        "md5": "MD5 hashes",
+        "sha1": "SHA1 hashes",
+        "sha256": "SHA256 hashes",
+        "cves": "CVEs",
+        "secrets": "Secrets",
+        "js_endpoints": "JS endpoints"
       }
     },
     "welcomeScreen": {
@@ -829,6 +875,27 @@
       "reporter": "Reporter",
       "reference": "Reference",
       "tags": "Tags"
+    },
+    "urlhaus": {
+      "unavailable": "URLhaus details are unavailable.",
+      "errorFetching": "Error fetching URLhaus details: {{error}}",
+      "notFound": "\"{{ioc}}\" is not listed in URLhaus.",
+      "queryStatus": "URLhaus query status: {{status}}.",
+      "hostTitle": "Malware host: {{host}}",
+      "urlTitle": "Malware URL",
+      "threat": "Threat",
+      "host": "Host",
+      "firstSeen": "First seen",
+      "lastOnline": "Last online",
+      "urlCount": "URLs on this host",
+      "reporter": "Reporter",
+      "blacklists": "Blacklists",
+      "blacklistEntry": "{{name}}: {{status}}",
+      "tags": "Tags",
+      "payloads": "Payloads ({{count}})",
+      "urlsOnHost": "URLs on this host",
+      "moreUrls": "…and {{count}} more on URLhaus.",
+      "viewOnUrlhaus": "View on URLhaus"
     },
     "twitter": {
       "loading": "Loading Twitter mentions...",

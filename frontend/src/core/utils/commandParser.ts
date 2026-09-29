@@ -1,4 +1,4 @@
-import { detectIocType, IOC_TYPES, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isSteamProfileTarget, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
 
 /**
  * Pure, framework-free parsing of the command palette's input grammar (see
@@ -44,6 +44,7 @@ export const TYPE_TOKEN_ALIASES: Record<string, IocType[]> = {
   email: [IOC_TYPES.EMAIL],
   hash: [IOC_TYPES.MD5, IOC_TYPES.SHA1, IOC_TYPES.SHA256],
   youtube: [IOC_TYPES.YOUTUBE_VIDEO_URL],
+  steam: [IOC_TYPES.STEAM_PROFILE],
   md5: [IOC_TYPES.MD5],
   sha1: [IOC_TYPES.SHA1],
   sha256: [IOC_TYPES.SHA256],
@@ -352,17 +353,33 @@ export function parseQuery(rawInput?: string | null, ctx: Partial<ParserContext>
   const iocType = detectIocType(input);
   if (iocType !== IOC_TYPES.UNKNOWN) {
     const matches = rankToolsForValue(iocType, context.registry);
-    // detectIocType classifies a YouTube link as plain URL (see iocTypeDetection.ts's
-    // YOUTUBE_VIDEO_URL comment for why that stays true rather than adding a real pattern for
-    // it) - so a more specific YouTube-module match, when one is registered, is surfaced here as
-    // an addition on top of the generic URL matches rather than instead of them.
+    // detectIocType classifies a YouTube link (or a steamcommunity.com profile URL) as plain URL
+    // (see iocTypeDetection.ts's YOUTUBE_VIDEO_URL/STEAM_PROFILE comments for why that stays
+    // true rather than adding a real pattern for either) - so a more specific module match, when
+    // one is registered, is surfaced here as an addition on top of the generic URL matches
+    // rather than instead of them.
     const youtubeMatches = iocType === IOC_TYPES.URL && isYoutubeVideoUrl(input)
       ? rankToolsForValue(IOC_TYPES.YOUTUBE_VIDEO_URL, context.registry)
       : [];
-    const orderedMatches = youtubeMatches.length > 0
-      ? [...youtubeMatches, ...matches.filter((entry) => !youtubeMatches.includes(entry))]
+    const steamMatches = iocType === IOC_TYPES.URL && isSteamProfileTarget(input)
+      ? rankToolsForValue(IOC_TYPES.STEAM_PROFILE, context.registry)
+      : [];
+    const extraMatches = [...youtubeMatches, ...steamMatches];
+    const orderedMatches = extraMatches.length > 0
+      ? [...extraMatches, ...matches.filter((entry) => !extraMatches.includes(entry))]
       : matches;
     return { kind: 'value', value: input, iocType, matches: orderedMatches };
+  }
+
+  // A bare SteamID64/SteamID3/SteamID2 (no URL wrapper) matches nothing in detectIocType's own
+  // chain, unlike the YouTube/Steam-URL case above - it needs its own primary classification
+  // here rather than an "on top of URL" injection, or it falls through to the generic
+  // identity-fallback below and loses out to whichever identity tool happens to sort first.
+  if (isSteamProfileTarget(input)) {
+    const matches = rankToolsForValue(IOC_TYPES.STEAM_PROFILE, context.registry);
+    if (matches.length > 0) {
+      return { kind: 'value', value: input, iocType: IOC_TYPES.STEAM_PROFILE, matches };
+    }
   }
 
   const pivot = parsePivot(input, context);

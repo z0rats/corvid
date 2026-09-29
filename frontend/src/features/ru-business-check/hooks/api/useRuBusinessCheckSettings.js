@@ -8,6 +8,9 @@ const DEFAULT_CONFIG = {
   large_claim_amount_threshold: 1_000_000,
   multiple_claims_defendant_threshold: 3,
   mass_address_threshold: 10,
+  equity_ratio_threshold: 0.1,
+  current_ratio_threshold: 1.0,
+  revenue_drop_threshold: 0.5,
 };
 
 export function useRuBusinessCheckSettings() {

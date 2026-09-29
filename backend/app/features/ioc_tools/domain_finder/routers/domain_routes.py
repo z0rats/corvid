@@ -22,12 +22,18 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
     DomainLookupResponse,
     HackerTargetSubdomainsRequest,
     HackerTargetSubdomainsResponse,
+    HostProbeRequest,
+    HostProbeResponse,
     RapidDnsSubdomainsRequest,
     RapidDnsSubdomainsResponse,
     SecurityHeadersRequest,
     SecurityHeadersResponse,
+    SiteCrawlRequest,
+    SiteCrawlResponse,
     SslInfoRequest,
     SslInfoResponse,
+    SubfinderSubdomainsRequest,
+    SubfinderSubdomainsResponse,
     TemporalAnalysisRequest,
     TemporalAnalysisResponse,
     WaybackLookupRequest,
@@ -48,13 +54,24 @@ from app.features.ioc_tools.domain_finder.service.domain_lookup_service import p
 from app.features.ioc_tools.domain_finder.service.hackertarget_lookup_service import (
     perform_hackertarget_lookup,
 )
+from app.features.ioc_tools.domain_finder.service.host_probe_service import (
+    get_httpx_version,
+    is_httpx_available,
+    perform_host_probe,
+)
 from app.features.ioc_tools.domain_finder.service.rapiddns_lookup_service import (
     perform_rapiddns_lookup,
 )
 from app.features.ioc_tools.domain_finder.service.security_headers_service import (
     perform_security_headers_lookup,
 )
+from app.features.ioc_tools.domain_finder.service.site_crawler_service import perform_site_crawl
 from app.features.ioc_tools.domain_finder.service.ssl_info_service import perform_ssl_info_lookup
+from app.features.ioc_tools.domain_finder.service.subfinder_service import (
+    get_subfinder_version,
+    is_subfinder_available,
+    perform_subfinder_lookup,
+)
 from app.features.ioc_tools.domain_finder.service.temporal_analysis_service import (
     perform_temporal_analysis,
 )
@@ -293,6 +310,98 @@ async def rapiddns_subdomains_lookup_get(
         domain,
         len(result.subdomains),
     )
+    return result
+
+
+@router.post(
+    "/subfinder-subdomains",
+    response_model=SubfinderSubdomainsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Enumerate subdomains via subfinder",
+    description=(
+        "Run subfinder (shelled out to as a subprocess) to passively enumerate subdomains "
+        "across its ~55 built-in sources, using only keyless ones"
+    ),
+)
+@limiter.limit("10/minute")  # heavier than other domain_finder checks: spawns a subprocess
+async def subfinder_subdomains_lookup_post(
+    request: Request, subfinder_request: SubfinderSubdomainsRequest
+) -> SubfinderSubdomainsResponse:
+    """Perform a subfinder subdomain lookup via POST request"""
+    logger.info("POST subfinder subdomains lookup request - Domain: %s", subfinder_request.domain)
+    result = await perform_subfinder_lookup(subfinder_request)
+    logger.info(
+        "POST subfinder subdomains lookup completed - Domain: %s, Subdomains: %s",
+        subfinder_request.domain,
+        len(result.subdomains),
+    )
+    return result
+
+
+@router.get(
+    "/subfinder-subdomains/{domain}",
+    response_model=SubfinderSubdomainsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Enumerate subdomains via subfinder via URL parameter",
+    description="Run subfinder using domain from URL path for simple GET requests",
+)
+@limiter.limit("10/minute")
+async def subfinder_subdomains_lookup_get(
+    request: Request, domain: str
+) -> SubfinderSubdomainsResponse:
+    """Perform a subfinder subdomain lookup using domain from URL path via GET request"""
+    logger.info("GET subfinder subdomains lookup request - Domain: %s", domain)
+    subfinder_request = SubfinderSubdomainsRequest(domain=domain)
+    result = await perform_subfinder_lookup(subfinder_request)
+    logger.info(
+        "GET subfinder subdomains lookup completed - Domain: %s, Subdomains: %s",
+        domain,
+        len(result.subdomains),
+    )
+    return result
+
+
+@router.post(
+    "/host-probe",
+    response_model=HostProbeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Probe a domain for a live http/https host via httpx",
+    description=(
+        "Run httpx (shelled out to as a subprocess) to detect which of http/https is live "
+        "for a domain, along with title, server, detected technologies, favicon hash, and "
+        "TLS certificate data - useful after subdomain enumeration to see which discovered "
+        "hosts are worth a closer look"
+    ),
+)
+@limiter.limit("10/minute")  # heavier than other domain_finder checks: spawns a subprocess
+async def host_probe_post(
+    request: Request, host_probe_request: HostProbeRequest
+) -> HostProbeResponse:
+    """Perform a host probe via POST request"""
+    logger.info("POST host probe request - Domain: %s", host_probe_request.domain)
+    result = await perform_host_probe(host_probe_request)
+    logger.info(
+        "POST host probe completed - Domain: %s, Reachable: %s",
+        host_probe_request.domain,
+        result.reachable,
+    )
+    return result
+
+
+@router.get(
+    "/host-probe/{domain}",
+    response_model=HostProbeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Probe a domain for a live http/https host via httpx via URL parameter",
+    description="Run httpx using domain from URL path for simple GET requests",
+)
+@limiter.limit("10/minute")
+async def host_probe_get(request: Request, domain: str) -> HostProbeResponse:
+    """Perform a host probe using domain from URL path via GET request"""
+    logger.info("GET host probe request - Domain: %s", domain)
+    host_probe_request = HostProbeRequest(domain=domain)
+    result = await perform_host_probe(host_probe_request)
+    logger.info("GET host probe completed - Domain: %s, Reachable: %s", domain, result.reachable)
     return result
 
 
@@ -639,6 +748,66 @@ async def temporal_analysis_get(request: Request, domain: str) -> TemporalAnalys
     return result
 
 
+@router.post(
+    "/site-crawl",
+    response_model=SiteCrawlResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Crawl a domain's same-host pages and extract IOCs",
+    description=(
+        "Crawl a domain starting from its HTTPS homepage, following only same-host links up to "
+        "a bounded page count/depth, and extract IOCs (secrets, JS endpoints, emails, URLs, "
+        "and more) from every fetched page"
+    ),
+)
+@limiter.limit("10/minute")  # heavier than other domain_finder checks: many outbound requests/call
+async def site_crawl_post(request: Request, crawl_request: SiteCrawlRequest) -> SiteCrawlResponse:
+    """Perform a bounded same-host site crawl via POST request"""
+    logger.info(
+        "POST site crawl request - Domain: %s, max_pages: %s, max_depth: %s",
+        crawl_request.domain,
+        crawl_request.max_pages,
+        crawl_request.max_depth,
+    )
+    result = await perform_site_crawl(crawl_request)
+    logger.info(
+        "POST site crawl completed - Domain: %s, Pages: %s, IOCs: %s",
+        crawl_request.domain,
+        result.total_pages_crawled,
+        result.iocs.statistics.total_unique_iocs,
+    )
+    return result
+
+
+@router.get(
+    "/site-crawl/{domain}",
+    response_model=SiteCrawlResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Crawl a domain's same-host pages and extract IOCs via URL parameter",
+    description="Crawl a domain's same-host pages using domain from URL path for simple GET "
+    "requests, with optional max_pages/max_depth query parameters",
+)
+@limiter.limit("10/minute")
+async def site_crawl_get(
+    request: Request, domain: str, max_pages: int = 15, max_depth: int = 2
+) -> SiteCrawlResponse:
+    """Perform a bounded same-host site crawl using domain from URL path via GET request"""
+    logger.info(
+        "GET site crawl request - Domain: %s, max_pages: %s, max_depth: %s",
+        domain,
+        max_pages,
+        max_depth,
+    )
+    crawl_request = SiteCrawlRequest(domain=domain, max_pages=max_pages, max_depth=max_depth)
+    result = await perform_site_crawl(crawl_request)
+    logger.info(
+        "GET site crawl completed - Domain: %s, Pages: %s, IOCs: %s",
+        domain,
+        result.total_pages_crawled,
+        result.iocs.statistics.total_unique_iocs,
+    )
+    return result
+
+
 @router.get(
     "/health",
     response_model=dict[str, Any],
@@ -662,6 +831,10 @@ async def check_domain_service_health() -> dict[str, Any]:
             "/api/domain/hackertarget-subdomains/{domain}",
             "/api/domain/rapiddns-subdomains",
             "/api/domain/rapiddns-subdomains/{domain}",
+            "/api/domain/subfinder-subdomains",
+            "/api/domain/subfinder-subdomains/{domain}",
+            "/api/domain/host-probe",
+            "/api/domain/host-probe/{domain}",
             "/api/domain/ssl-info",
             "/api/domain/ssl-info/{domain}",
             "/api/domain/security-headers",
@@ -678,5 +851,11 @@ async def check_domain_service_health() -> dict[str, Any]:
             "/api/domain/wayback/{domain}",
             "/api/domain/temporal-analysis",
             "/api/domain/temporal-analysis/{domain}",
+            "/api/domain/site-crawl",
+            "/api/domain/site-crawl/{domain}",
         ],
+        "subfinder_installed": is_subfinder_available(),
+        "subfinder_version": get_subfinder_version(),
+        "httpx_installed": is_httpx_available(),
+        "httpx_version": get_httpx_version(),
     }

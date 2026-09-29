@@ -19,7 +19,11 @@ from urllib.parse import urlencode
 
 from app.core.reports.schemas import ReportRow, ReportSection
 from app.core.reports.service import EXPORT_FORMATS, generate_report
-from app.features.ru_business_check.config.ru_business_check_config import SOURCE_LABELS
+from app.features.ru_business_check.config.ru_business_check_config import (
+    SOURCE_LABELS,
+    missing_required_sources,
+    not_applicable_sources,
+)
 from app.features.ru_business_check.models.ru_business_check_models import RuBusinessCheckSearch
 
 REPORT_TITLE = "Отчёт RU Business Check"
@@ -29,7 +33,12 @@ _ENTITY_TYPE_LABELS = {
     "legal_entity": "Юридическое лицо",
     "individual_entrepreneur": "Индивидуальный предприниматель",
 }
-_RISK_LABELS = {"low": "Низкий", "medium": "Средний", "high": "Высокий"}
+_RISK_LABELS = {
+    "low": "Низкий",
+    "medium": "Средний",
+    "high": "Высокий",
+    "incomplete": "Проверка неполная (не проверены обязательные источники)",
+}
 _ARBITRATION_ROLE_LABELS = {"plaintiff": "Истец", "defendant": "Ответчик", "other": "Иная роль"}
 
 # РДЛ and ФедСФМ's own search forms are both POST/JS-driven (confirmed live - neither
@@ -80,12 +89,30 @@ def _summary_section(search: RuBusinessCheckSearch) -> ReportSection:
         severity_label = "Флаг (жёсткий)" if flag.get("severity") == "hard" else "Флаг (мягкий)"
         rows.append(ReportRow(severity_label, f"{flag.get('title')}: {flag.get('detail')}"))
 
+    if search.risk_level == "incomplete":
+        missing = [
+            SOURCE_LABELS.get(s, s) for s in missing_required_sources(search.checked_sources)
+        ]
+        rows.append(
+            ReportRow(
+                "Вердикт не выдан",
+                "Не проверены обязательные источники: "
+                + (", ".join(missing) or "—")
+                + ". Отсутствие флагов по ним ничего не означает.",
+            )
+        )
+
     checked_labels = [SOURCE_LABELS.get(s, s) for s in (search.checked_sources or [])]
     if checked_labels:
         rows.append(ReportRow("Проверенные источники", ", ".join(checked_labels)))
     pending_labels = [SOURCE_LABELS.get(s, s) for s in (search.pending_sources or [])]
     if pending_labels:
         rows.append(ReportRow("Не проверено", ", ".join(pending_labels)))
+    not_applicable = not_applicable_sources(search.extra_data)
+    if not_applicable:
+        rows.append(
+            ReportRow("Не применимо", ", ".join(SOURCE_LABELS.get(s, s) for s in not_applicable))
+        )
 
     if search.candidates:
         for i, candidate in enumerate(search.candidates, start=1):
@@ -155,6 +182,8 @@ def _disqualification_section(disq: dict, director_name: str | None) -> ReportSe
             rows.append(ReportRow("ФИО", m.get("full_name") or "—"))
             if m.get("record_number"):
                 rows.append(ReportRow("Номер записи РДЛ", m["record_number"]))
+            if m.get("birth_date"):
+                rows.append(ReportRow("Дата рождения (по реестру)", m["birth_date"]))
             if m.get("organization") or m.get("position"):
                 rows.append(
                     ReportRow(
@@ -210,6 +239,21 @@ def _fedresurs_section(fedresurs: dict) -> ReportSection:
                 "Активное банкротство", "Да" if fedresurs.get("is_active_bankruptcy") else "Нет"
             ),
         ]
+        if fedresurs.get("status_recognized") is False:
+            rows.append(
+                ReportRow("Статус", "Не входит в известные — требуется ручная проверка карточки")
+            )
+        if fedresurs.get("publications_note"):
+            rows.append(ReportRow("Сообщения Федресурса", fedresurs["publications_note"]))
+        for message in fedresurs.get("messages") or []:
+            marker = " (учтено как признак)" if message.get("signal") else ""
+            rows.append(
+                ReportRow(
+                    f"Сообщение от {message.get('date')}",
+                    f"{message.get('type')}{marker}",
+                    href=message.get("url"),
+                )
+            )
     rows.append(
         ReportRow(
             "Источник",
@@ -295,6 +339,194 @@ def _rnp_section(rnp: dict, resolved_inn: str | None) -> ReportSection:
     return ReportSection(title="Реестр недобросовестных поставщиков (РНП)", rows=rows)
 
 
+def _gir_bo_section(gir_bo: dict, inn: str | None) -> ReportSection:
+    years = gir_bo.get("years") or []
+    if not years:
+        rows = [ReportRow("Результат", gir_bo.get("note") or "Отчётность не найдена")]
+    else:
+        unit = gir_bo.get("unit") or "тыс. руб."
+        rows = [ReportRow("Единицы", f"{unit}, как в источнике")]
+        for year in years:
+            rows.append(
+                ReportRow(
+                    f"Отчётность за {year.get('year')}",
+                    f"выручка {_format_number(year.get('revenue'))}, "
+                    f"чистая прибыль {_format_number(year.get('net_profit'))}, "
+                    f"итог баланса {_format_number(year.get('assets'))}, "
+                    f"капитал и резервы {_format_number(year.get('equity'))}",
+                )
+            )
+        if gir_bo.get("note"):
+            rows.append(ReportRow("Примечание", gir_bo["note"]))
+    rows.append(
+        ReportRow(
+            "Источник",
+            f"bo.nalog.gov.ru — поиск по ИНН {inn}" if inn else "bo.nalog.gov.ru",
+            href="https://bo.nalog.gov.ru/",
+        )
+    )
+    return ReportSection(title="Бухгалтерская отчётность (ГИР БО)", rows=rows)
+
+
+def _msp_section(msp: dict) -> ReportSection:
+    if not msp.get("found"):
+        rows = [ReportRow("Результат", "Не найдено в реестре МСП")]
+    else:
+        rows = [
+            ReportRow("Категория", msp.get("category") or "—"),
+            ReportRow("Сведения актуальны", "Да" if msp.get("is_active") else "Нет"),
+        ]
+        if msp.get("registered_at"):
+            rows.append(ReportRow("В реестре с", msp["registered_at"]))
+        if msp.get("removed_at"):
+            rows.append(ReportRow("Исключён из реестра", msp["removed_at"]))
+        if msp.get("is_new"):
+            rows.append(ReportRow("Признак", "Вновь созданный"))
+    rows.append(ReportRow("Источник", "rmsp.nalog.ru", href="https://rmsp.nalog.ru/"))
+    return ReportSection(title="Реестр МСП", rows=rows)
+
+
+def _digest_section(raw_sha256: dict) -> ReportSection:
+    rows = [
+        ReportRow(
+            "Что это",
+            "SHA-256 дословного ответа каждого источника, зафиксированный в момент получения "
+            "(сверка: sha256sum сохранённой копии ответа). Это отпечаток того, что получила "
+            "эта установка, а не заверенное время и не подтверждение содержимого источника.",
+        )
+    ]
+    for source, digest in sorted(raw_sha256.items()):
+        rows.append(ReportRow(SOURCE_LABELS.get(source, source), digest))
+    return ReportSection(title="Контрольные суммы сырых ответов", rows=rows)
+
+
+def _disqualified_dump_section(dump: dict) -> ReportSection:
+    rows = [
+        ReportRow(
+            "Выгрузка ФНС",
+            f"от {dump.get('dump_date')}; сверка по ФИО руководителя и ИНН организации",
+        )
+    ]
+    if dump.get("outdated"):
+        rows.append(ReportRow("Внимание", f"Выгрузка устарела (срок до {dump.get('valid_until')})"))
+    if dump.get("director_confirmed"):
+        rows.append(
+            ReportRow(
+                "Результат",
+                "Директор дисквалифицирован: действующая запись совпала по ФИО и ИНН организации",
+            )
+        )
+    records = [*(dump.get("director_records") or [])]
+    seen = {r.get("record_number") for r in records}
+    records.extend(
+        r for r in dump.get("company_records") or [] if r.get("record_number") not in seen
+    )
+    if not records:
+        rows.append(ReportRow("Результат", "Записей по ФИО руководителя и ИНН организации нет"))
+    for record in records:
+        state = "действует" if record.get("active") else "истёк"
+        same = "совпал ИНН организации" if record.get("same_company") else "другая организация"
+        rows.append(
+            ReportRow(
+                f"Запись №{record.get('record_number')}",
+                f"{record.get('full_name')} — {record.get('position') or '—'}, "
+                f"{record.get('start_date')} — {record.get('end_date')} ({state}; {same})",
+            )
+        )
+    rows.append(
+        ReportRow(
+            "Источник",
+            "data.nalog.ru/opendata/7707329152-registerdisqualified",
+            href="https://data.nalog.ru/opendata/7707329152-registerdisqualified",
+        )
+    )
+    return ReportSection(title="Реестр дисквалифицированных лиц (выгрузка ФНС)", rows=rows)
+
+
+def _cbr_warning_section(cbr: dict) -> ReportSection:
+    if cbr.get("not_applicable"):
+        return ReportSection(
+            title="Список Банка России: признаки нелегальной деятельности",
+            rows=[ReportRow("Результат", cbr["not_applicable"])],
+        )
+    rows = [
+        ReportRow(
+            "Список ЦБ",
+            f"локальная копия на {cbr.get('as_of')}; сверка по точному ИНН юрлица",
+        )
+    ]
+    records = cbr.get("records") or []
+    if not records:
+        rows.append(
+            ReportRow(
+                "Результат",
+                "Записей с этим ИНН нет (это не означает отсутствия в списке: часть записей "
+                "публикуется без ИНН)",
+            )
+        )
+    for record in records:
+        if record.get("is_clone"):
+            text = (
+                f"«{record.get('name')}» — запись использует данные легального участника рынка "
+                "(против владельца ИНН не сигнал)"
+            )
+        else:
+            since = f", в списке с {record['listed_at']}" if record.get("listed_at") else ""
+            closed = " (организация отмечена ликвидированной)" if record.get("closed") else ""
+            text = f"ЦБ сообщает о признаках: {record.get('sign') or '—'}{since}{closed}"
+        rows.append(ReportRow(f"Запись №{record.get('cbr_id')}", text))
+    rows.append(
+        ReportRow(
+            "Источник", "cbr.ru/inside/warning-list", href="https://www.cbr.ru/inside/warning-list/"
+        )
+    )
+    return ReportSection(title="Список Банка России: признаки нелегальной деятельности", rows=rows)
+
+
+def _ofac_sdn_section(ofac: dict) -> ReportSection:
+    rows = [
+        ReportRow(
+            "Список OFAC SDN",
+            f"локальная копия на {ofac.get('as_of')}; сверка по точному ИНН",
+        )
+    ]
+    records = ofac.get("records") or []
+    if not records:
+        rows.append(ReportRow("Результат", "Совпадений по ИНН нет"))
+    for record in records:
+        kind = "физлицо" if record.get("kind") == "individual" else "организация"
+        programs = f", программы: {record['programs']}" if record.get("programs") else ""
+        rows.append(
+            ReportRow(
+                f"Запись №{record.get('ent_num')}",
+                f"В списке OFAC SDN: {record.get('name')} ({kind}){programs}. Это статус в "
+                "американском перечне, не запрет по российскому праву",
+            )
+        )
+    rows.append(
+        ReportRow(
+            "Оговорка",
+            "Отсутствие совпадения не означает отсутствия санкций: у части российских записей "
+            "OFAC не указывает ИНН, а ограничения могут распространяться и на организации, "
+            "контролируемые лицами из списка. Список ЕС не проверялся.",
+        )
+    )
+    rows.append(
+        ReportRow(
+            "Источник",
+            "sanctionssearch.ofac.treas.gov",
+            href="https://sanctionssearch.ofac.treas.gov/",
+        )
+    )
+    return ReportSection(title="Санкционный список OFAC SDN (США)", rows=rows)
+
+
+def _format_number(value: float | None) -> str:
+    if value is None:
+        return "—"
+    return f"{value:,.0f}".replace(",", " ")
+
+
 def _website_section(website: str) -> ReportSection:
     """Display-only - this feature doesn't analyze the domain itself, the live UI links
     it out to `domain_finder`'s own WHOIS/DNS/CT analysis instead. In an exported report
@@ -323,8 +555,25 @@ def build_sections(search: RuBusinessCheckSearch) -> list[ReportSection]:
         sections.append(_fedsfm_section(search.fedsfm_result, director_name))
     if search.rnp_data and search.rnp_data.get("checked"):
         sections.append(_rnp_section(search.rnp_data, search.resolved_inn))
+    dump = (search.extra_data or {}).get("disqualified_dump")
+    if dump and dump.get("checked"):
+        sections.append(_disqualified_dump_section(dump))
+    ofac = (search.extra_data or {}).get("ofac_sdn")
+    if ofac and ofac.get("checked"):
+        sections.append(_ofac_sdn_section(ofac))
+    cbr = (search.extra_data or {}).get("cbr_warning")
+    if cbr and cbr.get("checked"):
+        sections.append(_cbr_warning_section(cbr))
+    gir_bo = (search.extra_data or {}).get("gir_bo")
+    if gir_bo and gir_bo.get("checked"):
+        sections.append(_gir_bo_section(gir_bo, search.resolved_inn))
+    msp = (search.extra_data or {}).get("msp")
+    if msp and msp.get("checked"):
+        sections.append(_msp_section(msp))
     if search.website:
         sections.append(_website_section(search.website))
+    if search.raw_sha256:
+        sections.append(_digest_section(search.raw_sha256))
 
     return sections
 

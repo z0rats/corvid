@@ -1,7 +1,11 @@
 import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
+
+from app.features.ru_business_check.config.ru_business_check_config import (
+    missing_required_sources as required_sources_not_checked,
+)
 
 
 class ScanRequest(BaseModel):
@@ -56,6 +60,9 @@ class DisqualificationMatch(BaseModel):
     issuing_authority: str | None = None
     judge: str | None = None
     details: str | None = None
+    # Date only (DD.MM.YYYY) - to help an analyst rule out a same-name collision; the ЕГРЮЛ
+    # extract carries no director birth date, so it can't be compared automatically.
+    birth_date: str | None = None
 
 
 class DisqualificationResult(BaseModel):
@@ -80,12 +87,38 @@ class ArbitrationData(BaseModel):
     cases: list[ArbitrationCase] = Field(default_factory=list)
 
 
+class FedresursMessage(BaseModel):
+    date: str
+    type: str
+    number: str | None = None
+    role: str | None = None
+    signal: str | None = None
+    url: str | None = None
+
+
+class FedresursSignal(BaseModel):
+    code: str
+    date: str
+    type: str | None = None
+    number: str | None = None
+    url: str | None = None
+
+
 class FedresursData(BaseModel):
     checked: bool = False
     found: bool = False
     status_text: str | None = None
     is_active_bankruptcy: bool = False
+    # False when the status text is outside the live-observed vocabulary (reported as a
+    # soft flag, never read as clean). Rows saved before this field existed default True.
+    status_recognized: bool = True
     profile_url: str | None = None
+    publications_checked: bool = False
+    publications_total: int | None = None
+    publications_truncated: bool = False
+    publications_note: str | None = None
+    messages: list[FedresursMessage] = Field(default_factory=list)
+    signals: list[FedresursSignal] = Field(default_factory=list)
 
 
 class MassAddressCompany(BaseModel):
@@ -131,6 +164,113 @@ class RnpEntry(BaseModel):
 class RnpData(BaseModel):
     checked: bool = False
     entries: list[RnpEntry] = Field(default_factory=list)
+
+
+class GirBoYear(BaseModel):
+    year: int
+    reported_at: str | None = None
+    revenue: float | None = None
+    net_profit: float | None = None
+    assets: float | None = None
+    equity: float | None = None
+    current_assets: float | None = None
+    current_liabilities: float | None = None
+    long_term_liabilities: float | None = None
+    cash: float | None = None
+    # False when the period's detail form couldn't be fetched - only revenue/assets
+    # (from the period list) are then filled.
+    detail_loaded: bool = False
+
+
+class GirBoData(BaseModel):
+    checked: bool = False
+    found: bool = False
+    has_reports: bool = False
+    org_name: str | None = None
+    status_code: str | None = None
+    profile_url: str | None = None
+    unit: str = "тыс. руб."
+    years: list[GirBoYear] = Field(default_factory=list)
+    note: str | None = None
+
+
+class MspData(BaseModel):
+    checked: bool = False
+    found: bool = False
+    category_code: int | None = None
+    category: str | None = None
+    is_active: bool | None = None
+    is_new: bool | None = None
+    registered_at: str | None = None
+    removed_at: str | None = None
+
+
+class DisqualifiedDumpRecord(BaseModel):
+    record_number: str
+    full_name: str
+    org_name: str | None = None
+    org_inn: str | None = None
+    position: str | None = None
+    article: str | None = None
+    term: str | None = None
+    start_date: str
+    end_date: str
+    active: bool
+    same_company: bool
+
+
+class DisqualifiedDumpData(BaseModel):
+    checked: bool = False
+    dump_date: str | None = None
+    valid_until: str | None = None
+    outdated: bool = False
+    director_confirmed: bool = False
+    director_records: list[DisqualifiedDumpRecord] = Field(default_factory=list)
+    company_records: list[DisqualifiedDumpRecord] = Field(default_factory=list)
+
+
+class CbrWarningRecord(BaseModel):
+    cbr_id: int
+    name: str | None = None
+    sign: str | None = None
+    listed_at: str | None = None
+    closed: bool = False
+    comment: str | None = None
+    is_clone: bool = False
+
+
+class CbrWarningData(BaseModel):
+    checked: bool = False
+    # Set for an individual entrepreneur: the list only carries legal entities' ИНН.
+    not_applicable: str | None = None
+    as_of: str | None = None
+    outdated: bool = False
+    records: list[CbrWarningRecord] = Field(default_factory=list)
+
+
+class OfacSdnRecord(BaseModel):
+    ent_num: int
+    name: str
+    kind: str
+    programs: str | None = None
+
+
+class OfacSdnData(BaseModel):
+    checked: bool = False
+    as_of: str | None = None
+    outdated: bool = False
+    records: list[OfacSdnRecord] = Field(default_factory=list)
+
+
+class ExtraData(BaseModel):
+    """Sources stored in `extra_data` rather than a dedicated column pair (see
+    docs/adr/0014-*.md); one optional key per source id."""
+
+    gir_bo: GirBoData | None = None
+    msp: MspData | None = None
+    disqualified_dump: DisqualifiedDumpData | None = None
+    cbr_warning: CbrWarningData | None = None
+    ofac_sdn: OfacSdnData | None = None
 
 
 class Candidate(BaseModel):
@@ -185,9 +325,21 @@ class SearchDetail(SearchSummary):
     website: str | None = None
     rnp_data: RnpData | None = None
     rnp_raw: str | None = None
+    extra_data: ExtraData | None = None
+    extra_raw: dict[str, str] | None = None
+    raw_sha256: dict[str, str] | None = None
     flags: list[Flag] = Field(default_factory=list)
     checked_sources: list[str] = Field(default_factory=list)
     pending_sources: list[str] = Field(default_factory=list)
     candidates: list[Candidate] = Field(default_factory=list)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def missing_required_sources(self) -> list[str]:
+        """`REQUIRED_SOURCES` members this scan didn't check - why a verdict is
+        `incomplete`. Served from here so the UI never keeps its own copy of the list."""
+        if self.risk_level != "incomplete":
+            return []
+        return required_sources_not_checked(self.checked_sources)
 
     model_config = ConfigDict(from_attributes=True)

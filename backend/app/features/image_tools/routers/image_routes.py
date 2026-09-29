@@ -1,13 +1,15 @@
+import hashlib
 import logging
 from typing import Literal
 
 from fastapi import APIRouter, File, Query, Request, Response, UploadFile
 
 from app.core.config.rate_limit_config import limiter
-from app.core.dependencies import ReadSessionDep
+from app.core.dependencies import ReadSessionDep, SessionDep
 from app.core.utils.file_upload import run_file_endpoint, validate_uploaded_file
 
 from ..config.image_config import ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE_BYTES
+from ..crud.geolocation_history_crud import create_search as create_geolocation_search
 from ..schemas.image_schemas import (
     ChronoverifyResponse,
     ImageAnalysisResponse,
@@ -97,7 +99,7 @@ async def analyze_image_file(
 @limiter.limit("10/minute")
 async def geolocate_image_file(
     request: Request,
-    db: ReadSessionDep,
+    db: SessionDep,
     file: UploadFile = File(..., description="Image file to analyze"),
 ) -> ImageGeolocationResponse:
     logger.info("Received image geolocation request for file: %s", file.filename)
@@ -113,6 +115,11 @@ async def geolocate_image_file(
         failure_message="Image geolocation failed",
         run_in_thread=False,
     )
+
+    image_sha256 = hashlib.sha256(file_content).hexdigest()
+    # file.filename is validated as non-empty by _validate_uploaded_image above.
+    saved = await create_geolocation_search(db, file.filename or "unknown", image_sha256, result)
+    result.history_id = saved.id
 
     logger.info("Image geolocation completed successfully for '%s'", file.filename)
     return result
@@ -371,6 +378,7 @@ async def health_check() -> ImageHealthResponse:
         endpoints=[
             "/api/image/analyze",
             "/api/image/geolocate",
+            "/api/image/geolocate/history",
             "/api/image/structure",
             "/api/image/anomalies",
             "/api/image/chronoverify",

@@ -25,7 +25,16 @@ from app.core.exceptions import register_exception_handlers
 from app.core.scheduler import stop_scheduler
 from app.core.security.access_control import get_access_token, verify_access_token
 from app.core.telegram_bot.service.polling_service import start_bot_polling, stop_bot_polling
+from app.features.amass.service.amass_engine_service import (
+    start_engine_in_background,
+)
+from app.features.amass.service.amass_engine_service import (
+    stop_engine as stop_amass_engine,
+)
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import close_client
+from app.features.ru_business_check.service.registry_dump_scheduler_service import (
+    refresh_dumps_if_stale,
+)
 from app.utils.router_registry import register_all_routers
 from app.utils.scheduler_registry import initialize_all_schedulers
 from app.utils.startup_service import initialize_application_defaults
@@ -70,22 +79,31 @@ async def _fetch_favicons_in_background() -> None:
 
 
 async def _reconcile_stale_scans() -> None:
-    """Mark username/email/git-recon/ru-business-check search runs still 'running' from a
-    previous process as failed.
+    """Mark username/email/git-recon/ru-business-check/amass/steam-recon/instagram-search
+    search runs still 'running' from a previous process as failed.
 
-    All four scans are driven by a detached `asyncio.create_task()` (see their
+    All seven scans are driven by a detached `asyncio.create_task()` (see their
     `routers/*_routes.py` `scan`/`start_scan` handlers) that outlives the SSE request but
     not the process itself, so a container stop/crash mid-scan leaves the row
     stuck at 'running' with nothing to ever move it out of that state.
     """
+    from app.features.amass.crud.amass_crud import (
+        interrupt_running_searches as interrupt_running_amass,
+    )
     from app.features.email_search.crud.email_search_crud import (
         interrupt_running_search_runs as interrupt_running_mail_runs,
     )
     from app.features.git_recon.crud.git_recon_crud import (
         interrupt_running_searches as interrupt_running_git_recon,
     )
+    from app.features.instagram_search.crud.instagram_search_crud import (
+        interrupt_running_searches as interrupt_running_instagram_search,
+    )
     from app.features.ru_business_check.crud.ru_business_check_crud import (
         interrupt_running_searches as interrupt_running_ru_business_check,
+    )
+    from app.features.steam_recon.crud.steam_recon_crud import (
+        interrupt_running_searches as interrupt_running_steam_recon,
     )
     from app.features.username_search.crud.username_search_crud import interrupt_running_search_runs
 
@@ -94,14 +112,31 @@ async def _reconcile_stale_scans() -> None:
         mail_count = await interrupt_running_mail_runs(db)
         git_recon_count = await interrupt_running_git_recon(db)
         ru_business_check_count = await interrupt_running_ru_business_check(db)
-        if maigret_count or mail_count or git_recon_count or ru_business_check_count:
-            logger.info(
-                "Reconciled stale scan runs left 'running' by a previous process: "
-                "%s username-search, %s email-search, %s git-recon, %s ru-business-check",
+        amass_count = await interrupt_running_amass(db)
+        steam_recon_count = await interrupt_running_steam_recon(db)
+        instagram_search_count = await interrupt_running_instagram_search(db)
+        if any(
+            (
                 maigret_count,
                 mail_count,
                 git_recon_count,
                 ru_business_check_count,
+                amass_count,
+                steam_recon_count,
+                instagram_search_count,
+            )
+        ):
+            logger.info(
+                "Reconciled stale scan runs left 'running' by a previous process: "
+                "%s username-search, %s email-search, %s git-recon, %s ru-business-check, "
+                "%s amass, %s steam-recon, %s instagram-search",
+                maigret_count,
+                mail_count,
+                git_recon_count,
+                ru_business_check_count,
+                amass_count,
+                steam_recon_count,
+                instagram_search_count,
             )
 
 
@@ -173,8 +208,10 @@ async def handle_application_startup() -> None:
         await _run_application_defaults()
         asyncio.create_task(_fetch_favicons_in_background())
         asyncio.create_task(_populate_blacklist_if_stale_in_background())
+        asyncio.create_task(refresh_dumps_if_stale())
         await initialize_all_schedulers()
         start_bot_polling()
+        start_engine_in_background()
         logger.info("Application startup completed successfully")
     except Exception as e:
         logger.error("Startup failed: %s", e)
@@ -186,6 +223,7 @@ async def handle_application_shutdown() -> None:
     logger.info("Application shutting down...")
     try:
         await stop_bot_polling()
+        await stop_amass_engine()
         stop_scheduler()
         await close_client()
         await dispose_database_engine()

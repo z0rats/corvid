@@ -32,6 +32,12 @@ export const IOC_TYPES = {
   // this shared enum (required by commandRegistry.test.js's "no garbage accepts values" guard) and
   // inject it into the palette's match list via isYoutubeVideoUrl() - see commandParser.ts.
   YOUTUBE_VIDEO_URL: 'YouTubeVideoURL',
+  // Same treatment as YOUTUBE_VIDEO_URL above, for the same reason: a SteamID64/3/2 has no shape
+  // any existing pattern below would recognize, and a steamcommunity.com profile URL already
+  // classifies as plain URL - detectIocType's own chain stays untouched (and unmirrored in the
+  // backend fixture, since Steam Recon isn't an ioc_lookup provider). commandParser.ts's
+  // isSteamProfileTarget() injects this type itself.
+  STEAM_PROFILE: 'SteamProfile',
   UNKNOWN: 'unknown',
 } as const;
 
@@ -131,4 +137,66 @@ export function isYoutubeVideoUrl(value?: string | null): boolean {
     if (!parsed.pathname.startsWith(prefix)) return false;
     return YOUTUBE_VIDEO_ID_RE.test(parsed.pathname.slice(prefix.length).split('/')[0]);
   });
+}
+
+// SteamID64 of an individual account = this base + a 32-bit account id. BigInt, not Number - a
+// 17-digit SteamID64 (~7.6e16) exceeds Number.MAX_SAFE_INTEGER (~9e15), so plain numeric
+// comparison would silently lose precision at this magnitude.
+const STEAMID64_BASE = 76561197960265728n;
+const ACCOUNT_ID_MAX = 2n ** 32n - 1n;
+const STEAMID64_RE = /^\d{17}$/;
+const STEAMID3_RE = /^\[?u:1:(\d{1,10})\]?$/i;
+const STEAMID2_RE = /^steam_[0-5]:([01]):(\d{1,10})$/i;
+const STEAM_HOSTS = ['steamcommunity.com', 'www.steamcommunity.com'];
+const STEAM_VANITY_RE = /^[A-Za-z0-9_-]{2,32}$/;
+
+function isValidSteamId64(text: string): boolean {
+  if (!STEAMID64_RE.test(text)) return false;
+  const n = BigInt(text);
+  return n > STEAMID64_BASE && n <= STEAMID64_BASE + ACCOUNT_ID_MAX;
+}
+
+function isValidSteamIdShorthand(value: string): boolean {
+  const id3 = STEAMID3_RE.exec(value);
+  if (id3) {
+    const accountId = BigInt(id3[1]);
+    return accountId > 0n && accountId <= ACCOUNT_ID_MAX;
+  }
+  const id2 = STEAMID2_RE.exec(value);
+  if (id2) {
+    const accountId = BigInt(id2[2]) * 2n + BigInt(id2[1]);
+    return accountId > 0n && accountId <= ACCOUNT_ID_MAX;
+  }
+  return false;
+}
+
+function isSteamProfileUrl(value: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(value.includes('://') ? value : `https://${value}`);
+  } catch {
+    return false;
+  }
+
+  if (!STEAM_HOSTS.includes(parsed.hostname.toLowerCase())) return false;
+
+  const [kind, target] = parsed.pathname.split('/').filter(Boolean);
+  if (!kind || !target) return false;
+  if (kind.toLowerCase() === 'profiles') return isValidSteamId64(target);
+  if (kind.toLowerCase() === 'id') return STEAM_VANITY_RE.test(target);
+  return false;
+}
+
+/**
+ * Whether `value` is a SteamID64, SteamID3 (`[U:1:N]`), SteamID2 (`STEAM_X:Y:Z`), or a
+ * steamcommunity.com `/profiles/…`/`/id/…` URL - a JS mirror of
+ * backend/app/features/steam_recon/utils/steam_id_utils.py's `parse_steam_target`, minus its
+ * bare-vanity-name case (too ambiguous for global command-palette detection - a plain word like
+ * "reddit" would otherwise hijack every unrecognized query). A bare vanity name is still typeable
+ * directly into Steam Recon's own form; it just isn't auto-detected here.
+ */
+export function isSteamProfileTarget(value?: string | null): boolean {
+  const text = (value ?? '').trim();
+  if (!text) return false;
+  return isValidSteamId64(text) || isValidSteamIdShorthand(text) || isSteamProfileUrl(text);
 }

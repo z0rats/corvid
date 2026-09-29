@@ -3,11 +3,10 @@ import Chip from '@mui/material/Chip';
 
 import HistoryTable from '../../../core/components/HistoryTable';
 import { ruBusinessCheckApi } from '../services/api/ruBusinessCheckApi';
+import { RISK_LABELS, RISK_COLORS } from '../constants/risk';
 
 const STATUS_COLORS = { running: 'info', completed: 'success', cancelled: 'warning', failed: 'error' };
 const STATUS_LABELS = { running: 'Выполняется', completed: 'Завершено', cancelled: 'Отменено', failed: 'Ошибка' };
-const RISK_LABELS = { low: 'Низкий', medium: 'Средний', high: 'Высокий' };
-const RISK_COLORS = { low: 'success', medium: 'warning', high: 'error' };
 
 export default function HistoryList() {
   const navigate = useNavigate();

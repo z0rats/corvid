@@ -29,6 +29,11 @@ import logging
 
 import httpx
 
+from app.features.ru_business_check.service.source_contract import (
+    require_dict,
+    require_list_field,
+)
+
 logger = logging.getLogger(__name__)
 
 KAD_ARBITR_BASE_URL = "https://kad.arbitr.ru"
@@ -129,7 +134,17 @@ def _classify_role(side_role: str | None, inn: str) -> str:
 def parse_response(data: dict, inn: str) -> list[dict]:
     """Pure function: extract a normalized case list from kad.arbitr.ru's search-response
     JSON. Kept separate from the network code above so it's independently unit-testable."""
-    items = (data.get("Result") or {}).get("Items") or []
+    # `Result.Items` is the case list: an empty list is "no cases", a missing `Result`/
+    # `Items` is drift (this shape is unverified against a live capture - see the module
+    # docstring - so a mismatch must not read as a clean history).
+    require_dict(data, error=ArbitrationError, label="kad.arbitr.ru")
+    items = require_list_field(
+        data.get("Result"),
+        "Items",
+        error=ArbitrationError,
+        label="kad.arbitr.ru",
+        where="Result",
+    )
     cases: list[dict] = []
 
     for item in items:
