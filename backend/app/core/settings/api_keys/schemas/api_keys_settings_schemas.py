@@ -13,7 +13,7 @@ class ApikeySchema(BaseModel):
     """Schema for reading an API key entry."""
 
     name: str = Field(..., min_length=1, max_length=100, description="API key provider name")
-    key: str = Field(default="", max_length=500, description="API key string")
+    key: str = Field(default="", max_length=20000, description="API key string")
     is_active: bool = Field(default=False, description="Whether the key is active")
     bulk_ioc_lookup: bool = Field(default=False, description="Whether bulk lookup is enabled")
 
@@ -46,7 +46,7 @@ class ApikeyCreateRequest(BaseModel):
     """Schema for API key creation requests."""
 
     name: str = Field(..., min_length=1, max_length=100, description="API key provider name")
-    key: str = Field(..., min_length=1, max_length=500, description="API key string")
+    key: str = Field(..., min_length=1, max_length=20000, description="API key string")
     is_active: bool = Field(default=False, description="Whether the key is active")
     bulk_ioc_lookup: bool = Field(default=False, description="Whether bulk lookup is enabled")
 
@@ -64,7 +64,7 @@ class ApikeyCreateRequest(BaseModel):
 class ApikeyUpdateRequest(BaseModel):
     """Schema for API key partial update requests."""
 
-    key: str | None = Field(None, max_length=500, description="API key string")
+    key: str | None = Field(None, max_length=20000, description="API key string")
     is_active: bool | None = Field(None, description="Whether the key is active")
     bulk_ioc_lookup: bool | None = Field(None, description="Whether bulk lookup is enabled")
 

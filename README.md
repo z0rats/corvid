@@ -92,8 +92,10 @@ A Reddit user's full post/comment history, including removed/deleted content, no
 required. → [Docs](https://z0rats.github.io/corvid/features/reddit-search/)
 
 ### Username & Email Search
-Find accounts and mail providers registered to a username, across hundreds of sites. →
-[Username Search docs](https://z0rats.github.io/corvid/features/username-search/) /
+Find accounts and mail providers registered to a username, across hundreds of sites. Email Search
+also has an explicit-click Google account profile lookup via [GHunt](https://github.com/mxrch/GHunt)
+— needs a configured Google-account session, disposable account recommended, same ToS caveat as
+Instagram Search below. → [Username Search docs](https://z0rats.github.io/corvid/features/username-search/) /
 [Email Search docs](https://z0rats.github.io/corvid/features/email-search/)
 
 ### Phone Search

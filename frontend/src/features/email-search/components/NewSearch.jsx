@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import SearchForm from './SearchForm';
 import LiveScanView from './LiveScanView';
 import ToolInfoBanner from './ToolInfoBanner';
+import GhuntProfilePanel from './GhuntProfilePanel';
 import { useEmailSearchScan } from '../hooks/useEmailSearchScan';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 
@@ -24,6 +25,7 @@ export default function NewSearch() {
       <ToolInfoBanner />
       <SearchForm onSearch={scan.startScan} disabled={scan.phase === 'running'} initialUsername={prefillValue} />
       {scan.phase !== 'idle' && <LiveScanView scan={scan} />}
+      <GhuntProfilePanel />
     </Box>
   );
 }

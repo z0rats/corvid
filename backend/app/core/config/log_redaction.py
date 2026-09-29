@@ -7,6 +7,12 @@ broad `except Exception as e: logger.error(..., str(e))` (e.g. in
 bulk_ioc_lookup_service.py) can leak the key into data/logs/*.log if such an
 exception ever escapes the normal response-handling path.
 
+The long-base64-blob pattern below exists for GHunt's session value
+specifically (base64 of cookies/OSIDs/an Android master token, easily several
+KB) - the most sensitive secret this app stores, per docs/architecture/ghunt.md
+- as a belt-and-suspenders catch on top of ghunt_profile_service.py never
+logging that value or GHunt's raw stdout/stderr itself.
+
 Matches by pattern rather than looking up live key values, so newly added
 providers/keys are covered without touching this file.
 """
@@ -21,6 +27,9 @@ _BEARER_RE = re.compile(r"(?i)(Bearer\s+)[A-Za-z0-9\-_.~+/]+=*")
 # IPQualityScore embeds the key as a URL path segment instead of a query param:
 # https://www.ipqualityscore.com/api/json/ip/<KEY>/<ioc>
 _IPQS_PATH_RE = re.compile(r"(ipqualityscore\.com/api/json/[a-z]+/)[A-Za-z0-9]+(/)")
+# A long contiguous base64 run - GHunt's `creds.m` content, if it ever ends up somewhere it
+# shouldn't. 80+ chars keeps this from firing on ordinary short tokens already caught above.
+_LONG_BASE64_RE = re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{80,}={0,2}(?![A-Za-z0-9+/=])")
 
 
 class SecretRedactionFilter(logging.Filter):
@@ -31,6 +40,7 @@ class SecretRedactionFilter(logging.Filter):
         redacted = _QUERY_PARAM_SECRET_RE.sub(r"\1***REDACTED***", message)
         redacted = _BEARER_RE.sub(r"\1***REDACTED***", redacted)
         redacted = _IPQS_PATH_RE.sub(r"\1***REDACTED***\2", redacted)
+        redacted = _LONG_BASE64_RE.sub("***REDACTED***", redacted)
         if redacted != message:
             record.msg = redacted
             record.args = ()

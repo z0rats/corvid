@@ -108,6 +108,38 @@ describe('useApiKeys — saveApiKey', () => {
   });
 });
 
+describe('useApiKeys — saveGhuntSession', () => {
+  it('saves via the validating endpoint and refreshes on success', async () => {
+    settingsApi.saveGhuntSession.mockResolvedValue({ name: 'ghunt_session', is_active: true });
+    settingsApi.getActiveApiKeys.mockResolvedValue({});
+    const { result } = renderHook(() => useApiKeys());
+
+    let returned;
+    await act(async () => {
+      returned = await result.current.saveGhuntSession('base64-session-value');
+    });
+
+    expect(settingsApi.saveGhuntSession).toHaveBeenCalledWith('base64-session-value');
+    expect(settingsApi.getActiveApiKeys).toHaveBeenCalled();
+    expect(returned).toMatchObject({ success: true });
+  });
+
+  it('surfaces a validation failure without refreshing', async () => {
+    settingsApi.saveGhuntSession.mockRejectedValue({
+      response: { data: { detail: 'Not a valid GHunt session' } },
+    });
+    const { result } = renderHook(() => useApiKeys());
+
+    let returned;
+    await act(async () => {
+      returned = await result.current.saveGhuntSession('garbage');
+    });
+
+    expect(settingsApi.getActiveApiKeys).not.toHaveBeenCalled();
+    expect(returned).toMatchObject({ success: false, message: 'Not a valid GHunt session' });
+  });
+});
+
 describe('useApiKeys — deleteApiKey', () => {
   it('clears the key and refreshes', async () => {
     settingsApi.updateApiKey.mockResolvedValue({});

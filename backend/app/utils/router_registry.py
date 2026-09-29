@@ -27,7 +27,7 @@ from app.features.amass.routers import amass_routes
 from app.features.cvss_calculator.routers import cvss_routes
 from app.features.dork_runner.routers import dork_routes
 from app.features.email_analyzer.routers import email_routes
-from app.features.email_search.routers import email_search_routes
+from app.features.email_search.routers import email_search_routes, ghunt_profile_routes
 from app.features.git_recon.routers import git_recon_routes
 from app.features.image_tools.routers import geolocation_history_routes, image_routes
 from app.features.instagram_search.routers import instagram_scan_routes, instagram_search_routes
@@ -126,6 +126,7 @@ def get_feature_routers() -> list[APIRouter]:
         lookup_history_routes.router,
         username_search_routes.router,
         email_search_routes.router,
+        ghunt_profile_routes.router,
         phone_search_routes.router,
         reddit_search_routes.router,
         git_recon_routes.router,

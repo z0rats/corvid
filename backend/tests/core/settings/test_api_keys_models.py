@@ -55,8 +55,10 @@ def test_none_key_becomes_empty_string():
 
 
 def test_overly_long_key_is_rejected():
-    with pytest.raises(ValueError, match="cannot exceed 500 characters"):
-        Apikey(name="vt", key="a" * 501)
+    # 20000, not the original 500 - raised to fit a GHunt session blob (see
+    # docs/architecture/ghunt.md), a shared validator so this cap applies to every key.
+    with pytest.raises(ValueError, match="cannot exceed 20000 characters"):
+        Apikey(name="vt", key="a" * 20001)
 
 
 # --- is_configured / is_usable ------------------------------------------

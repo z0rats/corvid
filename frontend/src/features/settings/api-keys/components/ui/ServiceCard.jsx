@@ -10,6 +10,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTheme, alpha } from '@mui/material/styles';
 import { getTierColor, generateKeyDisplayName } from '../../../utils/settingsUtils';
 import ApiKeyInput from '../../../components/forms/ApiKeyInput';
+import GhuntSessionInput from '../../../components/forms/GhuntSessionInput';
 
 export default function ServiceCard({ serviceKey, service }) {
   const { t } = useTranslation('settings');
@@ -78,6 +79,16 @@ export default function ServiceCard({ serviceKey, service }) {
           ) : (
             service.required_keys.map((keyName) => {
               const keyDisplayName = generateKeyDisplayName(keyName, service.name);
+
+              // GHunt's session is a multi-KB blob pasted in, not a short typed token - it gets
+              // its own input shape (multiline, no related-keys/doc-link concept) rather than a
+              // generic ApiKeyInput variant. See docs/architecture/ghunt.md.
+              if (keyName === 'ghunt_session') {
+                return (
+                  <GhuntSessionInput key={keyName} name={keyName} description={keyDisplayName} />
+                );
+              }
+
               const relatedKeys = service.required_keys.filter(k => k !== keyName);
 
               return (

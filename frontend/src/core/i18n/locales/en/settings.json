@@ -36,6 +36,16 @@
     "noKeyQuestion": "No API key?",
     "createItHere": "Create it here"
   },
+  "ghuntSessionInput": {
+    "label": "GHunt session (creds.m content)",
+    "placeholder": "Paste the base64 content of ~/.malfrats/ghunt/creds.m here...",
+    "helperText": "Generate with `ghunt login` on a disposable Google account - never your own. Never a password.",
+    "placeholderConfigured": "Session configured",
+    "tooltipRemove": "Remove session",
+    "tooltipSave": "Save session",
+    "ariaDelete": "Delete GHunt session",
+    "ariaSave": "Save GHunt session"
+  },
   "aiSettings": {
     "title": "AI Settings",
     "description": "Configure which LLM models are used as defaults across the application. Per-module overrides take priority over the global default.",

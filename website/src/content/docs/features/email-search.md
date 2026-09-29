@@ -28,3 +28,26 @@ Enable either group under **Settings → Email Search**.
 Like Username Search, the installed `mailcat-osint` version and whether a newer one is available
 are surfaced in settings (a manual PyPI check) — installing an update still requires a container
 rebuild.
+
+## Google Profile (GHunt)
+
+A separate, explicit-click panel on the same page looks up a Google account's public profile
+(Google ID, profile/cover photo, last profile edit date, account types, activated services, and
+raw Play Games/Maps/Calendar data if any) by email, using
+[GHunt](https://github.com/mxrch/GHunt). Nothing runs automatically — the request is made to
+Google under your own configured account, so it only fires when you click the lookup button.
+
+**This uses your Google account, not an API.** GHunt needs a real Google account's session
+(cookies, OSIDs, an Android master token) — there's no anonymous or API-key mode. Generate one
+by running `ghunt login` yourself (locally, with `pip install ghunt` or a temporary venv — this
+is a one-time interactive login, not something Corvid can do for you), then paste the resulting
+`~/.malfrats/ghunt/creds.m` file's content into **Settings → API Keys → GHunt Session**.
+
+**Use a disposable Google account, never your own daily-driver account.** This kind of lookup is
+against Google's Terms of Service, and the account behind the session can get flagged or banned
+for it. The session is encrypted at rest, never displayed back once saved, and only ever read
+into a throwaway, per-request temporary directory that's deleted immediately after each lookup.
+
+Only one lookup runs at a time (GHunt's own account gets rate-limited by Google otherwise), and
+each is capped at 60 seconds. See `docs/architecture/ghunt.md` in the repository for the full
+technical write-up, including what GHunt's raw JSON output actually contains.

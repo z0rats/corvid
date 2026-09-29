@@ -490,6 +490,22 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.SOCIAL_MEDIA,
         icon="default_icon",
     ),
+    "ghunt_session": ServiceDefinition(
+        name="GHunt Session",
+        key="ghunt_session",
+        description=(
+            "Google-account session (cookies/OSIDs/Android master token) that unlocks GHunt's "
+            "email -> Google account profile lookup. Never a password - generate it with "
+            "`ghunt login` on a disposable Google account, since GHunt's use is against "
+            "Google's ToS and the account may get flagged or banned."
+        ),
+        documentation_url="https://github.com/mxrch/GHunt#-usage",
+        supported_ioc_types=["Email"],
+        required_keys=["ghunt_session"],
+        tier=ServiceTier.FREE,
+        category=ServiceCategory.EMAIL_IDENTITY,
+        icon="default_icon",
+    ),
     "steam": ServiceDefinition(
         name="Steam Web API",
         key="steam",

@@ -64,6 +64,12 @@ export function useApiKeys() {
     return { message: t('notifications.apiKeySaved') };
   }, t('notifications.saveError')), [run, refreshApiKeys, t]);
 
+  const saveGhuntSession = useCallback((value) => run(async () => {
+    await settingsApi.saveGhuntSession(value);
+    await refreshApiKeys();
+    return { message: t('notifications.apiKeySaved') };
+  }, t('notifications.saveError')), [run, refreshApiKeys, t]);
+
   const deleteApiKey = useCallback((name) => run(async () => {
     await settingsApi.updateApiKey(name, '', false, false);
     await refreshApiKeys();
@@ -92,6 +98,7 @@ export function useApiKeys() {
     getServicesConfig,
     getKeyStatus,
     saveApiKey,
+    saveGhuntSession,
     deleteApiKey,
     toggleServiceActivation,
   };

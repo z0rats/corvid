@@ -63,6 +63,24 @@ def test_redacts_ipqualityscore_path_embedded_key():
     assert "ipqualityscore.com/api/json/ip/***REDACTED***/" in result
 
 
+def test_redacts_a_long_base64_blob():
+    # Shaped like a GHunt creds.m value (base64 of cookies/OSIDs/an Android master token) -
+    # see docs/architecture/ghunt.md. Not an actual valid creds.m; the filter matches by shape.
+    session_value = "QWJjZGVmZ2hpamtsbW5vcA" * 5
+    message = f"Wrote GHunt session to temp home: {session_value}"
+    result = _filtered_message(message)
+    assert session_value not in result
+    assert "***REDACTED***" in result
+
+
+def test_does_not_redact_short_base64_like_strings():
+    # Below the 80-char threshold - ordinary short tokens shouldn't get caught by this pattern
+    # (they're either already covered by the query-param/Bearer patterns above, or not secrets).
+    short_value = "QWJjZGVmZ2hpams="
+    message = f"cache key: {short_value}"
+    assert _filtered_message(message) == message
+
+
 def test_leaves_non_secret_messages_unchanged():
     message = "Fetched 12 articles from feed https://example.com/rss?page=2"
     assert _filtered_message(message) == message

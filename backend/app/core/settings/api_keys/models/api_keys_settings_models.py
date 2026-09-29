@@ -38,8 +38,11 @@ class Apikey(Base, TimestampMixin):
         if api_key is None:
             return ""
         normalized_key = api_key.strip()
-        if len(normalized_key) > 500:
-            raise ValueError("API key cannot exceed 500 characters")
+        # 20000 (not the original 500) to fit a GHunt session blob - base64 of cookies + OSIDs +
+        # an Android master token, several KB - not just a short plain API key/token like every
+        # other service currently stored here.
+        if len(normalized_key) > 20000:
+            raise ValueError("API key cannot exceed 20000 characters")
         return normalized_key
 
     def is_configured(self) -> bool:

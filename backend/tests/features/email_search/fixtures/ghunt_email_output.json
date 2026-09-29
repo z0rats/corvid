@@ -1,0 +1,39 @@
+{
+  "PROFILE_CONTAINER": {
+    "profile": {
+      "personId": "123456789012345678901",
+      "sourceIds": {
+        "PROFILE": { "lastUpdated": "2024/03/15 10:30:00 (UTC)" }
+      },
+      "emails": {
+        "PROFILE": { "value": "target@gmail.com" }
+      },
+      "names": {
+        "PROFILE": { "fullname": "", "firstName": "", "lastName": "" }
+      },
+      "profileInfos": {
+        "PROFILE": { "userTypes": ["GOOGLE_USER"] }
+      },
+      "profilePhotos": {
+        "PROFILE": { "url": "https://example.com/photo.jpg", "isDefault": false, "flathash": "abcd1234" }
+      },
+      "coverPhotos": {
+        "PROFILE": { "url": "https://example.com/cover.jpg", "isDefault": true }
+      },
+      "inAppReachability": {
+        "PROFILE": { "apps": ["Gmail", "Photos"] }
+      },
+      "extendedData": {
+        "dynamiteData": { "presence": "", "entityType": "PERSON", "dndState": "", "customerId": "" },
+        "gplusData": { "contentRestriction": "", "isEntrepriseUser": false }
+      }
+    },
+    "play_games": null,
+    "maps": {
+      "photos": null,
+      "reviews": null,
+      "stats": { "Reviews": 3, "Ratings": 5, "Photos": 12 }
+    },
+    "calendar": null
+  }
+}

@@ -53,6 +53,33 @@
     }
   },
 
+  "ghunt": {
+    "title": "Google Profile (GHunt)",
+    "consentDescription": "Looks up a Google account's public profile by email using GHunt. The request is made to Google under your own configured session's account - use is against Google's Terms of Service and that account may get flagged or banned. Use a disposable account, not your own.",
+    "methodLink": "How it works",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "target@gmail.com",
+    "lookupButton": "Look up Google profile",
+    "recheckButton": "Look up another",
+    "noSessionConfigured": "No GHunt session configured - add one under Settings > API Keys",
+    "gaiaId": "Google ID",
+    "lastProfileEdit": "Last profile edit",
+    "userTypes": "User types",
+    "activatedServices": "Activated services",
+    "profilePhoto": "Profile photo",
+    "coverPhoto": "Cover photo",
+    "defaultPhoto": "(default)",
+    "rawDataToggle": "Play Games / Maps / Calendar (raw data)",
+    "errors": {
+      "GHUNT_SESSION_MISSING": "No GHunt session configured - add one under Settings > API Keys",
+      "GHUNT_SESSION_INVALID": "The stored GHunt session is invalid - reconfigure it under Settings > API Keys",
+      "GHUNT_SESSION_EXPIRED": "The stored GHunt session appears to be expired or rejected by Google - generate a new one with `ghunt login`",
+      "GHUNT_NOT_FOUND": "No public Google account found for this email",
+      "GHUNT_TIMEOUT": "GHunt timed out",
+      "GHUNT_EXECUTION_ERROR": "GHunt failed to run"
+    }
+  },
+
   "settings": {
     "title": "Email Search Settings",
     "description": "Configure how mailcat checks mail providers when searching for a username.",

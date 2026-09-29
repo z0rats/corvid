@@ -119,6 +119,17 @@ describe('settingsApi — api keys', () => {
     expect(api.delete).toHaveBeenCalledWith('/api/apikeys/abuseipdb');
   });
 
+  it('saveGhuntSession puts the value to the validating GHunt session endpoint', async () => {
+    api.put.mockResolvedValue({ data: { name: 'ghunt_session', is_active: true } });
+
+    const result = await settingsApi.saveGhuntSession('base64-session-value');
+
+    expect(api.put).toHaveBeenCalledWith('/api/email-search/ghunt-profile/session', {
+      value: 'base64-session-value',
+    });
+    expect(result).toEqual({ name: 'ghunt_session', is_active: true });
+  });
+
   it('getQuotaStatus fetches quota data', async () => {
     api.get.mockResolvedValue({ data: [{ service: 'abuseipdb' }] });
     const result = await settingsApi.getQuotaStatus();

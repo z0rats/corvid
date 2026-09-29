@@ -87,6 +87,14 @@ export const settingsApi = {
     return response.data;
   },
 
+  // GHunt session - a dedicated validating endpoint (base64 -> JSON -> expected keys checked
+  // server-side, without running GHunt), not the generic create/update apikey routes above.
+  // See docs/architecture/ghunt.md.
+  async saveGhuntSession(value) {
+    const response = await api.put('/api/email-search/ghunt-profile/session', { value });
+    return response.data;
+  },
+
   async getQuotaStatus() {
     const response = await api.get('/api/services/quota');
     return response.data;
