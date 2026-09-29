@@ -3,6 +3,12 @@
 
 .DEFAULT_GOAL := help
 
+# Delegates `docker compose build` to `buildx bake`, which builds the backend/frontend
+# images together instead of one at a time and shares BuildKit's cache/output handling
+# across both - a plain rebuild after a small change stays effectively free either way,
+# but this shows up on a colder cache (e.g. after pruning, or a fresh machine).
+export COMPOSE_BAKE := true
+
 ## --- Docker lifecycle ---
 
 up: ## Start backend and frontend without rebuilding

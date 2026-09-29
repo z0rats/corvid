@@ -213,7 +213,11 @@ jobs:
 
   docker-build:
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [changes, backend, frontend]
+    # backend/frontend are skipped (not failed) when their path didn't change, and a
+    # skipped dependency still satisfies `needs` - so without this, this job would build
+    # and scan both images unconditionally on every push/PR, e.g. a website/docs-only change.
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
     permissions:
       contents: read
     steps:
@@ -224,8 +228,33 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Build images
-        run: docker compose -f docker-compose.yaml build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # Built with buildx + GHA cache (same mechanism as .github/workflows/publish-image.yml)
+      # instead of a plain `docker compose build`, so an unchanged Dockerfile/deps layer -
+      # including the Go-compiled subfinder/httpx/amass stage and lxml's from-source build -
+      # is reused instead of rebuilt from scratch on every run. `type=docker` loads the result
+      # into the local engine under the same tag `docker compose build` would have produced,
+      # so the Trivy/smoke-test/teardown steps below (and `compose up` without `--build`) are
+      # unchanged.
+      - name: Build backend image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend
+          tags: corvid-backend:latest
+          outputs: type=docker
+          cache-from: type=gha,scope=ci-backend
+          cache-to: type=gha,mode=max,scope=ci-backend
+
+      - name: Build frontend image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: frontend
+          tags: corvid-frontend:latest
+          outputs: type=docker
+          cache-from: type=gha,scope=ci-frontend
+          cache-to: type=gha,mode=max,scope=ci-frontend
 
       - name: Scan backend image for known CVEs (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
