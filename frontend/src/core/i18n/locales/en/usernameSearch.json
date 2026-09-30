@@ -10,11 +10,33 @@
     "updateAvailable": "update available: v{{version}}"
   },
 
+  "discovered": {
+    "title": "Pivot suggestions",
+    "caveat": "Hypotheses only: the same handle or name is often a different person, so verify before attributing anything.",
+    "usernames": "Other usernames found on these profiles",
+    "usernameSource": "{{type}} — found on {{sites}}",
+    "names": "Names found on these profiles",
+    "fromName": "Handle guesses from \"{{name}}\"",
+    "clickToSearch": "click to search",
+    "emails": "Possible email addresses for \"{{username}}\"",
+    "emailsHint": "click to look one up",
+    "checkProviders": "Check which mail providers have this username"
+  },
   "form": {
     "modulesLabel": "Search with (select one or more)",
     "usernameLabel": "Username",
     "usernamePlaceholder": "e.g. johndoe",
     "searchButton": "Search",
+    "variantsLabel": "Other handles to try (heuristic guesses, not findings)",
+    "variantsHint": "Click to put it in the box, then search",
+    "variantReason": {
+      "separator": "separator change",
+      "digits": "trailing digits / year",
+      "nameOrder": "first/last name pattern",
+      "nickname": "common nickname",
+      "leet": "leetspeak",
+      "affix": "prefix / suffix"
+    },
     "sourceMaigret": "Maigret",
     "sourceSocialAnalyzer": "Social Analyzer",
     "sourceThreatActorUsernames": "Threat Actor Usernames",

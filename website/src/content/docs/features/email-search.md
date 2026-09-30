@@ -48,6 +48,10 @@ against Google's Terms of Service, and the account behind the session can get fl
 for it. The session is encrypted at rest, never displayed back once saved, and only ever read
 into a throwaway, per-request temporary directory that's deleted immediately after each lookup.
 
+A found `gmail.com`/`googlemail.com` address in a scan's results has a **Google profile** button
+that drops it into this panel's email field and scrolls to it; it doesn't run the lookup itself.
+(Only on a live scan's results, not the history detail page, which has no lookup panel.)
+
 Only one lookup runs at a time (GHunt's own account gets rate-limited by Google otherwise), and
 each is capped at 60 seconds. See `docs/architecture/ghunt.md` in the repository for the full
 technical write-up, including what GHunt's raw JSON output actually contains.

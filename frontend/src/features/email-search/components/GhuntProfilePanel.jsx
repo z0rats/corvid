@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Avatar from '@mui/material/Avatar';
@@ -24,12 +24,25 @@ function DetailRow({ label, value }) {
   );
 }
 
-export default function GhuntProfilePanel() {
+/**
+ * `prefill` ({ email, seq }) drops an address into the field when a found-provider row's "Google
+ * profile" action fires - `seq` changes on every click so re-sending the same address still
+ * re-focuses the panel. It only fills the field: the lookup itself runs as the configured Google
+ * session's account, so it stays an explicit click on the panel's own button.
+ */
+export default function GhuntProfilePanel({ prefill }) {
   const { t } = useTranslation('emailSearch');
   const [email, setEmail] = useState('');
   const { health, result, loading, error, lookup, reset } = useGhuntProfile();
 
   const sessionConfigured = health?.session_configured === true;
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!prefill?.email) return;
+    setEmail(prefill.email);
+    panelRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [prefill]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -44,7 +57,7 @@ export default function GhuntProfilePanel() {
     : null;
 
   return (
-    <Box sx={{ mt: 3 }}>
+    <Box ref={panelRef} sx={{ mt: 3 }}>
       <Typography variant="h6" sx={{ mb: 1 }}>{t('ghunt.title')}</Typography>
       <Alert severity="warning" variant="outlined" sx={{ mb: 2, borderRadius: 1 }}>
         {t('ghunt.consentDescription')}{' '}

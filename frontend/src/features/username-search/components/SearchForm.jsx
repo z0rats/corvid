@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -14,6 +14,7 @@ import SearchIcon from '@mui/icons-material/Search';
 
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { createLogger } from '../../../core/utils/logger';
+import { generateUsernameVariants } from '../utils/usernameVariants';
 
 const logger = createLogger('UsernameSearchForm');
 
@@ -38,6 +39,8 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
   const [modules, setModules] = useState(DEFAULT_MODULES);
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+
+  const variants = useMemo(() => generateUsernameVariants(username), [username]);
 
   useEffect(() => {
     let ignore = false;
@@ -113,6 +116,26 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
           {t('form.searchButton')}
         </Button>
       </Box>
+      {variants.length > 0 && (
+        <Box sx={{ mt: 1.5 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+            {t('form.variantsLabel')} — {t('form.variantsHint')}
+          </Typography>
+          <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+            {variants.map(({ value, reason }) => (
+              <Tooltip key={value} title={t(`form.variantReason.${reason}`)}>
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={value}
+                  onClick={() => setUsername(value)}
+                  disabled={disabled}
+                />
+              </Tooltip>
+            ))}
+          </Stack>
+        </Box>
+      )}
       {modules.includes('maigret') && (
         <Autocomplete
           multiple

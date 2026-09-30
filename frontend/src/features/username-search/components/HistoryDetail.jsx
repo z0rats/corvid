@@ -11,6 +11,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundSitesList from './FoundSitesList';
+import DiscoveredIdentifiers from './DiscoveredIdentifiers';
+import { buildPrefillUrl } from '../../../core/utils/crossFeatureNav';
 import HudsonRockStatusChip from './HudsonRockStatusChip';
 import { useHudsonRockCheck } from '../hooks/api/useHudsonRockCheck';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
@@ -71,6 +73,13 @@ export default function HistoryDetail() {
 
       <HudsonRockStatusChip result={hudsonRockResult} />
       <FoundSitesList sites={run.site_results} />
+      {run.status !== 'running' && (
+        <DiscoveredIdentifiers
+          sites={run.site_results}
+          username={run.username}
+          onSearchUsername={(value) => navigate(buildPrefillUrl('/username-search/new', value))}
+        />
+      )}
     </Box>
   );
 }

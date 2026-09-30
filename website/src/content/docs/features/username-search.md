@@ -26,6 +26,32 @@ If a username search turns up an Instagram profile, see
 [Instagram Search](/corvid/features/instagram-search/) for profile metadata plus follower/followee/post
 scans.
 
+## Suggested variants
+
+While you type, the search form suggests other handles the same person might use — separator
+changes (`john.smith` / `john_smith`), a dropped or swapped trailing year, first/last-name
+patterns (`jsmith`, `smithj`), common nicknames (`john` → `johny`), single-character leetspeak,
+and a few prefixes/suffixes. If you paste an email address, its local part is used. Clicking a
+suggestion puts it in the box; it doesn't start a scan. Suggestions are generated in the browser
+with no lookups, are guesses rather than findings, and a hit under a variant still needs manual
+verification — different people share handles.
+
+## Pivot suggestions after a scan
+
+When a scan finishes (also on a past run's detail page), a "Pivot suggestions" block lists:
+
+- **Other usernames and display names** Maigret parsed out of the profile pages it found (linked
+  handles, platform IDs, full names). Clicking a handle starts a Maigret search for it. Only
+  Maigret-sourced runs carry these, and only for sites whose page it can parse.
+- **Handle guesses from each name** (`John Smith` → `johnsmith`, `jsmith`, …), using the same
+  rules as the suggested variants above.
+- **Possible email addresses** for the searched handle at common providers. Clicking one opens it
+  in the [IOC lookup](/corvid/features/ioc-tools/); a separate button opens
+  [Email Search](/corvid/features/email-search/) to check which mail providers have the username.
+
+All of it is hypotheses: the same handle or name is often a different person, so verify before
+attributing. Nothing here is fetched beyond what the scan already collected.
+
 ## Report export
 
 Maigret-sourced scans can export using Maigret's own report writers (see

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -13,6 +13,11 @@ import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 export default function NewSearch() {
   const { t } = useTranslation('emailSearch');
   const scan = useEmailSearchScan();
+  const [ghuntPrefill, setGhuntPrefill] = useState(null);
+  const lookupGoogleProfile = useCallback(
+    (email) => setGhuntPrefill((prev) => ({ email, seq: (prev?.seq ?? 0) + 1 })),
+    [],
+  );
   // Hand-off from a command-palette pivot (e.g. "john_doe email") — see crossFeatureNav.ts.
   const prefillValue = usePrefillFromQuery(useCallback((value) => scan.startScan(value), [scan]));
 
@@ -24,8 +29,8 @@ export default function NewSearch() {
       </Typography>
       <ToolInfoBanner />
       <SearchForm onSearch={scan.startScan} disabled={scan.phase === 'running'} initialUsername={prefillValue} />
-      {scan.phase !== 'idle' && <LiveScanView scan={scan} />}
-      <GhuntProfilePanel />
+      {scan.phase !== 'idle' && <LiveScanView scan={scan} onLookupGoogleProfile={lookupGoogleProfile} />}
+      <GhuntProfilePanel prefill={ghuntPrefill} />
     </Box>
   );
 }

@@ -60,7 +60,38 @@ class StreamingQueryNotify:
         pass
 
 
-def _extract_found_sites(results: dict) -> list[dict]:
+# Keys Maigret's profile parsers use for a person's display name, in `ids_data`.
+_NAME_KEYS = ("fullname", "full_name", "name")
+MAX_DISCOVERED_PER_SITE = 20
+
+
+def _build_discovered_extra(site_result: dict, searched_username: str) -> dict | None:
+    """Other identifiers Maigret parsed out of a found profile page (linked usernames/IDs, links,
+    display names) - pivot material for further searches, not proof they're the same person."""
+    usernames = [
+        {"value": value, "type": str(id_type)}
+        for value, id_type in (site_result.get("ids_usernames") or {}).items()
+        if isinstance(value, str) and value.lower() != searched_username.lower()
+    ][:MAX_DISCOVERED_PER_SITE]
+    links = [link for link in (site_result.get("ids_links") or []) if isinstance(link, str)][
+        :MAX_DISCOVERED_PER_SITE
+    ]
+    ids_data = getattr(site_result.get("status"), "ids_data", None) or {}
+    names = [
+        ids_data[key].strip()
+        for key in _NAME_KEYS
+        if isinstance(ids_data.get(key), str) and ids_data[key].strip()
+    ]
+    extra = {
+        "discovered_usernames": usernames,
+        "discovered_links": links,
+        "discovered_names": names,
+    }
+    extra = {key: value for key, value in extra.items() if value}
+    return extra or None
+
+
+def _extract_found_sites(results: dict, searched_username: str = "") -> list[dict]:
     """Build the list of found-site rows to persist from Maigret's raw results dict"""
     found_sites = []
     for site_name, site_result in results.items():
@@ -73,6 +104,7 @@ def _extract_found_sites(results: dict) -> list[dict]:
                 "site_name": site_name,
                 "url_user": site_result.get("url_user", ""),
                 "http_status": http_status if isinstance(http_status, int) else None,
+                "extra": _build_discovered_extra(site_result, searched_username),
             }
         )
     return found_sites
@@ -122,7 +154,7 @@ async def run_scan(
                 output_container=partial_results,
             )
         except asyncio.CancelledError:
-            found_sites = _extract_found_sites(partial_results)
+            found_sites = _extract_found_sites(partial_results, username)
             if partial_results:
                 save_scan_results(search_id, partial_results)
             raise ScanCancelled(
@@ -135,7 +167,7 @@ async def run_scan(
                 )
             ) from None
 
-        found_sites = _extract_found_sites(results)
+        found_sites = _extract_found_sites(results, username)
         save_scan_results(search_id, results)
 
         return ScanOutcome(

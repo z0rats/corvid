@@ -107,3 +107,19 @@ describe('GhuntProfilePanel', () => {
     expect(screen.getByText('No public Google account found for this email')).toBeInTheDocument();
   });
 });
+
+describe('GhuntProfilePanel prefill', () => {
+  it('fills the email field from a found-provider action without running the lookup', () => {
+    const lookup = vi.fn();
+    useGhuntProfile.mockReturnValue({
+      health: { installed: true, session_configured: true },
+      result: null, loading: false, error: null, lookup, reset: vi.fn(),
+    });
+
+    const { rerender } = render(<GhuntProfilePanel prefill={null} />);
+    rerender(<GhuntProfilePanel prefill={{ email: 'target@gmail.com', seq: 1 }} />);
+
+    expect(screen.getByLabelText('Email address').value).toBe('target@gmail.com');
+    expect(lookup).not.toHaveBeenCalled();
+  });
+});

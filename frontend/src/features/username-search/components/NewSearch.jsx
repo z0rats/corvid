@@ -47,6 +47,11 @@ export default function NewSearch() {
     });
   };
 
+  // A pivot chip from a finished scan (discovered handle / name-derived guess): maigret only, for
+  // the same reason as the palette hand-off below.
+  const searchDiscoveredUsername = (value) => handleSearch(value, { modules: ['maigret'] });
+  const pivotProps = { onSearchUsername: searchDiscoveredUsername, searchDisabled: anyScanRunning };
+
   // Hand-off from a command-palette pivot (e.g. "john_doe username") — see crossFeatureNav.ts.
   // Deliberately only starts Maigret, not every module, so a quick pivot click doesn't surprise
   // the user with several parallel scans.
@@ -57,11 +62,11 @@ export default function NewSearch() {
 
   const panelsBySource = {
     maigret: () => maigretScan.phase !== 'idle'
-      && <LiveScanView key="maigret" scan={maigretScan} title={t('form.sourceMaigret')} />,
+      && <LiveScanView key="maigret" scan={maigretScan} {...pivotProps} title={t('form.sourceMaigret')} />,
     social_analyzer: () => socialAnalyzerScan.phase !== 'idle'
-      && <LiveScanView key="social_analyzer" scan={socialAnalyzerScan} title={t('form.sourceSocialAnalyzer')} />,
+      && <LiveScanView key="social_analyzer" scan={socialAnalyzerScan} {...pivotProps} title={t('form.sourceSocialAnalyzer')} />,
     threat_actor_usernames: () => threatActorScan.phase !== 'idle'
-      && <LiveScanView key="threat_actor_usernames" scan={threatActorScan} title={t('form.sourceThreatActorUsernames')} />,
+      && <LiveScanView key="threat_actor_usernames" scan={threatActorScan} {...pivotProps} title={t('form.sourceThreatActorUsernames')} />,
     hudson_rock: () => hudsonRockUsername && <HudsonRockSection key="hudson_rock" result={hudsonRockResult} />,
   };
 

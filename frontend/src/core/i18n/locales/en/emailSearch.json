@@ -31,7 +31,8 @@
   },
 
   "chainActions": {
-    "sendToIocLookup": "Check in IOC Lookup"
+    "sendToIocLookup": "Check in IOC Lookup",
+    "googleProfile": "Google profile"
   },
 
   "history": {

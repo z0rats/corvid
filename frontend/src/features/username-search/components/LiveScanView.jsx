@@ -8,10 +8,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 import FoundSitesList from './FoundSitesList';
+import DiscoveredIdentifiers from './DiscoveredIdentifiers';
 
-export default function LiveScanView({ scan, title }) {
+export default function LiveScanView({ scan, title, onSearchUsername, searchDisabled }) {
   const { t } = useTranslation('usernameSearch');
-  const { phase, source, checked, totalSites, currentSite, foundSites, error, cancelScan } = scan;
+  const { phase, source, username, checked, totalSites, currentSite, foundSites, error, cancelScan } = scan;
   const isCoarseProgress = source === 'social_analyzer' || source === 'threat_actor_usernames';
   const progress = totalSites > 0 ? Math.min(100, (checked / totalSites) * 100) : 0;
 
@@ -60,6 +61,15 @@ export default function LiveScanView({ scan, title }) {
       )}
 
       <FoundSitesList sites={foundSites} />
+
+      {(phase === 'completed' || phase === 'cancelled') && username && onSearchUsername && (
+        <DiscoveredIdentifiers
+          sites={foundSites}
+          username={username}
+          onSearchUsername={onSearchUsername}
+          disabled={searchDisabled}
+        />
+      )}
     </Box>
   );
 }
