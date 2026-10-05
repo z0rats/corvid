@@ -163,7 +163,7 @@ class TestExecuteFailurePath:
         row = _run(_scenario())
 
         assert [e.type for e in events if e is not None] == ["started", "failed"]
-        assert events[1].data["error"] == "boom"
+        assert events[1].data["error"] == "Scan failed"
         assert row.status == "failed"
         assert row.error_message == "boom"
 

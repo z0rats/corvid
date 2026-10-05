@@ -3,12 +3,13 @@ updates:
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
-      interval: "weekly"
+      interval: "cron"
+      cronjob: "0 6 1,15 * *"
     cooldown:
-      default-days: 7
+      default-days: 14
     groups:
       # keep majors as individual PRs (higher breakage risk, worth reviewing
-      # one at a time); bundle everything else into one weekly PR.
+      # one at a time); bundle everything else into one PR per run.
       pip-minor-patch:
         update-types:
           - "minor"
@@ -17,9 +18,10 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
+      interval: "cron"
+      cronjob: "0 6 1,15 * *"
     cooldown:
-      default-days: 7
+      default-days: 14
     groups:
       # react and react-dom must be bumped together - a solo bump leaves them on
       # mismatched versions, which react-dom refuses to run with.
@@ -35,23 +37,26 @@ updates:
   - package-ecosystem: "docker"
     directory: "/backend"
     schedule:
-      interval: "weekly"
+      interval: "cron"
+      cronjob: "0 6 1,15 * *"
     cooldown:
-      default-days: 7
+      default-days: 14
 
   - package-ecosystem: "docker"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
+      interval: "cron"
+      cronjob: "0 6 1,15 * *"
     cooldown:
-      default-days: 7
+      default-days: 14
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "cron"
+      cronjob: "0 6 1,15 * *"
     cooldown:
-      default-days: 3
+      default-days: 14
     groups:
       # init and analyze must stay on the same codeql-action release - a solo bump
       # leaves them mismatched, which fails the analyze step at runtime.

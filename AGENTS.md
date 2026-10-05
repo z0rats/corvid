@@ -14,7 +14,7 @@ Self-hostable, single-user OSINT/security-analyst web app. FastAPI backend + Rea
 
 ## Git
 
-Never run `git commit` (or `git push`) yourself, create new tags or releases, regardless of how the rest of the task is scoped or how routine the change looks. Stage or leave changes uncommitted and let the user review and commit. This holds even if a broader instruction ("go ahead and update the repo", "ship this") could be read as covering it.
+Run `git commit` / `git push` (or create tags or releases) ONLY when the user directly asks for that specific action in their message (e.g. "commit this"). Otherwise stage or leave changes uncommitted and let the user review. A broader instruction ("go ahead and update the repo", "ship this", "fix everything") does not count as a direct request, no matter how routine the change looks. A direct request covers only the action named, not later ones: approval to commit is not approval to push, or to commit again later.
 
 ## Stack
 

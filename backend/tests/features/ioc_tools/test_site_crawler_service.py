@@ -91,7 +91,7 @@ def test_crawls_same_host_pages_and_aggregates_iocs(monkeypatch):
     assert "8.8.8.8" in result.iocs.ips
     assert "http://example.com/deep" in result.iocs.urls
     assert "/api/v1/users" in result.iocs.js_endpoints
-    assert "example.com" in result.iocs.domains
+    assert {"example.com"} <= set(result.iocs.domains)
 
 
 def test_stops_following_links_beyond_max_depth(monkeypatch):

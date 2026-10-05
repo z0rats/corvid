@@ -240,7 +240,10 @@ class ScanRun:
                         detail=str(exc),
                         telegram_category="scan_failed",
                     )
-                on_event(ScanEvent("failed", {"search_id": search_id, "error": str(exc)}))
+                # Only expected (validation/upstream) failures carry their message to the
+                # client; an unexpected exception's text may expose internals.
+                client_error = str(exc) if isinstance(exc, expected_exceptions) else "Scan failed"
+                on_event(ScanEvent("failed", {"search_id": search_id, "error": client_error}))
                 return
 
             async with managed_session() as db:
