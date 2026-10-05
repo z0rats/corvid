@@ -10,7 +10,7 @@ FROM ghcr.io/astral-sh/uv:0.12.19@sha256:04d046b13e60d6bcec73cbc5e1cad25d680dea9
 # one stage/image covers all three). CGO_ENABLED=0 produces fully static binaries
 # with no runtime dependency on this stage's (musl-based) libc, so they drop
 # straight into the glibc-based runtime stage below.
-FROM golang:1.26-alpine@sha256:ce864e7223ac17b1775e6fd0b4c0db580c2eb50e7953a427916379e4b92a1628 AS go-tools-builder
+FROM golang:1.27-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 AS go-tools-builder
 ENV CGO_ENABLED=0 GOBIN=/go/bin
 RUN apk add --no-cache git ca-certificates
 RUN --mount=type=cache,target=/root/.cache/go-build,id=go-build-cache \
