@@ -8,6 +8,7 @@ export type VariantReason =
   | 'digits'
   | 'nameOrder'
   | 'nickname'
+  | 'numeric'
   | 'leet'
   | 'affix';
 
@@ -55,6 +56,9 @@ const LEET_FORWARD: Record<string, string> = { o: '0', i: '1', l: '1', e: '3', a
 const LEET_REVERSE: Record<string, string> = {
   '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '@': 'a', $: 's',
 };
+
+// Digits people tack onto a taken or plain handle (`john` -> `john1`, `john123`).
+const NUMERIC_SUFFIXES = ['1', '01', '12', '123', '99'];
 
 const AFFIXES = { prefix: ['the', 'real', 'mr'], suffix: ['official', 'real', 'dev', 'x'] };
 
@@ -125,6 +129,12 @@ function nicknameVariants(tokens: string[]): string[] {
   return out;
 }
 
+function numericVariants(tokens: string[], compact: string): string[] {
+  // A handle that already ends in digits is the `digits` rule's business.
+  if (isDigits(tokens[tokens.length - 1])) return [];
+  return NUMERIC_SUFFIXES.map((suffix) => `${compact}${suffix}`);
+}
+
 function leetVariants(base: string): string[] {
   const out: string[] = [];
   // Un-leet the whole handle, then leet one character at a time (a full swap is rarely typed).
@@ -160,6 +170,7 @@ export function generateUsernameVariants(input: string, limit = MAX_VARIANTS): U
     ['digits', digitVariants(tokens)],
     ['nameOrder', nameOrderVariants(tokens)],
     ['nickname', nicknameVariants(tokens)],
+    ['numeric', numericVariants(tokens, compact)],
     ['leet', leetVariants(compact)],
     ['affix', affixVariants(compact)],
   ];

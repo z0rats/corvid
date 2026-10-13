@@ -172,5 +172,9 @@
     "lostTokenBody": "Delete data/.access_token on the server and restart the backend - a new token is generated and printed to the logs. This immediately invalidates the old token, signing out every browser that was using it, not just this one.",
     "tokenLabel": "Access token",
     "continueButton": "Continue"
+  },
+  "scanErrors": {
+    "tooManyRequests": "Too many requests - wait a minute and try again",
+    "serverError": "Server error: {{status}}"
   }
 }

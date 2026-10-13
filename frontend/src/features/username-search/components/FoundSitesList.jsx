@@ -6,7 +6,36 @@ import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Link from '@mui/material/Link';
+import Chip from '@mui/material/Chip';
+import Tooltip from '@mui/material/Tooltip';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import VerifiedIcon from '@mui/icons-material/Verified';
+
+import { sortByConfidence } from '../utils/confidence';
+
+// Strength reads off fill: solid = the notable ratings (confirmed, conflicting), outlined = the
+// rest. The theme's primary filled chip is a pale tint, so confirmed uses the solid info blue.
+const CONFIDENCE_STYLE = {
+  confirmed: { color: 'info', variant: 'filled' },
+  likely: { color: 'info', variant: 'outlined' },
+  candidate: { color: 'default', variant: 'outlined' },
+  conflicting: { color: 'warning', variant: 'filled' },
+};
+
+function ConfidenceChip({ level }) {
+  const { t } = useTranslation('usernameSearch');
+  return (
+    <Tooltip title={t(`confidence.hint.${level}`)} describeChild>
+      <Chip
+        size="small"
+        icon={level === 'confirmed' ? <VerifiedIcon /> : undefined}
+        {...CONFIDENCE_STYLE[level]}
+        label={t(`confidence.${level}`)}
+        sx={{ mr: 1 }}
+      />
+    </Tooltip>
+  );
+}
 
 export default function FoundSitesList({ sites }) {
   const { t } = useTranslation('usernameSearch');
@@ -19,13 +48,20 @@ export default function FoundSitesList({ sites }) {
     );
   }
 
+  const rated = sites.some((site) => site.extra?.confidence);
+
   return (
     <Box>
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         {t('results.foundCount', { count: sites.length })}
       </Typography>
+      {rated && (
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+          {t('confidence.caveat')}
+        </Typography>
+      )}
       <List dense>
-        {sites.map((site) => (
+        {sortByConfidence(sites).map((site) => (
           <ListItem key={`${site.site_name}-${site.url_user}`}>
             <ListItemIcon sx={{ minWidth: 32 }}>
               <CheckCircleIcon color="success" fontSize="small" />
@@ -42,6 +78,7 @@ export default function FoundSitesList({ sites }) {
                 ) : null
               }
             />
+            {site.extra?.confidence && <ConfidenceChip level={site.extra.confidence} />}
             {site.extra?.rate && (
               <Typography variant="caption" color="text.secondary">{site.extra.rate}</Typography>
             )}

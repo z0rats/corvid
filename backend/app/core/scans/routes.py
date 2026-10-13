@@ -1,5 +1,6 @@
+import inspect
 import logging
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fastapi import APIRouter, status
@@ -25,7 +26,7 @@ def add_run_routes(
     noun: str = "search",
     not_found_detail: str | None = None,
     with_results: bool = False,
-    to_detail: Callable[[Any], BaseModel] | None = None,
+    to_detail: Callable[[Any, Any], BaseModel | Awaitable[BaseModel]] | None = None,
     after_delete: Callable[[int], None] | None = None,
 ) -> None:
     """Mount a scan feature's run-history routes on `router`, identical in shape across
@@ -34,7 +35,8 @@ def add_run_routes(
     - `POST /{base}/{id}/cancel` - 202, or 404 `not_running_code` if nothing is running
     - `GET /{base}` - `list[summary_schema]`, newest first, `skip`/`limit` paged
     - `GET /{base}/{id}` - `detail_schema` (eager-loading the result rows if
-      `with_results`; `to_detail` replaces plain `model_validate`), or 404
+      `with_results`; `to_detail(run, db)`, sync or async, replaces plain `model_validate`),
+      or 404
     - `DELETE /{base}/{id}` - 204 (then `after_delete(id)`), or 404
 
     The scan-start (`POST /scan`) route stays in the feature: its request shape and
@@ -44,7 +46,7 @@ def add_run_routes(
     not_found_detail = not_found_detail or f"{noun.capitalize()} not found"
     not_running_code = not_running_code or not_found_code
     load = feature.history.get_with_results if with_results else feature.history.get
-    build_detail = to_detail or detail_schema.model_validate
+    build_detail = to_detail or (lambda run, _db: detail_schema.model_validate(run))
 
     def _not_found(detail: str, error_code: str) -> AppHTTPException:
         return AppHTTPException(
@@ -87,7 +89,8 @@ def add_run_routes(
         run = await load(db, search_id)
         if not run:
             raise _not_found(not_found_detail, not_found_code)
-        return build_detail(run)
+        detail = build_detail(run, db)
+        return await detail if inspect.isawaitable(detail) else detail
 
     @router.delete(
         f"/{base}/{{search_id}}",

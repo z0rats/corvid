@@ -46,7 +46,7 @@ const EXAMPLE_PIVOT_CHIP = { label: 'john_doe reddit', query: 'john_doe reddit' 
 
 /**
  * `/` home screen — the search bar re-rendered as a page instead of a modal overlay (see
- * docs/command-palette-plan.md's "doubles as the app's home screen" principle). Deliberately a
+ * docs/architecture/command-palette.md). Deliberately a
  * lighter subset of the palette's grammar: tool search, recognized-value ranking, #tag/type:kind
  * filters, `defang`/`fang` instant answers, and the `>settings`/`>theme` actions all run here
  * directly. The action panel and the record/playbook flows stay modal-only — Enter on those

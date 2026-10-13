@@ -16,6 +16,7 @@ export default function NewSearch() {
   const maigretScan = useUsernameSearchScan('maigret');
   const socialAnalyzerScan = useUsernameSearchScan('social_analyzer');
   const threatActorScan = useUsernameSearchScan('threat_actor_usernames');
+  const siteCheckScan = useUsernameSearchScan('site_check');
   const [hudsonRockUsername, setHudsonRockUsername] = useState(null);
   const hudsonRockResult = useHudsonRockCheck(hudsonRockUsername);
 
@@ -23,6 +24,7 @@ export default function NewSearch() {
     maigret: maigretScan,
     social_analyzer: socialAnalyzerScan,
     threat_actor_usernames: threatActorScan,
+    site_check: siteCheckScan,
   };
   const anyScanRunning = Object.values(scansByModule).some((scan) => scan.phase === 'running');
 
@@ -30,37 +32,63 @@ export default function NewSearch() {
   // front, so a scan started after earlier ones already have results appears above them
   // instead of always rendering in the fixed maigret/social_analyzer/threat_actor order.
   const [sourceOrder, setSourceOrder] = useState([
-    'maigret', 'social_analyzer', 'threat_actor_usernames', 'hudson_rock',
+    'site_check', 'maigret', 'social_analyzer', 'threat_actor_usernames', 'hudson_rock',
   ]);
   const bringToFront = useCallback((keys) => {
     setSourceOrder((prev) => [...keys, ...prev.filter((key) => !keys.includes(key))]);
   }, []);
 
-  const handleSearch = (username, { modules, tags }) => {
+  const handleSearch = (username, { modules, tags, parentSearchId, pivotSource }) => {
     bringToFront(modules);
     modules.forEach((moduleKey) => {
       if (moduleKey === 'hudson_rock') {
         setHudsonRockUsername(username);
+      } else if (moduleKey === 'maigret') {
+        maigretScan.startScan(username, { tags, parentSearchId, pivotSource });
       } else {
         scansByModule[moduleKey].startScan(username, { tags });
       }
     });
   };
 
+  // One request to one site: confirms a pivot without a full scan.
+  const checkSite = (username, site, { parentSearchId, pivotSource }) => {
+    bringToFront(['site_check']);
+    siteCheckScan.startScan(username, { siteNames: [site], parentSearchId, pivotSource });
+  };
+
   // A pivot chip from a finished scan (discovered handle / name-derived guess): maigret only, for
-  // the same reason as the palette hand-off below.
-  const searchDiscoveredUsername = (value) => handleSearch(value, { modules: ['maigret'] });
-  const pivotProps = { onSearchUsername: searchDiscoveredUsername, searchDisabled: anyScanRunning };
+  // the same reason as the palette hand-off below. The run it came from rides along as provenance.
+  const searchDiscoveredUsername = (value, { parentSearchId, pivotSource } = {}) => (
+    handleSearch(value, { modules: ['maigret'], parentSearchId, pivotSource })
+  );
+  const checkDiscoveredSite = (handle, context) => checkSite(handle.value, handle.site, context);
+  const pivotProps = {
+    onSearchUsername: searchDiscoveredUsername,
+    onCheckSite: checkDiscoveredSite,
+    searchDisabled: anyScanRunning,
+  };
 
   // Hand-off from a command-palette pivot (e.g. "john_doe username") — see crossFeatureNav.ts.
   // Deliberately only starts Maigret, not every module, so a quick pivot click doesn't surprise
   // the user with several parallel scans.
-  const prefillValue = usePrefillFromQuery(useCallback((value) => {
-    bringToFront(['maigret']);
-    maigretScan.startScan(value);
-  }, [maigretScan, bringToFront]));
+  // A pivot from run history also carries its run (`parent`), the site to check it on (`site`) and
+  // a label (`src`) - see usePrefillFromQuery.
+  const prefillValue = usePrefillFromQuery(useCallback((value, { parent, site, src }) => {
+    const parentSearchId = Number.parseInt(parent, 10) > 0 ? Number.parseInt(parent, 10) : undefined;
+    const pivotSource = src || undefined;
+    if (site) {
+      checkSite(value, site, { parentSearchId, pivotSource });
+    } else {
+      bringToFront(['maigret']);
+      maigretScan.startScan(value, { parentSearchId, pivotSource });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maigretScan, siteCheckScan, bringToFront]));
 
   const panelsBySource = {
+    site_check: () => siteCheckScan.phase !== 'idle'
+      && <LiveScanView key="site_check" scan={siteCheckScan} {...pivotProps} title={t('scan.siteCheckTitle', { username: siteCheckScan.username, sites: siteCheckScan.siteNames.join(', ') })} />,
     maigret: () => maigretScan.phase !== 'idle'
       && <LiveScanView key="maigret" scan={maigretScan} {...pivotProps} title={t('form.sourceMaigret')} />,
     social_analyzer: () => socialAnalyzerScan.phase !== 'idle'

@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 
 import { useNewsfeedData } from "../hooks/api/useNewsfeedApi";
 import { useArticleActions } from "../hooks/api/useArticleActions";
+import { useFeedReliability } from "../hooks/api/useFeedReliability";
 import { usePagination } from "../hooks/ui/usePagination";
 import { TLP_COLORS, PAGINATION } from "../constants/newsfeedConstants";
 
@@ -31,6 +32,7 @@ export default function Feed() {
   } = useNewsfeedData();
 
   const { handlePageChange, getTotalPages } = usePagination(page, setPage);
+  const feedReliability = useFeedReliability();
 
   const {
     analyzing,
@@ -66,6 +68,7 @@ export default function Feed() {
               <NewsArticleItem
                 key={item.id}
                 item={item}
+                reliability={feedReliability[item.feedname]}
                 updateArticle={updateArticle}
                 updateArticleField={updateArticleField}
                 tlpColors={TLP_COLORS}

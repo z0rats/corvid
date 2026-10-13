@@ -1,18 +1,34 @@
 {
   "page": {
     "title": "Email Search",
-    "description": "Find which mail providers a username is registered at, using mailcat."
+    "description": "Find which mail providers a username is registered at (mailcat), or which online services have an account for a full email address (User Scanner)."
   },
 
   "toolInfo": {
     "poweredBy": "Powered by {{tool}} v{{version}}",
     "providerCount": "{{count}} providers checked",
+    "notInstalled": "{{tool}} is not installed in this backend image - rebuild the backend to use this source",
     "updateAvailable": "update available: v{{version}}"
   },
 
   "form": {
+    "sourceLabel": "Search with",
+    "source": {
+      "mailcat": {
+        "label": "Mailcat",
+        "hint": "Probes a username at mail providers (name@provider): which mailboxes exist"
+      },
+      "user_scanner": {
+        "label": "User Scanner",
+        "hint": "Takes a full email address and checks which online services have an account for it",
+        "caveat": "The address is sent to about 150 third-party services from this host's own IP, so it cannot be combined with Tor or a proxy. Services that would email the address's owner (password-reset or verification mails) are skipped, but treat this as active reconnaissance, not a passive lookup."
+      }
+    },
     "usernameLabel": "Username",
     "usernamePlaceholder": "e.g. johndoe",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "e.g. johndoe@example.com",
+    "emailRequired": "This source needs a full email address",
     "searchButton": "Search"
   },
 
@@ -22,12 +38,14 @@
     "failed": "Search failed: {{error}}",
     "completed": "Checked {{checked}} providers, found {{found}}",
     "cancelled": "Cancelled after checking {{checked}} providers, found {{found}}",
+    "errors": "{{count}} check(s) failed (blocked, timed out or changed) - those services are not reported as \"not registered\"",
     "cancelButton": "Cancel"
   },
 
   "results": {
     "empty": "No registered providers found",
-    "foundCount": "{{count}} provider(s) found"
+    "foundCount": "{{count}} provider(s) found",
+    "openService": "open service"
   },
 
   "chainActions": {
@@ -41,6 +59,7 @@
     "summary": "Checked {{checked}} providers, found {{found}}",
     "headers": {
       "username": "Username",
+      "source": "Source",
       "status": "Status",
       "found": "Found",
       "started": "Started",

@@ -114,7 +114,9 @@ click==8.4.2
     #   rich-toolkit
     #   uvicorn
 colorama==0.4.6
-    # via maigret
+    # via
+    #   maigret
+    #   user-scanner
 colour==0.1.5
     # via mitreattack-python
 coverage[toml]==7.15.2
@@ -130,7 +132,9 @@ cssselect==1.4.0
 cssselect2==0.9.0
     # via svglib
 curl-cffi==0.15.0
-    # via maigret
+    # via
+    #   maigret
+    #   user-scanner
 cvss==3.6
     # via -r requirements.in
 decorator==5.3.1
@@ -208,6 +212,10 @@ h11==0.16.0
     #   httpcore2
     #   uvicorn
     #   wsproto
+h2==4.4.1
+    # via httpx
+hpack==4.2.0
+    # via h2
 html2text==2025.4.15
     # via -r requirements.in
 html5lib==1.1
@@ -220,18 +228,21 @@ httpcore2==2.13.1
     # via httpx2
 httptools==0.8.0
     # via uvicorn
-httpx==0.28.1
+httpx[http2]==0.28.1
     # via
     #   -r requirements.in
     #   fastapi
     #   fastapi-cloud-cli
     #   google-genai
+    #   user-scanner
 httpx2==2.13.1
     # via
     #   anthropic
     #   genai-prices
     #   openai
     #   pydantic-ai-slim
+hyperframe==6.1.0
+    # via h2
 idna==3.18
     # via
     #   anyio
@@ -536,6 +547,7 @@ rich==15.0.0
     #   mitreattack-python
     #   rich-toolkit
     #   typer
+    #   user-scanner
 rich-toolkit==0.20.3
     # via
     #   fastapi-cli
@@ -569,6 +581,8 @@ social-analyzer==0.45
     # via -r requirements.in
 socid-extractor==0.1.1
     # via maigret
+socksio==1.0.0
+    # via user-scanner
 sortedcontainers==2.4.0
     # via trio
 soupsieve==2.10
@@ -670,6 +684,8 @@ urllib3[socks]==2.7.0
     #   requests
     #   selenium
     #   sentry-sdk
+user-scanner==1.5.2.1
+    # via -r requirements.in
 uvicorn[standard]==0.54.0
     # via
     #   -r requirements.in

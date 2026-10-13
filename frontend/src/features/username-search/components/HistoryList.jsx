@@ -4,7 +4,7 @@ import Chip from '@mui/material/Chip';
 
 import HistoryTable from '../../../core/components/HistoryTable';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
-import { sourceLabelKey } from '../utils/sourceLabels';
+import { runSourceLabelKey } from '../utils/sourceLabels';
 import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
 
@@ -21,9 +21,14 @@ export default function HistoryList() {
         <Chip
           size="small"
           variant="outlined"
-          label={t(sourceLabelKey(run.source))}
+          label={t(runSourceLabelKey(run))}
         />
       ),
+    },
+    {
+      key: 'parent_search_id',
+      header: t('history.headers.followedFrom'),
+      render: (run) => (run.parent_search_id ? `#${run.parent_search_id}` : ''),
     },
     {
       key: 'status',

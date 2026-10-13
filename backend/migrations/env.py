@@ -18,8 +18,7 @@ def _import_all_models() -> None:
     either miss real schema changes for them or propose dropping their tables
     outright, thinking they shouldn't exist. Walking the filesystem instead of
     listing classes means a new feature's models are picked up automatically,
-    with no separate list to remember to update. See
-    docs/database-schema-audit.md section 6, phase 1 (finding #2).
+    with no separate list to remember to update.
     """
     backend_dir = Path(__file__).resolve().parent.parent
     app_dir = backend_dir / "app"

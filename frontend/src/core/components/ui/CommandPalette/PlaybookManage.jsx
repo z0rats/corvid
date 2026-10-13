@@ -11,7 +11,7 @@ import CheckIcon from '@mui/icons-material/CheckOutlined';
 import { useTranslation } from 'react-i18next';
 import Breadcrumbs from './Breadcrumbs';
 
-/** `>playbook:manage` view — list, not an editor (see docs/command-palette-plan.md). */
+/** `>playbook:manage` view — list, not an editor (see docs/architecture/command-palette.md). */
 export default function PlaybookManage({ playbooks, registry, onRename, onDelete, onRunNow, onBack }) {
   const { t } = useTranslation('commandPalette');
   const [editingName, setEditingName] = useState(null);

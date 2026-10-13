@@ -39,12 +39,14 @@ from app.features.username_search.schemas.username_search_schemas import (
     ScanRequest,
     SearchRunDetail,
     SearchRunSummary,
+    SiteCheckRequest,
     UsernameSearchInfo,
 )
 from app.features.username_search.service.db_refresh_service import refresh_database
 from app.features.username_search.service.hudson_rock_service import (
     check_username as check_hudson_rock_username,
 )
+from app.features.username_search.service.pivot_service import build_pivots
 from app.features.username_search.service.report_service import (
     delete_scan_results,
     generate_export,
@@ -89,9 +91,58 @@ async def start_scan(request: Request, scan_request: ScanRequest):
                 queue,
                 tags=scan_request.tags,
                 excluded_tags=scan_request.excluded_tags,
+                parent_search_id=scan_request.parent_search_id,
+                pivot_source=scan_request.pivot_source,
             )
         )
 
+    return sse_response(queue)
+
+
+def _resolve_site_names(requested: list[str]) -> list[str]:
+    """Canonical Maigret names for the requested sites; 422 if any is unknown or can't check a
+    plain username (disabled, or keyed by a platform ID)."""
+    usable = {
+        site.name.lower(): site.name
+        for site in get_maigret_database().sites
+        if not site.disabled and site.type == "username"
+    }
+    unknown = [name for name in requested if name.lower() not in usable]
+    if unknown:
+        raise AppHTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Unknown or unavailable site(s): {', '.join(unknown)}",
+            error_code="USERNAME_SEARCH_UNKNOWN_SITE",
+        )
+    return list(dict.fromkeys(usable[name.lower()] for name in requested))
+
+
+@router.post(
+    "/scan/site-check",
+    summary="Check a username on a few named sites",
+    description=(
+        "Confirm a pivot with a handful of requests: run Maigret for one username against 1-5 "
+        "named sites only, streaming progress as Server-Sent Events. A separate route from "
+        "`/scan` so it can carry its own, higher rate limit."
+    ),
+    responses={422: {"description": "Unknown or unavailable site name"}},
+)
+@limiter.limit("5/minute")
+async def start_site_check(request: Request, check_request: SiteCheckRequest):
+    """Start a Maigret check restricted to the named sites and stream its progress"""
+    site_names = _resolve_site_names(check_request.site_names)
+    logger.info("Starting site check for '%s' on %s", check_request.username, site_names)
+
+    queue: asyncio.Queue = asyncio.Queue()
+    asyncio.create_task(
+        run_maigret_scan(
+            check_request.username,
+            queue,
+            site_names=site_names,
+            parent_search_id=check_request.parent_search_id,
+            pivot_source=check_request.pivot_source,
+        )
+    )
     return sse_response(queue)
 
 
@@ -282,9 +333,17 @@ async def export_search_run(search_id: int, export_format: str, db: ReadSessionD
     )
 
 
-def _run_detail(run) -> SearchRunDetail:
+async def _run_detail(run, db) -> SearchRunDetail:
     detail = SearchRunDetail.model_validate(run)
     detail.has_export = has_scan_results(run.id)
+    detail.pivots = build_pivots(
+        ((site.site_name, site.extra) for site in run.site_results), run.username
+    )
+    # Not a foreign key, so the parent may have been deleted since.
+    if run.parent_search_id is not None:
+        detail.parent_exists = (
+            await USERNAME_SEARCH_SCANS.history.get(db, run.parent_search_id)
+        ) is not None
     return detail
 
 

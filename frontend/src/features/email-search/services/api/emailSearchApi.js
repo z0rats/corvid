@@ -15,8 +15,8 @@ export const emailSearchApi = {
     await api.delete(`/api/email-search/runs/${searchId}`);
   },
 
-  async getInfo() {
-    const response = await api.get('/api/email-search/info');
+  async getInfo(source = 'mailcat') {
+    const response = await api.get('/api/email-search/info', { params: { source } });
     return response.data;
   },
 

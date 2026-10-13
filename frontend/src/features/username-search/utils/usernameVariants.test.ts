@@ -36,6 +36,13 @@ describe('generateUsernameVariants', () => {
     expect(values('d4rkn3ss')).toContain('darkness');
   });
 
+  it('appends common number suffixes to a handle without digits, but not to one that has them', () => {
+    expect(values('johnsmith')).toEqual(expect.arrayContaining(['johnsmith1', 'johnsmith123']));
+    expect(generateUsernameVariants('johnsmith').find((v) => v.value === 'johnsmith1')?.reason).toBe('numeric');
+    expect(values('john_1990')).not.toContain('john1990123');
+    expect(generateUsernameVariants('john_1990').some((v) => v.reason === 'numeric')).toBe(false);
+  });
+
   it('uses the local part of a pasted email, minus +tag', () => {
     expect(values('john.smith+news@gmail.com')).toContain('john_smith');
   });

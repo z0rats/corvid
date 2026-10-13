@@ -56,6 +56,36 @@ describe('openSseStream', () => {
 
     await expect(openSseStream('/api/x/scan')).rejects.toThrow('Server error: Unauthorized');
   });
+
+  it('says to wait a minute on a rate-limit (429) response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 429, statusText: 'Too Many Requests', body: null }));
+
+    await expect(openSseStream('/api/x/scan')).rejects.toThrow(/wait a minute/);
+  });
+
+  it("surfaces the backend's own error detail", async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 422,
+      statusText: '',
+      body: null,
+      json: async () => ({ detail: 'Unknown or unavailable site(s): Twitter' }),
+    }));
+
+    await expect(openSseStream('/api/x/scan')).rejects.toThrow('Unknown or unavailable site(s): Twitter');
+  });
+
+  it('falls back to the status code when there is neither detail nor status text', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 422,
+      statusText: '',
+      body: null,
+      json: async () => ({ detail: [{ msg: 'field required' }] }),
+    }));
+
+    await expect(openSseStream('/api/x/scan')).rejects.toThrow('Server error: 422');
+  });
 });
 
 describe('readSseEvents', () => {

@@ -49,6 +49,7 @@ async def fetch_paginated_articles(
     has_note: bool | None = None,
     tlp: str | None = None,
     read: bool | None = None,
+    min_reliability: str | None = None,
 ) -> PaginatedArticlesResponse:
     """Fetch paginated articles with boolean presence filters translated to null checks"""
     result = await get_paginated_articles(
@@ -64,6 +65,7 @@ async def fetch_paginated_articles(
         note_null=None if has_note is None else not has_note,
         tlp=tlp,
         read=read,
+        min_reliability=min_reliability,
     )
     return PaginatedArticlesResponse(**result)
 

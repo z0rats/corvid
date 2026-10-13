@@ -1,11 +1,9 @@
 # Isolated per-tool venvs for CLI dependencies that conflict with the main backend venv
 
-Two planned integrations - GHunt (`docs/specs/ghunt-integration-spec.md`) and bbot
-(`docs/specs/bbot-integration-spec.md`, not yet built) - can't be installed into the main backend
-venv: `ghunt>=2.3.2` requires `rich<14`, and `bbot==3.0.2` requires `tabulate==0.8.10`, both
+Two integrations considered - GHunt (built) and bbot (not built; it duplicates subfinder and
+amass) - can't be installed into the main backend venv: `ghunt>=2.3.2` requires `rich<14`, and `bbot==3.0.2` requires `tabulate==0.8.10`, both
 conflicting with the main lock's `mitreattack-python==6.2.0` (`rich==15.0.0`, `tabulate==0.10.0`).
-`docs/specs/README.md` records this as a shared prerequisite to be designed once and reused,
-with the actual ADR deferred to whichever of the two ships first. GHunt is that first mover.
+This was a shared prerequisite, designed once and reused; GHunt is the first mover.
 
 ## Decision
 

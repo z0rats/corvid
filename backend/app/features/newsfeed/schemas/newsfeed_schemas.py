@@ -5,6 +5,7 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 IocType = Literal["ips", "md5_hashes", "sha1_hashes", "sha256_hashes", "urls", "domains", "emails"]
 BlacklistType = Literal["word", "ioc"]
+SourceReliability = Literal["A", "B", "C", "D", "E", "F"]
 
 
 class NewsfeedSettingsSchema(BaseModel):
@@ -21,6 +22,13 @@ class NewsfeedSettingsSchema(BaseModel):
     )
     last_error: str | None = Field(
         default=None, description="Error from the most recent failed fetch attempt, if any"
+    )
+    reliability: SourceReliability | None = Field(
+        default=None,
+        description=(
+            "Admiralty-system source reliability, A (completely reliable) to F (cannot be "
+            "judged); unset until rated"
+        ),
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -345,6 +353,12 @@ class BulkArticleRequest(BaseModel):
     article_ids: list[int] = Field(
         ..., description="List of article IDs", min_length=1, max_length=200
     )
+
+
+class FeedReliabilityUpdate(BaseModel):
+    """Request body for rating a feed's source reliability"""
+
+    reliability: SourceReliability = Field(..., description="Admiralty reliability grade, A-F")
 
 
 class FeedStatusUpdate(BaseModel):

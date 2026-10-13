@@ -3,7 +3,7 @@
 
 This is a transparent weighted-signal logit, not a trained model: SteamReveal's own ML
 classifier and its training data aren't available to reproduce (see
-docs/adr/0014-steam-recon-clean-room-and-heuristic-scoring.md), so probability here means
+docs/adr/0015-steam-recon-clean-room-and-heuristic-scoring.md), so probability here means
 "how well the profile matches known suspicious patterns", each pattern's contribution shown
 separately - not a calibrated probability of guilt.
 """

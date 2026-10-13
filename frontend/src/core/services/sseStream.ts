@@ -1,3 +1,4 @@
+import i18n from '../i18n';
 import { baseURL } from './baseApi';
 import { getAccessToken } from '../utils/accessToken';
 import { createLogger } from '../utils/logger';
@@ -31,9 +32,22 @@ export async function openSseStream(
     signal,
   });
   if (!response.ok || !response.body) {
-    throw new Error(`Server error: ${response.statusText}`);
+    throw new Error(await errorMessage(response));
   }
   return response.body;
+}
+
+// The backend's own `detail` (e.g. "Unknown or unavailable site(s): X") says what to fix;
+// the bare status text says nothing, and is empty over HTTP/2.
+async function errorMessage(response: Response): Promise<string> {
+  if (response.status === 429) return i18n.t('common:scanErrors.tooManyRequests');
+  try {
+    const { detail } = await response.json();
+    if (typeof detail === 'string' && detail) return detail;
+  } catch {
+    // not JSON - fall through to the status
+  }
+  return i18n.t('common:scanErrors.serverError', { status: response.statusText || response.status });
 }
 
 /** Yields each `data: <json>` frame's parsed payload, in order. A frame that isn't a data

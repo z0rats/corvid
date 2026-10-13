@@ -1,16 +1,18 @@
 # Command palette and cross-feature navigation
 
-Deep-dive referenced from AGENTS.md's Frontend architecture section. Full UX spec in
-`docs/command-palette-plan.md` — this covers implementation internals only.
+Deep-dive referenced from AGENTS.md's Frontend architecture section. Covers implementation
+internals and cross-feature navigation; the grammar itself is documented in
+`core/utils/commandParser.ts`'s header comments and the user-facing
+`website/src/content/docs/usage/command-palette.md`.
 
 ## Core pieces
 
-- `core/utils/commandParser.js` — framework-free parser for the search grammar (`#tag`,
+- `core/utils/commandParser.ts` — framework-free parser for the search grammar (`#tag`,
   `type:kind`, `>action`, `value tool` pivot, `defang`/`fang`, playbooks).
-- `core/utils/iocTypeDetection.js` — a JS port of `ioc_utils.py`'s `determine_ioc_type()`, kept
+- `core/utils/iocTypeDetection.ts` — a JS port of `ioc_utils.py`'s `determine_ioc_type()`, kept
   in sync via the shared fixture `testdata/ioc-type-detection-cases.json` (consumed by both
   `test_ioc_type_detection.py` and the JS test).
-- `core/hooks/useCommandPalette.js` — owns all palette state (open/close, recording,
+- `core/hooks/useCommandPalette.ts` — owns all palette state (open/close, recording,
   breadcrumbs), instantiated once in `CommandPalette.jsx` (mounted in `Layout.jsx`, inside the
   `AccessGate` subtree). Other components open it by dispatching the
   `OPEN_COMMAND_PALETTE_EVENT` window event rather than lifting state.
@@ -40,8 +42,8 @@ detection - it's still typeable directly into Steam Recon's own form, just not a
 ## Cross-feature "send to X"
 
 E.g. `email_search`'s found email → `ioc_lookup`, `ioc_lookup`'s domain result → `domain_finder`.
-The value passes via a `?q=` query param (`core/utils/crossFeatureNav.js`'s `buildPrefillUrl`);
-the target feature reads and clears it on mount via `core/hooks/usePrefillFromQuery.js`.
+The value passes via a `?q=` query param (`core/utils/crossFeatureNav.ts`'s `buildPrefillUrl`);
+the target feature reads and clears it on mount via `core/hooks/usePrefillFromQuery.tsx`.
 `core/components/ui/ChainActionButton.jsx` is the reusable trigger.
 
 ## Palette pivot gotcha

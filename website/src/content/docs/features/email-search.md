@@ -1,9 +1,14 @@
 ---
 title: Email Search
-description: Find which mail providers a username is registered at.
+description: Find which mail providers a username is registered at, or which services have an account for an email address.
 sidebar:
   order: 60
 ---
+
+Two sources, picked with the chips above the input. **Mailcat** takes a username; **User Scanner**
+takes a full email address (see below).
+
+## Mailcat: a username at mail providers
 
 Checks a username against roughly two dozen mail providers using
 [mailcat](https://github.com/sharsil/mailcat)'s per-provider checkers — a mix of SMTP RCPT
@@ -28,6 +33,35 @@ Enable either group under **Settings → Email Search**.
 Like Username Search, the installed `mailcat-osint` version and whether a newer one is available
 are surfaced in settings (a manual PyPI check) — installing an update still requires a container
 rebuild.
+
+## User Scanner: an email address at online services
+
+Takes a **full email address** and asks about 150 online services (shopping, social, developer,
+learning, entertainment, …) whether they have an account for it. A hit is a service that confirmed
+the address is registered; where the service's sign-in or signup check also reveals profile
+details (a display name, username, user ID, location, account type), they appear under the hit.
+Hits are saved to history with the same run lifecycle as Mailcat. It uses
+[user-scanner](https://github.com/kaifcodec/user-scanner) (MIT), pinned to an exact version.
+
+This is **active reconnaissance, not a passive lookup**: the address is submitted to every one of
+those services from the backend host's own IP.
+
+- **Services that would email the address's owner are skipped.** Some "does this account exist?"
+  checks work by starting a password reset or sending a verification code, which lands in the
+  target's inbox. Every user-scanner module is reviewed against that and listed in a committed
+  manifest; the ones that notify (or that submit a signup form) are blocked, as is the whole adult
+  category. A module that appears in a newer version stays off until it has been reviewed.
+- **Not combinable with Tor or a proxy.** user-scanner can't be routed through the configured
+  proxy, so rather than quietly sending requests from your own IP, a run fails with an explanation
+  while Tor or a proxy is set under **Settings → Email Search** (the page warns about this as soon
+  as you pick User Scanner).
+- **A failed check is not "no account".** Services that block the request, time out or changed
+  their API are counted separately ("N checks failed", kept in history too) and never reported as
+  "not registered".
+- Image links a profile exposes (avatars) are stored but never loaded in the browser.
+
+The installed package version and the number of services that will run are shown above the form.
+Updating the package needs a container rebuild, as with the other bundled tools.
 
 ## Google Profile (GHunt)
 

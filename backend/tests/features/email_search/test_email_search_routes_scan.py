@@ -27,6 +27,12 @@ def session_factory(make_session_factory):
     return make_session_factory([MailSearch.__table__, MailSearchResult.__table__])
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """`/scan` allows 3/minute per client; without a reset a later test in the file gets a 429."""
+    limiter.reset()
+
+
 @pytest.fixture
 def client(session_factory):
     async def _get_db() -> AsyncGenerator[AsyncSession]:
@@ -78,6 +84,54 @@ class TestStartScan:
         client.post("/api/email-search/scan", json={"username": "alice@example.com"})
 
         assert captured["username"] == "alice"
+
+
+class TestStartUserScannerScan:
+    def _capture(self, monkeypatch):
+        captured = {}
+
+        async def fake_user_scanner(email, queue):
+            captured["email"] = email
+            queue.put_nowait(None)
+
+        async def fake_mailcat(username, queue):
+            captured["mailcat"] = username
+            queue.put_nowait(None)
+
+        monkeypatch.setattr(email_search_routes, "run_user_scanner_scan", fake_user_scanner)
+        monkeypatch.setattr(email_search_routes, "run_scan", fake_mailcat)
+        return captured
+
+    def test_dispatches_to_user_scanner_and_keeps_the_full_address(self, client, monkeypatch):
+        captured = self._capture(monkeypatch)
+
+        response = client.post(
+            "/api/email-search/scan",
+            json={"username": "alice@example.com", "source": "user_scanner"},
+        )
+
+        assert response.status_code == 200
+        assert captured == {"email": "alice@example.com"}
+
+    def test_user_scanner_rejects_a_bare_username(self, client, monkeypatch):
+        self._capture(monkeypatch)
+
+        response = client.post(
+            "/api/email-search/scan", json={"username": "alice", "source": "user_scanner"}
+        )
+
+        assert response.status_code == 422
+
+    def test_an_unknown_source_is_rejected(self, client):
+        response = client.post("/api/email-search/scan", json={"username": "a", "source": "nope"})
+        assert response.status_code == 422
+
+    def test_omitting_the_source_still_means_mailcat(self, client, monkeypatch):
+        captured = self._capture(monkeypatch)
+
+        client.post("/api/email-search/scan", json={"username": "alice"})
+
+        assert captured == {"mailcat": "alice"}
 
 
 class TestCancelScan:

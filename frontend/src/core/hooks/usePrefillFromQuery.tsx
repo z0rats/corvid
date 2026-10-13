@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Navigate, useLocation, useSearchParams } from 'react-router';
-import { PREFILL_QUERY_PARAM } from '../utils/crossFeatureNav';
+import { PREFILL_CONTEXT_PARAMS, PREFILL_QUERY_PARAM } from '../utils/crossFeatureNav';
 
 /**
  * Reads a value chained in from another feature (see crossFeatureNav.buildPrefillUrl), strips it
@@ -10,19 +10,24 @@ import { PREFILL_QUERY_PARAM } from '../utils/crossFeatureNav';
  * [prefillValue])`). Always returns the raw value too, since most callers also feed it to a form
  * field's initial value regardless of whether they also act on it via `onValue`.
  */
-export function usePrefillFromQuery(onValue?: (value: string) => void): string | null {
+export function usePrefillFromQuery(
+  onValue?: (value: string, context: Record<string, string | null>) => void,
+): string | null {
   const [searchParams, setSearchParams] = useSearchParams();
   const prefillValue = searchParams.get(PREFILL_QUERY_PARAM);
 
   const clearPrefill = () => {
     const next = new URLSearchParams(searchParams);
     next.delete(PREFILL_QUERY_PARAM);
+    PREFILL_CONTEXT_PARAMS.forEach((key) => next.delete(key));
     setSearchParams(next, { replace: true });
   };
 
   useEffect(() => {
     if (!prefillValue || !onValue) return;
-    onValue(prefillValue);
+    onValue(prefillValue, Object.fromEntries(
+      PREFILL_CONTEXT_PARAMS.map((key) => [key, searchParams.get(key)]),
+    ));
     clearPrefill();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillValue]);

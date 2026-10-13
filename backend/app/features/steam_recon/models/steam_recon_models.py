@@ -13,8 +13,8 @@ class SteamReconSearch(Base):
 
     No child-row tables - the friends graph, close-friends list, geolocation hypothesis
     and cheater report are all persisted as one `result` JSON blob (same shape git_recon's
-    `GitReconSearch.result` uses, see database-schema-audit.md #12), since none of them
-    are ever queried independently of the scan they came from.
+    `GitReconSearch.result` uses, see docs/adr/0002-git-recon-json-blob-results.md), since
+    none of them are ever queried independently of the scan they came from.
     """
 
     __tablename__ = "steam_recon_searches"

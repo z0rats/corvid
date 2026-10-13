@@ -56,9 +56,12 @@ const activeControllers = new Map<string, AbortController>();
 
 // Every scan feature's backend mounts the same routes (backend `core/scans/routes.py`):
 // `POST <base>/scan` (SSE), `GET <base>/<runs>/<id>`, `POST <base>/<runs>/<id>/cancel`.
+// `scanPath` overrides the start route for a feature with a second one (username-search's
+// `scan/site-check`, which carries its own rate limit).
 export interface ScanEndpoint {
   base: string;
   runs: 'history' | 'runs';
+  scanPath?: string;
 }
 
 const TERMINAL_STATUSES = ['completed', 'cancelled', 'failed'];
@@ -69,10 +72,10 @@ interface ScanTransport {
   cancelScan: (searchId: string | number) => Promise<unknown>;
 }
 
-function scanTransport({ base, runs }: ScanEndpoint): ScanTransport {
+function scanTransport({ base, runs, scanPath = 'scan' }: ScanEndpoint): ScanTransport {
   return {
     startScan(body, signal) {
-      return openSseStream(`${base}/scan`, { body, signal });
+      return openSseStream(`${base}/${scanPath}`, { body, signal });
     },
     async fetchPersisted(searchId) {
       return (await api.get(`${base}/${runs}/${searchId}`)).data;
@@ -127,8 +130,8 @@ export interface UseResumableScanOptions<S extends PhaseScanState> {
 export function useResumableScan<S extends PhaseScanState>({
   scopeKey, state, setState, initialState, endpoint, reduce, reconcile,
 }: UseResumableScanOptions<S>) {
-  const { base, runs } = endpoint;
-  const transport = useMemo(() => scanTransport({ base, runs }), [base, runs]);
+  const { base, runs, scanPath } = endpoint;
+  const transport = useMemo(() => scanTransport({ base, runs, scanPath }), [base, runs, scanPath]);
 
   const processStream = useCallback(async (
     stream: ReadableStream<Uint8Array>,

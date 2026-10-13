@@ -138,6 +138,20 @@ describe('newsfeedSettingsApi.disableNewsfeed', () => {
   });
 });
 
+describe('newsfeedSettingsApi.setNewsfeedReliability', () => {
+  it('patches the encoded feed name with the grade', async () => {
+    api.patch.mockResolvedValue({ data: { name: 'feed name', reliability: 'B' } });
+
+    const result = await newsfeedSettingsApi.setNewsfeedReliability('feed name', 'B');
+
+    expect(api.patch).toHaveBeenCalledWith(
+      '/api/settings/modules/newsfeed/feed%20name/reliability',
+      { reliability: 'B' },
+    );
+    expect(result).toEqual({ name: 'feed name', reliability: 'B' });
+  });
+});
+
 describe('newsfeedSettingsApi.validateFeed', () => {
   it('posts the feed for validation', async () => {
     api.post.mockResolvedValue({ data: { valid: true } });

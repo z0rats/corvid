@@ -1,0 +1,909 @@
+{
+ "package_version": "1.5.2.1",
+ "modules": {
+  "babestation": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "fantasia": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "fapfolder": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "faproulette": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "flirtbate": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "letsporn": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "lovescape": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "made_porn": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "pornhub": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "redtube": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "sexvid": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "superporn": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "thegay": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "tube8": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "xnxx": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "xvideos": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "youporn": {
+   "category": "adult",
+   "run": false,
+   "reason": "adult category, not offered"
+  },
+  "disqus": {
+   "category": "community",
+   "run": true
+  },
+  "nextdoor": {
+   "category": "community",
+   "run": true
+  },
+  "quora": {
+   "category": "community",
+   "run": true
+  },
+  "stackoverflow": {
+   "category": "community",
+   "run": true
+  },
+  "adobe": {
+   "category": "creator",
+   "run": true
+  },
+  "buymeacoffee": {
+   "category": "creator",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "canva": {
+   "category": "creator",
+   "run": true
+  },
+  "figma": {
+   "category": "creator",
+   "run": true
+  },
+  "flickr": {
+   "category": "creator",
+   "run": true
+  },
+  "gumroad": {
+   "category": "creator",
+   "run": true
+  },
+  "kick": {
+   "category": "creator",
+   "run": true
+  },
+  "leanpub": {
+   "category": "creator",
+   "run": true
+  },
+  "patreon": {
+   "category": "creator",
+   "run": true
+  },
+  "payhip": {
+   "category": "creator",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "threadless": {
+   "category": "creator",
+   "run": true
+  },
+  "vimeo": {
+   "category": "creator",
+   "run": true
+  },
+  "wisio": {
+   "category": "creator",
+   "run": true
+  },
+  "axonaut": {
+   "category": "crm",
+   "run": true
+  },
+  "hubspot": {
+   "category": "crm",
+   "run": true
+  },
+  "insightly": {
+   "category": "crm",
+   "run": true
+  },
+  "zoho": {
+   "category": "crm",
+   "run": true
+  },
+  "lespark": {
+   "category": "dating",
+   "run": true
+  },
+  "locanto": {
+   "category": "dating",
+   "run": true
+  },
+  "okcupid": {
+   "category": "dating",
+   "run": true
+  },
+  "skout": {
+   "category": "dating",
+   "run": true
+  },
+  "atlassian": {
+   "category": "dev",
+   "run": true
+  },
+  "codecademy": {
+   "category": "dev",
+   "run": true
+  },
+  "codepen": {
+   "category": "dev",
+   "run": true
+  },
+  "codewars": {
+   "category": "dev",
+   "run": true
+  },
+  "devrant": {
+   "category": "dev",
+   "run": true
+  },
+  "envato": {
+   "category": "dev",
+   "run": true
+  },
+  "github": {
+   "category": "dev",
+   "run": true
+  },
+  "hackerearth": {
+   "category": "dev",
+   "run": true
+  },
+  "hackerone": {
+   "category": "dev",
+   "run": true
+  },
+  "hackerrank": {
+   "category": "dev",
+   "run": true
+  },
+  "hackthebox": {
+   "category": "dev",
+   "run": true
+  },
+  "howtogeek": {
+   "category": "dev",
+   "run": true
+  },
+  "huggingface": {
+   "category": "dev",
+   "run": true
+  },
+  "luarocks": {
+   "category": "dev",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "medium": {
+   "category": "dev",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "qiita": {
+   "category": "dev",
+   "run": true
+  },
+  "rubygems": {
+   "category": "dev",
+   "run": false,
+   "reason": "POSTs the signup form; an unregistered address could create an account"
+  },
+  "wix": {
+   "category": "dev",
+   "run": true
+  },
+  "wondershare": {
+   "category": "dev",
+   "run": true
+  },
+  "wordpress": {
+   "category": "dev",
+   "run": true
+  },
+  "xda": {
+   "category": "dev",
+   "run": true
+  },
+  "anilist": {
+   "category": "entertainment",
+   "run": false,
+   "reason": "sends a ResetPassword GraphQL mutation (password-reset email to the target)"
+  },
+  "appletv": {
+   "category": "entertainment",
+   "run": true
+  },
+  "dreame": {
+   "category": "entertainment",
+   "run": true
+  },
+  "girlslife": {
+   "category": "entertainment",
+   "run": true
+  },
+  "hoichoi": {
+   "category": "entertainment",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "justwatch": {
+   "category": "entertainment",
+   "run": true
+  },
+  "letterboxd": {
+   "category": "entertainment",
+   "run": true
+  },
+  "myanimelist": {
+   "category": "entertainment",
+   "run": true
+  },
+  "nebula_tv": {
+   "category": "entertainment",
+   "run": true
+  },
+  "netflix": {
+   "category": "entertainment",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "stremio": {
+   "category": "entertainment",
+   "run": true
+  },
+  "sunnxt": {
+   "category": "entertainment",
+   "run": true
+  },
+  "weverse": {
+   "category": "entertainment",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "evolveyou": {
+   "category": "fitness",
+   "run": true
+  },
+  "finch": {
+   "category": "fitness",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "fitnessblender": {
+   "category": "fitness",
+   "run": true
+  },
+  "myfitnesspal": {
+   "category": "fitness",
+   "run": true
+  },
+  "sweat": {
+   "category": "fitness",
+   "run": true
+  },
+  "addictinggames": {
+   "category": "gaming",
+   "run": true
+  },
+  "chess_com": {
+   "category": "gaming",
+   "run": true
+  },
+  "crazygames": {
+   "category": "gaming",
+   "run": true
+  },
+  "medal": {
+   "category": "gaming",
+   "run": true
+  },
+  "stackb": {
+   "category": "gaming",
+   "run": true
+  },
+  "bunny": {
+   "category": "hosting",
+   "run": false,
+   "reason": "POSTs to the registration endpoint"
+  },
+  "neocities": {
+   "category": "hosting",
+   "run": true
+  },
+  "cv_ee": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "cv_lv": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "cvkeskus": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "cvmarket_lt": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "cvmarket_lv": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "cvonline_lt": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "dirbam": {
+   "category": "jobs",
+   "run": true
+  },
+  "freelancer": {
+   "category": "jobs",
+   "run": true
+  },
+  "hercul": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "jobs_cz": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "kandideeri": {
+   "category": "jobs",
+   "run": true
+  },
+  "otsintood": {
+   "category": "jobs",
+   "run": true
+  },
+  "pulser": {
+   "category": "jobs",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "visidarbi": {
+   "category": "jobs",
+   "run": true
+  },
+  "alison": {
+   "category": "learning",
+   "run": true
+  },
+  "allen": {
+   "category": "learning",
+   "run": true
+  },
+  "annaabi": {
+   "category": "learning",
+   "run": true
+  },
+  "asafeer": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "aslbloom": {
+   "category": "learning",
+   "run": true
+  },
+  "babbel": {
+   "category": "learning",
+   "run": true
+  },
+  "bnrlanguages": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "bunpo": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "cakeapp": {
+   "category": "learning",
+   "run": true
+  },
+  "cambly": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "classdojo": {
+   "category": "learning",
+   "run": true
+  },
+  "coursera": {
+   "category": "learning",
+   "run": true
+  },
+  "duocards": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "duolingo": {
+   "category": "learning",
+   "run": true
+  },
+  "hanzii": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "hellochinese": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "heyjapan": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "jetpunk": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "linga": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "lingq": {
+   "category": "learning",
+   "run": true
+  },
+  "memrise": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "mondly": {
+   "category": "learning",
+   "run": true
+  },
+  "programminghub": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "quizlet": {
+   "category": "learning",
+   "run": true
+  },
+  "speak": {
+   "category": "learning",
+   "run": true
+  },
+  "speakly": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "talkme": {
+   "category": "learning",
+   "run": true
+  },
+  "talkpal": {
+   "category": "learning",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "vedantu": {
+   "category": "learning",
+   "run": true
+  },
+  "deezer": {
+   "category": "music",
+   "run": true
+  },
+  "gaana": {
+   "category": "music",
+   "run": true
+  },
+  "jiosaavn": {
+   "category": "music",
+   "run": true
+  },
+  "mixcloud": {
+   "category": "music",
+   "run": true
+  },
+  "spotify": {
+   "category": "music",
+   "run": true
+  },
+  "aljazeera": {
+   "category": "news",
+   "run": true
+  },
+  "bbc": {
+   "category": "news",
+   "run": true
+  },
+  "cnn": {
+   "category": "news",
+   "run": true
+  },
+  "flipboard": {
+   "category": "news",
+   "run": true
+  },
+  "foxnews": {
+   "category": "news",
+   "run": true
+  },
+  "globaltimes": {
+   "category": "news",
+   "run": true
+  },
+  "indiatimes": {
+   "category": "news",
+   "run": true
+  },
+  "nytimes": {
+   "category": "news",
+   "run": true
+  },
+  "ama": {
+   "category": "other",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "anydo": {
+   "category": "other",
+   "run": true
+  },
+  "deviantart": {
+   "category": "other",
+   "run": true
+  },
+  "dollarfix": {
+   "category": "other",
+   "run": true
+  },
+  "dragongroot": {
+   "category": "other",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "dropbox": {
+   "category": "other",
+   "run": true
+  },
+  "eventbrite": {
+   "category": "other",
+   "run": true
+  },
+  "firefox": {
+   "category": "other",
+   "run": true
+  },
+  "moz": {
+   "category": "other",
+   "run": true
+  },
+  "numsify": {
+   "category": "other",
+   "run": true
+  },
+  "office365": {
+   "category": "other",
+   "run": true
+  },
+  "screener": {
+   "category": "other",
+   "run": true
+  },
+  "secondline": {
+   "category": "other",
+   "run": true
+  },
+  "start_me": {
+   "category": "other",
+   "run": true
+  },
+  "alza_at": {
+   "category": "shopping",
+   "run": true
+  },
+  "alza_cz": {
+   "category": "shopping",
+   "run": true
+  },
+  "alza_de": {
+   "category": "shopping",
+   "run": true
+  },
+  "alza_hu": {
+   "category": "shopping",
+   "run": true
+  },
+  "alza_sk": {
+   "category": "shopping",
+   "run": true
+  },
+  "amazon": {
+   "category": "shopping",
+   "run": true
+  },
+  "etsy": {
+   "category": "shopping",
+   "run": true
+  },
+  "fixderma": {
+   "category": "shopping",
+   "run": true
+  },
+  "flipkart": {
+   "category": "shopping",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "hautesauce": {
+   "category": "shopping",
+   "run": true
+  },
+  "naturabuy": {
+   "category": "shopping",
+   "run": true
+  },
+  "nykaaman": {
+   "category": "shopping",
+   "run": true
+  },
+  "rappi": {
+   "category": "shopping",
+   "run": true
+  },
+  "tatacliq": {
+   "category": "shopping",
+   "run": true
+  },
+  "tindie": {
+   "category": "shopping",
+   "run": true
+  },
+  "vivino": {
+   "category": "shopping",
+   "run": true
+  },
+  "walmart": {
+   "category": "shopping",
+   "run": true
+  },
+  "classmates": {
+   "category": "social",
+   "run": true
+  },
+  "couplejoy": {
+   "category": "social",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "facebook": {
+   "category": "social",
+   "run": false,
+   "reason": "drives the account-recovery identify flow"
+  },
+  "gravatar": {
+   "category": "social",
+   "run": true
+  },
+  "instagram": {
+   "category": "social",
+   "run": true
+  },
+  "locket": {
+   "category": "social",
+   "run": true
+  },
+  "lovenudge": {
+   "category": "social",
+   "run": true
+  },
+  "mastodon": {
+   "category": "social",
+   "run": true
+  },
+  "meeff": {
+   "category": "social",
+   "run": true
+  },
+  "mewe": {
+   "category": "social",
+   "run": true
+  },
+  "pinterest": {
+   "category": "social",
+   "run": true
+  },
+  "plurk": {
+   "category": "social",
+   "run": true
+  },
+  "slowly": {
+   "category": "social",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "superlive": {
+   "category": "social",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "tumblr": {
+   "category": "social",
+   "run": true
+  },
+  "weawow": {
+   "category": "social",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "whering": {
+   "category": "social",
+   "run": true
+  },
+  "x": {
+   "category": "social",
+   "run": true
+  },
+  "aiscore": {
+   "category": "sports",
+   "run": true
+  },
+  "besoccer": {
+   "category": "sports",
+   "run": true
+  },
+  "espn": {
+   "category": "sports",
+   "run": true
+  },
+  "marca": {
+   "category": "sports",
+   "run": true
+  },
+  "nba": {
+   "category": "sports",
+   "run": true
+  },
+  "playtomic": {
+   "category": "sports",
+   "run": true
+  },
+  "uniscore": {
+   "category": "sports",
+   "run": false,
+   "reason": "upstream loud list: notifies the address owner"
+  },
+  "emirates": {
+   "category": "travel",
+   "run": true
+  },
+  "komoot": {
+   "category": "travel",
+   "run": true
+  },
+  "polarsteps": {
+   "category": "travel",
+   "run": true
+  },
+  "skyscanner": {
+   "category": "travel",
+   "run": true
+  },
+  "femometer": {
+   "category": "women_health",
+   "run": true
+  },
+  "glow": {
+   "category": "women_health",
+   "run": true
+  },
+  "iyoni": {
+   "category": "women_health",
+   "run": true
+  },
+  "meetyou": {
+   "category": "women_health",
+   "run": true
+  },
+  "myperiodtracker": {
+   "category": "women_health",
+   "run": true
+  },
+  "premom": {
+   "category": "women_health",
+   "run": true
+  },
+  "womanlog": {
+   "category": "women_health",
+   "run": true
+  }
+ }
+}

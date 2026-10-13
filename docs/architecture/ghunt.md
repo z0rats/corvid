@@ -80,7 +80,7 @@ the child process's `HOME`: `ghunt_profile_service.run_ghunt_profile`
 
 ## `--json` output shape (code-derived, not live-captured)
 
-The spec for this feature (`docs/specs/ghunt-integration-spec.md` §3.6/§10) explicitly flags the
+The original integration plan explicitly flagged the
 `--json` schema as unconfirmed pending a real Google-account session, which wasn't available
 during implementation. The shape below was read directly from the pinned 2.3.4 source
 (`ghunt/modules/email.py`, `ghunt/parsers/people.py`, `ghunt/objects/encoders.py`) rather than

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -9,11 +10,16 @@ import CancelIcon from '@mui/icons-material/Cancel';
 
 import FoundSitesList from './FoundSitesList';
 import DiscoveredIdentifiers from './DiscoveredIdentifiers';
+import { inconclusiveSites } from '../utils/siteCheck';
 
-export default function LiveScanView({ scan, title, onSearchUsername, searchDisabled }) {
+export default function LiveScanView({ scan, title, onSearchUsername, onCheckSite, searchDisabled }) {
   const { t } = useTranslation('usernameSearch');
-  const { phase, source, username, checked, totalSites, currentSite, foundSites, error, cancelScan } = scan;
+  const { phase, source, username, checked, totalSites, currentSite, foundSites, pivots, error, searchId, siteStatuses, cancelScan } = scan;
   const isCoarseProgress = source === 'social_analyzer' || source === 'threat_actor_usernames';
+  // A site that was blocked or errored says nothing about the account, so a one-site check that
+  // ended that way must not read as "not found".
+  const unanswered = source === 'site_check' ? inconclusiveSites(siteStatuses) : [];
+  const inconclusive = phase === 'completed' && unanswered.length > 0;
   const progress = totalSites > 0 ? Math.min(100, (checked / totalSites) * 100) : 0;
 
   return (
@@ -51,7 +57,13 @@ export default function LiveScanView({ scan, title, onSearchUsername, searchDisa
         />
       )}
 
-      {phase === 'completed' && (
+      {inconclusive && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {t('scan.siteInconclusive', { sites: unanswered.join(', ') })}
+        </Alert>
+      )}
+
+      {phase === 'completed' && !inconclusive && (
         <Chip
           icon={<CheckCircleIcon />}
           color="success"
@@ -60,13 +72,14 @@ export default function LiveScanView({ scan, title, onSearchUsername, searchDisa
         />
       )}
 
-      <FoundSitesList sites={foundSites} />
+      {!(inconclusive && foundSites.length === 0) && <FoundSitesList sites={foundSites} />}
 
       {(phase === 'completed' || phase === 'cancelled') && username && onSearchUsername && (
         <DiscoveredIdentifiers
-          sites={foundSites}
+          pivots={pivots}
           username={username}
-          onSearchUsername={onSearchUsername}
+          onSearchUsername={(value, context) => onSearchUsername(value, { ...context, parentSearchId: searchId })}
+          onCheckSite={onCheckSite && ((handle, context) => onCheckSite(handle, { ...context, parentSearchId: searchId }))}
           disabled={searchDisabled}
         />
       )}

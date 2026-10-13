@@ -1,4 +1,4 @@
-"""Migration-chain smoke tests (docs/database-schema-audit.md, section 6, phase 0).
+"""Migration-chain smoke tests.
 
 Two independent code paths can build the schema from scratch, and both need
 to agree with `Base.metadata`:
@@ -179,3 +179,126 @@ def test_migration_chain_downgrade_upgrade_round_trip(tmp_path):
 
     assert _actual_table_names(tmp_path) == expected
     assert _stamped_revision(tmp_path) == _head_revision(env)
+
+
+def test_reliability_migration_keeps_existing_articles(tmp_path):
+    """`a7c41e90b3d2` adds a column to `newsfeed_settings`, the parent of
+    `news_articles` (`ON DELETE CASCADE`). A table-recreating (batch) migration would,
+    with the app's `PRAGMA foreign_keys=ON`, silently delete every stored article on
+    upgrade - so seed one and check it survives both directions."""
+    env = _env(tmp_path)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "logs").mkdir()
+
+    _alembic(["upgrade", "43f3a99819ae"], env)
+    con = sqlite3.connect(tmp_path / "test.db")
+    try:
+        con.execute(
+            "INSERT INTO newsfeed_settings(name, url, icon, icon_id, enabled, deleted) "
+            "VALUES ('f', 'https://x.test/rss', 'default.png', 'i', 1, 0)"
+        )
+        con.execute(
+            "INSERT INTO news_articles(feedname, icon, title, summary, date, link, "
+            "fetched_at, tlp, read) VALUES ('f', 'default.png', 't', 's', '2026-01-01', "
+            "'https://x.test/1', '2026-01-01', 'TLP:CLEAR', 0)"
+        )
+        con.commit()
+    finally:
+        con.close()
+
+    def article_count() -> int:
+        con = sqlite3.connect(tmp_path / "test.db")
+        try:
+            return con.execute("SELECT count(*) FROM news_articles").fetchone()[0]
+        finally:
+            con.close()
+
+    _alembic(["upgrade", "head"], env)
+    assert article_count() == 1
+
+    _alembic(["downgrade", "43f3a99819ae"], env)
+    assert article_count() == 1
+
+
+def test_mail_search_source_migration_keeps_existing_runs_and_results(tmp_path):
+    """`b3d90f1a7c55` adds `mail_searches.source`; `mail_search_results` cascades from it, so a
+    table-recreating (batch) migration would delete every stored result under the app's
+    `PRAGMA foreign_keys=ON`. Existing rows must also come out as `mailcat` runs."""
+    env = _env(tmp_path)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "logs").mkdir()
+
+    _alembic(["upgrade", "a7c41e90b3d2"], env)
+    con = sqlite3.connect(tmp_path / "test.db")
+    try:
+        con.execute(
+            "INSERT INTO mail_searches(id, username, status, total_providers_checked, found_count, "
+            "started_at) VALUES (1, 'alice', 'completed', 26, 1, '2026-01-01')"
+        )
+        con.execute(
+            "INSERT INTO mail_search_results(search_id, provider_name, emails) "
+            "VALUES (1, 'gmail', '[\"alice@gmail.com\"]')"
+        )
+        con.commit()
+    finally:
+        con.close()
+
+    def read() -> tuple[int, list]:
+        con = sqlite3.connect(tmp_path / "test.db")
+        try:
+            results = con.execute("SELECT count(*) FROM mail_search_results").fetchone()[0]
+            cols = {r[1] for r in con.execute("PRAGMA table_info(mail_searches)")}
+            sources = (
+                [r[0] for r in con.execute("SELECT source FROM mail_searches")]
+                if "source" in cols
+                else []
+            )
+            return results, sources
+        finally:
+            con.close()
+
+    _alembic(["upgrade", "head"], env)
+    assert read() == (1, ["mailcat"])
+
+    _alembic(["downgrade", "a7c41e90b3d2"], env)
+    assert read() == (1, [])
+
+
+def test_maigret_parent_migration_keeps_existing_runs_and_results(tmp_path):
+    """`c5e18a3d9f20` adds columns to `maigret_searches`; `maigret_site_results` cascades from
+    it, so a table-recreating (batch) migration would delete every stored result under the app's
+    `PRAGMA foreign_keys=ON`."""
+    env = _env(tmp_path)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "logs").mkdir()
+
+    _alembic(["upgrade", "b3d90f1a7c55"], env)
+    con = sqlite3.connect(tmp_path / "test.db")
+    try:
+        con.execute(
+            "INSERT INTO maigret_searches(id, username, source, status, total_sites_checked, "
+            "found_count, started_at) VALUES (1, 'alice', 'maigret', 'completed', 500, 1, "
+            "'2026-01-01')"
+        )
+        con.execute(
+            "INSERT INTO maigret_site_results(search_id, site_name, url_user) "
+            "VALUES (1, 'GitHub', 'https://github.com/alice')"
+        )
+        con.commit()
+    finally:
+        con.close()
+
+    def read() -> tuple[int, set[str]]:
+        con = sqlite3.connect(tmp_path / "test.db")
+        try:
+            results = con.execute("SELECT count(*) FROM maigret_site_results").fetchone()[0]
+            cols = {r[1] for r in con.execute("PRAGMA table_info(maigret_searches)")}
+            return results, cols & {"parent_search_id", "pivot_source"}
+        finally:
+            con.close()
+
+    _alembic(["upgrade", "head"], env)
+    assert read() == (1, {"parent_search_id", "pivot_source"})
+
+    _alembic(["downgrade", "b3d90f1a7c55"], env)
+    assert read() == (1, set())

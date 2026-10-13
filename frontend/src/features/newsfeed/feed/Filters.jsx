@@ -9,6 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
+import FormHelperText from '@mui/material/FormHelperText';
 import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -26,6 +27,7 @@ import Grid from '@mui/material/Grid';
 
 import { newsfeedApi } from "../services/api/newsfeedApi";
 import { TLP_OPTIONS } from "../constants/newsfeedConstants";
+import { MIN_RELIABILITY_OPTIONS } from "../constants/reliability";
 import { createLogger } from "../../../core/utils/logger";
 
 const logger = createLogger("NewsfeedFilters");
@@ -158,6 +160,27 @@ export default function Filters({ filters, setFilters, applyFilters, resetFilter
                 label={t('feed.filters.hasNote')}
               />
             </FormGroup>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <FormControl fullWidth>
+              <InputLabel id="min-reliability-label">{t('feed.filters.minReliability')}</InputLabel>
+              <Select
+                labelId="min-reliability-label"
+                name="min_reliability"
+                value={filters.min_reliability ?? ""}
+                label={t('feed.filters.minReliability')}
+                onChange={handleChange}
+              >
+                <MenuItem value="">{t('feed.filters.anyReliability')}</MenuItem>
+                {MIN_RELIABILITY_OPTIONS.map((grade) => (
+                  <MenuItem key={grade} value={grade}>
+                    {`${grade} — ${t(`reliability.grades.${grade}`)}`}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>{t('feed.filters.minReliabilityHelp')}</FormHelperText>
+            </FormControl>
           </Grid>
 
           <Grid size={{ xs: 12, md: 4 }} sx={{ display: "flex", alignItems: "center" }}>

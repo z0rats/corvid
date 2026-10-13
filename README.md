@@ -92,8 +92,11 @@ A Reddit user's full post/comment history, including removed/deleted content, no
 required. → [Docs](https://z0rats.github.io/corvid/features/reddit-search/)
 
 ### Username & Email Search
-Find accounts and mail providers registered to a username, across hundreds of sites. Email Search
-also has an explicit-click Google account profile lookup via [GHunt](https://github.com/mxrch/GHunt)
+Find accounts and mail providers registered to a username, across hundreds of sites (Username
+Search also checks a forum-scrape index of threat-actor handles and Hudson Rock's infostealer
+exposure). Email Search can also take a full address and ask ~150 online services whether they
+have an account for it, using only modules reviewed not to trigger reset or verification emails to
+the target. It also has an explicit-click Google account profile lookup via [GHunt](https://github.com/mxrch/GHunt)
 — needs a configured Google-account session, disposable account recommended, same ToS caveat as
 Instagram Search below. → [Username Search docs](https://z0rats.github.io/corvid/features/username-search/) /
 [Email Search docs](https://z0rats.github.io/corvid/features/email-search/)
@@ -140,6 +143,12 @@ flags) by username, anonymously by default, plus a separate scan of its follower
 posts with persisted history. An optional imported browser-session cookie unlocks more — never a
 password, and required for followers/followees; automated access violates Instagram's ToS either
 way, so use a disposable account. → [Docs](https://z0rats.github.io/corvid/features/instagram-search/)
+
+### YouTube
+Look up a YouTube video's metadata from its URL — title, channel, description, duration,
+thumbnails at every resolution — with no API key. An optional YouTube Data API key adds view/like
+counts and tags, and is required for searching a video's comments by author or text. →
+[Docs](https://z0rats.github.io/corvid/features/youtube/)
 
 ### Browser Extension
 A minimal Chrome extension ("Corvid Quick Send") lets you select text on any page and send it

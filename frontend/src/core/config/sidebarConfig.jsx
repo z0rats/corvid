@@ -43,7 +43,7 @@ import { IOC_TYPES } from "../utils/iocTypeDetection";
 
 // aliases/tags/accepts/acceptsRouting power the command palette's registry
 // (core/config/commandRegistry.js), derived from this array so the tool catalog can't drift
-// from the palette's own search index — see docs/command-palette-plan.md's governance table.
+// from the palette's own search index — see docs/architecture/command-palette.md.
 const MAIN_MENU_ITEMS_CONFIG = [
   {
     i18nKey: "nav.newsfeed",

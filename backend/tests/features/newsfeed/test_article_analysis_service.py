@@ -1,12 +1,16 @@
 import asyncio
 import datetime
 import json
+from types import SimpleNamespace
 
 import pytest
 
 from app.features.newsfeed.models.newsfeed_models import NewsArticle
 from app.features.newsfeed.schemas.newsfeed_schemas import ThreatIntelEnrichment
 from app.features.newsfeed.service import article_analysis_service as svc
+
+# The autouse fixture below stubs the lookup out for every test; one test needs the real one.
+_REAL_LOAD_FEED_RELIABILITY = svc._load_feed_reliability
 
 
 def _run(coro):
@@ -72,6 +76,7 @@ def _enrichment(has_mitre_data=True):
 def _patch_common(monkeypatch):
     """build_model_registry is always called once the cache-hit shortcut is bypassed."""
     monkeypatch.setattr(svc, "build_model_registry", _async_return({}))
+    monkeypatch.setattr(svc, "_load_feed_reliability", _async_return(None))
 
 
 class _Capture:
@@ -300,3 +305,30 @@ def test_all_mode_nothing_cached_both_succeed(monkeypatch):
     assert capture.calls[0]["mitre_attack"] is not None
     assert result["analysis_result"]["raw"]["relevance"] == "High"
     assert result["mitre_attack"]["has_mitre_data"] is True
+
+
+class TestSourceReliabilityInPrompt:
+    ITEM = {"title": "T", "source": "Krebs", "date": "2026-01-01", "content": "body"}
+
+    def test_graded_source_adds_the_admiralty_line_after_the_source(self):
+        _, prompt = svc.build_analysis_prompts({**self.ITEM, "reliability": "B"}, "profile")
+        assert "Source: Krebs\nSource reliability (Admiralty, A best to F): B\nDate:" in prompt
+
+    @pytest.mark.parametrize("item", [ITEM, {**ITEM, "reliability": None}])
+    def test_ungraded_source_adds_nothing(self, item):
+        _, prompt = svc.build_analysis_prompts(item, "profile")
+        assert "Admiralty" not in prompt
+        assert "Source: Krebs\nDate:" in prompt
+
+    def test_reliability_lookup_is_by_feed_name_and_tolerates_a_deleted_feed(self):
+        class FakeDb:
+            def __init__(self, feed):
+                self.feed = feed
+
+            async def get(self, model, key):
+                assert key == "Krebs"
+                return self.feed
+
+        feed = SimpleNamespace(reliability="C")
+        assert _run(_REAL_LOAD_FEED_RELIABILITY(FakeDb(feed), "Krebs")) == "C"
+        assert _run(_REAL_LOAD_FEED_RELIABILITY(FakeDb(None), "Krebs")) is None

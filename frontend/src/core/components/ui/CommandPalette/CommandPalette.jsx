@@ -26,7 +26,7 @@ import PlaybookManage from './PlaybookManage';
 /**
  * The command palette overlay. Must be mounted inside the AccessGate subtree (Layout.jsx),
  * never beside AccessGate in App.jsx, or the `/`-listener in useCommandPalette would fire on
- * the pre-auth token screen — see docs/command-palette-plan.md's mount-point requirement.
+ * the pre-auth token screen — see docs/architecture/command-palette.md.
  */
 export default function CommandPalette() {
   const { t } = useTranslation('commandPalette');

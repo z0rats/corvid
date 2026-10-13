@@ -20,7 +20,13 @@
     "clickToSearch": "click to search",
     "emails": "Possible email addresses for \"{{username}}\"",
     "emailsHint": "click to look one up",
-    "checkProviders": "Check which mail providers have this username"
+    "checkProviders": "Check which mail providers have this username",
+    "checkOnSite": "Check on {{site}}",
+    "reportedSource": "Named on {{sites}}",
+    "linkSource": "Linked from {{sites}} (points to {{site}})",
+    "platformIds": "Platform account IDs found on these profiles",
+    "platformIdsHint": "not usernames — look them up on their platform",
+    "publishedEmails": "Email addresses these profiles published"
   },
   "form": {
     "modulesLabel": "Search with (select one or more)",
@@ -29,17 +35,23 @@
     "searchButton": "Search",
     "variantsLabel": "Other handles to try (heuristic guesses, not findings)",
     "variantsHint": "Click to put it in the box, then search",
+    "patternCount": "Pattern matches {{count}} handle(s)",
+    "patternShowing": "Pattern matches {{total}} handles, showing the first {{shown}}",
+    "patternTooBroad": "Pattern matches more than {{max}} handles - narrow it down",
+    "patternSyntax": "Pattern problem: {{detail}}. Use [abc], [a-z], [0-9]{0-2}; escape a literal bracket with \\[",
     "variantReason": {
       "separator": "separator change",
       "digits": "trailing digits / year",
       "nameOrder": "first/last name pattern",
       "nickname": "common nickname",
+      "numeric": "common number suffix",
       "leet": "leetspeak",
       "affix": "prefix / suffix"
     },
     "sourceMaigret": "Maigret",
     "sourceSocialAnalyzer": "Social Analyzer",
     "sourceThreatActorUsernames": "Threat Actor Usernames",
+    "sourceSiteCheck": "Maigret site check",
     "sourceHudsonRock": "Hudson Rock",
     "sourceHudsonRockTooltip": "Not a scan engine like the others - a separate, always-quick keyless lookup for infostealer exposure",
     "tagsLabel": "Site tags",
@@ -54,7 +66,23 @@
     "failed": "Search failed: {{error}}",
     "completed": "Checked {{checked}} sites, found {{found}}",
     "cancelled": "Cancelled after checking {{checked}} sites, found {{found}}",
-    "cancelButton": "Cancel"
+    "cancelButton": "Cancel",
+    "siteCheckTitle": "Site check: {{username}} on {{sites}}",
+    "siteInconclusive": "Could not check {{sites}} (blocked or unavailable). This says nothing about whether the account exists - try again later or open the site yourself."
+  },
+
+  "confidence": {
+    "caveat": "Confidence is triage against the run these searches followed, not proof of the same person.",
+    "confirmed": "Confirmed",
+    "likely": "Likely",
+    "candidate": "Candidate",
+    "conflicting": "Conflicting",
+    "hint": {
+      "confirmed": "This exact account was linked from a profile of the run this followed",
+      "likely": "The profile repeats a name, email, personal site or linked account known from that run",
+      "candidate": "Nothing to compare it with - could be anyone using this handle",
+      "conflicting": "The profile names a different person than the run this followed"
+    }
   },
 
   "results": {
@@ -75,8 +103,10 @@
     "notFound": "Search run not found",
     "summary": "Checked {{checked}} sites, found {{found}}",
     "tagsUsed": "Tags",
+    "followedFrom": "Followed from run #{{id}}",
     "headers": {
       "username": "Username",
+      "followedFrom": "From run",
       "source": "Source",
       "status": "Status",
       "found": "Found",

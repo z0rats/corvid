@@ -67,6 +67,56 @@ class TestReadInfo:
         assert response.json()["update_available"] is None
 
 
+def _patch_config(monkeypatch, **overrides):
+    config = _fake_config(**{"proxy_url": None, "use_tor": False, **overrides})
+
+    async def fake_get_config(db):
+        return config
+
+    monkeypatch.setattr(email_search_routes, "get_email_search_config", fake_get_config)
+
+
+class TestReadInfoUserScanner:
+    def test_reports_the_installed_version_and_runnable_module_count(self, client, monkeypatch):
+        _patch_config(monkeypatch)
+        monkeypatch.setattr(email_search_routes, "user_scanner_available", lambda: True)
+        monkeypatch.setattr(email_search_routes, "get_user_scanner_version", lambda: "1.5.2.1")
+        monkeypatch.setattr(email_search_routes, "runnable_module_count", lambda: 152)
+
+        response = client.get("/api/email-search/info", params={"source": "user_scanner"})
+
+        assert response.json() == {
+            "tool": "user-scanner",
+            "version": "1.5.2.1",
+            "provider_count": 152,
+            "available": True,
+            "blocked_reason": None,
+            "latest_version": None,
+            "update_available": None,
+        }
+
+    def test_flags_a_missing_package_instead_of_failing(self, client, monkeypatch):
+        _patch_config(monkeypatch)
+        monkeypatch.setattr(email_search_routes, "user_scanner_available", lambda: False)
+        monkeypatch.setattr(email_search_routes, "runnable_module_count", lambda: 152)
+
+        body = client.get("/api/email-search/info", params={"source": "user_scanner"}).json()
+
+        assert body["available"] is False
+        assert body["version"] == ""
+
+    @pytest.mark.parametrize("routing", [{"use_tor": True}, {"proxy_url": "socks5://p:1080"}])
+    def test_warns_up_front_that_tor_or_a_proxy_blocks_the_scan(self, client, monkeypatch, routing):
+        _patch_config(monkeypatch, **routing)
+        monkeypatch.setattr(email_search_routes, "user_scanner_available", lambda: True)
+        monkeypatch.setattr(email_search_routes, "get_user_scanner_version", lambda: "1.5.2.1")
+        monkeypatch.setattr(email_search_routes, "runnable_module_count", lambda: 152)
+
+        body = client.get("/api/email-search/info", params={"source": "user_scanner"}).json()
+
+        assert body["blocked_reason"] == email_search_routes.PROXY_UNSUPPORTED_MESSAGE
+
+
 class TestCheckUpdate:
     def test_delegates_to_check_for_update_with_package_name_config_and_installed_version(
         self, client, monkeypatch

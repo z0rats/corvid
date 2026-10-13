@@ -57,6 +57,14 @@ export const newsfeedSettingsApi = {
     await api.patch(`/api/settings/modules/newsfeed/${encodeURIComponent(name)}`, { enabled: false });
   },
 
+  async setNewsfeedReliability(name, reliability) {
+    const response = await api.patch(
+      `/api/settings/modules/newsfeed/${encodeURIComponent(name)}/reliability`,
+      { reliability }
+    );
+    return response.data;
+  },
+
   async validateFeed(feed) {
     const response = await api.post('/api/settings/modules/newsfeed/validation', feed);
     return response.data;

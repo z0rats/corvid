@@ -32,7 +32,26 @@ describe('UsernameSearch — cross-feature prefill (command palette pivot)', () 
   it('auto-runs the search with the prefilled value', () => {
     renderUsernameSearch(['/username-search?q=john_doe']);
 
-    expect(startScan).toHaveBeenCalledWith('john_doe');
+    expect(startScan).toHaveBeenCalledWith('john_doe', { parentSearchId: undefined, pivotSource: undefined });
+  });
+
+  it('keeps the run a history pivot came from (?parent=&src=) on the auto-run search', () => {
+    renderUsernameSearch(['/username-search?q=john_doe&parent=7&src=link%20on%20GitHub']);
+
+    expect(startScan).toHaveBeenCalledWith('john_doe', { parentSearchId: 7, pivotSource: 'link on GitHub' });
+  });
+
+  it('runs a one-site check instead of a full scan when ?site= comes along', () => {
+    renderUsernameSearch(['/username-search?q=john_doe&parent=7&site=Twitter&src=link']);
+
+    expect(startScan).toHaveBeenCalledTimes(1);
+    expect(startScan).toHaveBeenCalledWith('john_doe', { siteNames: ['Twitter'], parentSearchId: 7, pivotSource: 'link' });
+  });
+
+  it('ignores a malformed ?parent= instead of sending it', () => {
+    renderUsernameSearch(['/username-search?q=john_doe&parent=abc']);
+
+    expect(startScan).toHaveBeenCalledWith('john_doe', { parentSearchId: undefined, pivotSource: undefined });
   });
 
   it('leaves the field empty and does not search with no prefill value', () => {

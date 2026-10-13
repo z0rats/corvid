@@ -15,8 +15,9 @@ export function reduce(prev, event) {
       totalProviders: data.total_providers,
       currentProvider: data.checker_name,
       foundProviders: data.found
-        ? [...prev.foundProviders, { provider_name: data.provider_name, emails: data.emails }]
+        ? [...prev.foundProviders, { provider_name: data.provider_name, emails: data.emails, extra: data.extra }]
         : prev.foundProviders,
+      errorCount: data.status === 'error' ? prev.errorCount + 1 : prev.errorCount,
     };
   }
   if (event.type === 'completed' || event.type === 'cancelled') {
@@ -26,6 +27,7 @@ export function reduce(prev, event) {
       checked: data.total_providers_checked,
       totalProviders: data.total_providers_checked,
       searchId: data.search_id,
+      errorCount: data.error_count ?? prev.errorCount,
     };
   }
   if (event.type === 'failed') {
@@ -38,9 +40,12 @@ export function reconcile(prev, run) {
   return {
     ...prev,
     phase: run.status,
+    source: run.source ?? prev.source,
+    username: run.username ?? prev.username,
     checked: run.total_providers_checked,
     totalProviders: run.total_providers_checked,
     foundProviders: run.provider_results || [],
+    errorCount: run.error_count ?? prev.errorCount,
     error: run.error_message || '',
   };
 }
@@ -58,9 +63,9 @@ export function useEmailSearchScan() {
     reconcile,
   });
 
-  const startScan = useCallback((username) => resumableStartScan(
-    { username },
-    buildRunningSeed(SCAN_INITIAL_STATE, { username }),
+  const startScan = useCallback((username, source = 'mailcat') => resumableStartScan(
+    { username, source },
+    buildRunningSeed(SCAN_INITIAL_STATE, { username, source }),
   ), [resumableStartScan]);
 
   return { ...state, startScan, cancelScan, reset };

@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 /**
  * Per-row action menu (⌘K on a focused row) — generalizes the existing "send to X" chip.
  * IOC-typed tools additionally get Copy / Copy defanged / Add to Bulk Lookup, gated on the
- * row's own `accepts` (see docs/command-palette-plan.md's Action panel section).
+ * row's own `accepts` (see docs/architecture/command-palette.md).
  */
 export default function ActionPanel({
   anchorEl, entry, value, pinnedIds, onClose, onOpen, onTogglePin, onCopy, onCopyDefanged, onAddToBulk,

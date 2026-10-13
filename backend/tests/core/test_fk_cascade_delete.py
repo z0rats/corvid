@@ -1,6 +1,6 @@
 """Proves `ondelete="CASCADE"`/`ondelete="SET NULL"` actually apply at the DB level on SQLite.
 
-docs/database-schema-audit.md finding #1: SQLite ignores `ondelete="CASCADE"`
+SQLite ignores `ondelete="CASCADE"`
 entirely unless `PRAGMA foreign_keys=ON` is set on every connection, and every
 search-history model relies on it (`passive_deletes=True` tells SQLAlchemy "don't
 delete children yourself, trust the DB"). `app/core/database.py`'s

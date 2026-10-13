@@ -56,12 +56,20 @@ def get_site_dict(
     top_sites_count: int,
     tags: list[str] | None = None,
     excluded_tags: list[str] | None = None,
+    names: list[str] | None = None,
 ) -> dict[str, MaigretSite]:
     """Build the site dict to scan, ranked by popularity and optionally filtered by tag.
 
-    ``top_sites_count`` of 0 scans every bundled site (CLI's --all-sites).
+    ``top_sites_count`` of 0 scans every bundled site (CLI's --all-sites). With ``names`` only
+    those sites are returned (case-insensitive) and ``top_sites_count`` is ignored, so a
+    low-ranked site is never cut off; Maigret's own name filter also pulls in mirror sites
+    whose ``source`` is a named site, which are dropped here.
     """
     db = get_maigret_database()
+    if names:
+        wanted = {name.lower() for name in names}
+        sites = db.ranked_sites_dict(names=names, disabled=False, id_type="username")
+        return {name: site for name, site in sites.items() if name.lower() in wanted}
     top = top_sites_count if top_sites_count > 0 else sys.maxsize
     return db.ranked_sites_dict(
         top=top,
