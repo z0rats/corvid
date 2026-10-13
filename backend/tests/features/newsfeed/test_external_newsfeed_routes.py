@@ -118,6 +118,19 @@ class TestGetPaginatedArticles:
         assert response.status_code == 200
         assert response.json()["total_count"] == 0
 
+    def test_min_reliability_excludes_unrated_feeds(self, client, session_factory):
+        _seed_articles(session_factory, 2)  # feed-a has no grade
+
+        response = client.get("/api/newsfeed/articles", params={"min_reliability": "E"})
+
+        assert response.status_code == 200
+        assert response.json()["total_count"] == 0
+
+    @pytest.mark.parametrize("value", ["G", "AB", "", "F"])
+    def test_min_reliability_rejects_anything_but_one_filterable_grade(self, client, value):
+        response = client.get("/api/newsfeed/articles", params={"min_reliability": value})
+        assert response.status_code == 422
+
 
 class TestGetRecentArticles:
     def test_returns_recent_articles(self, client, session_factory):

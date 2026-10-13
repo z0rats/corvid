@@ -6,7 +6,7 @@ from sqlalchemy import Select, String, and_, cast, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.newsfeed.models.newsfeed_models import NewsArticle
+from app.features.newsfeed.models.newsfeed_models import NewsArticle, NewsfeedSettings
 from app.features.newsfeed.schemas.newsfeed_schemas import NewsArticleSchema, RecentArticleSchema
 from app.features.newsfeed.utils.time_utils import parse_time_range
 
@@ -226,8 +226,14 @@ def apply_article_filters(
     note_null: bool | None = None,
     tlp: str | None = None,
     read: bool | None = None,
+    min_reliability: str | None = None,
 ) -> Select:
-    """Apply filters to a SQLAlchemy select statement"""
+    """Apply filters to a SQLAlchemy select statement.
+
+    `min_reliability` keeps articles from feeds graded at least that well (Admiralty `A` best, so
+    `B` keeps A and B); articles from feeds never graded, or graded F ("cannot be judged", not
+    "worse than E"), are excluded while it is set.
+    """
     parsed_start = _parse_date(start_date)
     parsed_end = _parse_date(end_date)
 
@@ -250,6 +256,15 @@ def apply_article_filters(
         stmt = stmt.where(NewsArticle.tlp == tlp)
     if read is not None:
         stmt = stmt.where(NewsArticle.read == read)
+    if min_reliability:
+        # Grades are single letters, so `<=` is "at least as reliable"; NULL never compares true.
+        stmt = stmt.where(
+            NewsArticle.feedname.in_(
+                select(NewsfeedSettings.name).where(
+                    NewsfeedSettings.reliability <= min_reliability.upper()
+                )
+            )
+        )
 
     return stmt
 
@@ -267,6 +282,7 @@ async def get_paginated_articles(
     note_null: bool | None = None,
     tlp: str | None = None,
     read: bool | None = None,
+    min_reliability: str | None = None,
 ) -> dict[str, Any]:
     """Retrieve paginated news articles with optional filtering"""
     filter_args = dict(
@@ -279,6 +295,7 @@ async def get_paginated_articles(
         note_null=note_null,
         tlp=tlp,
         read=read,
+        min_reliability=min_reliability,
     )
 
     total_count = (

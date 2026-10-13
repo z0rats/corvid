@@ -200,7 +200,8 @@ jobs:
 
   docs-coverage:
     # Not path-scoped like backend/frontend above: this check spans frontend's feature
-    # registry and website's docs pages, so it must run even on a website-only change.
+    # registry and website's docs pages (and every `docs/*.md` citation in the repo), so it must
+    # run even on a website-only change.
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -217,8 +218,11 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Check every feature has a docs page
+      - name: Check every feature has a docs page, and engines/settings tabs are documented
         run: node .github/scripts/check-docs-coverage.mjs
+
+      - name: Check docs/ references resolve
+        run: python3 scripts/check_doc_references.py
 
   docker-build:
     runs-on: ubuntu-latest

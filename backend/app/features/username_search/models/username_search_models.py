@@ -45,6 +45,27 @@ class MaigretSearch(Base):
     tags: Mapped[list[str] | None] = mapped_column(
         JSON, comment="Maigret category tags matched for this username"
     )
+    parent_search_id: Mapped[int | None] = mapped_column(
+        Integer,
+        index=True,
+        comment=(
+            "MaigretSearch.id of the run whose pivot this run followed. Deliberately not a "
+            "foreign key (SQLite cannot add one via ALTER): the parent may be deleted later, "
+            "leaving a dangling id readers must tolerate"
+        ),
+    )
+    pivot_source: Mapped[str | None] = mapped_column(
+        String(200),
+        comment="Client-supplied label for the pivot this run followed (untrusted text)",
+    )
+    site_statuses: Mapped[dict[str, str] | None] = mapped_column(
+        JSON,
+        comment=(
+            "Site checks only (a Maigret run on named sites): site name -> Maigret verdict "
+            "(claimed, available, unknown, illegal), so a blocked check isn't read as not "
+            "found. NULL for a full scan"
+        ),
+    )
     started_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), comment="When the search run started"
     )

@@ -89,8 +89,7 @@ export default [
     },
   },
   // Non-type-checked recommended rules only (no `parserOptions.project`) - fast to run,
-  // revisit the type-checked variant once enough of the codebase has migrated (see
-  // docs/frontend-typescript-migration-plan.md).
+  // revisit the type-checked variant once enough of the codebase has migrated.
   ...tseslint.config({
     files: ['**/*.{ts,tsx}'],
     extends: [...tseslint.configs.recommended, react.configs.flat.recommended],

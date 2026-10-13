@@ -53,6 +53,15 @@ describe('useUsernameSearchScan reduce', () => {
     });
   });
 
+  it('stores the backend-computed pivots from the persisted run on "completed"', async () => {
+    const pivots = { usernames: [{ value: 'bob', kind: 'link', id_type: 'username', searchable: true, sites: ['GitHub'] }], names: [], emails: [] };
+    usernameSearchApi.getRun.mockResolvedValue({ site_results: [], pivots });
+
+    const next = await reduce(running, { type: 'completed', data: { search_id: 9, total_sites_checked: 300 } });
+
+    expect(next.pivots).toEqual(pivots);
+  });
+
   it('keeps the previous foundSites when the refetch fails', async () => {
     usernameSearchApi.getRun.mockRejectedValue(new Error('network down'));
     const prev = { ...running, foundSites: [{ site_name: 'GitHub', url_user: 'https://github.com/alice' }] };
@@ -79,7 +88,37 @@ describe('useUsernameSearchScan reconcile', () => {
       error_message: '',
     };
     expect(await reconcile(prev, run)).toMatchObject({
-      phase: 'completed', checked: 300, totalSites: 300, foundSites: run.site_results, error: '',
+      phase: 'completed', checked: 300, totalSites: 300, foundSites: run.site_results, pivots: null, error: '',
     });
+  });
+
+  it('restores a site check\'s persisted verdicts after a reload, so blocked stays inconclusive', async () => {
+    const prev = buildInitialState('site_check');
+    const run = {
+      status: 'completed', username: 'jsmith', total_sites_checked: 1, site_results: [],
+      site_statuses: { Twitter: 'unknown' },
+    };
+    expect(await reconcile(prev, run)).toMatchObject({
+      username: 'jsmith', siteNames: ['Twitter'], siteStatuses: { Twitter: 'unknown' },
+    });
+  });
+});
+
+describe('useUsernameSearchScan reduce: site check verdicts', () => {
+  const progress = (status) => ({
+    type: 'progress',
+    data: { checked: 1, total_sites: 1, site_name: 'Twitter', status, found: status === 'claimed' },
+  });
+
+  it('records the per-site verdict for a site check, so blocked is not read as not found', async () => {
+    const running = { ...buildInitialState('site_check'), phase: 'running', siteNames: ['Twitter'] };
+    const next = await reduce(running, progress('unknown'));
+    expect(next.siteStatuses).toEqual({ Twitter: 'unknown' });
+  });
+
+  it('leaves the verdict map alone for ordinary scans (thousands of sites)', async () => {
+    const running = { ...buildInitialState('maigret'), phase: 'running' };
+    const next = await reduce(running, progress('available'));
+    expect(next.siteStatuses).toEqual({});
   });
 });

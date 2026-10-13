@@ -1,7 +1,8 @@
 import asyncio
 import logging
+from typing import Literal
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 from app.core.config.rate_limit_config import limiter
 from app.core.dependencies import ReadSessionDep, SessionDep
@@ -16,6 +17,16 @@ from app.features.email_search.config.mailcat_config import (
     SMTP_CHECKERS,
     get_installed_version,
 )
+from app.features.email_search.config.user_scanner_config import (
+    PACKAGE_NAME as USER_SCANNER_PACKAGE_NAME,
+)
+from app.features.email_search.config.user_scanner_config import (
+    get_installed_version as get_user_scanner_version,
+)
+from app.features.email_search.config.user_scanner_config import (
+    is_available as user_scanner_available,
+)
+from app.features.email_search.config.user_scanner_config import runnable_module_count
 from app.features.email_search.crud.email_search_crud import EMAIL_SEARCH_SCANS
 from app.features.email_search.schemas.email_search_schemas import (
     EmailSearchInfo,
@@ -24,6 +35,12 @@ from app.features.email_search.schemas.email_search_schemas import (
     SearchRunSummary,
 )
 from app.features.email_search.service.email_search_service import run_scan
+from app.features.email_search.service.user_scanner_service import (
+    PROXY_UNSUPPORTED_MESSAGE,
+)
+from app.features.email_search.service.user_scanner_service import (
+    run_scan as run_user_scanner_scan,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +64,11 @@ def _active_provider_count(config) -> int:
 @limiter.limit("3/minute")
 async def start_scan(request: Request, scan_request: ScanRequest):
     """Start a new email search and stream its progress"""
-    logger.info("Starting email search for '%s'", scan_request.username)
+    logger.info("Starting %s email search for '%s'", scan_request.source, scan_request.username)
 
     queue: asyncio.Queue = asyncio.Queue()
-    asyncio.create_task(run_scan(scan_request.username, queue))
+    runner = run_user_scanner_scan if scan_request.source == "user_scanner" else run_scan
+    asyncio.create_task(runner(scan_request.username, queue))
 
     return sse_response(queue)
 
@@ -60,12 +78,25 @@ async def start_scan(request: Request, scan_request: ScanRequest):
     response_model=EmailSearchInfo,
     summary="Get search tool info",
     description=(
-        "Get the underlying mailcat tool's installed version, active provider "
-        "count, and whether a newer version is available on PyPI"
+        "Get the underlying tool's installed version, active provider count, and (mailcat "
+        "only) whether a newer version is available on PyPI"
     ),
 )
-async def read_info(db: ReadSessionDep) -> EmailSearchInfo:
-    """Get info about the mailcat tool and its installed/available version"""
+async def read_info(
+    db: ReadSessionDep, source: Literal["mailcat", "user_scanner"] = Query(default="mailcat")
+) -> EmailSearchInfo:
+    """Get info about an email search tool and its installed/available version"""
+    if source == "user_scanner":
+        available = user_scanner_available()
+        config = await get_email_search_config(db)
+        routed = bool(config.proxy_url or config.use_tor)
+        return EmailSearchInfo(
+            tool=USER_SCANNER_PACKAGE_NAME,
+            version=get_user_scanner_version() if available else "",
+            provider_count=runnable_module_count(),
+            available=available,
+            blocked_reason=PROXY_UNSUPPORTED_MESSAGE if routed else None,
+        )
     config = await get_email_search_config(db)
     installed_version = get_installed_version()
 

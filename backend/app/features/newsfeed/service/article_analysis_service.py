@@ -11,7 +11,7 @@ from app.features.newsfeed.crud.news_articles_crud import (
     get_news_article_by_id,
     update_news_article,
 )
-from app.features.newsfeed.models.newsfeed_models import NewsArticle
+from app.features.newsfeed.models.newsfeed_models import NewsArticle, NewsfeedSettings
 from app.features.newsfeed.service.mitre_enrichment_service import enrich_article_with_mitre
 from app.utils.llm_service import build_model_registry, execute_prompt
 
@@ -132,6 +132,10 @@ def build_cti_profile_text(cti_settings) -> str:
 
 def build_analysis_prompts(newsfeed_item: dict, cti_profile_text: str) -> tuple[str, str]:
     """Build the system and user prompts for article analysis"""
+    reliability = newsfeed_item.get("reliability")
+    reliability_line = (
+        f"\nSource reliability (Admiralty, A best to F): {reliability}" if reliability else ""
+    )
     user_prompt = f"""
 You are an AI assistant that analyzes a news article based on a user's Cyber Threat Intelligence
 (CTI) profile. Below you will find the CTI profile, the news article and instructions for your
@@ -143,7 +147,7 @@ analysis.
 
 <News Article>
 Title: {newsfeed_item["title"]}
-Source: {newsfeed_item["source"]}
+Source: {newsfeed_item["source"]}{reliability_line}
 Date: {newsfeed_item["date"]}
 
 Content:
@@ -220,6 +224,12 @@ async def _load_cti_settings(db: AsyncSession):
         logger.error("Error retrieving CTI settings: %s", str(e))
         logger.warning("Continuing with default analysis without CTI settings")
         return None
+
+
+async def _load_feed_reliability(db: AsyncSession, feedname: str) -> str | None:
+    """The Admiralty grade of an article's feed, if the feed still exists and was graded"""
+    feed = await db.get(NewsfeedSettings, feedname)
+    return feed.reliability if feed else None
 
 
 def _parse_stored_mitre_data(mitre_attack_str: str | None) -> dict | None:
@@ -355,6 +365,7 @@ async def analyze_article_with_llm(
     cti_settings = await _load_cti_settings(db) if use_cti_settings else None
     cti_profile_text = build_cti_profile_text(cti_settings)
     newsfeed_item = extract_article_content(news_article_record)
+    newsfeed_item["reliability"] = await _load_feed_reliability(db, news_article_record.feedname)
     models = await build_model_registry(db)
 
     formatted_result = None

@@ -62,7 +62,7 @@ export function usePlaybooks(registry, { onOpenEntry, setBreadcrumbs, showNotice
       showNotice(t('notices.playbookNotFound', { name: playbookName }), 'error');
       return;
     }
-    // Only the tool IDs are recorded (see docs/command-palette-plan.md's Playbooks section) —
+    // Only the tool IDs are recorded (see docs/architecture/command-palette.md) —
     // there's no generic way to capture each step's *result* value across unrelated features,
     // so replay opens step one prefilled and seeds the rest as a breadcrumb trail to continue
     // pivoting through by hand, exactly like a live chain.

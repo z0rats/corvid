@@ -1,4 +1,4 @@
-import { sourceLabelKey } from './sourceLabels';
+import { runSourceLabelKey, sourceLabelKey } from './sourceLabels';
 
 describe('sourceLabelKey', () => {
   it('maps each known source to its i18n key', () => {
@@ -10,5 +10,12 @@ describe('sourceLabelKey', () => {
   it('falls back to the maigret key for an unknown source', () => {
     expect(sourceLabelKey('not_a_real_source')).toBe('form.sourceMaigret');
     expect(sourceLabelKey(undefined)).toBe('form.sourceMaigret');
+  });
+});
+
+describe('runSourceLabelKey', () => {
+  it('labels a site check apart from a full maigret scan', () => {
+    expect(runSourceLabelKey({ source: 'maigret', site_statuses: { GitHub: 'claimed' } })).toBe('form.sourceSiteCheck');
+    expect(runSourceLabelKey({ source: 'maigret', site_statuses: null })).toBe('form.sourceMaigret');
   });
 });

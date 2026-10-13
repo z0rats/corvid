@@ -21,10 +21,12 @@ from app.features.newsfeed.crud.newsfeed_config_crud import (
 )
 from app.features.newsfeed.crud.newsfeed_settings_crud import (
     get_all_newsfeed_settings,
+    set_feed_reliability,
     toggle_feed_status,
     update_newsfeed_setting,
 )
 from app.features.newsfeed.schemas.newsfeed_schemas import (
+    FeedReliabilityUpdate,
     FeedStatusUpdate,
     NewsfeedConfigSchema,
     NewsfeedConfigUpdateSchema,
@@ -98,6 +100,31 @@ async def update_feed_status(
         )
     action = "Enabled" if update.enabled else "Disabled"
     logger.info("%s newsfeed %s.", action, feed_name)
+    return NewsfeedSettingsSchema.model_validate(feed)
+
+
+@router.patch(
+    "/modules/newsfeed/{feed_name}/reliability",
+    response_model=NewsfeedSettingsSchema,
+    response_model_exclude_none=True,
+    summary="Grade newsfeed reliability",
+    description="Set a newsfeed's Admiralty-system source reliability grade (A-F)",
+    responses={404: {"description": "Newsfeed not found"}},
+)
+async def update_feed_reliability(
+    feed_name: str,
+    update: FeedReliabilityUpdate,
+    db: SessionDep,
+) -> NewsfeedSettingsSchema:
+    """Rate a newsfeed's source reliability"""
+    feed = await set_feed_reliability(db, feed_name, update.reliability)
+    if not feed:
+        raise AppHTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Newsfeed not found",
+            error_code="NEWSFEED_NOT_FOUND",
+        )
+    logger.info("Set newsfeed %s reliability to %s.", feed_name, update.reliability)
     return NewsfeedSettingsSchema.model_validate(feed)
 
 

@@ -14,6 +14,12 @@ def generate_icon_id() -> str:
 
 class NewsfeedSettings(Base):
     __tablename__ = "newsfeed_settings"
+    __table_args__ = (
+        CheckConstraint(
+            "reliability IS NULL OR reliability IN ('A', 'B', 'C', 'D', 'E', 'F')",
+            name="ck_newsfeed_settings_reliability",
+        ),
+    )
 
     name: Mapped[str] = mapped_column(
         String(255), primary_key=True, comment="Unique feed name, natural key"
@@ -47,6 +53,13 @@ class NewsfeedSettings(Base):
     )
     last_error: Mapped[str | None] = mapped_column(
         String(500), comment="Error message from the last failed fetch, if any"
+    )
+    reliability: Mapped[str | None] = mapped_column(
+        String(1),
+        comment=(
+            "Admiralty-system source reliability: A (completely reliable) to F (cannot be "
+            "judged); NULL means never rated"
+        ),
     )
 
     articles: Mapped[list[NewsArticle]] = relationship(back_populates="feed", passive_deletes=True)

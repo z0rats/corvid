@@ -119,6 +119,54 @@ class TestUpdateFeedStatus:
         assert response.json()["enabled"] is False
 
 
+class TestUpdateFeedReliability:
+    def test_returns_404_for_an_unknown_feed(self, client):
+        response = client.patch(
+            "/api/settings/modules/newsfeed/absent/reliability", json={"reliability": "B"}
+        )
+        assert response.status_code == 404
+        assert response.json()["error_code"] == "NEWSFEED_NOT_FOUND"
+
+    def test_sets_the_grade(self, client, session_factory):
+        _seed_feed(session_factory, name="feed-a")
+
+        response = client.patch(
+            "/api/settings/modules/newsfeed/feed-a/reliability", json={"reliability": "B"}
+        )
+
+        assert response.status_code == 200
+        assert response.json()["reliability"] == "B"
+        listed = client.get("/api/settings/modules/newsfeed").json()
+        assert listed[0]["reliability"] == "B"
+
+    @pytest.mark.parametrize("grade", ["G", "a", "", None])
+    def test_rejects_anything_but_a_to_f(self, client, session_factory, grade):
+        _seed_feed(session_factory, name="feed-a")
+
+        response = client.patch(
+            "/api/settings/modules/newsfeed/feed-a/reliability", json={"reliability": grade}
+        )
+
+        assert response.status_code == 422
+
+    def test_unrated_feeds_omit_the_field(self, client, session_factory):
+        _seed_feed(session_factory, name="feed-a")
+
+        listed = client.get("/api/settings/modules/newsfeed").json()
+
+        assert "reliability" not in listed[0]
+
+    def test_put_does_not_clear_an_existing_grade(self, client, session_factory):
+        _seed_feed(session_factory, name="feed-a", reliability="A")
+
+        client.put(
+            "/api/settings/modules/newsfeed",
+            json={"name": "feed-a", "url": "https://feed-a.example/rss", "enabled": False},
+        )
+
+        assert client.get("/api/settings/modules/newsfeed").json()[0]["reliability"] == "A"
+
+
 class TestRetentionDays:
     def test_get_returns_the_default_when_unset(self, client):
         response = client.get("/api/settings/newsfeed/retention")

@@ -3,10 +3,12 @@ import { atom } from 'jotai';
 export const SCAN_INITIAL_STATE = {
   phase: 'idle', // idle | running | completed | cancelled | failed
   username: '',
+  source: 'mailcat', // mailcat | user_scanner
   checked: 0,
   totalProviders: 0,
   currentProvider: '',
   foundProviders: [],
+  errorCount: 0, // user_scanner only: checks that failed rather than answered
   searchId: null,
   error: '',
 };

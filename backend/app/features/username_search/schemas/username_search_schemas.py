@@ -1,7 +1,18 @@
 import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+
+
+def _clean_username(value: str) -> str:
+    username = value.strip()
+    if not username:
+        raise ValueError("Username cannot be empty")
+    return username
+
+
+def _clean_label(value: str | None) -> str | None:
+    return (value.strip() or None) if value is not None else None
 
 
 class ScanRequest(BaseModel):
@@ -17,14 +28,37 @@ class ScanRequest(BaseModel):
     excluded_tags: list[str] | None = Field(
         default=None, description="Skip sites with any of these tags (maigret only)"
     )
+    parent_search_id: int | None = Field(
+        default=None, ge=1, description="Run whose pivot this search follows, if any"
+    )
+    pivot_source: str | None = Field(
+        default=None,
+        max_length=200,
+        description="Label for the pivot this search follows (stored as untrusted text)",
+    )
 
-    @field_validator("username")
-    @classmethod
-    def validate_username(cls, v: str) -> str:
-        username = v.strip()
-        if not username:
-            raise ValueError("Username cannot be empty")
-        return username
+    strip_username = field_validator("username")(_clean_username)
+    strip_pivot_source = field_validator("pivot_source")(_clean_label)
+
+
+class SiteCheckRequest(BaseModel):
+    """Request to check one username on a few named sites only (confirming a pivot)"""
+
+    username: str = Field(..., description="Username to check", min_length=1, max_length=100)
+    site_names: list[Annotated[str, StringConstraints(min_length=1, max_length=100)]] = Field(
+        ..., min_length=1, max_length=5, description="Maigret site names to check"
+    )
+    parent_search_id: int | None = Field(
+        default=None, ge=1, description="Run whose pivot this check follows, if any"
+    )
+    pivot_source: str | None = Field(
+        default=None,
+        max_length=200,
+        description="Label for the pivot this check follows (stored as untrusted text)",
+    )
+
+    strip_username = field_validator("username")(_clean_username)
+    strip_pivot_source = field_validator("pivot_source")(_clean_label)
 
 
 class SiteResultSchema(BaseModel):
@@ -60,6 +94,18 @@ class SearchRunSummary(BaseModel):
     tags: list[str] | None = Field(
         default=None, description="Tags the search was filtered to, if any"
     )
+    parent_search_id: int | None = Field(
+        default=None,
+        description="Run this one followed a pivot from (may no longer exist)",
+    )
+    pivot_source: str | None = Field(default=None, description="Label of the followed pivot")
+    site_statuses: dict[str, str] | None = Field(
+        default=None,
+        description=(
+            "Site checks only: site name -> Maigret verdict (claimed, available, unknown, "
+            "illegal); null for a full scan"
+        ),
+    )
     started_at: datetime.datetime = Field(..., description="When the search started")
     completed_at: datetime.datetime | None = Field(
         default=None, description="When the search completed"
@@ -68,12 +114,65 @@ class SearchRunSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class PivotUsername(BaseModel):
+    """Another handle or account ID found on a profile, to search next"""
+
+    value: str = Field(..., description="The handle or account ID")
+    kind: Literal["reported", "link"] = Field(
+        ...,
+        description=(
+            "reported: the profile page itself named this account; link: a URL the profile "
+            "owner typed in, resolved to the account it points at"
+        ),
+    )
+    id_type: str = Field(
+        ..., description="'username' for a plain handle, else the platform ID type (vk_id, ...)"
+    )
+    searchable: bool = Field(
+        ..., description="Whether a username search for this value makes sense (plain handles)"
+    )
+    site: str | None = Field(
+        default=None, description="Site a link-derived handle lives on, by Maigret site name"
+    )
+    sites: list[str] = Field(
+        default_factory=list, description="Found sites whose profile exposed this value"
+    )
+
+
+class PivotName(BaseModel):
+    """A display name found on a profile"""
+
+    value: str = Field(..., description="The name as written")
+    sites: list[str] = Field(default_factory=list, description="Found sites that showed it")
+
+
+class PivotEmail(BaseModel):
+    """An email address a profile published in one of its own fields"""
+
+    value: str = Field(..., description="Lower-cased address")
+    sites: list[str] = Field(default_factory=list, description="Found sites that showed it")
+
+
+class RunPivots(BaseModel):
+    """Leads harvested from a run's found profiles - hypotheses, not attribution"""
+
+    usernames: list[PivotUsername] = Field(default_factory=list)
+    names: list[PivotName] = Field(default_factory=list)
+    emails: list[PivotEmail] = Field(default_factory=list)
+
+
 class SearchRunDetail(SearchRunSummary):
     """Full detail of a search run, including its found-site results"""
 
     site_results: list[SiteResultSchema] = Field(default_factory=list, description="Found sites")
     has_export: bool = Field(
         default=False, description="Whether a full report is available for export"
+    )
+    pivots: RunPivots = Field(
+        default_factory=RunPivots, description="Other handles, names and emails to pivot on"
+    )
+    parent_exists: bool = Field(
+        default=False, description="Whether the run in `parent_search_id` still exists"
     )
 
 

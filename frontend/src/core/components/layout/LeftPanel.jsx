@@ -16,7 +16,7 @@ import { getPinnedToolIds, getRecents, togglePinnedToolId, PINNED_CHANGED_EVENT 
 
 /**
  * Global tool catalog — replaces both TopNavMenu (top bar) and the mobile drawer's flat tool
- * list (see docs/command-palette-plan.md's Left panel section). Renders leftmost, with the
+ * list (see docs/architecture/command-palette.md). Renders leftmost, with the
  * existing per-feature sub-tab Drawer (SidebarTabs) unchanged immediately to its right when a
  * feature has sub-tabs — confirmed as two stacked panels rather than one replacing the other.
  */

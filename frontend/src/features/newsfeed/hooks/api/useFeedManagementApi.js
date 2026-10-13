@@ -40,16 +40,19 @@ export function useFeedManagement() {
     return () => { ignore = true; };
   }, []);
 
+  // Optimistic edits go through functional updates of just the one field: a slower request
+  // must not roll back (or overwrite) other edits made while it was in flight - another feed,
+  // or another field of the same feed.
+  const patchFeed = useCallback((feedName, patch) => {
+    setFeeds((prev) => (prev[feedName] ? { ...prev, [feedName]: { ...prev[feedName], ...patch } } : prev));
+  }, []);
+
   const toggleFeed = useCallback(async (feedName) => {
     const currentFeed = feeds[feedName];
     if (!currentFeed) return { success: false };
 
     const isCurrentlyEnabled = currentFeed.enabled;
-    const optimisticFeeds = {
-      ...feeds,
-      [feedName]: { ...currentFeed, enabled: !isCurrentlyEnabled },
-    };
-    setFeeds(optimisticFeeds);
+    patchFeed(feedName, { enabled: !isCurrentlyEnabled });
 
     try {
       if (isCurrentlyEnabled) {
@@ -59,13 +62,25 @@ export function useFeedManagement() {
       }
       return { success: true, enabled: !isCurrentlyEnabled };
     } catch (error) {
-      setFeeds({
-        ...feeds,
-        [feedName]: { ...currentFeed, enabled: isCurrentlyEnabled },
-      });
+      patchFeed(feedName, { enabled: isCurrentlyEnabled });
       return { success: false, error };
     }
-  }, [feeds]);
+  }, [feeds, patchFeed]);
+
+  const setReliability = useCallback(async (feedName, reliability) => {
+    const previous = feeds[feedName]?.reliability;
+    if (!feeds[feedName]) return { success: false };
+
+    const apply = (value) => patchFeed(feedName, { reliability: value });
+    apply(reliability);
+    try {
+      await newsfeedSettingsApi.setNewsfeedReliability(feedName, reliability);
+      return { success: true, reliability };
+    } catch (error) {
+      apply(previous);
+      return { success: false, error };
+    }
+  }, [feeds, patchFeed]);
 
   const addFeed = useCallback(async (newFeed, iconFile) => {
     try {
@@ -114,6 +129,7 @@ export function useFeedManagement() {
     setFeeds,
     loading,
     toggleFeed,
+    setReliability,
     addFeed,
     deleteFeed,
   };

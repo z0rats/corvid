@@ -2,7 +2,7 @@ import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, is
 
 /**
  * Pure, framework-free parsing of the command palette's input grammar (see
- * docs/command-palette-plan.md's "Interaction grammar" table). Every function here takes plain
+ * docs/architecture/command-palette.md). Every function here takes plain
  * data in and returns plain data out — no DOM, no storage, no network — so it's fully covered by
  * Vitest without rendering anything. The stateful pieces (recording sessions, storage,
  * navigation, clipboard, network) live in core/hooks/useCommandPalette.ts instead.
@@ -116,7 +116,7 @@ export type WhichKeyOperator = '#' | 'type:' | '>';
 
 /**
  * Empty-operator "which-key" completions: typing a bare `#`, `type:`, or `>` always lists
- * everything valid to type next (see docs/command-palette-plan.md's which-key rule).
+ * everything valid to type next (see docs/architecture/command-palette.md).
  */
 export function getWhichKeySuggestions(
   operator: WhichKeyOperator,

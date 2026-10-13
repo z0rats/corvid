@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router';
 /**
  * Touch fallback for the result list — renders as a tile grid instead of a keyboard-navigable
  * list. Auto-switches on `@media (pointer: coarse)` or the "Always tiles" setting; same result
- * set, different layout (see docs/command-palette-plan.md's Touch fallback section).
+ * set, different layout (see docs/architecture/command-palette.md).
  */
 export default function TileGrid({ registry, onOpen }) {
   const navigate = useNavigate();

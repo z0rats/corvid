@@ -56,6 +56,22 @@ async def update_newsfeed_setting(
     return await create_newsfeed_setting(db, settings)
 
 
+async def set_feed_reliability(
+    db: AsyncSession, feed_name: str, reliability: str
+) -> NewsfeedSettings | None:
+    """Grade an active feed's source reliability (Admiralty A-F)"""
+    result = await db.execute(_active_feed_query().where(NewsfeedSettings.name == feed_name))
+    feed = result.scalar_one_or_none()
+
+    if not feed:
+        return None
+
+    feed.reliability = reliability
+    await db.flush()
+    await db.refresh(feed)
+    return feed
+
+
 async def delete_newsfeed_setting(db: AsyncSession, feed_name: str) -> bool:
     """Delete a newsfeed setting by name (soft-delete for defaults, hard-delete for custom)"""
     from app.features.newsfeed.utils.default_rss_feeds import DEFAULT_NEWSFEEDS

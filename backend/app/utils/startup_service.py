@@ -60,12 +60,20 @@ async def create_default_newsfeeds(db: AsyncSession) -> None:
     from app.features.newsfeed.utils.default_rss_feeds import DEFAULT_NEWSFEEDS
 
     for feed_data in DEFAULT_NEWSFEEDS:
-        if not await get_feed_by_name(db, feed_data["name"]):
+        existing = await get_feed_by_name(db, feed_data["name"])
+        if not existing:
             feed_schema = NewsfeedSettingsSchema(
                 name=feed_data["name"],
                 url=feed_data["url"],
+                reliability=feed_data.get("reliability"),
             )
             await create_newsfeed_setting(db, feed_schema)
+        elif existing.reliability is None and feed_data.get("reliability"):
+            # Installs from before reliability grading: grade the default feed once. The
+            # rating endpoint only accepts A-F, so a user's own grade is never NULL again
+            # and is never overwritten here.
+            existing.reliability = feed_data["reliability"]
+            await db.flush()
 
     logger.info("Default newsfeeds initialized")
 

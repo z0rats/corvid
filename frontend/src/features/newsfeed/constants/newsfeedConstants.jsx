@@ -65,6 +65,7 @@ export const DEFAULT_FILTERS = {
   has_note: null,
   tlp: "",
   read: null,
+  min_reliability: "",
 };
 
 export const TIME_RANGE_OPTIONS = [

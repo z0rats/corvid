@@ -265,7 +265,7 @@ class TestCheckHudsonrock:
 # --- check_libraryofleaks: keyless, must never surface raw entity content -
 
 
-# Shape actually observed from the live API (`docs/library-of-leaks-integration-plan.md`):
+# Shape actually observed from the live API:
 # `results` entities carry raw leaked content in `properties` (emails, names, password
 # mentions, document titles); `facets.collection_id.values` gives per-collection counts
 # without needing to fetch any entity at all.

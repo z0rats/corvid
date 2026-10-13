@@ -36,9 +36,9 @@ banner data per host but needs its own free-tier API key from `dnsdumpster.com`,
 under Settings → API Keys like any other provider. Capped at 50 records/lookup; no domain-map
 image or pagination (those are DNSDumpster's paid-tier features, not integrated here).
 
-Further panels have been added since (HackerTarget/RapidDNS/subfinder subdomain enumeration,
+Further panels: HackerTarget/RapidDNS/subfinder subdomain enumeration,
 WebCheck's SSL/security-headers/DNSSEC/blocklist checks, Wayback Machine history, Temporal
-Analysis) - `docs/specs/README.md` lists what's implemented and what was deliberately not integrated.
+Analysis.
 
 Backend: every third-party provider panel (crt.sh, RapidDNS, HackerTarget, Wayback, URLScan,
 DNSDumpster) calls its provider through `service/provider_http.py`'s `provider_get(Provider,

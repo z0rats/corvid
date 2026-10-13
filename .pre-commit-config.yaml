@@ -34,3 +34,10 @@ repos:
         language: system
         pass_filenames: false
         files: ^frontend/src/core/utils/iocTypeDetection\.ts$
+      - id: doc-references
+        name: docs/ references must resolve
+        description: Fails if any file cites a `docs/*.md` that doesn't exist (e.g. a plan or spec that was never committed). Mirrors CI's docs-coverage job.
+        entry: python3 scripts/check_doc_references.py
+        language: system
+        pass_filenames: false
+        always_run: true

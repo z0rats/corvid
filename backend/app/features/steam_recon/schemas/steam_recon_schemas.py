@@ -149,7 +149,7 @@ class CheaterSignal(BaseModel):
 
 class CheaterReport(BaseModel):
     """CS2 cheater-probability heuristic - a transparent weighted-signal estimate, not a
-    verdict. See docs/adr/0014-steam-recon-clean-room-and-heuristic-scoring.md."""
+    verdict. See docs/adr/0015-steam-recon-clean-room-and-heuristic-scoring.md."""
 
     probability: float
     level: Literal["low", "medium", "high"]

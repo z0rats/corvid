@@ -65,7 +65,7 @@ export function useGlobalPaletteShortcuts(isOpen, open, close, onShowShortcutShe
   }, [isOpen, open, close, navigate, onShowShortcutSheet]);
 
   // Global ⌘V/Ctrl+V — a pasted image jumps to Image Tools with it preloaded, from anywhere in
-  // the app (see docs/command-palette-plan.md's Keyboard shortcuts table). Image Tools' own
+  // the app (see docs/architecture/command-palette.md). Image Tools' own
   // `/image-tools` page has its own local paste handler already, so this one steps aside there
   // to avoid double-handling the same clipboard event.
   useEffect(() => {

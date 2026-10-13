@@ -7,6 +7,8 @@ import IconButton from "@mui/material/IconButton";
 import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemText from "@mui/material/ListItemText";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Tooltip from "@mui/material/Tooltip";
@@ -17,10 +19,11 @@ import WarningAmber from "@mui/icons-material/WarningAmberOutlined";
 
 import { getFeedIconUrl } from "../../../utils/urlUtils";
 import { formatDate } from "../../../utils/formatters";
+import { RELIABILITY_GRADES } from "../../../constants/reliability";
 
 const hasCustomIcon = (feed) => feed.icon !== "default.png" && feed.icon_id;
 
-function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchIcon }) {
+function FeedListItem({ name, feed, onToggle, onReliabilityChange, onDelete, onIconDelete, onRefetchIcon }) {
   const { t } = useTranslation('newsfeed');
   const [refetchLoading, setRefetchLoading] = useState(false);
 
@@ -39,35 +42,6 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
         py: 1,
         "&:hover": { backgroundColor: "action.hover" },
       }}
-      secondaryAction={
-        <Stack direction="row" spacing={0.5} sx={{
-          alignItems: "center"
-        }}>
-          <Tooltip title={t('settings.feeds.refreshFavicon')}>
-            <span>
-              <IconButton
-                onClick={handleRefetch}
-                disabled={refetchLoading}
-                aria-label={t('settings.feeds.refreshFavicon')}
-              >
-                {refetchLoading ? <CircularProgress size={20} /> : <Refresh />}
-              </IconButton>
-            </span>
-          </Tooltip>
-
-          <Switch checked={feed.enabled} onChange={() => onToggle(name)} size="small" />
-
-          <Tooltip title={t('settings.feeds.deleteFeed')}>
-            <IconButton
-              color="error"
-              onClick={() => onDelete(name)}
-              aria-label={t('settings.feeds.deleteFeed')}
-            >
-              <Delete />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      }
     >
       <ListItemAvatar>
         <Box
@@ -132,13 +106,60 @@ function FeedListItem({ name, feed, onToggle, onDelete, onIconDelete, onRefetchI
           </Stack>
         }
         secondary={feed.url}
-        primaryTypographyProps={{ variant: "body2", fontWeight: 500, component: "div" }}
-        secondaryTypographyProps={{
-          variant: "caption",
-          noWrap: true,
-          sx: { maxWidth: 300 },
+        sx={{ minWidth: 0 }}
+        slotProps={{
+          primary: { variant: "body2", fontWeight: 500, component: "div" },
+          secondary: { variant: "caption", noWrap: true, sx: { maxWidth: 300 } },
         }}
       />
+      {/* In the row's flex flow, not `secondaryAction`: that is absolutely positioned and
+          would overlap the name/URL once the actions outgrow the reserved right padding. */}
+      <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", flexShrink: 0, ml: 1 }}>
+        <Select
+          value={feed.reliability ?? ""}
+          onChange={(event) => onReliabilityChange(name, event.target.value)}
+          displayEmpty
+          size="small"
+          renderValue={(value) => value || t('reliability.notRated')}
+          inputProps={{ "aria-label": t('reliability.label') }}
+          sx={{
+            width: 112,
+            fontSize: "0.8125rem",
+            "& .MuiSelect-select": { py: 0.5 },
+            color: feed.reliability ? "text.primary" : "text.secondary",
+          }}
+        >
+          {RELIABILITY_GRADES.map((grade) => (
+            <MenuItem key={grade} value={grade}>
+              {grade} — {t(`reliability.grades.${grade}`)}
+            </MenuItem>
+          ))}
+        </Select>
+
+        <Tooltip title={t('settings.feeds.refreshFavicon')}>
+          <span>
+            <IconButton
+              onClick={handleRefetch}
+              disabled={refetchLoading}
+              aria-label={t('settings.feeds.refreshFavicon')}
+            >
+              {refetchLoading ? <CircularProgress size={20} /> : <Refresh />}
+            </IconButton>
+          </span>
+        </Tooltip>
+
+        <Switch checked={feed.enabled} onChange={() => onToggle(name)} size="small" />
+
+        <Tooltip title={t('settings.feeds.deleteFeed')}>
+          <IconButton
+            color="error"
+            onClick={() => onDelete(name)}
+            aria-label={t('settings.feeds.deleteFeed')}
+          >
+            <Delete />
+          </IconButton>
+        </Tooltip>
+      </Stack>
     </ListItem>
   );
 }

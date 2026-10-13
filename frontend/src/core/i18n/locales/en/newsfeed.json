@@ -9,6 +9,9 @@
       "startDate": "Start Date",
       "endDate": "End Date",
       "tlp": "TLP",
+      "minReliability": "Minimum reliability",
+      "anyReliability": "Any",
+      "minReliabilityHelp": "Hides unrated feeds and F (cannot be judged)",
       "hasKeywordMatches": "Has Keyword Matches",
       "hasIocs": "Has IOCs",
       "hasAnalysis": "Has Analysis",
@@ -293,6 +296,21 @@
       "errorLoadingArticle": "Error loading article {{articleId}}: {{error}}",
       "detailsNotAvailable": "Article details not available.",
       "openArticle": "Open article"
+    }
+  },
+  "reliability": {
+    "label": "Reliability",
+    "notRated": "Not rated",
+    "sourceTooltip": "Source reliability {{grade}}: {{description}}",
+    "ratedSuccess": "Reliability set to {{grade}}",
+    "rateError": "Failed to set reliability",
+    "grades": {
+      "A": "Completely reliable",
+      "B": "Usually reliable",
+      "C": "Fairly reliable",
+      "D": "Not usually reliable",
+      "E": "Unreliable",
+      "F": "Cannot be judged"
     }
   }
 }

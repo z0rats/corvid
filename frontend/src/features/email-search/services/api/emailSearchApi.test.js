@@ -49,8 +49,16 @@ describe('emailSearchApi.getInfo', () => {
 
     const result = await emailSearchApi.getInfo();
 
-    expect(api.get).toHaveBeenCalledWith('/api/email-search/info');
+    expect(api.get).toHaveBeenCalledWith('/api/email-search/info', { params: { source: 'mailcat' } });
     expect(result).toEqual({ version: '1.0' });
+  });
+
+  it('asks for the given source', async () => {
+    api.get.mockResolvedValue({ data: { tool: 'user-scanner' } });
+
+    await emailSearchApi.getInfo('user_scanner');
+
+    expect(api.get).toHaveBeenCalledWith('/api/email-search/info', { params: { source: 'user_scanner' } });
   });
 });
 

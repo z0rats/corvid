@@ -15,6 +15,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { createLogger } from '../../../core/utils/logger';
 import { generateUsernameVariants } from '../utils/usernameVariants';
+import { expandPattern, isPattern, MAX_PATTERN_TOTAL, unescapeLiterals } from '../utils/usernamePatterns';
 
 const logger = createLogger('UsernameSearchForm');
 
@@ -40,7 +41,10 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
 
-  const variants = useMemo(() => generateUsernameVariants(username), [username]);
+  // `[...]` in the box switches it to pattern mode: candidates to pick from instead of heuristic guesses.
+  const patternMode = isPattern(username);
+  const pattern = useMemo(() => (patternMode ? expandPattern(username) : null), [patternMode, username]);
+  const variants = useMemo(() => (patternMode ? [] : generateUsernameVariants(username)), [patternMode, username]);
 
   useEffect(() => {
     let ignore = false;
@@ -59,8 +63,8 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = username.trim();
-    if (!trimmed || modules.length === 0) return;
-    onSearch(trimmed, { modules, tags: modules.includes('maigret') ? tags : undefined });
+    if (!trimmed || modules.length === 0 || patternMode) return;
+    onSearch(unescapeLiterals(trimmed), { modules, tags: modules.includes('maigret') ? tags : undefined });
   };
 
   return (
@@ -110,12 +114,44 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
           type="submit"
           variant="contained"
           startIcon={<SearchIcon />}
-          disabled={disabled || !username.trim() || modules.length === 0}
+          disabled={disabled || !username.trim() || modules.length === 0 || patternMode}
           sx={{ whiteSpace: 'nowrap' }}
         >
           {t('form.searchButton')}
         </Button>
       </Box>
+      {pattern && (
+        <Box sx={{ mt: 1.5 }}>
+          {pattern.ok ? (
+            <>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                {pattern.total > pattern.values.length
+                  ? t('form.patternShowing', { shown: pattern.values.length, total: pattern.total })
+                  : t('form.patternCount', { count: pattern.total })}
+                {' — '}{t('form.variantsHint')}
+              </Typography>
+              <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+                {pattern.values.map((value) => (
+                  <Chip
+                    key={value}
+                    size="small"
+                    variant="outlined"
+                    label={value}
+                    onClick={() => setUsername(value)}
+                    disabled={disabled}
+                  />
+                ))}
+              </Stack>
+            </>
+          ) : (
+            <Typography variant="caption" color="error" role="alert">
+              {pattern.error === 'tooBroad'
+                ? t('form.patternTooBroad', { max: MAX_PATTERN_TOTAL })
+                : t('form.patternSyntax', { detail: pattern.detail })}
+            </Typography>
+          )}
+        </Box>
+      )}
       {variants.length > 0 && (
         <Box sx={{ mt: 1.5 }}>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>

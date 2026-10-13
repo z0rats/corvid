@@ -1,6 +1,10 @@
 import datetime
+import re
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+_EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]{2,}")
 
 
 class ScanRequest(BaseModel):
@@ -8,18 +12,29 @@ class ScanRequest(BaseModel):
 
     username: str = Field(
         ...,
-        description="Username (or local-part of an email) to search for",
+        description=(
+            "mailcat: username (or the local part of an email) to probe at mail providers. "
+            "user_scanner: the full email address to look up"
+        ),
         min_length=1,
         max_length=100,
     )
+    source: Literal["mailcat", "user_scanner"] = Field(
+        default="mailcat", description="Which search tool to use"
+    )
 
-    @field_validator("username")
-    @classmethod
-    def validate_username(cls, v: str) -> str:
-        username = v.strip()
-        if not username:
+    @model_validator(mode="after")
+    def normalize_target(self) -> ScanRequest:
+        target = self.username.strip()
+        if not target:
             raise ValueError("Username cannot be empty")
-        return username.split("@")[0] if "@" in username else username
+        if self.source == "user_scanner":
+            if not _EMAIL.fullmatch(target):
+                raise ValueError("user_scanner needs a full email address")
+            self.username = target
+        else:
+            self.username = target.split("@")[0] if "@" in target else target
+        return self
 
 
 class ProviderResultSchema(BaseModel):
@@ -38,11 +53,18 @@ class SearchRunSummary(BaseModel):
     """Summary of a past or in-progress search run, without full provider results"""
 
     id: int = Field(..., description="Search run ID")
-    username: str = Field(..., description="Username that was searched")
+    username: str = Field(..., description="Username or email address that was searched")
+    source: str = Field(
+        ..., description="Which search tool produced the run: mailcat or user_scanner"
+    )
     status: str = Field(..., description="running, completed, cancelled, or failed")
     total_providers_checked: int = Field(..., description="Number of providers checked")
     found_count: int = Field(
         ..., description="Number of providers where the username was found registered"
+    )
+    error_count: int = Field(
+        default=0,
+        description="user_scanner only: checks that failed rather than answered",
     )
     error_message: str | None = Field(default=None, description="Error message if the run failed")
     started_at: datetime.datetime = Field(..., description="When the search started")
@@ -68,6 +90,13 @@ class EmailSearchInfo(BaseModel):
     version: str = Field(..., description="Installed version of the search tool")
     provider_count: int = Field(
         ..., description="Number of provider checkers currently active, given the current settings"
+    )
+    available: bool = Field(
+        default=True, description="False when the tool's package isn't installed in this image"
+    )
+    blocked_reason: str | None = Field(
+        default=None,
+        description="Why a scan with this tool would be refused under the current settings",
     )
     latest_version: str | None = Field(
         default=None, description="Latest version published on PyPI, if checked"

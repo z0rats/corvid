@@ -1,59 +1,32 @@
-// Pivot material harvested from found profiles (see backend `_build_discovered_extra`) plus
-// mail-address guesses. Everything here is a hypothesis: shared handles are often different
-// people, so results need manual verification.
+// Pivot material for a finished run, computed by the backend (`pivot_service.build_pivots`,
+// returned as `pivots` on a run) plus mail-address guesses made here. Everything is a hypothesis:
+// shared handles are often different people, so results need manual verification.
 
-export interface FoundSiteExtra {
-  discovered_usernames?: Array<{ value: string; type: string }>;
-  discovered_names?: string[];
-  discovered_links?: string[];
+export interface PivotUsername {
+  value: string;
+  /** reported: the profile page named it; link: a URL the owner typed in, resolved to an account. */
+  kind: 'reported' | 'link';
+  /** 'username' for a plain handle, else the platform ID type (vk_id, steam_id, ...). */
+  id_type: string;
+  /** False for platform IDs: a username search for a numeric ID wastes a whole scan. */
+  searchable: boolean;
+  /** Site a link-derived handle lives on. */
+  site?: string | null;
+  sites: string[];
 }
 
-export interface FoundSite {
-  site_name: string;
-  extra?: FoundSiteExtra | null;
-}
-
-export interface DiscoveredItem {
+export interface PivotItem {
   value: string;
   sites: string[];
 }
 
-export interface DiscoveredUsername extends DiscoveredItem {
-  type: string;
+export interface RunPivots {
+  usernames: PivotUsername[];
+  names: PivotItem[];
+  emails: PivotItem[];
 }
 
-export interface DiscoveredIdentifiers {
-  usernames: DiscoveredUsername[];
-  names: DiscoveredItem[];
-}
-
-/** Dedupes (case-insensitively) across sites, excluding the handle that was searched. */
-export function aggregateDiscovered(
-  sites: FoundSite[] | null | undefined,
-  searchedUsername: string,
-): DiscoveredIdentifiers {
-  const self = searchedUsername.trim().toLowerCase();
-  const usernames = new Map<string, DiscoveredUsername>();
-  const names = new Map<string, DiscoveredItem>();
-
-  const add = <T extends DiscoveredItem>(map: Map<string, T>, value: string, site: string, make: () => T) => {
-    const key = value.trim().toLowerCase();
-    if (!key) return;
-    const entry = map.get(key) ?? make();
-    if (!entry.sites.includes(site)) entry.sites.push(site);
-    map.set(key, entry);
-  };
-
-  (sites ?? []).forEach(({ site_name: site, extra }) => {
-    extra?.discovered_usernames?.forEach(({ value, type }) => {
-      if (value.trim().toLowerCase() === self) return;
-      add(usernames, value, site, () => ({ value: value.trim(), type, sites: [] }));
-    });
-    extra?.discovered_names?.forEach((name) => add(names, name, site, () => ({ value: name.trim(), sites: [] })));
-  });
-
-  return { usernames: [...usernames.values()], names: [...names.values()] };
-}
+export const EMPTY_PIVOTS: RunPivots = { usernames: [], names: [], emails: [] };
 
 // Consumer providers first; mail.ru/yandex.ru because a lot of the audience this tool serves
 // (and the ru-market checks elsewhere in it) lives there.

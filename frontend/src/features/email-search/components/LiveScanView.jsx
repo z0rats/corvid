@@ -7,11 +7,11 @@ import Chip from '@mui/material/Chip';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
-import FoundProvidersList from './FoundProvidersList';
+import FoundProvidersList, { FailedChecksNote } from './FoundProvidersList';
 
 export default function LiveScanView({ scan, onLookupGoogleProfile }) {
   const { t } = useTranslation('emailSearch');
-  const { phase, checked, totalProviders, currentProvider, foundProviders, error, cancelScan } = scan;
+  const { phase, source, username, checked, totalProviders, currentProvider, foundProviders, errorCount, error, cancelScan } = scan;
   const progress = totalProviders > 0 ? Math.min(100, (checked / totalProviders) * 100) : 0;
 
   return (
@@ -55,7 +55,13 @@ export default function LiveScanView({ scan, onLookupGoogleProfile }) {
         />
       )}
 
-      <FoundProvidersList providers={foundProviders} onLookupGoogleProfile={onLookupGoogleProfile} />
+      {phase !== 'running' && <FailedChecksNote count={errorCount} />}
+
+      <FoundProvidersList
+        providers={foundProviders}
+        searchedEmail={source === 'user_scanner' ? username : undefined}
+        onLookupGoogleProfile={onLookupGoogleProfile}
+      />
     </Box>
   );
 }

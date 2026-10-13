@@ -100,7 +100,7 @@ class TestHistoryRoutes:
         (search_id,) = _seed(session_factory, "a.com")
         deleted = []
 
-        def to_detail(run):
+        def to_detail(run, _db):
             return SearchDetail.model_validate(run).model_copy(update={"error": "decorated"})
 
         client = _client(

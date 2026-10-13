@@ -20,7 +20,19 @@ class MailSearch(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, comment="Surrogate primary key")
     username: Mapped[str] = mapped_column(
-        String(100), index=True, comment="Username/email searched across providers"
+        String(100),
+        index=True,
+        comment="Username probed at mail providers (mailcat) or full address (user_scanner)",
+    )
+    source: Mapped[str] = mapped_column(
+        String(30),
+        default="mailcat",
+        server_default="mailcat",
+        index=True,
+        comment=(
+            "Which tool produced this run: 'mailcat' (username probed at mail providers) or "
+            "'user_scanner' (full address checked at ~150 services)"
+        ),
     )
     status: Mapped[str] = mapped_column(
         String(20),
@@ -33,6 +45,15 @@ class MailSearch(Base):
     )
     found_count: Mapped[int] = mapped_column(
         Integer, default=0, comment="Providers where a registered account was found"
+    )
+    error_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        comment=(
+            "user_scanner only: checks that failed (blocked, timed out, changed) rather than "
+            "answered, so they aren't read as 'not registered'"
+        ),
     )
     error_message: Mapped[str | None] = mapped_column(
         String(1000), comment="Error detail if status is failed"

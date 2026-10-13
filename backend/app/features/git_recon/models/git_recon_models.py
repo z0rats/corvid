@@ -39,6 +39,6 @@ class GitReconSearch(Base):
         JSON,
         comment=(
             "Full gitcolombo result blob - no normalized result table, see "
-            "database-schema-audit.md #12"
+            "docs/adr/0002-git-recon-json-blob-results.md"
         ),
     )

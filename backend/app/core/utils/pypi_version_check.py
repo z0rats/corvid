@@ -1,7 +1,6 @@
 """Single copy of the "check PyPI for a newer version of this vendored OSINT tool"
 pattern shared by `username_search` (maigret, social-analyzer) and `email_search`
-(mailcat-osint). Was three near-identical fetch+record+bool blocks before this
-existed. See docs/database-schema-audit.md section 6, phase 3 addendum.
+(mailcat-osint).
 """
 
 import datetime

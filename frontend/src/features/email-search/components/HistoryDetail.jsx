@@ -2,11 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
-import FoundProvidersList from './FoundProvidersList';
+import FoundProvidersList, { FailedChecksNote } from './FoundProvidersList';
 import { emailSearchApi } from '../services/api/emailSearchApi';
 import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
@@ -25,12 +26,21 @@ export default function HistoryDetail() {
       <HistoryDetailHeader
         onBack={() => navigate('/email-search/history')}
         title={run.username}
-        chips={<ScanStatusChip status={run.status} label={t(`history.status.${run.status}`)} />}
+        chips={(
+          <>
+            <Chip size="small" label={t(`form.source.${run.source ?? 'mailcat'}.label`)} />
+            <ScanStatusChip status={run.status} label={t(`history.status.${run.status}`)} />
+          </>
+        )}
         summary={t('history.summary', { checked: run.total_providers_checked, found: run.found_count })}
         error={run.status === 'failed' ? run.error_message : null}
       />
 
-      <FoundProvidersList providers={run.provider_results} />
+      <FailedChecksNote count={run.error_count} />
+      <FoundProvidersList
+        providers={run.provider_results}
+        searchedEmail={run.source === 'user_scanner' ? run.username : undefined}
+      />
     </Box>
   );
 }

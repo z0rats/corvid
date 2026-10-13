@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import LinearProgress from '@mui/material/LinearProgress';
 import Button from '@mui/material/Button';
+import Link from '@mui/material/Link';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
@@ -16,7 +18,8 @@ import { buildPrefillUrl } from '../../../core/utils/crossFeatureNav';
 import HudsonRockStatusChip from './HudsonRockStatusChip';
 import { useHudsonRockCheck } from '../hooks/api/useHudsonRockCheck';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
-import { sourceLabelKey } from '../utils/sourceLabels';
+import { runSourceLabelKey } from '../utils/sourceLabels';
+import { inconclusiveSites } from '../utils/siteCheck';
 import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
 const EXPORT_FORMATS = ['csv', 'txt', 'json', 'html', 'pdf', 'xmind'];
@@ -31,6 +34,9 @@ export default function HistoryDetail() {
   if (loading) return <LinearProgress />;
   if (!run) return <Typography color="text.secondary">{t('history.notFound')}</Typography>;
 
+  const parentId = run.parent_search_id ?? null;
+  const unanswered = run.status === 'completed' ? inconclusiveSites(run.site_statuses) : [];
+
   return (
     <Box>
       <HistoryDetailHeader
@@ -38,13 +44,25 @@ export default function HistoryDetail() {
         title={run.username}
         chips={(
           <>
-            <Chip size="small" variant="outlined" label={t(sourceLabelKey(run.source))} />
+            <Chip size="small" variant="outlined" label={t(runSourceLabelKey(run))} />
             <ScanStatusChip status={run.status} label={t(`history.status.${run.status}`)} />
           </>
         )}
         summary={t('history.summary', { checked: run.total_sites_checked, found: run.found_count })}
         error={run.status === 'failed' ? run.error_message : null}
       />
+
+      {parentId != null && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {/* The parent may have been deleted since; only link to one that still exists. */}
+          {run.parent_exists ? (
+            <Link component="button" variant="body2" onClick={() => navigate(`/username-search/history/${parentId}`)}>
+              {t('history.followedFrom', { id: parentId })}
+            </Link>
+          ) : t('history.followedFrom', { id: parentId })}
+          {run.pivot_source ? ` — ${run.pivot_source}` : ''}
+        </Typography>
+      )}
 
       {run.tags && run.tags.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
@@ -72,12 +90,22 @@ export default function HistoryDetail() {
       )}
 
       <HudsonRockStatusChip result={hudsonRockResult} />
-      <FoundSitesList sites={run.site_results} />
+      {unanswered.length > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {t('scan.siteInconclusive', { sites: unanswered.join(', ') })}
+        </Alert>
+      )}
+      {!(unanswered.length > 0 && run.site_results.length === 0) && <FoundSitesList sites={run.site_results} />}
       {run.status !== 'running' && (
         <DiscoveredIdentifiers
-          sites={run.site_results}
+          pivots={run.pivots}
           username={run.username}
-          onSearchUsername={(value) => navigate(buildPrefillUrl('/username-search/new', value))}
+          onSearchUsername={(value, { pivotSource } = {}) => navigate(
+            buildPrefillUrl('/username-search/new', value, { parent: run.id, src: pivotSource }),
+          )}
+          onCheckSite={(handle, { pivotSource } = {}) => navigate(
+            buildPrefillUrl('/username-search/new', handle.value, { parent: run.id, site: handle.site, src: pivotSource }),
+          )}
         />
       )}
     </Box>

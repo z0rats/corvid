@@ -27,7 +27,7 @@ export default function ManageNewsfeeds() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [feedToDelete, setFeedToDelete] = useState(null);
 
-  const { feeds, setFeeds, loading, toggleFeed, addFeed, deleteFeed } = useFeedManagement();
+  const { feeds, setFeeds, loading, toggleFeed, setReliability, addFeed, deleteFeed } = useFeedManagement();
   const { deleteIcon, processIconFile, refetchIcon, refetchAllMissingIcons } = useIconManagement(feeds, setFeeds);
   const { notification, showSuccess, showError, hideNotification } = useNotification();
 
@@ -51,6 +51,15 @@ export default function ManageNewsfeeds() {
       showError(t('settings.feeds.feedToggleError'));
     }
   }, [toggleFeed, showSuccess, showError, t]);
+
+  const handleReliabilityChange = useCallback(async (feedName, grade) => {
+    const result = await setReliability(feedName, grade);
+    if (result.success) {
+      showSuccess(t('reliability.ratedSuccess', { grade }));
+    } else {
+      showError(t('reliability.rateError'));
+    }
+  }, [setReliability, showSuccess, showError, t]);
 
   const handleDelete = useCallback((name) => {
     setFeedToDelete(name);
@@ -162,6 +171,7 @@ export default function ManageNewsfeeds() {
                 name={name}
                 feed={feed}
                 onToggle={handleToggle}
+                onReliabilityChange={handleReliabilityChange}
                 onDelete={handleDelete}
                 onIconDelete={handleIconDelete}
                 onRefetchIcon={handleRefetchIcon}

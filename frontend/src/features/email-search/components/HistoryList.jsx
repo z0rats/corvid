@@ -13,6 +13,11 @@ export default function HistoryList() {
   const columns = [
     { key: 'username', header: t('history.headers.username') },
     {
+      key: 'source',
+      header: t('history.headers.source'),
+      render: (run) => t(`form.source.${run.source ?? 'mailcat'}.label`),
+    },
+    {
       key: 'status',
       header: t('history.headers.status'),
       render: (run) => (

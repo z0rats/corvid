@@ -27,6 +27,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ShieldIcon from '@mui/icons-material/Shield';
 import { format } from "date-fns";
+import ReliabilityChip from "../components/ui/ReliabilityChip";
 
 import { hasLlmKeyAtom } from "../../../core/state/atoms";
 import { getFeedIconUrl } from "../utils/urlUtils";
@@ -46,6 +47,7 @@ const decodeHtmlEntities = (str) => {
 
 const NewsArticleItem = React.memo(function NewsArticleItem({
   item,
+  reliability,
   updateArticle,
   updateArticleField,
   tlpColors,
@@ -99,9 +101,12 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
               variant="rounded"
             />
             <Stack>
-              <Typography variant="subtitle1">
-                <b>{item.feedname}</b>
-              </Typography>
+              <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+                <Typography variant="subtitle1">
+                  <b>{item.feedname}</b>
+                </Typography>
+                <ReliabilityChip grade={reliability} />
+              </Stack>
               <Typography variant="body2">
                 {format(new Date(item.date), "MMMM d, yyyy, h:mm a")}
               </Typography>

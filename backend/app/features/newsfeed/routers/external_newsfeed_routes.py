@@ -77,6 +77,14 @@ async def get_paginated_articles_route(
     has_note: bool | None = Query(None, description="Filter for articles with notes"),
     tlp: str | None = Query(None, description="Filter by TLP value"),
     read: bool | None = Query(None, description="Filter by read status"),
+    min_reliability: str | None = Query(
+        None,
+        pattern="^[A-Ea-e]$",
+        description=(
+            "Only articles from feeds graded at least this reliable (Admiralty A-E, A best); "
+            "feeds never graded, or graded F (cannot be judged), are excluded"
+        ),
+    ),
 ) -> PaginatedArticlesResponse:
     """Fetch paginated articles with optional filtering"""
     logger.info("Fetching paginated articles - Page: %s, Size: %s", page, page_size)
@@ -93,6 +101,7 @@ async def get_paginated_articles_route(
         has_note=has_note,
         tlp=tlp,
         read=read,
+        min_reliability=min_reliability,
     )
 
 

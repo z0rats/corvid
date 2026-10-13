@@ -404,3 +404,57 @@ class TestGetPaginatedArticles:
         result = _run(_scenario())
         assert result["total_count"] == 1
         assert result["articles"][0].link == "https://news.example/filtered-red"
+
+
+class TestMinReliabilityFilter:
+    """`min_reliability` keeps feeds graded at least that well (A best); unrated feeds drop out."""
+
+    @staticmethod
+    def _links_with_filter(session_factory, min_reliability):
+        async def _scenario():
+            async with session_factory() as db:
+                for name, grade in [
+                    ("fa", "A"),
+                    ("fb", "B"),
+                    ("fc", "C"),
+                    ("ff", "F"),
+                    ("fn", None),
+                ]:
+                    db.add(
+                        NewsfeedSettings(
+                            name=name, url=f"https://{name}.example/rss", reliability=grade
+                        )
+                    )
+                await db.flush()
+                for name in ("fa", "fb", "fc", "ff", "fn"):
+                    await create_news_article(
+                        db,
+                        _article_schema(feedname=name, link=f"https://news.example/{name}"),
+                    )
+                await db.commit()
+                return await get_paginated_articles(db, min_reliability=min_reliability)
+
+        result = _run(_scenario())
+        return {a.feedname for a in result["articles"]}, result["total_count"]
+
+    def test_keeps_the_given_grade_and_better_ones(self, session_factory):
+        feeds, total = self._links_with_filter(session_factory, "B")
+        assert feeds == {"fa", "fb"}
+        assert total == 2
+
+    def test_boundary_grade_is_inclusive(self, session_factory):
+        feeds, _ = self._links_with_filter(session_factory, "C")
+        assert feeds == {"fa", "fb", "fc"}
+
+    def test_lowest_grade_drops_cannot_be_judged_and_unrated_feeds(self, session_factory):
+        feeds, _ = self._links_with_filter(session_factory, "E")
+        assert feeds == {"fa", "fb", "fc"}
+
+    def test_lowercase_grade_is_accepted(self, session_factory):
+        feeds, _ = self._links_with_filter(session_factory, "a")
+        assert feeds == {"fa"}
+
+    def test_no_filter_keeps_unrated_feeds_too(self, session_factory):
+        feeds, total = self._links_with_filter(session_factory, None)
+        assert feeds == {"fa", "fb", "fc", "ff", "fn"}
+        assert total == 5

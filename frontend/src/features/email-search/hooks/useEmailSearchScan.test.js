@@ -34,9 +34,37 @@ describe('useEmailSearchScan reduce', () => {
     expect(next.foundProviders).toEqual([]);
   });
 
+  it('keeps a hit\'s profile extras and counts failed checks without treating them as hits', () => {
+    const extra = { category: 'shopping', url: 'https://etsy.test', fields: { name: 'Ann' } };
+    const hit = reduce(running, {
+      type: 'progress',
+      data: { checked: 1, total_providers: 2, checker_name: 'Etsy', found: true, status: 'registered', provider_name: 'Etsy', emails: ['a@b.test'], extra },
+    });
+    expect(hit.foundProviders).toEqual([{ provider_name: 'Etsy', emails: ['a@b.test'], extra }]);
+    expect(hit.errorCount).toBe(0);
+
+    const failed = reduce(hit, {
+      type: 'progress',
+      data: { checked: 2, total_providers: 2, checker_name: 'Quora', found: false, status: 'error' },
+    });
+    expect(failed.foundProviders).toHaveLength(1);
+    expect(failed.errorCount).toBe(1);
+
+    const notRegistered = reduce(failed, {
+      type: 'progress',
+      data: { checked: 3, total_providers: 3, checker_name: 'Gap', found: false, status: 'not_registered' },
+    });
+    expect(notRegistered.errorCount).toBe(1);
+  });
+
   it('marks the scan finished on "completed" and carries the checked total', () => {
     const next = reduce(running, { type: 'completed', data: { search_id: 9, total_providers_checked: 26 } });
     expect(next).toMatchObject({ phase: 'completed', checked: 26, totalProviders: 26, searchId: 9 });
+  });
+
+  it('takes the final failed-check count from the terminal event', () => {
+    const next = reduce(running, { type: 'completed', data: { search_id: 9, total_providers_checked: 26, error_count: 2 } });
+    expect(next.errorCount).toBe(2);
   });
 
   it('falls back to the previous searchId on "failed" (shared failedReduce behaviour)', () => {
@@ -58,5 +86,18 @@ describe('useEmailSearchScan reconcile', () => {
     expect(reconcile(prev, run)).toMatchObject({
       phase: 'completed', checked: 26, totalProviders: 26, foundProviders: run.provider_results, error: '',
     });
+  });
+
+  it('restores the searched address and the failed-check count', () => {
+    const prev = { ...SCAN_INITIAL_STATE, phase: 'running' };
+    expect(reconcile(prev, {
+      status: 'completed', username: 'a@b.test', error_count: 4, provider_results: [],
+    })).toMatchObject({ username: 'a@b.test', errorCount: 4 });
+  });
+
+  it('adopts the persisted run\'s source', () => {
+    const prev = { ...SCAN_INITIAL_STATE, phase: 'running', username: 'a@b.test' };
+    expect(reconcile(prev, { status: 'completed', source: 'user_scanner', provider_results: [] }).source).toBe('user_scanner');
+    expect(reconcile(prev, { status: 'completed', provider_results: [] }).source).toBe('mailcat');
   });
 });
