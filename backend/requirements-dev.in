@@ -1,0 +1,9 @@
+# Dev/CI-only tools on top of the runtime requirements (requirements.in), which is all the
+# Docker image installs. Constrained to requirements.txt so shared packages resolve to the
+# exact versions the image ships.
+-r requirements.in
+-c requirements.txt
+mypy
+pytest
+pytest-cov
+ruff

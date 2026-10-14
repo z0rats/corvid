@@ -62,12 +62,8 @@ asn1crypto==1.5.1
     #   oscrypto
     #   pyhanko
     #   pyhanko-certvalidator
-ast-serialize==0.8.0
-    # via mypy
 asttokens==3.0.2
     # via stack-data
-asyncpg==0.31.0
-    # via -r requirements.in
 attrs==26.1.0
     # via
     #   aiohttp
@@ -96,7 +92,6 @@ certifi==2026.6.17
     #   maigret
     #   requests
     #   selenium
-    #   sentry-sdk
 cffi==2.1.0
     # via
     #   cryptography
@@ -111,7 +106,6 @@ click==8.4.2
     # via
     #   flask
     #   mitreattack-python
-    #   rich-toolkit
     #   uvicorn
 colorama==0.4.6
     # via
@@ -119,8 +113,6 @@ colorama==0.4.6
     #   user-scanner
 colour==0.1.5
     # via mitreattack-python
-coverage[toml]==7.15.2
-    # via pytest-cov
 cryptography==50.0.0
     # via
     #   google-auth
@@ -143,8 +135,6 @@ deepdiff==9.1.0
     # via mitreattack-python
 deprecated==1.3.1
     # via limits
-detect-installer==0.1.0
-    # via fastapi-cloud-cli
 distro==1.9.0
     # via google-genai
 dnspython==2.8.0
@@ -157,9 +147,7 @@ docstring-parser==0.18.0
 drawsvg==2.4.1
     # via mitreattack-python
 email-validator==2.3.0
-    # via
-    #   fastapi
-    #   pydantic
+    # via pydantic
 et-xmlfile==2.0.0
     # via openpyxl
 executing==2.2.1
@@ -168,14 +156,8 @@ exifread==3.5.1
     # via -r requirements.in
 fake-useragent==2.2.0
     # via requests-html
-fastapi[all]==0.141.1
+fastapi==0.141.1
     # via -r requirements.in
-fastapi-cli[standard]==0.0.32
-    # via fastapi
-fastapi-cloud-cli==0.22.2
-    # via fastapi-cli
-fastar==0.11.0
-    # via fastapi-cloud-cli
 feedparser==6.0.14
     # via
     #   -r requirements.in
@@ -184,7 +166,7 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 filelock==3.31.0
     # via tldextract
-flask[async]==3.1.3
+flask==3.1.3
     # via maigret
 frozenlist==1.8.0
     # via
@@ -196,7 +178,7 @@ genai-prices==0.1.9
     # via pydantic-ai-slim
 gitcolombo==0.3.0
     # via -r requirements.in
-google-auth[requests]==2.57.1
+google-auth==2.57.1
     # via google-genai
 google-genai==2.28.0
     # via pydantic-ai-slim
@@ -228,11 +210,9 @@ httpcore2==2.13.1
     # via httpx2
 httptools==0.8.0
     # via uvicorn
-httpx[http2]==0.28.1
+httpx==0.28.1
     # via
     #   -r requirements.in
-    #   fastapi
-    #   fastapi-cloud-cli
     #   google-genai
     #   user-scanner
 httpx2==2.13.1
@@ -253,8 +233,6 @@ idna==3.18
     #   tldextract
     #   trio
     #   yarl
-iniconfig==2.3.0
-    # via pytest
 instaloader==4.15.3
     # via -r requirements.in
 ipython==9.15.0
@@ -262,14 +240,12 @@ ipython==9.15.0
 ipython-pygments-lexers==1.1.1
     # via ipython
 itsdangerous==2.2.0
-    # via
-    #   fastapi
-    #   flask
+    # via flask
 jedi==0.20.0
     # via ipython
 jinja2==3.1.6
     # via
-    #   fastapi
+    #   -r requirements.in
     #   flask
     #   maigret
     #   pyvis
@@ -281,15 +257,13 @@ jsonpickle==4.1.2
     # via pyvis
 langdetect==1.0.9
     # via social-analyzer
-librt==0.15.0
-    # via mypy
 limits==5.8.0
     # via slowapi
 logfire-api==4.37.0
     # via pydantic-graph
 loguru==0.7.3
     # via mitreattack-python
-lxml[html-clean]==6.1.3
+lxml==6.1.3
     # via
     #   -r requirements.in
     #   lxml-html-clean
@@ -303,7 +277,7 @@ lxml-html-clean==0.4.5
     # via
     #   lxml
     #   mailcat-osint
-maigret[pdf]==0.6.6
+maigret==0.6.6
     # via -r requirements.in
 mailcat-osint==0.1.1
     # via -r requirements.in
@@ -330,10 +304,6 @@ multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-mypy==2.3.1
-    # via -r requirements.in
-mypy-extensions==1.1.0
-    # via mypy
 networkx==2.8.8
     # via
     #   maigret
@@ -362,7 +332,6 @@ packaging==26.2
     # via
     #   limits
     #   pooch
-    #   pytest
     #   wheel
 pandas==3.0.3
     # via mitreattack-python
@@ -370,8 +339,6 @@ parse==1.22.1
     # via requests-html
 parso==0.8.7
     # via jedi
-pathspec==1.1.1
-    # via mypy
 pdfminer-six==20260107
     # via pdfplumber
 pdfplumber==0.11.10
@@ -392,10 +359,6 @@ platformdirs==4.10.1
     # via
     #   maigret
     #   pooch
-pluggy==1.6.0
-    # via
-    #   pytest
-    #   pytest-cov
 pooch==1.9.0
     # via mitreattack-python
 prompt-toolkit==3.0.52
@@ -422,38 +385,31 @@ pycountry==26.2.16
     # via maigret
 pycparser==3.0
     # via cffi
-pydantic[email]==2.13.5
+pydantic==2.13.5
     # via
     #   -r requirements.in
     #   anthropic
     #   fastapi
-    #   fastapi-cloud-cli
     #   genai-prices
     #   google-genai
     #   openai
     #   pydantic-ai-slim
-    #   pydantic-extra-types
     #   pydantic-graph
     #   pydantic-settings
-pydantic-ai-slim[anthropic,google,openai]==2.51.0
+pydantic-ai-slim==2.51.0
     # via -r requirements.in
 pydantic-core==2.46.5
     # via pydantic
-pydantic-extra-types==2.11.1
-    # via fastapi
 pydantic-graph==2.51.0
     # via pydantic-ai-slim
 pydantic-settings==2.15.0
-    # via
-    #   -r requirements.in
-    #   fastapi
+    # via -r requirements.in
 pyee==13.0.1
     # via pyppeteer
 pygments==2.20.0
     # via
     #   ipython
     #   ipython-pygments-lexers
-    #   pytest
     #   rich
 pyhanko==0.35.2
     # via xhtml2pdf
@@ -473,12 +429,6 @@ pysocks==1.7.1
     # via
     #   maigret
     #   urllib3
-pytest==9.1.1
-    # via
-    #   -r requirements.in
-    #   pytest-cov
-pytest-cov==7.1.0
-    # via -r requirements.in
 python-bidi==0.6.11
     # via
     #   maigret
@@ -495,8 +445,8 @@ python-dotenv==1.2.2
     #   pydantic-settings
     #   uvicorn
 python-multipart==0.0.32
-    # via fastapi
-python-socks[asyncio]==2.8.2
+    # via -r requirements.in
+python-socks==2.8.2
     # via aiohttp-socks
 pytz==2026.2
     # via stix2
@@ -504,7 +454,6 @@ pyvis==0.3.2
     # via maigret
 pyyaml==6.0.3
     # via
-    #   fastapi
     #   newspaper4k
     #   pyhanko
     #   uvicorn
@@ -545,21 +494,10 @@ rich==15.0.0
     # via
     #   curl-cffi
     #   mitreattack-python
-    #   rich-toolkit
     #   typer
     #   user-scanner
-rich-toolkit==0.20.3
-    # via
-    #   fastapi-cli
-    #   fastapi-cloud-cli
-rignore==0.8.0
-    # via fastapi-cloud-cli
-ruff==0.16.9
-    # via -r requirements.in
 selenium==4.46.0
     # via galeodes
-sentry-sdk==2.66.0
-    # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
 simplejson==4.1.1
@@ -639,10 +577,7 @@ truststore==0.10.4
     #   httpcore2
     #   httpx2
 typer==0.27.0
-    # via
-    #   fastapi-cli
-    #   fastapi-cloud-cli
-    #   mitreattack-python
+    # via mitreattack-python
 typing-extensions==4.16.0
     # via
     #   alembic
@@ -653,15 +588,12 @@ typing-extensions==4.16.0
     #   limits
     #   maigret
     #   mitreattack-python
-    #   mypy
     #   newspaper4k
     #   openai
     #   opentelemetry-api
     #   pydantic
     #   pydantic-core
-    #   pydantic-extra-types
     #   pyee
-    #   rich-toolkit
     #   selenium
     #   sqlalchemy
     #   typing-inspection
@@ -678,20 +610,15 @@ tzlocal==5.4.4
     #   pyhanko
 uritools==6.1.2
     # via pyhanko-certvalidator
-urllib3[socks]==2.7.0
+urllib3==2.7.0
     # via
     #   pyppeteer
     #   requests
     #   selenium
-    #   sentry-sdk
 user-scanner==1.5.2.1
     # via -r requirements.in
-uvicorn[standard]==0.54.0
-    # via
-    #   -r requirements.in
-    #   fastapi
-    #   fastapi-cli
-    #   fastapi-cloud-cli
+uvicorn==0.54.0
+    # via -r requirements.in
 uvloop==0.22.1
     # via uvicorn
 w3lib==2.4.1

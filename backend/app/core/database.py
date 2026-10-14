@@ -23,14 +23,17 @@ class Base(DeclarativeBase):
 
 
 def _to_async_url(url: str) -> str:
-    """Convert a sync database URL to its async driver equivalent"""
+    """Convert a sqlite:/// DB_URL to its aiosqlite equivalent. SQLite is the only supported
+    backend (docs/adr/0004-sqlite-only-postgres-unsupported.md), so anything else fails here,
+    at startup, rather than later with a missing-driver error."""
+    if url.startswith("sqlite+aiosqlite:///"):
+        return url
     if url.startswith("sqlite:///"):
         return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    if url.startswith("postgresql+psycopg2://"):
-        return url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
-    return url
+    raise ValueError(
+        f"Unsupported DB_URL {url.split('://', 1)[0]}://...: Corvid supports SQLite only "
+        "(e.g. sqlite:///./data/corvid.db)"
+    )
 
 
 def create_database_engine() -> AsyncEngine:
@@ -41,49 +44,38 @@ def create_database_engine() -> AsyncEngine:
     if echo:
         logger.warning("DB_ECHO is enabled — SQL queries will be logged. Disable in production.")
 
-    if "sqlite" in db_url:
-        # No poolclass override: each checkout gets its own real connection (the
-        # default AsyncAdaptedQueuePool), sized like the Postgres branch below.
-        # StaticPool (one shared connection for every concurrent request) was used
-        # here previously - it's meant for sqlite:///:memory: test databases, and on
-        # the real file DB it let one request's commit/rollback tear down another
-        # concurrent request's still-pending flush, surfacing as spurious
-        # `Could not refresh instance` errors under concurrent first-access to a
-        # singleton settings row (see core/settings/singleton.py).
-        engine = create_async_engine(
-            db_url,
-            connect_args={"check_same_thread": False, "timeout": 30},
-            echo=echo,
-            pool_size=settings.database.pool_size,
-            max_overflow=settings.database.max_overflow,
-            hide_parameters=True,
-        )
+    # No poolclass override: each checkout gets its own real connection (the
+    # default AsyncAdaptedQueuePool), sized by DB_POOL_SIZE/DB_MAX_OVERFLOW.
+    # StaticPool (one shared connection for every concurrent request) was used
+    # here previously - it's meant for sqlite:///:memory: test databases, and on
+    # the real file DB it let one request's commit/rollback tear down another
+    # concurrent request's still-pending flush, surfacing as spurious
+    # `Could not refresh instance` errors under concurrent first-access to a
+    # singleton settings row (see core/settings/singleton.py).
+    engine = create_async_engine(
+        db_url,
+        connect_args={"check_same_thread": False, "timeout": 30},
+        echo=echo,
+        pool_size=settings.database.pool_size,
+        max_overflow=settings.database.max_overflow,
+        hide_parameters=True,
+    )
 
-        @event.listens_for(engine.sync_engine, "connect")
-        def _set_sqlite_pragma(dbapi_connection, connection_record) -> None:
-            """Enable WAL so readers (e.g. SSE progress polling) aren't blocked by
-            the scheduler or an in-progress scan holding a write lock.
+    @event.listens_for(engine.sync_engine, "connect")
+    def _set_sqlite_pragma(dbapi_connection, connection_record) -> None:
+        """Enable WAL so readers (e.g. SSE progress polling) aren't blocked by
+        the scheduler or an in-progress scan holding a write lock.
 
-            Also enable foreign key enforcement: SQLite ignores `ondelete="CASCADE"`
-            entirely unless this is set on every connection, and the ORM models rely
-            on it (`passive_deletes=True`) to cascade-delete search results. This is a
-            per-connection PRAGMA, not persisted in the DB file, so it must run here
-            rather than in a migration."""
-            cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA journal_mode=WAL")
-            cursor.execute("PRAGMA synchronous=NORMAL")
-            cursor.execute("PRAGMA foreign_keys=ON")
-            cursor.close()
-    else:
-        engine = create_async_engine(
-            db_url,
-            echo=echo,
-            pool_size=settings.database.pool_size,
-            max_overflow=settings.database.max_overflow,
-            pool_pre_ping=True,
-            pool_recycle=settings.database.pool_recycle,
-            hide_parameters=True,
-        )
+        Also enable foreign key enforcement: SQLite ignores `ondelete="CASCADE"`
+        entirely unless this is set on every connection, and the ORM models rely
+        on it (`passive_deletes=True`) to cascade-delete search results. This is a
+        per-connection PRAGMA, not persisted in the DB file, so it must run here
+        rather than in a migration."""
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
     logger.info("Async database engine created successfully")
     return engine

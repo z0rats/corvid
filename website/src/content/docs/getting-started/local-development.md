@@ -12,7 +12,7 @@ but each part can also run directly on the host for faster iteration.
 
 ```bash
 cd backend
-uv pip install -r requirements.txt
+uv pip install -r requirements-dev.txt
 pytest
 ```
 

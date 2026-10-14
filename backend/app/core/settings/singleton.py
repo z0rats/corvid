@@ -1,13 +1,9 @@
-from typing import TypeVar
-
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-ModelT = TypeVar("ModelT")
 
-
-async def get_or_create_singleton(
+async def get_or_create_singleton[ModelT](
     db: AsyncSession,
     model: type[ModelT],
     defaults: dict | None = None,

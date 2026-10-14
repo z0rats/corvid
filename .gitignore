@@ -27,3 +27,6 @@ sketch
 
 ROADMAP.md
 dataset.json
+
+# Python bytecode (scripts/ has no .gitignore of its own)
+__pycache__/

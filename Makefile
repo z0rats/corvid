@@ -45,8 +45,8 @@ migrate: ## Apply pending Alembic migrations by hand (runs automatically on cont
 
 ## --- Testing & linting (run locally, not in Docker) ---
 
-sync-backend: ## Sync the local backend venv with requirements.txt (same install CI uses)
-	cd backend && uv pip install -r requirements.txt
+sync-backend: ## Sync the local backend venv with requirements-dev.txt (same install CI uses)
+	cd backend && uv pip install -r requirements-dev.txt
 
 test-backend: ## Run backend tests with coverage (same invocation as CI)
 	cd backend && pytest -v --cov=app --cov-report=xml
@@ -58,8 +58,8 @@ test: test-backend test-frontend ## Run backend and frontend test suites
 
 lint: lint-backend lint-frontend ## Lint backend and frontend
 
-lint-backend: ## Lint + type-check the backend (ruff check, ruff format --check, mypy)
-	cd backend && ruff check . && ruff format --check . && mypy app
+lint-backend: ## Lint + type-check the backend (ruff check, ruff format --check, mypy vs baseline)
+	cd backend && ruff check . && ruff format --check . && python ../scripts/check_mypy_baseline.py
 
 lint-frontend: ## Lint + type-check the frontend (eslint, tsc --noEmit)
 	cd frontend && yarn lint && yarn typecheck

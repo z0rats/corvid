@@ -1,5 +1,12 @@
-# SQLite is the only supported backend; PostgreSQL is untested
+# SQLite is the only supported backend
 
-`database.py`'s `_to_async_url` converts a `postgresql://` URL to `asyncpg`, so Postgres is technically reachable through the same SQLAlchemy models. But no test in the suite runs against it, CI never starts a Postgres container, and no doc lists it as a deployment option.
+Corvid targets a self-hosted, single operator, and a SQLite file is the simplest possible path to
+that (`docker compose up`, zero external services).
 
-Corvid targets a self-hosted, single operator, and a SQLite file is the simplest possible path to that (`docker compose up`, zero external services). SQLAlchemy makes a second dialect nearly free at the code level, so the Postgres path was left in as a placeholder for a possible future multi-user mode rather than removed — but it's not exercised anywhere, so it should be treated as unsupported: a "doesn't work on Postgres" report is low priority until there's a separate decision to make Postgres an officially supported backend, with the test coverage that implies.
+`database.py`'s `_to_async_url` accepts only `sqlite:///` (or `sqlite+aiosqlite:///`) URLs and
+raises on anything else, so a non-SQLite `DB_URL` fails at startup with a clear message. No
+Postgres driver (`asyncpg`) is installed: no test ran against Postgres, CI never started a
+Postgres container, and no doc offered it as a deployment option, so keeping a half-wired path
+only shipped an untested driver in every image and invited "works on Postgres?" reports.
+SQLAlchemy keeps a second dialect cheap to add later; doing so needs its own decision, a driver
+dependency, and test coverage against a real Postgres instance.
