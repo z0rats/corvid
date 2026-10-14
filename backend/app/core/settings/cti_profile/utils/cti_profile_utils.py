@@ -133,33 +133,6 @@ def format_settings_for_display(settings: dict[str, Any]) -> dict[str, Any]:
     return formatted
 
 
-def validate_retention_settings(retention_settings: dict[str, Any]) -> bool:
-    """
-    Validate data retention settings
-    """
-    required_fields = ["raw_data_retention_days", "processed_data_retention_days"]
-
-    for field in required_fields:
-        if field not in retention_settings:
-            logger.error("Missing required retention field: %s", field)
-            return False
-
-        value = retention_settings[field]
-        if not isinstance(value, int) or value < 1:
-            logger.error("Invalid retention value for %s: %s", field, value)
-            return False
-
-    # Ensure processed data retention is not less than raw data retention
-    raw_retention = retention_settings["raw_data_retention_days"]
-    processed_retention = retention_settings["processed_data_retention_days"]
-
-    if processed_retention < raw_retention:
-        logger.error("Processed data retention cannot be less than raw data retention")
-        return False
-
-    return True
-
-
 def generate_settings_summary(settings: dict[str, Any]) -> str:
     """
     Generate a human-readable summary of CTI profile settings

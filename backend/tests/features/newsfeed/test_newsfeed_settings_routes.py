@@ -171,16 +171,16 @@ class TestRetentionDays:
     def test_get_returns_the_default_when_unset(self, client):
         response = client.get("/api/settings/newsfeed/retention")
         assert response.status_code == 200
-        assert response.json() == 0
+        assert response.json() == 30
 
     def test_update_persists_the_new_value(self, client):
-        put_response = client.put("/api/settings/newsfeed/retention", json={"retention_days": 30})
+        put_response = client.put("/api/settings/newsfeed/retention", json={"retention_days": 90})
 
         assert put_response.status_code == 200
-        assert put_response.json()["retention_days"] == 30
+        assert put_response.json()["retention_days"] == 90
 
         get_response = client.get("/api/settings/newsfeed/retention")
-        assert get_response.json() == 30
+        assert get_response.json() == 90
 
     def test_rejects_a_negative_value(self, client):
         response = client.put("/api/settings/newsfeed/retention", json={"retention_days": -1})

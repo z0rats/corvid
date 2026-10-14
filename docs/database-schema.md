@@ -486,7 +486,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | Column | Type | Nullable | Default | Key | Comment |
 |---|---|---|---|---|---|
 | `id` | int | no | — | PK | Singleton row id, always 1 |
-| `retention_days` | int | no | 0 | — | Days to keep articles before pruning; 0 = keep forever |
+| `retention_days` | int | no | 30 | — | Days to keep articles before pruning; 0 = keep forever |
 | `background_fetch_enabled` | boolean | no | True | — | Whether the scheduler job fetches feeds automatically |
 | `fetch_interval_minutes` | int | no | 60 | — | Minutes between scheduled feed fetches |
 | `last_fetch_timestamp` | datetime | yes | — | — | When the background fetch job last ran, across all feeds |

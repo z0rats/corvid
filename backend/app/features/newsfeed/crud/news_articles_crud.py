@@ -1,8 +1,9 @@
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from typing import cast as type_cast
 
-from sqlalchemy import Select, String, and_, cast, delete, func, or_, select
+from sqlalchemy import CursorResult, Select, String, and_, cast, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -101,13 +102,26 @@ async def update_news_article(
     return db_news_article
 
 
-async def delete_old_news_articles(db: AsyncSession, retention_days: int) -> None:
-    """Delete news articles older than the retention period. Skip when 0 (unlimited)"""
+async def delete_old_news_articles(db: AsyncSession, retention_days: int) -> int:
+    """Delete news articles older than the retention period and return how many went.
+    Skipped when 0 (unlimited). Articles the user annotated (a note) or had analyzed are kept
+    regardless of age - that work isn't re-creatable from the feed."""
     if retention_days == 0:
-        return
+        return 0
     cutoff_date = datetime.now(UTC) - timedelta(days=retention_days)
-    await db.execute(delete(NewsArticle).where(NewsArticle.date < cutoff_date))
+    # DML returns a CursorResult (which has rowcount); execute() is typed as the generic Result.
+    result = type_cast(
+        CursorResult,
+        await db.execute(
+            delete(NewsArticle).where(
+                NewsArticle.date < cutoff_date,
+                or_(NewsArticle.note.is_(None), NewsArticle.note == ""),
+                or_(NewsArticle.analysis_result.is_(None), NewsArticle.analysis_result == ""),
+            )
+        ),
+    )
     await db.flush()
+    return result.rowcount or 0
 
 
 async def check_article_exists(db: AsyncSession, link: str) -> bool:

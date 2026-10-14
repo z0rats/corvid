@@ -20,7 +20,6 @@ def get_default_cti_profile_settings() -> dict[str, Any]:
         "auto_enrichment": False,
         "notification_preferences": get_default_notification_preferences(),
         "analysis_settings": get_default_analysis_settings(),
-        "retention_settings": get_default_retention_settings(),
     }
 
 
@@ -66,18 +65,6 @@ def get_default_analysis_settings() -> dict[str, Any]:
         "confidence_threshold": 0.7,
         "temporal_analysis": {"enabled": True, "time_window_hours": 24},
         "geolocation_analysis": {"enabled": True, "suspicious_countries": []},
-    }
-
-
-def get_default_retention_settings() -> dict[str, Any]:
-    """
-    Get default data retention settings
-    """
-    return {
-        "raw_data_retention_days": 90,
-        "processed_data_retention_days": 365,
-        "archive_old_data": True,
-        "cleanup_frequency": "weekly",
     }
 
 

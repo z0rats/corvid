@@ -103,3 +103,51 @@ class TestKeywordMatchAlert:
         )
 
         assert _run(_alert_titles(factory)) == ["Newsfeed keyword match"]
+
+
+class TestRetentionCutoffOnFetch:
+    """Entries older than the retention cutoff are skipped, so an article pruned for age
+    isn't fetched again while its feed still lists it."""
+
+    def test_entries_before_the_cutoff_are_not_processed(self, monkeypatch):
+        import time
+        from datetime import UTC, datetime, timedelta
+        from types import SimpleNamespace
+
+        now = datetime.now(UTC)
+
+        def post(link, days_ago):
+            published = (now - timedelta(days=days_ago)).timetuple()
+            return {"link": link, "published_parsed": time.struct_time(published)}
+
+        class Post(dict):
+            def __getattr__(self, name):
+                return self[name]
+
+        entries = [Post(post("https://x.test/old", 40)), Post(post("https://x.test/new", 1))]
+        processed = []
+
+        async def fake_parse_feed(url):
+            return SimpleNamespace(entries=entries)
+
+        async def fake_process_entry(entry, post, keyword_matching_enabled, keywords):
+            processed.append(post["link"])
+
+        async def fake_record_status(*args, **kwargs):
+            return None
+
+        monkeypatch.setattr(feed_processing_service, "parse_feed", fake_parse_feed)
+        monkeypatch.setattr(feed_processing_service, "process_feed_entry", fake_process_entry)
+        monkeypatch.setattr(feed_processing_service, "record_feed_status", fake_record_status)
+
+        feeds = [{"name": "f", "url": "https://x.test/rss", "icon": "default.png"}]
+        _run(
+            feed_processing_service.process_feed_chunk(
+                feeds, False, [], cutoff=now - timedelta(days=30)
+            )
+        )
+        assert processed == ["https://x.test/new"]
+
+        processed.clear()
+        _run(feed_processing_service.process_feed_chunk(feeds, False, []))
+        assert processed == ["https://x.test/old", "https://x.test/new"]

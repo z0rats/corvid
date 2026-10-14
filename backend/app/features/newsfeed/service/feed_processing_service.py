@@ -2,7 +2,7 @@ import asyncio
 import logging
 import re
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import urlparse
 
@@ -11,7 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.alerts.service.alerts_service import raise_alert
 from app.core.database import managed_session
 from app.core.settings.keywords.crud.keywords_settings_crud import get_keywords
-from app.features.newsfeed.crud.news_articles_crud import check_article_exists, create_news_article
+from app.features.newsfeed.crud.news_articles_crud import (
+    check_article_exists,
+    create_news_article,
+    delete_old_news_articles,
+)
 from app.features.newsfeed.crud.newsfeed_settings_crud import record_feed_fetch_result
 from app.features.newsfeed.schemas.newsfeed_schemas import NewsArticleSchema
 from app.features.newsfeed.utils.fetching import (
@@ -204,9 +208,14 @@ async def record_feed_status(feed_name: str, success: bool, error: str | None = 
 
 
 async def process_feed_chunk(
-    feeds: list[dict[str, Any]], keyword_matching_enabled: bool, keywords: list[str]
+    feeds: list[dict[str, Any]],
+    keyword_matching_enabled: bool,
+    keywords: list[str],
+    cutoff: datetime | None = None,
 ) -> None:
-    """Process a chunk of feeds concurrently"""
+    """Process a chunk of feeds concurrently. Entries published before `cutoff` (the
+    retention boundary) are skipped, so an article pruned for age isn't re-fetched while
+    it's still listed in its feed."""
     tasks = []
 
     for entry in feeds:
@@ -224,6 +233,7 @@ async def process_feed_chunk(
                 [
                     process_feed_entry(entry, post, keyword_matching_enabled, keywords)
                     for post in feed.entries
+                    if cutoff is None or parse_published_date(post) >= cutoff
                 ]
             )
         except Exception as e:
@@ -253,6 +263,18 @@ async def fetch_and_store_news(db: AsyncSession) -> None:
         keyword_matching_enabled = config.keyword_matching_enabled
         keywords = [k.keyword for k in await get_keywords(db)] if keyword_matching_enabled else []
 
+        # Prune on every fetch rather than in a separate scheduled job: articles only
+        # accumulate when fetching, and this needs no restart-surviving timer of its own.
+        cutoff = None
+        if config.retention_days:
+            cutoff = datetime.now(UTC) - timedelta(days=config.retention_days)
+            deleted = await delete_old_news_articles(db, config.retention_days)
+            await db.commit()
+            if deleted:
+                logger.info(
+                    "Pruned %d article(s) older than %d days", deleted, config.retention_days
+                )
+
         feeds = [
             {"name": feed.name, "url": str(feed.url), "icon": feed.icon}
             for feed in await get_all_newsfeed_settings(db)
@@ -261,7 +283,7 @@ async def fetch_and_store_news(db: AsyncSession) -> None:
 
         for i in range(0, len(feeds), CHUNK_SIZE):
             chunk = feeds[i : i + CHUNK_SIZE]
-            await process_feed_chunk(chunk, keyword_matching_enabled, keywords)
+            await process_feed_chunk(chunk, keyword_matching_enabled, keywords, cutoff)
 
         await update_last_fetch_timestamp(db)
         logger.info("Completed fetch_and_store_news")

@@ -128,7 +128,7 @@ class NewsfeedConfig(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, comment="Singleton row id, always 1")
     retention_days: Mapped[int] = mapped_column(
-        default=0, comment="Days to keep articles before pruning; 0 = keep forever"
+        default=30, comment="Days to keep articles before pruning; 0 = keep forever"
     )
     background_fetch_enabled: Mapped[bool] = mapped_column(
         default=True, comment="Whether the scheduler job fetches feeds automatically"

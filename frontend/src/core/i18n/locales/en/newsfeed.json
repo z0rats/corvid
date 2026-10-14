@@ -120,7 +120,7 @@
       "title": "General Newsfeed Settings",
       "description": "Configure how your newsfeed behaves and manages content",
       "contentRetention": "Content Retention",
-      "contentRetentionDescription": "Define how long articles should be kept in your feed before being automatically removed",
+      "contentRetentionDescription": "Define how long articles should be kept in your feed before being automatically removed. Articles with a note or an AI analysis are always kept.",
       "retentionPeriod": "Retention Period",
       "backgroundFetch": "Background Fetch",
       "backgroundFetchDescription": "Enable automatic fetching of new content at regular intervals",

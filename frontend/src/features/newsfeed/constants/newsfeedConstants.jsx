@@ -79,7 +79,7 @@ export const TIME_RANGE_OPTIONS = [
 ];
 
 export const DEFAULT_CONFIG = {
-  retention_days: 0,
+  retention_days: 30,
   background_fetch_enabled: false,
   fetch_interval_minutes: 5,
 };

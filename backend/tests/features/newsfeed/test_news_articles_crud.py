@@ -204,6 +204,24 @@ class TestDeleteOldNewsArticles:
 
         assert len(_run(_scenario())) == 1
 
+    def test_keeps_old_articles_with_a_note_or_an_analysis(self, session_factory):
+        async def _scenario():
+            async with session_factory() as db:
+                await _seed(db, link="https://news.example/plain", days_ago=40)
+                await _seed(db, link="https://news.example/blank-note", days_ago=40, note="")
+                await _seed(db, link="https://news.example/noted", days_ago=40, note="follow up")
+                await _seed(
+                    db, link="https://news.example/analyzed", days_ago=40, analysis_result="{}"
+                )
+                await db.commit()
+                deleted = await delete_old_news_articles(db, retention_days=30)
+                await db.commit()
+                return deleted, sorted(a.link for a in await get_all_news_articles(db))
+
+        deleted, remaining = _run(_scenario())
+        assert deleted == 2
+        assert remaining == ["https://news.example/analyzed", "https://news.example/noted"]
+
 
 class TestCheckArticleExists:
     def test_true_for_existing_link(self, session_factory):
