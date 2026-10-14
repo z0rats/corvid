@@ -12,24 +12,32 @@ services:
   backend:
     networks:
       - corvid-network
-    image: ghcr.io/z0rats/corvid-backend:latest
+    image: ghcr.io/z0rats/corvid-backend:${CORVID_VERSION:-latest}
     restart: unless-stopped
     env_file:
       - path: .env
         required: false
     volumes:
       - ./data:/backend/data
+    # Hard memory cap for the backend container (e.g. 2g) - 0 means no limit. If heavy scans
+    # exceed it, Docker kills and restarts only this container instead of the host running out.
+    mem_limit: ${BACKEND_MEM_LIMIT:-0}
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/healthcheck', timeout=3)"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/healthcheck', timeout=3)"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      # Probed every start_interval (not interval) during start_period, so `up --wait` and the
+      # frontend's depends_on see "healthy" seconds after boot instead of after the first 30s
+      # interval. Generous start_period since first boot also runs migrations; it only bounds
+      # how long failures are ignored, not how long a healthy start takes.
+      start_period: 60s
+      start_interval: 1s
 
   frontend:
     networks:
         - corvid-network
-    image: ghcr.io/z0rats/corvid-frontend:latest
+    image: ghcr.io/z0rats/corvid-frontend:${CORVID_VERSION:-latest}
     restart: unless-stopped
     depends_on:
       backend:
@@ -37,11 +45,12 @@ services:
     ports:
       - "${FRONTEND_PORT:-4000}:80"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 10s
+      start_interval: 1s
 
 networks:
   corvid-network:

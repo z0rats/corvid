@@ -20,17 +20,21 @@ history is a single squashed revision that creates the schema from scratch
 (see `migrations/versions/`), so there's no separate stamp-and-create_all path
 for a fresh install anymore.
 
-Right before migrating, an existing SQLite database is copied into
-`data/backups/<timestamp>/`. SQLite has no transactional DDL and
+Right before migrating, an existing SQLite database that has migrations pending is
+copied into `data/backups/<timestamp>/`. SQLite has no transactional DDL and
 `migrations/env.py`'s `do_run_migrations` doesn't wrap a multi-step revision in
 one batch, so a migration that fails partway through can otherwise leave the
-schema stuck with no way back except a manually-restored copy. Only the last
-few backups are kept.
+schema stuck with no way back except a manually-restored copy - and rolling back
+to an older image after a successful migration needs that copy too (the older
+code can't start against a newer schema). Only the last few backups are kept, so
+a plain restart (nothing to migrate) takes none: otherwise a handful of restarts
+after an upgrade would rotate the pre-upgrade copy away.
 """
 
 import os
 import pwd
 import shutil
+import sqlite3
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -39,6 +43,7 @@ APP_USER = "appuser"
 DATA_DIR = "/backend/data"
 BACKUP_DIR = os.path.join(DATA_DIR, "backups")
 BACKUPS_TO_KEEP = 5
+MIGRATIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "migrations")
 
 
 def _sqlite_db_path() -> str | None:
@@ -63,10 +68,32 @@ def _prune_old_backups() -> None:
         shutil.rmtree(os.path.join(BACKUP_DIR, stale))
 
 
+def _migrations_pending(db_path: str) -> bool:
+    """Whether `alembic upgrade head` has anything to apply to this database. Errs on the
+    side of True (so a backup is taken) whenever it can't tell for sure."""
+    try:
+        from alembic.script import ScriptDirectory
+
+        heads = set(ScriptDirectory(MIGRATIONS_DIR).get_heads())
+        # Read-only: a read-write connection checkpoints and deletes -wal/-shm on close,
+        # which would alter the very files about to be backed up.
+        con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            current = {row[0] for row in con.execute("SELECT version_num FROM alembic_version")}
+        finally:
+            con.close()
+    except Exception:
+        return True
+    return current != heads
+
+
 def _backup_database() -> None:
     db_path = _sqlite_db_path()
     if db_path is None or not os.path.exists(db_path):
         return  # non-SQLite backend, or first run with no DB file yet
+    if not _migrations_pending(db_path):
+        print("Database schema is up to date; no pre-migration backup needed.", flush=True)
+        return
 
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S.%fZ")
     dest_dir = os.path.join(BACKUP_DIR, timestamp)

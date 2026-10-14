@@ -14,6 +14,9 @@ die() { printf 'error: %s\n' "$1" >&2; exit 1; }
 
 command -v docker >/dev/null 2>&1 || die "Docker is required. Install it first: https://docs.docker.com/engine/install/"
 docker compose version >/dev/null 2>&1 || die "Docker Compose v2 plugin is required (the 'docker compose' command)."
+# --wait (Compose 2.1.1+) blocks until every service reports healthy and fails if one doesn't.
+docker compose up --help 2>/dev/null | grep -q -- '--wait' \
+  || die "Docker Compose is too old (no 'up --wait'). Update the Compose plugin and re-run."
 
 mkdir -p "$INSTALL_DIR/data"
 cd "$INSTALL_DIR"
@@ -44,25 +47,21 @@ chmod +x update.sh
 log "Pulling images"
 docker compose pull
 
-log "Starting Corvid"
-docker compose up -d
-
-log "Waiting for backend to become healthy"
-for _ in $(seq 1 30); do
-  status="$(docker inspect --format '{{.State.Health.Status}}' backend 2>/dev/null || echo starting)"
-  [ "$status" = "healthy" ] && break
-  sleep 2
-done
+log "Starting Corvid (waiting for it to become healthy)"
+docker compose up -d --wait \
+  || die "Corvid failed to start. Check 'docker compose logs backend' in $INSTALL_DIR."
 
 echo
-log "Corvid is starting up in $INSTALL_DIR"
+log "Corvid is running in $INSTALL_DIR"
 log "Open http://localhost:4000 in your browser"
 
-TOKEN_FILE="$INSTALL_DIR/data/.access_token"
-if [ -r "$TOKEN_FILE" ]; then
-  log "Access token: $(cat "$TOKEN_FILE")"
+# Read from inside the container: on the host, data/.access_token is owned by the container's
+# UID 1000 with mode 0600, so a host user with a different UID can't read it.
+if token="$(docker compose exec -T backend cat data/.access_token 2>/dev/null)" && [ -n "$token" ]; then
+  log "Access token: $token"
 else
-  log "Access token: not generated (custom API_ACCESS_TOKEN in .env, or backend still starting - check 'docker compose logs backend' or cat $TOKEN_FILE once it's up)"
+  log "Access token: not generated (custom API_ACCESS_TOKEN in .env) - check 'docker compose logs backend' if unsure"
 fi
 
+log "Opening it from other devices? Put HTTPS in front first: https://z0rats.github.io/corvid/getting-started/remote-access/"
 log "To update later: cd $INSTALL_DIR && ./update.sh"

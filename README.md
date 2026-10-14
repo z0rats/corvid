@@ -196,7 +196,8 @@ curl -fsSL https://raw.githubusercontent.com/z0rats/corvid/main/install.sh | bas
 
 Once it's running, open http://localhost:4000. There's no auto-update — new versions aren't
 pulled without your say-so. To update later, run `./update.sh` from the install directory (it
-pulls the latest images and recreates the containers).
+pulls the latest images and recreates the containers); `./update.sh <version>` pins or rolls back
+to a specific release — see [Updating and rolling back](https://z0rats.github.io/corvid/getting-started/installation/#updating-and-rolling-back).
 
 **Option B — build from source.** Gives you a local build instead of pulling from a registry, and
 lets you review the Dockerfiles before anything runs:
@@ -225,6 +226,10 @@ the browser.
 
 To set your own fixed token instead of the auto-generated one, set `API_ACCESS_TOKEN` in `.env`
 before starting the container.
+
+Opening Corvid from another device (`http://<server-ip>:4000`) works out of the box, but over
+plain HTTP — see [Access from another device](https://z0rats.github.io/corvid/getting-started/remote-access/)
+for putting HTTPS in front of it.
 
 If the token is ever exposed, regenerate it from Settings → About → Access Token → Regenerate
 (unavailable if `API_ACCESS_TOKEN` is set) — this immediately signs out every other browser

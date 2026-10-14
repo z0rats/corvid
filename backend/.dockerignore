@@ -14,3 +14,13 @@ pip-log.txt
 venv
 env
 data
+# Dev/test-only files - not needed at runtime, kept out of the image
+tests
+fuzz
+coverage.json
+coverage.xml
+.coverage
+requirements-dev.in
+requirements-dev.txt
+mypy-baseline.txt
+uv.lock

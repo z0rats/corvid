@@ -1,17 +1,19 @@
 import asyncio
+import contextlib
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config.body_limit_config import RequestBodyLimitMiddleware
+from app.core.config.docs_pages import add_docs_routes
 from app.core.config.fastapi_config import get_cors_config, get_fastapi_config
 from app.core.config.logging_config import setup_logging
 from app.core.config.rate_limit_config import limiter
@@ -23,11 +25,8 @@ from app.core.database import Base, dispose_database_engine, engine, managed_ses
 from app.core.dependencies import get_disk_space_health
 from app.core.exceptions import register_exception_handlers
 from app.core.scheduler import stop_scheduler
-from app.core.security.access_control import get_access_token, verify_access_token
+from app.core.security.access_control import get_access_token
 from app.core.telegram_bot.service.polling_service import start_bot_polling, stop_bot_polling
-from app.features.amass.service.amass_engine_service import (
-    start_engine_in_background,
-)
 from app.features.amass.service.amass_engine_service import (
     stop_engine as stop_amass_engine,
 )
@@ -108,6 +107,32 @@ async def _populate_blacklist_if_stale_in_background() -> None:
         logger.error("Background blacklist refresh failed: %s", e)
 
 
+# Run one after another, not as parallel tasks: each one writes to SQLite (the dump refreshes
+# replace whole tables), and SQLite has a single writer, so in parallel they'd queue on each
+# other's write lock anyway and risk `database is locked` on a slow cold start.
+_STARTUP_CATCHUPS: tuple[tuple[str, Callable[[], Awaitable[None]]], ...] = (
+    ("feed favicon fetch", _fetch_favicons_in_background),
+    ("address blacklist catch-up", _populate_blacklist_if_stale_in_background),
+    ("ru_business_check dump catch-up", refresh_dumps_if_stale),
+    ("sanctions dump catch-up", refresh_sanctions_search_dumps_if_stale),
+)
+
+# Held so the task isn't garbage-collected mid-run (asyncio keeps only weak references to
+# tasks) and so shutdown can cancel it.
+_startup_catchup_task: asyncio.Task | None = None
+
+
+async def _run_startup_catchups(
+    steps: tuple[tuple[str, Callable[[], Awaitable[None]]], ...] = _STARTUP_CATCHUPS,
+) -> None:
+    """Run the post-startup background catch-ups sequentially; one failing doesn't stop the rest."""
+    for name, step in steps:
+        try:
+            await step()
+        except Exception:
+            logger.error("Startup %s failed", name, exc_info=True)
+
+
 def _check_disk_space() -> None:
     """Warn (don't block startup) if the data_dir mount is running low on free space"""
     health = get_disk_space_health(settings)
@@ -140,6 +165,7 @@ def _register_keyless_providers() -> None:
 
 async def handle_application_startup() -> None:
     """Handle application startup tasks"""
+    global _startup_catchup_task
     logger.info("Application starting up...")
     try:
         get_access_token()  # eager: prints/persists the token now, not on first request
@@ -148,13 +174,9 @@ async def handle_application_startup() -> None:
         await _create_database_tables()
         await reconcile_stale_scans()
         await _run_application_defaults()
-        asyncio.create_task(_fetch_favicons_in_background())
-        asyncio.create_task(_populate_blacklist_if_stale_in_background())
-        asyncio.create_task(refresh_dumps_if_stale())
-        asyncio.create_task(refresh_sanctions_search_dumps_if_stale())
+        _startup_catchup_task = asyncio.create_task(_run_startup_catchups())
         await initialize_all_schedulers()
         start_bot_polling()
-        start_engine_in_background()
         logger.info("Application startup completed successfully")
     except Exception as e:
         logger.error("Startup failed: %s", e)
@@ -165,6 +187,10 @@ async def handle_application_shutdown() -> None:
     """Handle application shutdown tasks"""
     logger.info("Application shutting down...")
     try:
+        if _startup_catchup_task is not None and not _startup_catchup_task.done():
+            _startup_catchup_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await _startup_catchup_task
         await stop_bot_polling()
         await stop_amass_engine()
         stop_scheduler()
@@ -202,38 +228,9 @@ def create_fastapi_application() -> FastAPI:
 
     register_exception_handlers(app)
     register_all_routers(app)
-    add_protected_docs_routes(app)
+    add_docs_routes(app)
 
     return app
-
-
-def add_protected_docs_routes(app: FastAPI) -> None:
-    """Re-add /docs, /redoc and /openapi.json behind the access-token dependency.
-
-    fastapi_config.py disables FastAPI's own auto-registered docs routes
-    unconditionally so they can't be reached without a token; these replacements
-    stay off entirely in production, matching the previous behaviour.
-    """
-    if settings.environment == "production":
-        return
-
-    protected = [Depends(verify_access_token)]
-
-    @app.get("/openapi.json", include_in_schema=False, dependencies=protected)
-    async def get_openapi_json():
-        return app.openapi()
-
-    @app.get("/docs", include_in_schema=False, dependencies=protected)
-    async def get_docs():
-        return get_swagger_ui_html(
-            openapi_url="/openapi.json",
-            title=f"{app.title} - Swagger UI",
-            swagger_ui_parameters=app.swagger_ui_parameters,
-        )
-
-    @app.get("/redoc", include_in_schema=False, dependencies=protected)
-    async def get_redoc():
-        return get_redoc_html(openapi_url="/openapi.json", title=f"{app.title} - ReDoc")
 
 
 def initialize_application() -> FastAPI:

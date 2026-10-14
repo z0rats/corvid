@@ -302,3 +302,33 @@ def test_maigret_parent_migration_keeps_existing_runs_and_results(tmp_path):
 
     _alembic(["downgrade", "b3d90f1a7c55"], env)
     assert read() == (1, set())
+
+
+@pytest.mark.parametrize(("before", "after"), [(0, 30), (7, 7), (365, 365)])
+def test_newsfeed_retention_migration_moves_only_unlimited_to_30_days(tmp_path, before, after):
+    """`e4b7a2c91d06` makes 30 days the article-retention default: the old default 0
+    ("unlimited", which never actually pruned anything) moves to 30, while a deliberately
+    chosen finite period is left alone."""
+    env = _env(tmp_path)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "logs").mkdir()
+
+    _alembic(["upgrade", "c5e18a3d9f20"], env)
+    con = sqlite3.connect(tmp_path / "test.db")
+    try:
+        con.execute(
+            "INSERT INTO newsfeed_config(id, retention_days, background_fetch_enabled, "
+            "fetch_interval_minutes, keyword_matching_enabled) VALUES (1, ?, 1, 60, 0)",
+            (before,),
+        )
+        con.commit()
+    finally:
+        con.close()
+
+    _alembic(["upgrade", "head"], env)
+
+    con = sqlite3.connect(tmp_path / "test.db")
+    try:
+        assert con.execute("SELECT retention_days FROM newsfeed_config").fetchone()[0] == after
+    finally:
+        con.close()

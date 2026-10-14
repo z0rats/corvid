@@ -61,6 +61,8 @@ contributors: the SQLite database and rotated logs stay small (tens of MB); Maig
 database and its own image-hash cache add tens of MB; `email_search`'s headless checkers (if
 enabled) lazily download a Chromium binary the first time they run (~150-300 MB, plus its own
 runtime footprint); exported reports accumulate if you generate a lot of them and never clean up.
+Newsfeed articles are the largest table but are pruned by their retention period (30 days by
+default, **Newsfeed → Settings → General**); scan history is kept until you delete it.
 
 The backend logs a warning at startup — and `GET /api/healthcheck/detailed`'s `disk` field reports
 `"status": "low"` — once free space on the `data/` mount drops below 1 GB (configurable via
@@ -71,8 +73,9 @@ an early signal, not a hard limit.
 
 This tool talks to third-party services (VirusTotal, Shodan, target mail servers via
 `email_search`'s SMTP checks, etc.) using your own infrastructure's IP, and stores investigation
-history in a local database. Some practices worth following, especially for sensitive
-engagements:
+history in a local database. To hide that IP, route the backend through a VPN container — see
+[Route outbound traffic through a VPN](/corvid/getting-started/outbound-vpn/). Some practices worth
+following, especially for sensitive engagements:
 
 - **Isolate the instance.** Run it on a dedicated VM/VPS or an isolated host, not your
   daily-driver machine — a target under investigation can potentially see inbound lookups

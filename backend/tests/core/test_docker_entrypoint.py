@@ -110,3 +110,67 @@ def test_backup_then_prune_end_to_end(tmp_path, monkeypatch, backup_dir):
 
 if "docker_entrypoint" in sys.modules:
     del sys.modules["docker_entrypoint"]
+
+
+def _db_at_revision(path, revision):
+    import sqlite3
+
+    con = sqlite3.connect(path)
+    con.execute("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)")
+    if revision is not None:
+        con.execute("INSERT INTO alembic_version VALUES (?)", (revision,))
+    con.commit()
+    con.close()
+
+
+def _head_revision():
+    from alembic.script import ScriptDirectory
+
+    (head,) = ScriptDirectory(entrypoint.MIGRATIONS_DIR).get_heads()
+    return head
+
+
+def test_backup_database_skipped_when_schema_is_already_at_head(tmp_path, monkeypatch, backup_dir):
+    # A plain restart must not take a backup, or a few restarts after an upgrade would
+    # rotate the pre-upgrade copy (the one a rollback needs) out of BACKUPS_TO_KEEP.
+    db_path = tmp_path / "corvid.db"
+    _db_at_revision(db_path, _head_revision())
+    monkeypatch.setenv("DB_URL", f"sqlite:///{db_path}")
+
+    entrypoint._backup_database()
+
+    assert not backup_dir.exists()
+
+
+@pytest.mark.parametrize("revision", ["c5e18a3d9f20", None])
+def test_backup_database_taken_when_migrations_are_pending(
+    tmp_path, monkeypatch, backup_dir, revision
+):
+    db_path = tmp_path / "corvid.db"
+    _db_at_revision(db_path, revision)  # an older revision, or none recorded yet
+    monkeypatch.setenv("DB_URL", f"sqlite:///{db_path}")
+
+    entrypoint._backup_database()
+
+    assert len(list(backup_dir.iterdir())) == 1
+
+
+def test_migrations_pending_check_leaves_wal_files_untouched(tmp_path):
+    import sqlite3
+
+    db_path = tmp_path / "corvid.db"
+    writer = sqlite3.connect(db_path)
+    try:
+        writer.execute("PRAGMA journal_mode=WAL")
+        writer.execute("PRAGMA wal_autocheckpoint=0")
+        writer.execute("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)")
+        writer.execute("INSERT INTO alembic_version VALUES (?)", (_head_revision(),))
+        writer.commit()
+        wal = tmp_path / "corvid.db-wal"
+        wal_before = wal.read_bytes()
+        assert wal_before  # un-checkpointed data lives only in the WAL
+
+        assert entrypoint._migrations_pending(str(db_path)) is False
+        assert wal.read_bytes() == wal_before
+    finally:
+        writer.close()

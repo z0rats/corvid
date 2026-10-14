@@ -27,7 +27,8 @@ curl -fsSL https://raw.githubusercontent.com/z0rats/corvid/main/install.sh | bas
 ```
 
 Once it's running, open http://localhost:4000. There's no auto-update — new versions aren't
-pulled without your say-so. To update later, run `./update.sh` from the install directory.
+pulled without your say-so. To update later, run `./update.sh` from the install directory (see
+[Updating and rolling back](#updating-and-rolling-back)).
 
 ## Option B — build from source
 
@@ -55,6 +56,41 @@ you'll be asked to paste that token once — it's then remembered in the browser
 
 To set your own fixed token instead of the auto-generated one, set `API_ACCESS_TOKEN` in `.env`
 before starting the container.
+
+## Updating and rolling back
+
+For a one-line-installer deployment, from the install directory:
+
+- `./update.sh` — update to the latest release.
+- `./update.sh 2.3.0` — switch to a specific release (to pin one, or roll back). The version is
+  recorded as `CORVID_VERSION` in `.env`, so later `docker compose` commands keep using it.
+
+Installed before version pinning existed? Your `docker-compose.yaml` and `update.sh` predate it —
+fetch the current ones once (this overwrites `docker-compose.yaml`; reapply any local edits):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/z0rats/corvid/main/docker-compose.prod.yaml -o docker-compose.yaml
+curl -fsSL https://raw.githubusercontent.com/z0rats/corvid/main/update.sh -o update.sh && chmod +x update.sh
+```
+
+**Automatic database backups.** Before applying database migrations, the backend copies
+`data/corvid.db` to `data/backups/<UTC timestamp>/` (the last 5 are kept) and logs
+`Backed up database to …`. A start with nothing to migrate takes no backup, so the copy made right
+before an upgrade survives later restarts.
+
+**Rolling back.** An older release can't start against a database a newer release has already
+migrated — it aborts at its own migration step. So if the upgrade took a backup, restore it first:
+
+```bash
+docker compose down
+rm -f data/corvid.db-wal data/corvid.db-shm
+cp data/backups/<timestamp>/corvid.db* data/
+./update.sh <previous version>
+```
+
+Anything recorded after the upgrade is lost. If the upgrade took no backup (nothing to migrate),
+`./update.sh <previous version>` alone is enough. For a source build, the same applies with
+`git checkout v<previous version>` and `make rebuild` in place of `update.sh`.
 
 ## Production considerations
 
