@@ -8,4 +8,5 @@ STEAM_RECON_SCANS = ScanFeature(
     model=SteamReconSearch,
     columns=ScanColumns(error_column="error_message", completed_at_column="completed_at"),
     order_by=SteamReconSearch.started_at,
+    target_column="target",
 )

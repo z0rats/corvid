@@ -9,6 +9,7 @@ EMAIL_SEARCH_SCANS = ScanFeature(
     model=MailSearch,
     columns=ScanColumns(error_column="error_message", completed_at_column="completed_at"),
     order_by=MailSearch.started_at,
+    target_column="username",
     relation=MailSearch.provider_results,
 )
 

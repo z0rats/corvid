@@ -23,9 +23,8 @@ Two ways to host the engine process were considered:
    parts for a self-hosted single-user tool, and a new inter-container network dependency
    (`amass_service.py` would need `AMASS_ENGINE_URL` pointed at the sidecar's hostname rather
    than `127.0.0.1`).
-2. **A background subprocess inside the existing backend container**, started once at app
-   startup (`main.py`'s `handle_application_startup`, alongside `start_bot_polling()`) and
-   left running for the process's life.
+2. **A background subprocess inside the existing backend container**, started on the first
+   amass scan and left running for the process's life.
 
 Chosen: (2). It fits this app's existing precedent for a persistent background process
 (`telegram_bot/service/polling_service.py`, see `docs/adr/0012-telegram-bot-polling.md`) and
@@ -38,8 +37,10 @@ than having independent ones - both accepted as reasonable for a single-user, "n
 production-hardened" app (per the project's own framing) where a sidecar's operational
 cleanliness isn't worth the added deployment complexity.
 
-`amass_engine_service.py`'s `ensure_engine_ready()` is called defensively before every scan
-(not just relied on the startup task) - it's idempotent (a lock guards against a concurrent
+The engine starts lazily, from `amass_engine_service.py`'s `ensure_engine_ready()` before each
+scan, not at app boot: most instances rarely or never run Amass, so a boot-time start costs every
+deployment an idle process for a ≤30 s wait saved on the first scan only. `ensure_engine_ready()`
+is idempotent (a lock guards against a concurrent
 caller spawning a second engine process) and self-healing if the engine process ever dies
 between scans, without needing a supervisor process of its own.
 

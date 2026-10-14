@@ -13,6 +13,7 @@ RU_BUSINESS_CHECK_SCANS = ScanFeature(
     model=RuBusinessCheckSearch,
     columns=ScanColumns(error_column="error", completed_at_column="completed_at"),
     order_by=RuBusinessCheckSearch.searched_at,
+    target_column="query",
 )
 
 

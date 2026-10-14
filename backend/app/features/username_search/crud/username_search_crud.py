@@ -15,6 +15,7 @@ USERNAME_SEARCH_SCANS = ScanFeature(
     model=MaigretSearch,
     columns=ScanColumns(error_column="error_message", completed_at_column="completed_at"),
     order_by=MaigretSearch.started_at,
+    target_column="username",
     relation=MaigretSearch.site_results,
 )
 

@@ -10,10 +10,11 @@ import ScanForm from './ScanForm';
 import ResultsView from './ResultsView';
 import { useAmass } from '../hooks/useAmass';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
+import ScanQueuedNotice from '../../../core/components/ui/ScanQueuedNotice';
 
 export default function NewScan() {
   const { t } = useTranslation('amass');
-  const { result, loading, error, scan, cancelScan } = useAmass();
+  const { result, loading, queued, error, scan, cancelScan } = useAmass();
 
   // Hand-off from a command-palette pivot (e.g. a domain sent to Amass) - see crossFeatureNav.ts.
   const prefillValue = usePrefillFromQuery(useCallback((value) => scan({
@@ -32,6 +33,7 @@ export default function NewScan() {
 
       {loading && (
         <Box sx={{ mb: 2 }}>
+          {queued && <ScanQueuedNotice />}
           <LinearProgress sx={{ mb: 0.5 }} />
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button size="small" color="error" startIcon={<CancelIcon />} onClick={cancelScan}>

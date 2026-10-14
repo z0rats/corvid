@@ -37,6 +37,20 @@ in `tests/core/scans/test_scan_feature_routes.py`.
 Wire shape is the nested `{"type": ..., "data": {...}}`, adapted onto the raw `asyncio.Queue`
 `sse_response` reads from via `core/scans/sse.py`'s `queue_sink`.
 
+### Heavy-scan queue
+
+A call site passes `heavy=True` for resource-heavy runs: maigret's full sweep (not a few-site
+`site_check`), social-analyzer, user_scanner, amass, and git_recon's `url`/`nickname` clone modes
+(not API-only `search`). They share `SCAN_MAX_CONCURRENT_HEAVY` slots (an `asyncio.Semaphore`,
+per event loop); lighter runs never wait. Between steps 2 and 3, a heavy run with no free slot
+emits `queued`, waits, then emits `running` once it gets one. The row stays `running` meanwhile
+(no separate DB status), so a restart reconciles a queued run like any other.
+
+Consequence for a heavy feature: its real work - subprocesses included - must start inside
+`run_work`, never before `execute()`, or it would run while "queued". `ProcessCancellable` is
+therefore constructed empty and handed the process via `attach()`, and `GitCloneCancellable`
+takes its child-pid baseline via `snapshot_children()` at the top of `run_work`.
+
 ## SSE framing (every stream, not just scans)
 
 `core/scans/sse.py`'s `sse_stream(async_iterator)` is the one place the `data: <json>\n\n`
@@ -52,7 +66,9 @@ route requires) and `readSseEvents` (async generator of parsed frames) are used 
 `ScanRun.cancel(model, search_id)` looks up a process-local `Cancellable`
 (`core/scans/cancellable.py`'s `TaskCancellable`/`ProcessCancellable`/`GitCloneCancellable`,
 registered per run under `(model, search_id)` - two tables' ids can collide, one table's never
-do) and awaits its `cancel()` — real cancellation, not just a signal.
+do) and awaits its `cancel()` — real cancellation, not just a signal. A heavy run still in the
+queue is dropped from it instead (its slot wait is cancelled; `run_work` never runs and the
+`Cancellable` isn't touched), and ends `cancelled` like any other.
 
 ## Restart reconciliation
 
@@ -76,5 +92,9 @@ mapping (reading `event.type`/`event.data.*`) and passes the request body - alre
 snake_case shape - to `startScan`. Tested once in `useResumableScan.test.js` against a faked
 network; feature hook tests cover only their `reduce`/`reconcile`. History pages share
 `core/components/HistoryTable`/`HistoryDetailHeader`/`ScanStatusChip` (status → chip colour).
+
+The hook also sets `state.queued` itself (true from a `queued` event until the next event), so a
+feature's `reduce` needn't know about the heavy-scan queue; a heavy feature's running view just
+renders `core/components/ui/ScanQueuedNotice` when it's set.
 
 A new scan-style feature should use these rather than reimplementing the lifecycle.

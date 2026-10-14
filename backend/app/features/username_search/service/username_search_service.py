@@ -249,4 +249,6 @@ async def run_scan(
         },
         started_fields={"username": username, "total_sites": len(site_dict)},
         cancellable=cancellable,
+        # A full top-sites sweep is heavy; a check of a few named sites isn't.
+        heavy=not site_names,
     )

@@ -9,4 +9,5 @@ AMASS_SCANS = ScanFeature(
     model=AmassSearch,
     columns=ScanColumns(error_column="error", completed_at_column=None),
     order_by=AmassSearch.searched_at,
+    target_column="domain",
 )

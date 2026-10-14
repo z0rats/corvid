@@ -101,11 +101,9 @@ async def run_scan_task(*, domain: str, brute_force: bool, queue: asyncio.Queue)
     output is a raw progress bar, not discrete events), so this only emits
     "started" and a single terminal event, same as social_analyzer/git_recon.
 
-    The `enum` subprocess (when the engine is available) is created here, before
-    `ScanRun.execute()` is called, so its `ProcessCancellable` can be registered
-    up front - `ScanRun` only accepts a `cancellable` alongside `run_work`, not
-    one constructed lazily inside it, since a cancel request needs it registered
-    before `run_work` starts awaiting.
+    The `enum` subprocess is started inside `run_work` (after this heavy scan gets a
+    slot), while its `ProcessCancellable` is registered up front and handed the process
+    via `attach()` - so a cancel request works whether the run is queued or running.
     """
     on_event = queue_sink(queue)
     create_fields = {"domain": domain, "brute_force": brute_force}
@@ -130,12 +128,13 @@ async def run_scan_task(*, domain: str, brute_force: bool, queue: asyncio.Queue)
     args = [BINARY_NAME, "enum", "-d", domain, "-timeout", str(ENUM_IDLE_TIMEOUT_MINUTES)]
     if brute_force:
         args.append("-brute")
-    process = await asyncio.create_subprocess_exec(
-        *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
-    )
-    cancellable = ProcessCancellable(process)
+    cancellable = ProcessCancellable()
 
     async def run_work(search_id: int) -> ScanOutcome:
+        process = await asyncio.create_subprocess_exec(
+            *args, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
+        )
+        cancellable.attach(process)
         try:
             await asyncio.wait_for(process.wait(), timeout=WALL_CLOCK_TIMEOUT_SECONDS)
         except TimeoutError:
@@ -163,4 +162,5 @@ async def run_scan_task(*, domain: str, brute_force: bool, queue: asyncio.Queue)
         started_fields=create_fields,
         cancellable=cancellable,
         expected_exceptions=(AmassError,),
+        heavy=True,
     )

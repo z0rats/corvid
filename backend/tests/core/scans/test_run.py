@@ -380,6 +380,163 @@ class TestTableNamespacing:
         _run(_scenario())
 
 
+class TestHeavyScanQueue:
+    """`heavy=True` runs share SCAN_MAX_CONCURRENT_HEAVY slots (capped at 1 here)."""
+
+    @pytest.fixture(autouse=True)
+    def one_heavy_slot(self, monkeypatch):
+        monkeypatch.setattr(run_module.settings.scans, "max_concurrent_heavy", 1)
+        monkeypatch.setattr(run_module, "_heavy_slots", None)
+
+    @staticmethod
+    def _start(run_work, events, *, heavy=True, cancellable=None, username="alice"):
+        return asyncio.create_task(
+            ScanRun.execute(
+                "username_search",
+                MaigretSearch,
+                run_work,
+                events.append,
+                columns=MAIGRET_COLUMNS,
+                create_fields={"username": username, "source": "maigret"},
+                cancellable=cancellable,
+                heavy=heavy,
+            )
+        )
+
+    @staticmethod
+    async def _until(predicate):
+        while not predicate():
+            await asyncio.sleep(0)
+
+    @staticmethod
+    def _types(events):
+        return [e.type for e in events if e is not None]
+
+    def test_second_heavy_run_queues_until_the_first_finishes(self, session_factory):
+        release_first = asyncio.Event()
+        second_started = False
+
+        async def first_work(search_id):
+            await release_first.wait()
+            return ScanOutcome()
+
+        async def second_work(search_id):
+            nonlocal second_started
+            second_started = True
+            return ScanOutcome()
+
+        first_events, second_events = [], []
+
+        async def _scenario():
+            first = self._start(first_work, first_events)
+            await self._until(lambda: first_events)
+            second = self._start(second_work, second_events, username="bob")
+            await self._until(lambda: "queued" in self._types(second_events))
+            await asyncio.sleep(0)
+            assert second_started is False
+
+            release_first.set()
+            await first
+            await second
+
+        _run(_scenario())
+
+        assert second_started is True
+        assert self._types(second_events) == ["started", "queued", "running", "completed"]
+        assert "queued" not in self._types(first_events)
+
+    def test_cancel_while_queued_skips_the_work_and_leaks_no_slot(self, session_factory):
+        release_first = asyncio.Event()
+        queued_work_ran = False
+        cancellable = FakeCancellable()
+
+        async def first_work(search_id):
+            await release_first.wait()
+            return ScanOutcome()
+
+        async def queued_work(search_id):
+            nonlocal queued_work_ran
+            queued_work_ran = True
+            return ScanOutcome()
+
+        first_events, queued_events, third_events = [], [], []
+
+        async def _scenario():
+            first = self._start(first_work, first_events)
+            await self._until(lambda: first_events)
+            queued = self._start(queued_work, queued_events, cancellable=cancellable)
+            await self._until(lambda: "queued" in self._types(queued_events))
+
+            search_id = queued_events[0].data["search_id"]
+            assert await ScanRun.cancel(MaigretSearch, search_id) is True
+            await queued
+
+            release_first.set()
+            await first
+            # The single slot must be free again: a later heavy run goes straight through.
+            await self._start(lambda _id: asyncio.sleep(0, ScanOutcome()), third_events)
+            return await _row(session_factory, MaigretSearch, search_id)
+
+        row = _run(_scenario())
+
+        assert queued_work_ran is False
+        assert cancellable.cancel_called is False  # dropped from the queue, nothing to stop
+        assert row.status == "cancelled"
+        assert self._types(queued_events) == ["started", "queued", "cancelled"]
+        assert self._types(third_events) == ["started", "completed"]
+        assert ScanRun._queued == {}
+
+    def test_task_cancelled_while_queued_does_not_leak_a_slot(self, session_factory):
+        release_first = asyncio.Event()
+
+        async def first_work(search_id):
+            await release_first.wait()
+            return ScanOutcome()
+
+        first_events, queued_events, third_events = [], [], []
+
+        async def _scenario():
+            first = self._start(first_work, first_events)
+            await self._until(lambda: first_events)
+            queued = self._start(lambda _id: asyncio.sleep(0, ScanOutcome()), queued_events)
+            await self._until(lambda: "queued" in self._types(queued_events))
+
+            queued.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await queued
+
+            release_first.set()
+            await first
+            await self._start(lambda _id: asyncio.sleep(0, ScanOutcome()), third_events)
+
+        _run(_scenario())
+
+        assert "cancelled" in self._types(queued_events)
+        assert self._types(third_events) == ["started", "completed"]
+
+    def test_light_runs_are_not_queued_behind_heavy_ones(self, session_factory):
+        release_heavy = asyncio.Event()
+
+        async def heavy_work(search_id):
+            await release_heavy.wait()
+            return ScanOutcome()
+
+        heavy_events, light_events = [], []
+
+        async def _scenario():
+            heavy = self._start(heavy_work, heavy_events)
+            await self._until(lambda: heavy_events)
+            await self._start(
+                lambda _id: asyncio.sleep(0, ScanOutcome()), light_events, heavy=False
+            )
+            release_heavy.set()
+            await heavy
+
+        _run(_scenario())
+
+        assert self._types(light_events) == ["started", "completed"]
+
+
 class TestScanEvent:
     def test_is_a_type_data_dataclass(self):
         event = ScanEvent("progress", {"checked": 1})

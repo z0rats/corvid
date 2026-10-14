@@ -7,15 +7,10 @@ whole job. The engine needs no flags to start and, with no database configured,
 falls back to a local SQLite store under its config directory (`~/.config/amass/`,
 i.e. `appuser`'s home - no Postgres/new docker-compose service needed).
 
-Started once at app startup (`main.py`'s `handle_application_startup`, same
-fire-and-forget `asyncio.create_task` shape as the favicon/blacklist background
-catch-ups) and left running for the life of the process, mirroring
-`telegram_bot/service/polling_service.py`'s start/stop pair - this is the second
-persistent background process in this codebase, the first that's a real OS
-subprocess rather than an asyncio loop. `ensure_engine_ready()` is also called
-defensively before every scan, so a request still works (after a short wait) even
-if startup's background task hasn't finished yet, or the engine process died
-between scans and needs restarting.
+Started lazily by `ensure_engine_ready()` before the first amass scan (so an
+instance that never uses Amass never pays for the engine) and left running for the
+life of the process; `main.py`'s shutdown calls `stop_engine()`. Called before every
+scan, so it also restarts an engine process that died between scans.
 """
 
 import asyncio
@@ -110,22 +105,6 @@ async def ensure_engine_ready() -> bool:
                 "amass engine did not become ready within %ss", ENGINE_READY_TIMEOUT_SECONDS
             )
         return ready
-
-
-def start_engine_in_background() -> None:
-    """Fire-and-forget engine startup for app boot - doesn't block the app from
-    serving other requests while the engine spins up. Failures are logged, not
-    raised (same posture as `_fetch_favicons_in_background`); a scan request
-    that comes in before this finishes falls back to `ensure_engine_ready()`'s
-    own on-demand start."""
-
-    async def _run() -> None:
-        try:
-            await ensure_engine_ready()
-        except Exception:
-            logger.error("Background amass engine startup failed", exc_info=True)
-
-    asyncio.create_task(_run())
 
 
 async def stop_engine() -> None:

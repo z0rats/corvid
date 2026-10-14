@@ -1,6 +1,7 @@
 import logging
 
 from app.core.database import managed_session
+from app.core.scans.feature import ScanFeature
 from app.features.amass.crud.amass_crud import AMASS_SCANS
 from app.features.email_search.crud.email_search_crud import EMAIL_SEARCH_SCANS
 from app.features.git_recon.crud.git_recon_crud import GIT_RECON_SCANS
@@ -27,6 +28,11 @@ _SCAN_FEATURES = [
     STEAM_RECON_SCANS,
     INSTAGRAM_SCANS,
 ]
+
+
+def all_scan_features() -> tuple[ScanFeature, ...]:
+    """Every registered `ScanFeature` - for cross-feature readers like the activity feed."""
+    return tuple(_SCAN_FEATURES)
 
 
 async def reconcile_stale_scans() -> None:

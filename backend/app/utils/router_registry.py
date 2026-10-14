@@ -23,6 +23,7 @@ from app.core.settings.username_search.routers import (
     social_analyzer_settings_routes,
     username_search_settings_routes,
 )
+from app.features.activity.routers import activity_routes
 from app.features.amass.routers import amass_routes
 from app.features.cvss_calculator.routers import cvss_routes
 from app.features.dork_runner.routers import dork_routes
@@ -137,6 +138,7 @@ def get_feature_routers() -> list[APIRouter]:
         steam_recon_routes.router,
         instagram_search_routes.router,
         instagram_scan_routes.router,
+        activity_routes.router,
     ]
 
 

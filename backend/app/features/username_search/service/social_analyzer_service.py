@@ -77,26 +77,27 @@ async def run_scan(
         )
         return
 
-    process = await asyncio.create_subprocess_exec(
-        binary,
-        "--username",
-        username,
-        "--top",
-        str(top),
-        "--timeout",
-        str(timeout),
-        "--output",
-        "json",
-        "--method",
-        "find",
-        "--filter",
-        "good",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    cancellable = ProcessCancellable(process)
+    cancellable = ProcessCancellable()
 
     async def run_work(search_id: int) -> ScanOutcome:
+        process = await asyncio.create_subprocess_exec(
+            binary,
+            "--username",
+            username,
+            "--top",
+            str(top),
+            "--timeout",
+            str(timeout),
+            "--output",
+            "json",
+            "--method",
+            "find",
+            "--filter",
+            "good",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        cancellable.attach(process)
         try:
             stdout, stderr = await asyncio.wait_for(
                 process.communicate(), timeout=PROCESS_WATCHDOG_SECONDS
@@ -139,4 +140,5 @@ async def run_scan(
         create_fields={"username": username, "source": "social_analyzer"},
         started_fields={"username": username, "total_sites": top},
         cancellable=cancellable,
+        heavy=True,
     )

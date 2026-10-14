@@ -174,4 +174,5 @@ async def run_scan(email: str, queue: asyncio.Queue) -> None:
         create_fields={"username": email, "source": "user_scanner"},
         started_fields={"username": email, "total_providers": len(modules)},
         cancellable=cancellable,
+        heavy=True,
     )

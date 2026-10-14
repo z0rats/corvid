@@ -9,7 +9,6 @@ import urllib.request
 from collections import defaultdict
 
 import gitcolombo
-import psutil
 
 from app.core.scans.cancellable import GitCloneCancellable
 from app.core.scans.run import ScanCancelled, ScanOutcome
@@ -360,16 +359,13 @@ async def run_scan_task(
     """
     on_event = queue_sink(queue)
 
-    # Snapshot of this process's children before the scan's own git subprocesses
-    # exist, so GitCloneCancellable only ever kills processes this scan itself
-    # spawned - see its own docstring.
-    try:
-        before_pids = {c.pid for c in psutil.Process().children(recursive=True)}
-    except psutil.Error:
-        before_pids = set()
-    cancellable = GitCloneCancellable(before_pids)
+    cancellable = GitCloneCancellable()
 
     async def run_work(search_id: int) -> ScanOutcome:
+        # Snapshot of this process's children before the scan's own git subprocesses
+        # exist, so GitCloneCancellable only ever kills processes this scan itself
+        # spawned - see its own docstring.
+        cancellable.snapshot_children()
         try:
             result = await run_scan(
                 mode=mode,
@@ -414,4 +410,6 @@ async def run_scan_task(
         started_fields={"mode": mode, "target": target},
         cancellable=cancellable,
         expected_exceptions=(GitReconError, TimeoutError),
+        # API-only `search` mode is light; `url`/`nickname` clone repositories.
+        heavy=mode != "search",
     )

@@ -8,7 +8,7 @@ const logger = createLogger('ResumableScan');
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface ScanEvent {
-  type: 'started' | 'progress' | 'completed' | 'cancelled' | 'failed' | string;
+  type: 'started' | 'queued' | 'running' | 'progress' | 'completed' | 'cancelled' | 'failed' | string;
   data: Record<string, unknown>;
 }
 
@@ -20,7 +20,14 @@ export interface PhaseScanState {
   loading?: boolean;
   searchId?: string | number | null;
   error?: string | null;
+  // Set by this hook (not a feature's `reduce`): true between a heavy scan's `queued` event and the
+  // next event, i.e. while it waits for a free backend slot (backend `ScanRun.execute`'s `heavy`).
+  queued?: boolean;
   [key: string]: unknown;
+}
+
+function withQueued<S extends PhaseScanState>(state: S, queued: boolean): S {
+  return Boolean(state.queued) === queued ? state : { ...state, queued };
 }
 
 /**
@@ -144,7 +151,7 @@ export function useResumableScan<S extends PhaseScanState>({
       if (event.type === 'started' && event.data?.search_id != null) {
         searchIdRef.current = event.data.search_id as string | number;
       }
-      stateRef.current = await reduce(stateRef.current, event);
+      stateRef.current = withQueued(await reduce(stateRef.current, event), event.type === 'queued');
       setState(stateRef.current);
     }
   }, [reduce, setState]);
@@ -169,7 +176,7 @@ export function useResumableScan<S extends PhaseScanState>({
       }
 
       if (TERMINAL_STATUSES.includes(record.status)) {
-        setState(await reconcile(seedState, record));
+        setState(withQueued(await reconcile(seedState, record), false));
         return;
       }
 
@@ -178,7 +185,7 @@ export function useResumableScan<S extends PhaseScanState>({
     }
     // Gave up waiting - the scan may still genuinely be in progress server-side,
     // but there's no live connection left to keep watching it from here.
-    setState(await reduce(seedState, { type: 'failed', data: { error: 'Lost connection to the server', search_id: searchId } }));
+    setState(withQueued(await reduce(seedState, { type: 'failed', data: { error: 'Lost connection to the server', search_id: searchId } }), false));
   }, [transport, reconcile, reduce, setState]);
 
   const startScan = useCallback(async (payload: unknown, seedState: S) => {

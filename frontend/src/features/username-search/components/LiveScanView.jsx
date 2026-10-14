@@ -11,10 +11,11 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import FoundSitesList from './FoundSitesList';
 import DiscoveredIdentifiers from './DiscoveredIdentifiers';
 import { inconclusiveSites } from '../utils/siteCheck';
+import ScanQueuedNotice from '../../../core/components/ui/ScanQueuedNotice';
 
 export default function LiveScanView({ scan, title, onSearchUsername, onCheckSite, searchDisabled }) {
   const { t } = useTranslation('usernameSearch');
-  const { phase, source, username, checked, totalSites, currentSite, foundSites, pivots, error, searchId, siteStatuses, cancelScan } = scan;
+  const { phase, queued, source, username, checked, totalSites, currentSite, foundSites, pivots, error, searchId, siteStatuses, cancelScan } = scan;
   const isCoarseProgress = source === 'social_analyzer' || source === 'threat_actor_usernames';
   // A site that was blocked or errored says nothing about the account, so a one-site check that
   // ended that way must not read as "not found".
@@ -27,6 +28,7 @@ export default function LiveScanView({ scan, title, onSearchUsername, onCheckSit
       {title && <Typography variant="subtitle1" sx={{ mb: 1 }}>{title}</Typography>}
       {phase === 'running' && (
         <Box sx={{ mb: 2 }}>
+          {queued && <ScanQueuedNotice />}
           <LinearProgress variant={isCoarseProgress ? 'indeterminate' : 'determinate'} value={progress} />
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
             <Typography variant="caption">

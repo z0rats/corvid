@@ -9,4 +9,5 @@ GIT_RECON_SCANS = ScanFeature(
     model=GitReconSearch,
     columns=ScanColumns(error_column="error", completed_at_column=None),
     order_by=GitReconSearch.searched_at,
+    target_column="target",
 )

@@ -386,3 +386,49 @@ describe('useResumableScan — reset', () => {
     expect(result.current.state).toEqual(baseInitialState);
   });
 });
+
+describe('useResumableScan — heavy-scan queue', () => {
+  it('sets `queued` on a queued event, without the feature reduce knowing about it', async () => {
+    const frames = encodeSseFrames([
+      { type: 'started', data: { search_id: 9 } },
+      { type: 'queued', data: { search_id: 9 } },
+    ]);
+    const api = { startScan: vi.fn().mockResolvedValue(makeSseStream(frames)), fetchPersisted: vi.fn() };
+    const { result } = renderHook(() => useHarness({ api, scopeKey: 'queue-1' }));
+
+    await act(async () => {
+      await result.current.startScan({}, buildRunningSeed(baseInitialState, {}));
+    });
+
+    expect(result.current.state).toMatchObject({ phase: 'running', searchId: 9, queued: true });
+  });
+
+  it('clears `queued` on the next event once the scan gets a slot', async () => {
+    const frames = encodeSseFrames([
+      { type: 'started', data: { search_id: 9 } },
+      { type: 'queued', data: { search_id: 9 } },
+      { type: 'running', data: { search_id: 9 } },
+      { type: 'completed', data: {} },
+    ]);
+    const api = { startScan: vi.fn().mockResolvedValue(makeSseStream(frames)), fetchPersisted: vi.fn() };
+    const { result } = renderHook(() => useHarness({ api, scopeKey: 'queue-2' }));
+
+    await act(async () => {
+      await result.current.startScan({}, buildRunningSeed(baseInitialState, {}));
+    });
+
+    expect(result.current.state).toMatchObject({ phase: 'completed', queued: false });
+  });
+
+  it('leaves state untouched (no `queued` key) for scans that never queue', async () => {
+    const frames = encodeSseFrames([{ type: 'started', data: { search_id: 3 } }, { type: 'completed', data: {} }]);
+    const api = { startScan: vi.fn().mockResolvedValue(makeSseStream(frames)), fetchPersisted: vi.fn() };
+    const { result } = renderHook(() => useHarness({ api, scopeKey: 'queue-3' }));
+
+    await act(async () => {
+      await result.current.startScan({}, buildRunningSeed(baseInitialState, {}));
+    });
+
+    expect(result.current.state).not.toHaveProperty('queued');
+  });
+});

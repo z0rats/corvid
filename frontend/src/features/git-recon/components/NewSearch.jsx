@@ -10,10 +10,11 @@ import ScanForm from './ScanForm';
 import ResultsView from './ResultsView';
 import { useGitRecon } from '../hooks/useGitRecon';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
+import ScanQueuedNotice from '../../../core/components/ui/ScanQueuedNotice';
 
 export default function NewSearch() {
   const { t } = useTranslation('gitRecon');
-  const { result, loading, error, scan, cancelScan } = useGitRecon();
+  const { result, loading, queued, error, scan, cancelScan } = useGitRecon();
 
   // Hand-off from a command-palette pivot (e.g. "octocat github recon") — see crossFeatureNav.ts.
   // Defaults to 'nickname' mode, the closest match to a bare pivot value (a single GitHub
@@ -42,6 +43,7 @@ export default function NewSearch() {
 
       {loading && (
         <Box sx={{ mb: 2 }}>
+          {queued && <ScanQueuedNotice />}
           <LinearProgress sx={{ mb: 0.5 }} />
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button size="small" color="error" startIcon={<CancelIcon />} onClick={cancelScan}>

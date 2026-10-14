@@ -40,13 +40,26 @@ class ProcessCancellable:
     by another request, it doesn't raise `CancelledError`. `.cancelled` lets
     `run_work` tell that apart from a genuine nonzero-exit/crash after
     `communicate()` returns.
+
+    Constructed before the process exists and handed it via `attach()` from inside
+    `run_work`, since a heavy scan's subprocess may only start once it leaves the
+    queue (see `ScanRun.execute`'s `heavy`); a cancel arriving before `attach()`
+    is remembered and applied to the process as soon as it's attached.
     """
 
-    def __init__(self, process: asyncio.subprocess.Process):
-        self._process = process
+    def __init__(self) -> None:
+        self._process: asyncio.subprocess.Process | None = None
         self.cancelled = False
 
+    def attach(self, process: asyncio.subprocess.Process) -> None:
+        self._process = process
+        if self.cancelled and process.returncode is None:
+            process.terminate()
+
     async def cancel(self) -> None:
+        if self._process is None:
+            self.cancelled = True
+            return
         if self._process.returncode is not None:
             return
         self.cancelled = True
@@ -77,9 +90,18 @@ class GitCloneCancellable:
     once its `await asyncio.to_thread(...)` call does eventually return.
     """
 
-    def __init__(self, before_pids: set[int]):
-        self._before_pids = before_pids
+    def __init__(self, before_pids: set[int] | None = None):
+        self._before_pids = before_pids if before_pids is not None else set()
         self.cancelled = False
+
+    def snapshot_children(self) -> None:
+        """Record this process's current children as "not ours". Called at the start of
+        `run_work` rather than before `ScanRun.execute`, so git processes another scan
+        spawns while this one sits in the heavy-scan queue aren't mistaken for its own."""
+        try:
+            self._before_pids = {c.pid for c in psutil.Process().children(recursive=True)}
+        except psutil.Error:
+            self._before_pids = set()
 
     async def cancel(self) -> None:
         self.cancelled = True

@@ -60,7 +60,8 @@ class TestProcessCancellable:
         process.returncode = None
         process.wait = AsyncMock()
 
-        cancellable = ProcessCancellable(process)
+        cancellable = ProcessCancellable()
+        cancellable.attach(process)
         _run(cancellable.cancel())
 
         process.terminate.assert_called_once()
@@ -72,11 +73,33 @@ class TestProcessCancellable:
         process.returncode = 0
         process.wait = AsyncMock()
 
-        cancellable = ProcessCancellable(process)
+        cancellable = ProcessCancellable()
+        cancellable.attach(process)
         _run(cancellable.cancel())
 
         process.terminate.assert_not_called()
         assert cancellable.cancelled is False
+
+    def test_cancel_before_attach_is_remembered_and_terminates_the_process_on_attach(self):
+        # A heavy scan's subprocess only starts once it leaves the queue, so a cancel can
+        # arrive before there's any process to stop.
+        process = MagicMock()
+        process.returncode = None
+
+        cancellable = ProcessCancellable()
+        _run(cancellable.cancel())
+        assert cancellable.cancelled is True
+
+        cancellable.attach(process)
+        process.terminate.assert_called_once()
+
+    def test_attach_without_a_prior_cancel_leaves_the_process_running(self):
+        process = MagicMock()
+        process.returncode = None
+
+        ProcessCancellable().attach(process)
+
+        process.terminate.assert_not_called()
 
 
 class _FakeChild:
@@ -140,6 +163,21 @@ class TestGitCloneCancellable:
             _run(cancellable.cancel())  # should not raise
 
         assert cancellable.cancelled is True
+
+    def test_snapshot_children_marks_current_children_as_not_ours(self):
+        already_running = _FakeChild(pid=100, name="git")
+        spawned_later = _FakeChild(pid=200, name="git")
+
+        fake_process = MagicMock()
+        fake_process.children.return_value = [already_running]
+        cancellable = GitCloneCancellable()
+        with patch("app.core.scans.cancellable.psutil.Process", return_value=fake_process):
+            cancellable.snapshot_children()
+            fake_process.children.return_value = [already_running, spawned_later]
+            _run(cancellable.cancel())
+
+        assert already_running.killed is False
+        assert spawned_later.killed is True
 
 
 class TestCooperativeCancellable:

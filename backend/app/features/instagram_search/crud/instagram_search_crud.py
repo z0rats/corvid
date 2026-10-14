@@ -9,4 +9,5 @@ INSTAGRAM_SCANS = ScanFeature(
     model=InstagramSearch,
     columns=ScanColumns(error_column="error", completed_at_column=None),
     order_by=InstagramSearch.searched_at,
+    target_column="username",
 )

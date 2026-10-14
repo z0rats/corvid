@@ -17,6 +17,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any, Literal
 
 from app.core.alerts.service.alerts_service import TelegramCategory, raise_alert
+from app.core.config.settings import settings
 from app.core.database import managed_session
 from app.core.scans.crud import (
     ScanColumns,
@@ -27,6 +28,18 @@ from app.core.scans.crud import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Caps resource-heavy scans across every feature (`heavy=True` runs); per event loop, since an
+# asyncio.Semaphore binds to the first loop that waits on it (tests run one loop per test).
+_heavy_slots: tuple[asyncio.AbstractEventLoop, asyncio.Semaphore] | None = None
+
+
+def _heavy_semaphore() -> asyncio.Semaphore:
+    global _heavy_slots
+    loop = asyncio.get_running_loop()
+    if _heavy_slots is None or _heavy_slots[0] is not loop:
+        _heavy_slots = (loop, asyncio.Semaphore(settings.scans.max_concurrent_heavy))
+    return _heavy_slots[1]
 
 
 def _format_fields(fields: dict[str, Any]) -> str:
@@ -70,7 +83,7 @@ class ScanEvent:
     replacing every feature's previous flat `{"type": ..., "search_id": ..., ...}`
     dict."""
 
-    type: Literal["started", "progress", "completed", "cancelled", "failed"]
+    type: Literal["started", "queued", "running", "progress", "completed", "cancelled", "failed"]
     data: dict[str, Any]
 
 
@@ -142,6 +155,9 @@ class ScanRun:
     """
 
     _registry: dict[tuple[type, int], Cancellable] = {}
+    # Heavy runs still waiting for a slot, so `cancel()` can drop one from the queue before its
+    # work (and its subprocess, if any) ever starts.
+    _queued: dict[tuple[type, int], asyncio.Future] = {}
 
     @classmethod
     async def execute(
@@ -156,6 +172,7 @@ class ScanRun:
         started_fields: dict[str, Any] | None = None,
         cancellable: Cancellable | None = None,
         expected_exceptions: tuple[type[Exception], ...] = (),
+        heavy: bool = False,
     ) -> None:
         """Create the running row, emit `started`, run `run_work(search_id)`,
         then mark the row and emit the matching terminal event - regardless of
@@ -169,6 +186,11 @@ class ScanRun:
         (bad input, a timeout it already renamed) - logged at `warning` without
         a traceback instead of `error` with one, so routine cases (e.g. a typo'd
         git_recon target) don't read as application errors in the logs.
+
+        `heavy` runs share `SCAN_MAX_CONCURRENT_HEAVY` slots: past the cap, a run emits
+        `queued` and waits (cancellable) before `run_work` starts, then `running` once it
+        gets a slot. A heavy feature must therefore start its real work (subprocesses
+        included) inside `run_work`, not before calling this.
         """
         async with managed_session() as db:
             search = await create_running(db, model, **create_fields)
@@ -180,8 +202,11 @@ class ScanRun:
 
         on_event(ScanEvent("started", {"search_id": search_id, **(started_fields or {})}))
 
+        slot: asyncio.Semaphore | None = None
         try:
             try:
+                if heavy:
+                    slot = await cls._acquire_heavy_slot(key, search_id, on_event)
                 outcome = await run_work(search_id)
             except ScanCancelled as exc:
                 async with managed_session() as db:
@@ -269,8 +294,40 @@ class ScanRun:
                 )
             on_event(ScanEvent("completed", {"search_id": search_id, **outcome.fields}))
         finally:
+            if slot is not None:
+                slot.release()
             cls._registry.pop(key, None)
             on_event(None)
+
+    @classmethod
+    async def _acquire_heavy_slot(
+        cls, key: tuple[type, int], search_id: int, on_event: OnEvent
+    ) -> asyncio.Semaphore:
+        """Wait for a heavy-scan slot and return the semaphore it must be released to.
+        Raises `ScanCancelled` if `cancel()` drops this run from the queue."""
+        slots = _heavy_semaphore()
+        queued = slots.locked()
+        if queued:
+            on_event(ScanEvent("queued", {"search_id": search_id}))
+
+        waiter = asyncio.ensure_future(slots.acquire())
+        cls._queued[key] = waiter
+        try:
+            await waiter
+        except asyncio.CancelledError:
+            # The slot may have been granted just before this task was cancelled.
+            if waiter.done() and not waiter.cancelled():
+                slots.release()
+            current = asyncio.current_task()
+            if current is not None and current.cancelling():
+                raise  # the whole scan task was cancelled, not just its queue wait
+            raise ScanCancelled() from None
+        finally:
+            cls._queued.pop(key, None)
+
+        if queued:
+            on_event(ScanEvent("running", {"search_id": search_id}))
+        return slots
 
     @classmethod
     async def cancel(cls, model: type, search_id: int) -> bool:
@@ -280,6 +337,9 @@ class ScanRun:
         returns once the underlying work has actually stopped (except
         git_recon's `GitCloneCancellable`, which deliberately doesn't wait for
         its worker thread to finish - see its own docstring)."""
+        waiter = cls._queued.get((model, search_id))
+        if waiter is not None and waiter.cancel():
+            return True  # still queued: nothing started yet, so nothing else to stop
         cancellable = cls._registry.get((model, search_id))
         if cancellable is None:
             return False

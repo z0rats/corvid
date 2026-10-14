@@ -9,6 +9,7 @@ PHONE_SEARCH_SCANS = ScanFeature(
     model=PhoneSearch,
     columns=ScanColumns(error_column="error_message", completed_at_column="completed_at"),
     order_by=PhoneSearch.started_at,
+    target_column="phone_number",
     relation=PhoneSearch.provider_results,
 )
 

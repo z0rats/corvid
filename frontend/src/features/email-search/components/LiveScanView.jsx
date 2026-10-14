@@ -8,16 +8,18 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 import FoundProvidersList, { FailedChecksNote } from './FoundProvidersList';
+import ScanQueuedNotice from '../../../core/components/ui/ScanQueuedNotice';
 
 export default function LiveScanView({ scan, onLookupGoogleProfile }) {
   const { t } = useTranslation('emailSearch');
-  const { phase, source, username, checked, totalProviders, currentProvider, foundProviders, errorCount, error, cancelScan } = scan;
+  const { phase, queued, source, username, checked, totalProviders, currentProvider, foundProviders, errorCount, error, cancelScan } = scan;
   const progress = totalProviders > 0 ? Math.min(100, (checked / totalProviders) * 100) : 0;
 
   return (
     <Box>
       {phase === 'running' && (
         <Box sx={{ mb: 2 }}>
+          {queued && <ScanQueuedNotice />}
           <LinearProgress variant="determinate" value={progress} />
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
             <Typography variant="caption">

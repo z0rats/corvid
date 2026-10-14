@@ -12,9 +12,10 @@ runs as an in-container background process rather than a docker-compose sidecar:
 
 Unlike subfinder/httpx (a single subprocess call each), amass v5's `enum`/`subs` subcommands are
 HTTP clients to a separate `amass engine` process that owns the asset graph. `amass_engine_service.py`
-starts it once at app boot (`main.py`'s `handle_application_startup`, alongside
-`start_bot_polling()`) and `ensure_engine_ready()` is also called defensively before every scan
-(idempotent, lock-guarded, self-healing if the engine died between scans) - polling
+starts it lazily: `ensure_engine_ready()` runs before every scan (idempotent, lock-guarded,
+self-healing if the engine died between scans), so the engine first starts with the first amass
+scan - which waits up to `ENGINE_READY_TIMEOUT_SECONDS` for it - and an instance that never uses
+Amass never runs it. Readiness is checked by polling
 `ae_isready --host 127.0.0.1` (amass's own readiness-check binary) rather than a raw TCP probe.
 No database config means the engine falls back to a local SQLite store under its own
 `~/.config/amass/` (`appuser`'s home) - no Postgres, no new docker-compose service.
