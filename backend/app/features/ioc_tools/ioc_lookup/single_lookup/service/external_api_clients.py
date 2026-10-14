@@ -320,13 +320,17 @@ async def check_maltiverse(ioc: str, endpoint: str, apikey: str) -> dict[str, An
     return await handle_response("Maltiverse", response)
 
 
-async def check_malwarebazaar(ioc: str) -> dict[str, Any]:
-    """Perform hash lookup using MalwareBazaar API"""
+async def check_malwarebazaar(ioc: str, apikey: str) -> dict[str, Any]:
+    """Perform hash lookup using MalwareBazaar API. Needs an abuse.ch Auth-Key header (the same
+    key ThreatFox/URLhaus take); unauthenticated calls get `{"error": "Unauthorized"}`."""
+    _require_apikey("MalwareBazaar", apikey)
     logger.debug("Checking hash %s with MalwareBazaar", ioc)
 
     client = get_client()
     response = await client.post(
-        url="https://mb-api.abuse.ch/api/v1/", data={"query": "get_info", "hash": ioc}
+        url="https://mb-api.abuse.ch/api/v1/",
+        headers={"Auth-Key": apikey},
+        data={"query": "get_info", "hash": ioc},
     )
     return await handle_response("MalwareBazaar", response)
 
@@ -593,7 +597,10 @@ async def check_urlhaus(ioc: str, ioc_type: str, apikey: str) -> dict[str, Any]:
     return await handle_response("URLhaus", response)
 
 
-_OPENPHISH_FEED_URL = "https://openphish.com/feed.txt"
+# openphish.com/feed.txt 302-redirects here; the client doesn't follow redirects, so use the target.
+_OPENPHISH_FEED_URL = (
+    "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt"
+)
 _OPENPHISH_CACHE_TTL_SECONDS = 3600  # community feed updates every few hours
 _openphish_cache: dict[str, Any] = {"urls": None, "domains": None, "fetched_at": 0.0}
 _openphish_cache_lock = asyncio.Lock()

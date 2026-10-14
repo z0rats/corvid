@@ -57,10 +57,16 @@ async def create_default_module_settings(db: AsyncSession) -> None:
 
 async def create_default_newsfeeds(db: AsyncSession) -> None:
     """Create default newsfeeds if they don't exist (favicons are fetched in background)"""
-    from app.features.newsfeed.utils.default_rss_feeds import DEFAULT_NEWSFEEDS
+    from app.features.newsfeed.utils.default_rss_feeds import (
+        DEFAULT_NEWSFEEDS,
+        MOVED_DEFAULT_FEED_URLS,
+    )
 
     for feed_data in DEFAULT_NEWSFEEDS:
         existing = await get_feed_by_name(db, feed_data["name"])
+        if existing and existing.url in MOVED_DEFAULT_FEED_URLS:
+            existing.url = MOVED_DEFAULT_FEED_URLS[existing.url]
+            await db.flush()
         if not existing:
             feed_schema = NewsfeedSettingsSchema(
                 name=feed_data["name"],

@@ -4,6 +4,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from typing import Any
+from urllib.parse import urljoin, urlparse
 
 import httpx
 from lxml import etree
@@ -183,15 +184,34 @@ def _clean_opensanctions_address(raw_address: str) -> str:
     return raw_address.split(" (")[0].rstrip("*").strip()
 
 
+_OPENSANCTIONS_MAX_REDIRECTS = 2
+
+
+async def _get_opensanctions(url: str) -> httpx.Response:
+    """GET following redirects only within https://data.opensanctions.org: its `latest/` URLs
+    answer 307 to a versioned `/artifacts/...` path on the same host. The shared client never
+    follows redirects itself, so an off-host Location is refused rather than fetched."""
+    client = get_client()
+    for _ in range(_OPENSANCTIONS_MAX_REDIRECTS + 1):
+        response = await client.get(url, timeout=OFAC_FETCH_TIMEOUT)
+        if not response.is_redirect:
+            response.raise_for_status()
+            return response
+        target = urljoin(url, response.headers.get("location", ""))
+        parsed = urlparse(target)
+        if parsed.scheme != "https" or parsed.hostname != "data.opensanctions.org":
+            raise ValueError(f"OpenSanctions redirected off its own host: {target}")
+        url = target
+    raise ValueError(f"OpenSanctions: more than {_OPENSANCTIONS_MAX_REDIRECTS} redirects")
+
+
 async def fetch_opensanctions_addresses() -> list[dict[str, Any]]:
     """Download Israel's Ministry of Defense counter-terror-financing crypto wallet list via
     OpenSanctions' free il_mod_crypto bulk export (newline-delimited FollowTheMoney entities).
 
     Small enough (~2.5MB) to buffer and split in memory, unlike the streamed OFAC XML above.
     """
-    client = get_client()
-    response = await client.get(OPENSANCTIONS_IL_CRYPTO_URL, timeout=OFAC_FETCH_TIMEOUT)
-    response.raise_for_status()
+    response = await _get_opensanctions(OPENSANCTIONS_IL_CRYPTO_URL)
 
     entities = [json.loads(line) for line in response.text.splitlines() if line.strip()]
     # `holder` (~7% of CryptoWallet entries) references another entity in this same dump by

@@ -1,10 +1,12 @@
 name: Source canaries
 
-# Weekly live check of ru_business_check's external sources: not "does our code work" but
-# "did a site change its response shape". A failure means a scraper's parser needs a fix (the
-# production scan already reports such a source as not-checked rather than clean). Sources
-# unreachable from a GitHub runner (non-RU IP, anti-bot) are skipped, not failed - see the
-# outcome policy in backend/tests/canary/test_ru_business_check_canary.py.
+# Weekly live check of external sources (backend/tests/canary/: ru_business_check's registries,
+# the keyless scraped/undocumented ones - Reddit archives, threat-actor usernames, Hudson Rock,
+# YouTube, DuckDuckGo, the OpenSanctions dump - the keyless ioc_lookup providers, the address-
+# blacklist feeds and the default newsfeed RSS feeds): not "does our code work" but "did a
+# source change its response shape, move, or start demanding a key". A failure means a fix.
+# Sources unreachable from a GitHub runner (non-RU IP, rate limits, anti-bot) are skipped, not
+# failed - see the outcome policy in each canary module's docstring.
 
 on:
   schedule:
@@ -43,10 +45,10 @@ jobs:
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
-          cache-dependency-glob: backend/requirements.txt
+          cache-dependency-glob: backend/requirements*.txt
 
       - name: Install dependencies
-        run: uv pip install --system -r requirements.txt
+        run: uv pip install --system -r requirements-dev.txt
 
       - name: Run source canaries
         run: pytest -m canary -o addopts= -q -rs

@@ -20,12 +20,12 @@ which provider handles which type.
 
 - **Needs an API key** (Settings → API Keys): AbuseIPDB, AlienVault OTX, CheckPhish, CrowdSec,
   CrowdStrike, EmailRep.io, GitHub (optional — raises an otherwise-anonymous rate limit, not
-  required), Have I Been Pwned, Hunter.io, IPQualityScore, LeakIX, Maltiverse, Mandiant, NIST NVD,
+  required), Have I Been Pwned, Hunter.io, IPQualityScore, LeakIX, Maltiverse, MalwareBazaar, Mandiant, NIST NVD,
   Pulsedive, Reddit, Google Safe Browsing, Shodan, ThreatFox, Twitter/X, URLhaus, VirusTotal.
-  ThreatFox and URLhaus both take the same free abuse.ch Auth-Key (get one at
+  ThreatFox, URLhaus and MalwareBazaar all take the same free abuse.ch Auth-Key (get one at
   [auth.abuse.ch](https://auth.abuse.ch/)) — paste it into each service's field.
 - **Fully keyless**: Address Blacklist (resolved locally, see below), CISA KEV, FFraud, FIRST.org
-  EPSS, Hudson Rock, Library of Leaks, MalwareBazaar, OpenPhish, URLScan.io.
+  EPSS, Hudson Rock, Library of Leaks, OpenPhish, URLScan.io.
 - **Address Blacklist** resolves instantly from a local table, refreshed daily rather than called
   per lookup, from three free keyless feeds: OFAC's `sanctionslistservice.ofac.treas.gov` (SDN
   digital-currency addresses), ScamSniffer's GitHub-hosted phishing-address database, and
@@ -33,7 +33,7 @@ which provider handles which type.
 - **CISA KEV** (`cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json`) — the
   full catalog (no per-CVE endpoint exists) is fetched and kept in an in-process cache for up to
   an hour, rather than re-downloaded on every CVE lookup.
-- **OpenPhish** (`openphish.com/feed.txt`) — the free community feed is a flat list of active
+- **OpenPhish** (its GitHub-hosted `openphish/public_feed` `feed.txt`) — the free community feed is a flat list of active
   phishing URLs with no per-URL lookup endpoint, so it's cached the same way as CISA KEV: fetched
   in full and kept in-process for up to an hour rather than re-downloaded per lookup.
 

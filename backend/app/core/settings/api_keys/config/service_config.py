@@ -264,11 +264,12 @@ SERVICE_DEFINITIONS = {
         name="MalwareBazaar",
         key="malwarebazaar",
         description=(
-            "Free malware sample repository by abuse.ch for malware analysis and threat research."
+            "Free malware sample repository by abuse.ch for malware analysis and threat research. "
+            "Needs a free abuse.ch Auth-Key (the same one ThreatFox and URLhaus use)."
         ),
         documentation_url="https://bazaar.abuse.ch/api/",
         supported_ioc_types=["MD5", "SHA1", "SHA256"],
-        required_keys=[],
+        required_keys=["malwarebazaar"],
         tier=ServiceTier.FREE,
         category=ServiceCategory.THREAT_INTELLIGENCE,
         icon="malwarebazaar_logo_small",

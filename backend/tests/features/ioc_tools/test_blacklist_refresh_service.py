@@ -200,3 +200,50 @@ class TestFetchOpensanctionsAddresses:
                 },
             },
         ]
+
+
+class _RedirectingClient:
+    """Answers each URL from a {url: response} map, recording the URLs asked for."""
+
+    def __init__(self, responses: dict[str, httpx.Response]):
+        self._responses = responses
+        self.urls: list[str] = []
+
+    async def get(self, url, **kwargs):
+        self.urls.append(url)
+        return self._responses[url]
+
+
+class TestOpensanctionsRedirects:
+    LATEST = blacklist_refresh_service.OPENSANCTIONS_IL_CRYPTO_URL
+    ARTIFACT = "https://data.opensanctions.org/artifacts/il_mod_crypto/v1/entities.ftm.json"
+
+    def _redirect(self, location):
+        return httpx.Response(
+            307, headers={"location": location}, request=httpx.Request("GET", self.LATEST)
+        )
+
+    def test_follows_a_same_host_redirect_to_the_versioned_artifact(self, monkeypatch):
+        body = httpx.Response(
+            200, request=httpx.Request("GET", self.ARTIFACT), content=_OPENSANCTIONS_NDJSON.encode()
+        )
+        client = _RedirectingClient(
+            {
+                self.LATEST: self._redirect("/artifacts/il_mod_crypto/v1/entities.ftm.json"),
+                self.ARTIFACT: body,
+            }
+        )
+        monkeypatch.setattr(blacklist_refresh_service, "get_client", lambda: client)
+
+        result = _run(fetch_opensanctions_addresses())
+
+        assert client.urls == [self.LATEST, self.ARTIFACT]
+        assert len(result) == 3
+
+    def test_refuses_a_redirect_off_the_opensanctions_host(self, monkeypatch):
+        client = _RedirectingClient({self.LATEST: self._redirect("https://evil.example/x.json")})
+        monkeypatch.setattr(blacklist_refresh_service, "get_client", lambda: client)
+
+        with pytest.raises(ValueError, match="off its own host"):
+            _run(fetch_opensanctions_addresses())
+        assert client.urls == [self.LATEST]

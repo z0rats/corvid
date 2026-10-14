@@ -86,3 +86,33 @@ class TestSearch:
         results = _run(search("a-query-with-no-hits"))
 
         assert results == []
+
+
+_AD_HTML = """
+<html><body>
+<div class="result results_links result--ad">
+  <a class="result__a" href="https://duckduckgo.com/y.js?ad_domain=ads.test&amp;u3=https%3A%2F%2Fwww.bing.com%2Faclick">
+    Sponsored by class
+  </a>
+</div>
+<div class="result">
+  <a class="result__a" href="https://duckduckgo.com/y.js?ad_domain=ads.test&amp;ad_provider=bing">
+    Sponsored, unmarked
+  </a>
+</div>
+<div class="result">
+  <a class="result__a" href="https://duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Forganic">
+    Organic
+  </a>
+</div>
+</body></html>
+"""
+
+
+class TestAds:
+    def test_drops_ads_by_class_and_by_a_link_that_stays_on_duckduckgo(self, patch_httpx_transport):
+        patch_httpx_transport(lambda request: httpx.Response(200, text=_AD_HTML))
+
+        results = _run(search("site:example.com"))
+
+        assert [r.url for r in results] == ["https://example.com/organic"]

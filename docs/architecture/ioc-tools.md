@@ -60,8 +60,9 @@ Frontend: every panel's request lifecycle is one hook, `hooks/useDomainPanel.ts`
 dropped, `auto: false` + `run()` for the click-triggered panels). An auto panel's
 loading/error/empty rendering is `components/ui/panelStatusView.jsx`. A new panel is its
 `*Panel.jsx` plus an entry in `DomainMonitoring.jsx` - no per-panel api/hook files.
-subfinder and httpx are the two Go binaries in this list, both compiled from source (pinned
-tags, not `@latest`) in one shared `go-tools-builder` Dockerfile stage and shelled out to via
+subfinder and httpx are the two Go binaries in this list, both upstream release binaries pinned by
+tag + per-arch sha256 in the `go-tools-fetch` Dockerfile stage
+(`docs/adr/0021-go-tools-from-pinned-release-binaries.md`) and shelled out to via
 `asyncio.create_subprocess_exec` (`subfinder_service.py`/`host_probe_service.py`; version/
 availability read through the shared `core/utils/cli_tool_version.py` helper, same
 "-version"-flag-parsing pattern for both). subfinder: no provider-config.yaml is shipped, so

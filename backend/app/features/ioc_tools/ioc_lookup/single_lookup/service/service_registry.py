@@ -180,6 +180,7 @@ def register_services(ioc_lookup_service_module) -> None:
             func=ioc_lookup_service_module.check_malwarebazaar,
             name="MalwareBazaar",
             supported_ioc_types=_supported_ioc_types("malwarebazaar"),
+            api_key=ApiKeySpec(setting_name="malwarebazaar"),
         ),
         "mandiant": ProviderSpec(
             func=ioc_lookup_service_module.check_mandiant,

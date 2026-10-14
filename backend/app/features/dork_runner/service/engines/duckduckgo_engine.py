@@ -19,6 +19,11 @@ from .base import RawResult, fetch_html
 logger = logging.getLogger(__name__)
 
 
+def _is_duckduckgo_url(url: str) -> bool:
+    hostname = urlparse(url).hostname or ""
+    return hostname == "duckduckgo.com" or hostname.endswith(".duckduckgo.com")
+
+
 def _resolve_result_url(href: str) -> str:
     """DuckDuckGo's HTML result links are redirects through duckduckgo.com/l/?uddg=<target>."""
     if not href:
@@ -26,9 +31,7 @@ def _resolve_result_url(href: str) -> str:
     if href.startswith("//"):
         href = f"https:{href}"
     parsed = urlparse(href)
-    hostname = parsed.hostname or ""
-    is_duckduckgo = hostname == "duckduckgo.com" or hostname.endswith(".duckduckgo.com")
-    if is_duckduckgo and parsed.path.startswith("/l/"):
+    if _is_duckduckgo_url(href) and parsed.path.startswith("/l/"):
         target = parse_qs(parsed.query).get("uddg")
         if target:
             return target[0]
@@ -44,12 +47,16 @@ async def search(query: str) -> list[RawResult]:
     results: list[RawResult] = []
 
     for block in soup.select("div.result"):
+        # Sponsored results: marked `result--ad`, and their link is a duckduckgo.com/y.js
+        # click-tracking redirect to the advertiser - never a finding for the dork.
+        if "result--ad" in (block.get("class") or []):
+            continue
         title_tag = block.select_one("a.result__a")
         if not title_tag:
             continue
         title = title_tag.get_text(strip=True)
         url = _resolve_result_url(title_tag.get("href", ""))
-        if not url:
+        if not url or _is_duckduckgo_url(url):
             continue
         snippet_tag = block.select_one(".result__snippet")
         snippet = snippet_tag.get_text(strip=True) if snippet_tag else ""

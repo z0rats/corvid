@@ -117,3 +117,29 @@ class TestThreatfoxAuthHeader:
         _run(external_api_clients.check_threatfox("evil.example", "k-123"))
 
         assert fake.last_call["headers"] == {"Auth-Key": "k-123"}
+
+
+class TestCheckMalwareBazaar:
+    """Same abuse.ch Auth-Key requirement - unauthenticated calls answer `Unauthorized`."""
+
+    def test_requires_apikey(self):
+        with pytest.raises(ServiceAuthError):
+            _run(external_api_clients.check_malwarebazaar("a" * 64, ""))
+
+    def test_sends_the_auth_key_header(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json={"query_status": "hash_not_found"}))
+
+        result = _run(external_api_clients.check_malwarebazaar("a" * 64, "k-123"))
+
+        assert result == {"query_status": "hash_not_found"}
+        assert fake.last_call["url"] == "https://mb-api.abuse.ch/api/v1/"
+        assert fake.last_call["headers"] == {"Auth-Key": "k-123"}
+        assert fake.last_call["data"] == {"query": "get_info", "hash": "a" * 64}
+
+    def test_registry_passes_the_malwarebazaar_key(self):
+        service_registry.register_services(external_api_clients)
+        spec = service_registry.get_all_services()["malwarebazaar"]
+
+        validate_provider_spec(spec)
+        args = build_call_args(spec, "a" * 64, "SHA256", {"malwarebazaar": "k-9"})
+        assert args == {"ioc": "a" * 64, "apikey": "k-9"}

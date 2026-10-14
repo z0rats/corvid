@@ -18,7 +18,7 @@ DEFAULT_NEWSFEEDS = [
     },
     {
         "name": "Dark Reading",
-        "url": "https://www.darkreading.com/rss_simple.asp",
+        "url": "https://www.darkreading.com/rss.xml",
         "reliability": "C",
     },
     {
@@ -43,11 +43,6 @@ DEFAULT_NEWSFEEDS = [
         "reliability": "C",
     },
     {
-        "name": "SecurityWeek",
-        "url": "https://feeds.feedburner.com/securityweek",
-        "reliability": "C",
-    },
-    {
         "name": "The DFIR Report",
         "url": "https://thedfirreport.com/feed/atom",
         "reliability": "B",
@@ -64,3 +59,9 @@ DEFAULT_NEWSFEEDS = [
         "reliability": "C",
     },
 ]
+
+# Default feeds whose publisher moved them: {old URL: new URL}. Applied at startup to an
+# existing install's row only while it still has the old URL, so a user's own edit is kept.
+MOVED_DEFAULT_FEED_URLS = {
+    "https://www.darkreading.com/rss_simple.asp": "https://www.darkreading.com/rss.xml",
+}
