@@ -1,10 +1,14 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useServiceFetcher } from './useServiceFetcher';
 import { iocLookupApi } from '../../../../shared/services/api/iocLookupApi';
+import { clearLookupCache } from '../../utils/lookupCache';
 
 vi.mock('../../../../shared/services/api/iocLookupApi');
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  clearLookupCache();
+});
 
 const serviceConfigEntry = {
   key: 'abuseipdb',
@@ -43,6 +47,7 @@ describe('useServiceFetcher — success path', () => {
       summary: 'score 42',
       tlp: 'GREEN',
       data: { score: 42 },
+      fromCache: false,
     });
   });
 });
@@ -149,5 +154,46 @@ describe('useServiceFetcher — getSummaryAndTlp failures', () => {
       summary: 'Data received, no summary available',
       tlp: 'BLUE',
     });
+  });
+});
+
+describe('useServiceFetcher — session cache', () => {
+  it('serves a repeat lookup from the cache and reports it as fromCache', async () => {
+    iocLookupApi.lookupSingleService.mockResolvedValue({ data: { score: 42 } });
+    const first = renderHook(() => useServiceFetcher('1.2.3.4', 'ip', serviceConfigEntry, null));
+    await waitFor(() => expect(first.result.current.loading).toBe(false));
+    first.unmount();
+
+    const onResult = vi.fn();
+    const second = renderHook(() => useServiceFetcher('1.2.3.4', 'ip', serviceConfigEntry, onResult));
+    await waitFor(() => expect(second.result.current.loading).toBe(false));
+
+    expect(iocLookupApi.lookupSingleService).toHaveBeenCalledTimes(1);
+    expect(second.result.current.apiResult).toEqual({ score: 42 });
+    expect(onResult).toHaveBeenCalledWith('abuseipdb', expect.objectContaining({ fromCache: true }));
+  });
+
+  it('bypasses the cache on an explicit refresh', async () => {
+    iocLookupApi.lookupSingleService.mockResolvedValue({ data: { score: 42 } });
+    const first = renderHook(() => useServiceFetcher('1.2.3.4', 'ip', serviceConfigEntry, null));
+    await waitFor(() => expect(first.result.current.loading).toBe(false));
+    first.unmount();
+
+    const second = renderHook(() => useServiceFetcher('1.2.3.4', 'ip', serviceConfigEntry, null, true));
+    await waitFor(() => expect(second.result.current.loading).toBe(false));
+
+    expect(iocLookupApi.lookupSingleService).toHaveBeenCalledTimes(2);
+  });
+
+  it('never caches an error, so a failed provider is retried next time', async () => {
+    iocLookupApi.lookupSingleService.mockResolvedValue({ error: 'Rate limited', status: 429 });
+    const first = renderHook(() => useServiceFetcher('1.2.3.4', 'ip', serviceConfigEntry, null));
+    await waitFor(() => expect(first.result.current.loading).toBe(false));
+    first.unmount();
+
+    const second = renderHook(() => useServiceFetcher('1.2.3.4', 'ip', serviceConfigEntry, null));
+    await waitFor(() => expect(second.result.current.loading).toBe(false));
+
+    expect(iocLookupApi.lookupSingleService).toHaveBeenCalledTimes(2);
   });
 });

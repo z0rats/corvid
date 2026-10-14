@@ -21,11 +21,6 @@ async function toApiError(err) {
 
 export const settingsApi = {
   // General settings API calls
-  async updateDarkmode(darkmode) {
-    const response = await api.put(`/api/settings/general/darkmode?darkmode=${darkmode}`);
-    return response.data;
-  },
-
   async updateLanguage(language) {
     const response = await api.put('/api/settings/general/language', { language });
     return response.data;

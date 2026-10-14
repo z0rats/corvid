@@ -18,28 +18,6 @@ afterEach(async () => {
   await i18n.changeLanguage('en');
 });
 
-describe('useGeneralSettings — updateDarkmode', () => {
-  it('sends the update and returns a success message', async () => {
-    settingsApi.updateDarkmode.mockResolvedValue({});
-    const { result } = renderHook(() => useGeneralSettings());
-
-    let returned;
-    await act(async () => { returned = await result.current.updateDarkmode(true); });
-
-    expect(settingsApi.updateDarkmode).toHaveBeenCalledWith(true);
-    expect(returned).toMatchObject({ success: true, message: 'Dark mode updated successfully.' });
-  });
-
-  it('surfaces the save-error message on failure', async () => {
-    settingsApi.updateDarkmode.mockRejectedValue(new Error('down'));
-    const { result } = renderHook(() => useGeneralSettings());
-
-    await act(async () => { await result.current.updateDarkmode(true); });
-
-    expect(result.current.error).toBe('Failed to save changes.');
-  });
-});
-
 describe('useGeneralSettings — updateLanguage', () => {
   it('sends the update and switches the active i18n language', async () => {
     settingsApi.updateLanguage.mockResolvedValue({});

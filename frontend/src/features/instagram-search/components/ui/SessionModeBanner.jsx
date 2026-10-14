@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router';
+import { apiKeySettingsPath } from '../../../../core/utils/apiKeyLinks';
 import Alert from '@mui/material/Alert';
 import Link from '@mui/material/Link';
 
@@ -14,7 +15,7 @@ export default function SessionModeBanner({ mode }) {
       sx={{ borderRadius: 1, mb: 2 }}
       action={
         !isSession && (
-          <Link component={RouterLink} to="/settings/apikeys" underline="hover" sx={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
+          <Link component={RouterLink} to={apiKeySettingsPath('instagram_session')} underline="hover" sx={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
             {t('mode.configureSessionAction')}
           </Link>
         )

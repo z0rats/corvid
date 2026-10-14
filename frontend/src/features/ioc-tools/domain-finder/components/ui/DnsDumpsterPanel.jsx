@@ -24,6 +24,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
 import LanguageIcon from "@mui/icons-material/Language";
 import MailOutlineIcon from "@mui/icons-material/MailOutlineOutlined";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
+import { apiKeySettingsPath } from "../../../../../core/utils/apiKeyLinks";
 
 const RECORD_GROUPS = [
   { key: 'a', icon: DnsOutlinedIcon },
@@ -166,7 +167,7 @@ export default function DnsDumpsterPanel({ domain }) {
         variant="outlined"
         sx={{ borderRadius: 1, mb: 2 }}
         action={
-          <Link component={RouterLink} to="/settings/apikeys" underline="hover" sx={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
+          <Link component={RouterLink} to={apiKeySettingsPath('dnsdumpster')} underline="hover" sx={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
             {t('domainFinder.dnsDumpster.addKeyAction')}
           </Link>
         }

@@ -9,6 +9,11 @@ REST endpoint) just get the DB row + WS broadcast, unchanged from before Telegra
 See `docs/adr/0011-telegram-notifications.md` for why this design (reusing `Alert` as the
 event bus, no bot-framework dependency) was chosen over a parallel notification system.
 
+In the UI, the AppBar bell (`core/components/ui/AlertsMenu.jsx`) polls the unread count and
+lists alerts over REST, not the WebSocket (`docs/adr/0020-alerts-inbox-polling.md`). Clicking a
+scan alert opens that run (`core/utils/alertLink.js` parses the `Scan #<id>` message prefix, so
+keep that prefix if `run.py`'s wording changes).
+
 ## Hook points
 
 Two shared choke points call `raise_alert`, so every current and future feature of that
@@ -125,8 +130,8 @@ processing within the loop).
 
 `service/polling_service.py`'s `_poll_loop` runs for the life of the process (started from
 `main.py`'s lifespan via `start_bot_polling()`, stopped via `stop_bot_polling()` — the first
-persistent, gracefully-stoppable background task in this codebase; contrast with the two
-fire-and-forget, run-once `asyncio.create_task(...)` calls already in `main.py`'s startup).
+persistent, gracefully-stoppable background task in this codebase; contrast with `main.py`'s
+run-once startup catch-up task, `_run_startup_catchups`).
 Each iteration re-reads `TelegramSettings` fresh and idles (30s sleep) unless
 `is_usable() and bot_commands_enabled` are both true — this sidesteps needing a
 settings-changed hook to start/stop the loop; a config change takes effect on the next

@@ -6,6 +6,7 @@ import Chip from '@mui/material/Chip';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundProvidersList, { FailedChecksNote } from './FoundProvidersList';
 import { emailSearchApi } from '../services/api/emailSearchApi';
@@ -34,6 +35,9 @@ export default function HistoryDetail() {
         )}
         summary={t('history.summary', { checked: run.total_providers_checked, found: run.found_count })}
         error={run.status === 'failed' ? run.error_message : null}
+        exportName={exportFileName('email-search', run.username, run.id)}
+        exportData={run}
+        csvRows={run.provider_results}
       />
 
       <FailedChecksNote count={run.error_count} />

@@ -1,8 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
-import { hasLlmKeyAtom, enabledModulesMapAtom, themeModeAtom, generalSettingsState } from '../../state/atoms';
+import { hasLlmKeyAtom, themeModeAtom, generalSettingsState } from '../../state/atoms';
+import { useVisibleModuleIds } from '../../hooks/useVisibleModuleIds';
 import { useThemeManager } from '../../hooks/ui/useThemeManager';
+import { usePersistentState } from '../../hooks/ui/usePersistentState';
 import { useGeneralSettings } from '../../../features/settings/hooks/api/useGeneralSettings';
 import { Outlet, Link, useLocation } from 'react-router';
 import AppBar from '@mui/material/AppBar';
@@ -25,8 +27,9 @@ import HomeIcon from '@mui/icons-material/HomeOutlined';
 import SidebarTabs from '../ui/SidebarTabs';
 import LeftPanel from './LeftPanel';
 import CommandPalette from '../ui/CommandPalette/CommandPalette';
+import AlertsMenu from '../ui/AlertsMenu';
 import { OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useGlobalPaletteShortcuts';
-import { getMainMenuItems, TAB_ROUTES } from '../../config/sidebarConfig';
+import { TAB_ROUTES } from '../../config/sidebarConfig';
 import { useTheme, alpha } from '@mui/material/styles';
 
 const defaultDrawerWidth = 240;
@@ -38,6 +41,9 @@ const minLeftPanelWidth = 160;
 const maxLeftPanelWidth = 360;
 const leftPanelMiniWidth = 56;
 
+const isBoolean = (value) => typeof value === 'boolean';
+const isWidthBetween = (min, max) => (value) => Number.isFinite(value) && value >= min && value <= max;
+
 /**
  * Main layout component that provides the application structure
  */
@@ -45,19 +51,21 @@ function Layout() {
   const { t } = useTranslation();
   const { t: tPalette } = useTranslation('commandPalette');
   const hasLlmKey = useAtomValue(hasLlmKeyAtom);
-  const enabledModules = useAtomValue(enabledModulesMapAtom);
   const themeMode = useAtomValue(themeModeAtom);
   const { toggleColorMode } = useThemeManager();
   const generalSettings = useAtomValue(generalSettingsState);
   const { updateLanguage } = useGeneralSettings();
   const currentLanguage = generalSettings?.language || 'en';
   const handleLanguageToggle = () => updateLanguage(currentLanguage === 'en' ? 'ru' : 'en');
-  const menuItems = useMemo(() => getMainMenuItems(t), [t]);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(defaultDrawerWidth);
-  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
-  const [leftPanelWidth, setLeftPanelWidth] = useState(defaultLeftPanelWidth);
+  const [sidebarOpen, setSidebarOpen] = usePersistentState('layout.sidebarOpen', true, isBoolean);
+  const [sidebarWidth, setSidebarWidth] = usePersistentState(
+    'layout.sidebarWidth', defaultDrawerWidth, isWidthBetween(minDrawerWidth, maxDrawerWidth),
+  );
+  const [leftPanelOpen, setLeftPanelOpen] = usePersistentState('layout.leftPanelOpen', true, isBoolean);
+  const [leftPanelWidth, setLeftPanelWidth] = usePersistentState(
+    'layout.leftPanelWidth', defaultLeftPanelWidth, isWidthBetween(minLeftPanelWidth, maxLeftPanelWidth),
+  );
   // Tracks which panel ('leftPanel' | 'sidebar') is being dragged, not just whether — a ref since
   // it drives a synchronous mousemove listener, not a render.
   const resizingPanel = useRef(null);
@@ -109,24 +117,14 @@ function Layout() {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, []);
+  }, [setLeftPanelWidth, setSidebarWidth]);
 
   const currentTabs = useMemo(() => {
     const route = TAB_ROUTES.find(({ prefix }) => location.pathname.startsWith(prefix));
     return route ? route.getTabs(t, { hasLlmKey }) : null;
   }, [location.pathname, hasLlmKey, t]);
 
-  const filteredMenuItems = useMemo(() => menuItems.filter(item => {
-    if (item.moduleId === 'llm_templates') {
-      return hasLlmKey && (enabledModules[item.moduleId] ?? true);
-    }
-    return enabledModules[item.moduleId] ?? true;
-  }), [hasLlmKey, enabledModules, menuItems]);
-
-  const filteredModuleIds = useMemo(
-    () => new Set(filteredMenuItems.map(item => item.moduleId)),
-    [filteredMenuItems],
-  );
+  const filteredModuleIds = useVisibleModuleIds();
 
   const showSidebar = Boolean(currentTabs);
 
@@ -285,6 +283,7 @@ function Layout() {
                 {currentLanguage === 'en' ? 'RU' : 'EN'}
               </IconButton>
             </Tooltip>
+            <AlertsMenu />
             <Tooltip title={themeMode === 'dark' ? t('layout.switchToLightMode') : t('layout.switchToDarkMode')}>
               <IconButton color="inherit" onClick={toggleColorMode} aria-label={t('layout.toggleDarkMode')}>
                 {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}

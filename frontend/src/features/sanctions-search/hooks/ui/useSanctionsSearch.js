@@ -2,17 +2,17 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { sanctionsSearchApi } from '../../services/api/sanctionsSearchApi';
 import { sanctionsSearchStateAtom } from '../../state/sanctionsSearchAtoms';
-import { usePrefillFromQuery } from '../../../../core/hooks/usePrefillFromQuery';
+import { useUrlDrivenLookup } from '../../../../core/hooks/useUrlQuery';
 import { createLogger } from '../../../../core/utils/logger';
 
 const logger = createLogger('SanctionsSearch');
 const MIN_QUERY_LENGTH = 3;
+const isRunnable = (value) => value.length >= MIN_QUERY_LENGTH;
 
 export function useSanctionsSearch() {
-  const [query, setQuery] = useState('');
+  const [{ result, loading, error, lastQuery }, setSearchState] = useAtom(sanctionsSearchStateAtom);
   const [schema, setSchema] = useState('');
   const [schemas, setSchemas] = useState([]);
-  const [{ result, loading, error }, setSearchState] = useAtom(sanctionsSearchStateAtom);
 
   useEffect(() => {
     let ignore = false;
@@ -26,31 +26,31 @@ export function useSanctionsSearch() {
     return () => { ignore = true; };
   }, []);
 
-  const runSearch = useCallback(async (queryOverride) => {
-    const queryValue = (queryOverride ?? query).trim();
-    if (queryValue.length < MIN_QUERY_LENGTH) return;
-
-    setSearchState({ result: null, loading: true, error: null });
+  const search = useCallback(async (queryValue) => {
+    setSearchState({ lastQuery: queryValue, result: null, loading: true, error: null });
     try {
       const data = await sanctionsSearchApi.search({
         query: queryValue,
         schema: schema || undefined,
         limit: 50,
       });
-      setSearchState({ result: data, loading: false, error: null });
+      setSearchState({ lastQuery: queryValue, result: data, loading: false, error: null });
     } catch (err) {
       setSearchState({
+        lastQuery: queryValue,
         result: null,
         loading: false,
         error: err.response?.data?.detail || err.message || 'Sanctions search failed',
       });
     }
-  }, [query, schema, setSearchState]);
+  }, [schema, setSearchState]);
 
-  usePrefillFromQuery(useCallback((value) => {
-    setQuery(value);
-    runSearch(value);
-  }, [runSearch]));
+  // The query lives in the URL (?q=): pivots, reloads, bookmarks and Back/Forward all run through it.
+  const { urlValue, submit } = useUrlDrivenLookup({ run: search, shownValue: lastQuery, isRunnable });
+  const [query, setQuery] = useState(urlValue || lastQuery);
+  useEffect(() => { if (urlValue) setQuery(urlValue); }, [urlValue]);
+
+  const runSearch = useCallback((queryOverride) => submit(queryOverride ?? query), [submit, query]);
 
   return {
     query,

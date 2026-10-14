@@ -4,6 +4,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import ResultsView from './ResultsView';
 import { instagramSearchApi } from '../services/api/instagramSearchApi';
@@ -27,6 +28,9 @@ export default function HistoryDetail() {
         chips={<ScanStatusChip status={search.status} label={t(`history.status.${search.status}`)} />}
         summary={t('history.summary', { scanType: t(`scanForm.types.${search.scan_type}`), date: new Date(search.searched_at).toLocaleString() })}
         error={search.status === 'failed' ? search.error : null}
+        exportName={exportFileName('instagram', search.username, search.id)}
+        exportData={search}
+        csvRows={search.items}
       />
 
       <ResultsView result={search} />

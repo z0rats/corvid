@@ -1,10 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { iocLookupApi } from '../../../../shared/services/api/iocLookupApi';
 import { createLogger } from '../../../../../../core/utils/logger';
+import { getCachedLookup, setCachedLookup } from '../../utils/lookupCache';
 
 const logger = createLogger('ServiceFetcher');
 
-export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult) {
+/**
+ * `bypassCache` forces a live request (an explicit re-search); otherwise a cached response from
+ * this session (see utils/lookupCache.js) is reused and reported with `fromCache: true`.
+ */
+export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult, bypassCache = false) {
   const [loading, setLoading] = useState(true);
   const [apiResult, setApiResult] = useState(null);
   const [displayProps, setDisplayProps] = useState({ summary: 'Loading...', tlp: 'WHITE' });
@@ -29,7 +34,7 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult) {
     const abortController = new AbortController();
     const getDisplayData = (data) => getDisplayDataRef.current(data);
 
-    const reportResult = (data, display) => {
+    const reportResult = (data, display, fromCache = false) => {
       if (!onResultRef.current || !serviceConfigEntry?.key) return;
       const status = data?.notFound ? 'not_found' : data?.error ? 'error' : 'found';
       onResultRef.current(serviceConfigEntry.key, {
@@ -38,6 +43,7 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult) {
         summary: display.summary,
         tlp: display.tlp,
         data,
+        fromCache,
       });
     };
 
@@ -49,6 +55,16 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult) {
         const errorData = { error: 500, message: `No service key configured for ${serviceConfigEntry?.name}.` };
         setApiResult(errorData);
         setDisplayProps(getDisplayData(errorData));
+        setLoading(false);
+        return;
+      }
+
+      const cached = bypassCache ? undefined : getCachedLookup(serviceConfigEntry.key, iocType, ioc);
+      if (cached !== undefined) {
+        setApiResult(cached);
+        const display = getDisplayData(cached);
+        setDisplayProps(display);
+        reportResult(cached, display, true);
         setLoading(false);
         return;
       }
@@ -67,6 +83,7 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult) {
         } else {
           data = response.data;
         }
+        if (!data?.error) setCachedLookup(serviceConfigEntry.key, iocType, ioc, data);
         setApiResult(data);
         const display = getDisplayData(data);
         setDisplayProps(display);
@@ -96,7 +113,7 @@ export function useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult) {
     fetchData();
 
     return () => abortController.abort();
-  }, [ioc, iocType, serviceConfigEntry]);
+  }, [ioc, iocType, serviceConfigEntry, bypassCache]);
 
   return { loading, apiResult, displayProps };
 }

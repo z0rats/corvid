@@ -14,7 +14,7 @@ import { useServiceFilter } from '../../../shared/hooks/useServiceFilter';
 import NoApiKeysAlert from './NoApiKeysAlert';
 import ServiceFetcherRow from './ServiceFetcherRow';
 
-function ResultTable({ ioc, iocType, filteredServices: externallyFilteredServices, onSearchComplete }) {
+function ResultTable({ ioc, iocType, filteredServices: externallyFilteredServices, onSearchComplete, bypassCache = false }) {
   const { t } = useTranslation('iocTools');
   const theme = useTheme();
   const servicesToRender = useServiceFilter(iocType, externallyFilteredServices);
@@ -34,13 +34,17 @@ function ResultTable({ ioc, iocType, filteredServices: externallyFilteredService
     if (resultsMapRef.current.size < servicesToRender.length) return;
 
     savedRef.current = true;
+    const entries = servicesToRender.map((service) => resultsMapRef.current.get(service.key));
+    // Replaying a lookup entirely from this session's cache (e.g. Back from another tool) is
+    // not a new search - don't write a duplicate history row for it.
+    if (entries.every((entry) => entry.fromCache)) return;
     onSearchComplete({
       ioc,
       iocType,
-      results: servicesToRender.map((service) => ({
-        service_key: service.key,
-        ...resultsMapRef.current.get(service.key),
-      })),
+      results: servicesToRender.map((service, index) => {
+        const { fromCache: _fromCache, ...entry } = entries[index];
+        return { service_key: service.key, ...entry };
+      }),
     });
   }, [servicesToRender, ioc, iocType, onSearchComplete]);
 
@@ -74,6 +78,7 @@ function ResultTable({ ioc, iocType, filteredServices: externallyFilteredService
                   iocType={iocType}
                   serviceConfigEntry={serviceDefinition}
                   onResult={handleServiceResult}
+                  bypassCache={bypassCache}
                 />
               ))}
             </TableBody>

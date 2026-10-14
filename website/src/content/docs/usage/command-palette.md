@@ -10,7 +10,8 @@ Corvid is built around a single search bar instead of hunting through menus. Pre
 
 - **Tool name** — type a tool's name (`reddit`, `git recon`, `whois`) to jump straight to it.
 - **Raw value** — paste an IP, domain, email, hash, CVE ID, or crypto address, and Corvid
-  suggests which tools can look it up (type is auto-detected).
+  suggests which tools can look it up (type is auto-detected). Defanged values copied from a report
+  (`1.2.3[.]4`, `hxxps[://]evil[.]com`) are refanged automatically.
 - **Value + tool pivot** — combine both (`john_doe reddit`) to open that tool with the value
   already filled in and the search triggered. Works for any single-value "identity" lookup:
   Reddit Search, Username Search, Email Search, and Git Recon's nickname mode.
@@ -35,4 +36,4 @@ instead of typing. Press `?` any time for the full shortcut list.
 ## Start screen
 
 The `/` route renders a lighter, non-modal version of the same search grammar by default. Under
-**Settings → General**, you can instead have `/` open straight into the newsfeed.
+**Settings → Command Palette**, you can instead have `/` open straight into the newsfeed.

@@ -4,6 +4,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import CheaterReportCard from './CheaterReportCard';
 import CloseFriendsTable from './CloseFriendsTable';
@@ -32,6 +33,9 @@ export default function HistoryDetail() {
         chips={<ScanStatusChip status={search.status} label={t(`history.status.${search.status}`)} />}
         summary={t('history.summary', { analyzed: search.friends_analyzed, total: search.friends_total })}
         error={search.status === 'failed' ? search.error_message : null}
+        exportName={exportFileName('steam-recon', search.target, search.id)}
+        exportData={search}
+        csvRows={search.result?.close_friends}
       />
 
       {result && (

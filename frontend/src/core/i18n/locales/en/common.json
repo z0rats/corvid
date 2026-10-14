@@ -134,14 +134,6 @@
   },
 
   "settings": {
-    "general": {
-      "title": "General",
-      "description": "Application wide settings can be configured here.",
-      "visual": "Visual",
-      "darkMode": "Dark mode",
-      "language": "Language",
-      "languageHelper": "Change the language used across the application interface"
-    },
     "commandPalette": {
       "title": "Command Palette",
       "description": "Configure how the search-first command palette (/ or ⌘K) behaves.",
@@ -176,5 +168,36 @@
   "scanErrors": {
     "tooManyRequests": "Too many requests - wait a minute and try again",
     "serverError": "Server error: {{status}}"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "ariaLabel": "Alerts, {{count}} unread",
+    "markAllRead": "Mark all read",
+    "clearAll": "Clear",
+    "empty": "No alerts yet. Scan results, failing background jobs and security events show up here.",
+    "loadFailed": "Couldn't load alerts.",
+    "confirmClearTitle": "Delete all alerts?",
+    "confirmClearMessage": "Every alert, read or unread, will be permanently removed."
+  },
+  "apiKeyAlert": {
+    "addKey": "Add API key"
+  },
+  "actions": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "view": "View"
+  },
+  "historyTable": {
+    "loadFailed": "Couldn't load history - check that the backend is reachable.",
+    "deleteFailed": "Couldn't delete this entry.",
+    "confirmDeleteTitle": "Delete this entry?",
+    "confirmDeleteMessage": "Its saved results will be permanently removed.",
+    "filterPlaceholder": "Filter loaded runs",
+    "noMatches": "No runs match this filter.",
+    "loadMore": "Load older runs"
+  },
+  "scanQueue": {
+    "waiting": "Queued: other heavy scans are using all slots. This scan starts automatically when one finishes; you can cancel it meanwhile."
   }
 }

@@ -27,9 +27,12 @@ import { sha256Hex } from '../../utils/fileHash';
 import { addRecent, addQueryToHistory, getPinnedToolIds, getRecents } from '../../utils/commandPaletteStorage';
 import { OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useGlobalPaletteShortcuts';
 import { useThemeManager } from '../../hooks/ui/useThemeManager';
+import { useVisibleModuleIds } from '../../hooks/useVisibleModuleIds';
 import api from '../../services/baseApi';
 import ResultList from './CommandPalette/ResultList';
 import TileGrid from './CommandPalette/TileGrid';
+import RecentActivity from './RecentActivity';
+import ApiKeysOnboardingHint from './ApiKeysOnboardingHint';
 
 // Illustrative example queries — literal grammar tokens (see commandParser.ts), not translated
 // prose, same reasoning as BUILTIN_ACTIONS/type: aliases staying English in both locales.
@@ -77,7 +80,11 @@ export default function StartScreen() {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const registry = useMemo(() => buildCommandRegistry(tCommon), [tCommon]);
+  const visibleModuleIds = useVisibleModuleIds();
+  const registry = useMemo(
+    () => buildCommandRegistry(tCommon).filter((entry) => visibleModuleIds.has(entry.moduleId)),
+    [tCommon, visibleModuleIds],
+  );
   const parsed = useMemo(() => parseQuery(query, { registry }), [query, registry]);
   const results = useMemo(() => getSelectableResults(parsed), [parsed]);
 
@@ -244,6 +251,8 @@ export default function StartScreen() {
 
         <Divider sx={{ mt: 1.5, mb: { xs: 3, sm: 5 } }} />
 
+        <ApiKeysOnboardingHint />
+
         <Box sx={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           gap: 2, width: '100%', maxWidth: 640, mx: 'auto',
@@ -336,6 +345,8 @@ export default function StartScreen() {
             />
           )}
         </Box>
+
+        {query === '' && <RecentActivity />}
       </Paper>
 
       <Snackbar

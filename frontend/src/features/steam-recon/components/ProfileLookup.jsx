@@ -8,7 +8,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 
-import ApiKeyRequiredAlert from './ApiKeyRequiredAlert';
+import ApiKeyRequiredAlert from '../../../core/components/ui/ApiKeyRequiredAlert';
 import ProfileCard from './ProfileCard';
 import WelcomeScreen from './WelcomeScreen';
 import { useSteamProfile } from '../hooks/useSteamProfile';
@@ -49,7 +49,9 @@ export default function ProfileLookup() {
         </Stack>
       </Paper>
 
-      {errorCode === 'STEAM_NOT_CONFIGURED' && <ApiKeyRequiredAlert />}
+      {errorCode === 'STEAM_NOT_CONFIGURED' && (
+        <ApiKeyRequiredAlert serviceKey="steam" message={t('apiKey.notConfigured')} actionLabel={t('apiKey.addKeyAction')} />
+      )}
 
       {error && errorCode !== 'STEAM_NOT_CONFIGURED' && (
         <Grow in={true}>

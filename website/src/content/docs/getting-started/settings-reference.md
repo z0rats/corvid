@@ -10,6 +10,7 @@ Telegram, Backup, About). They're stored in the database (not in `.env`), so the
 container restarts as long as `data/` is preserved. Newsfeed-specific settings are under
 **Newsfeed → Settings** instead, and a few features keep their own settings on the feature page —
 see [Newsfeed settings](#newsfeed-settings) and [Per-feature settings](#per-feature-settings).
+The dark/light theme and UI language toggles are in the top bar, not in Settings.
 
 ## API Keys
 
@@ -69,15 +70,14 @@ The running version, an "update available" badge when a newer GitHub release exi
 when `API_ACCESS_TOKEN` pins a fixed value in `.env`. See
 [Security](/corvid/architecture/security/).
 
-## General
-
-UI preferences: dark/light theme and UI language.
-
 ## Newsfeed settings
 
 Under **Newsfeed → Settings**:
 
-- **General** — content retention period and background-fetch interval.
+- **General** — content retention period and background-fetch interval. Articles older than the
+  retention period (default 30 days; **Unlimited** keeps everything) are deleted at the start of
+  each fetch, except ones with a note or an AI analysis, and aren't re-fetched while their feed
+  still lists them.
 - **Manage Feeds** — add/remove/enable feeds, per-feed failure warnings, and an optional
   Admiralty reliability grade (A–F) per feed.
 - **Trends** — words and IOC values excluded from the trends charts.

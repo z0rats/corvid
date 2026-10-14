@@ -2,7 +2,15 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
+import { Provider, createStore } from 'jotai';
+import { modulesState } from '../../state/atoms';
 import StartScreen from './StartScreen';
+
+vi.mock('../../services/api/activityService', () => ({
+  activityService: { listRecent: vi.fn().mockResolvedValue([]) },
+}));
+
+vi.mock('./ApiKeysOnboardingHint', () => ({ default: () => null }));
 
 const mockNavigate = vi.fn();
 
@@ -16,11 +24,13 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-function renderStartScreen() {
+function renderStartScreen(store = createStore()) {
   return render(
-    <MemoryRouter>
-      <StartScreen />
-    </MemoryRouter>,
+    <Provider store={store}>
+      <MemoryRouter>
+        <StartScreen />
+      </MemoryRouter>
+    </Provider>,
   );
 }
 
@@ -57,6 +67,14 @@ describe('StartScreen', () => {
   it('shows the full catalog with nothing typed', () => {
     renderStartScreen();
     expect(screen.getByText('Reddit Search')).toBeInTheDocument();
+    expect(screen.getByText('IOC Tools')).toBeInTheDocument();
+  });
+
+  it('hides modules disabled in Settings -> Modules from the catalog', () => {
+    const store = createStore();
+    store.set(modulesState, { reddit_search: { enabled: false } });
+    renderStartScreen(store);
+    expect(screen.queryByText('Reddit Search')).not.toBeInTheDocument();
     expect(screen.getByText('IOC Tools')).toBeInTheDocument();
   });
 });

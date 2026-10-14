@@ -107,11 +107,11 @@ describe('ProfileLookup', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('No Steam profile uses the vanity name');
   });
 
-  it('points to Settings > API Keys when no key is configured', () => {
+  it('points straight to the Steam key in Settings > API Keys when no key is configured', () => {
     mockHook({ error: 'A Steam Web API key is required.', errorCode: 'STEAM_NOT_CONFIGURED' });
     renderPage();
 
-    expect(screen.getByRole('link', { name: /add api key/i })).toHaveAttribute('href', '/settings/apikeys');
+    expect(screen.getByRole('link', { name: /add api key/i })).toHaveAttribute('href', '/settings/apikeys?service=steam');
     expect(screen.queryByText('A Steam Web API key is required.')).not.toBeInTheDocument();
   });
 });

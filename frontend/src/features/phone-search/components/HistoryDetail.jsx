@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundProvidersList from './FoundProvidersList';
 import { phoneSearchApi } from '../services/api/phoneSearchApi';
@@ -28,6 +29,9 @@ export default function HistoryDetail() {
         chips={<ScanStatusChip status={run.status} label={t(`history.status.${run.status}`)} />}
         summary={t('history.summary', { checked: run.total_providers_checked, found: run.found_count })}
         error={run.status === 'failed' ? run.error_message : null}
+        exportName={exportFileName('phone-search', run.phone_number, run.id)}
+        exportData={run}
+        csvRows={run.provider_results}
       />
 
       <FoundProvidersList providers={run.provider_results} />

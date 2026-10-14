@@ -5,6 +5,8 @@
     "errorTitle": "Configuration Error",
     "noServicesFound": "No services found",
     "noServicesFoundHelper": "Try adjusting your search or filter criteria.",
+    "focusedOn": "Showing only {{name}}.",
+    "showAll": "Show all services",
     "searchPlaceholder": "Search services...",
     "showOnlyConfigured": "Show only configured",
     "supportedIocTypes": "Supported IoC Types",

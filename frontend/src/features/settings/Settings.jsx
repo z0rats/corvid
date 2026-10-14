@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router';
 import NotFound from '../../core/components/ui/NotFound';
 
 import AiSettings from './ai-settings/AiSettings';
-import General from './general/General';
 import About from './about/About';
 import ApiKeys from './api-keys/ApiKeys';
 import Modules from './modules/Modules';
@@ -21,7 +20,6 @@ export default function Settings() {
       <Route path="apikeys" element={<ApiKeys />} />
       <Route path="modules" element={<Modules />} />
       <Route path="ai-settings" element={<AiSettings />} />
-      <Route path="general" element={<General />} />
       <Route path="command-palette" element={<CommandPaletteSettings />} />
       <Route path="telegram" element={<TelegramSettings />} />
       <Route path="backup" element={<BackupSettings />} />

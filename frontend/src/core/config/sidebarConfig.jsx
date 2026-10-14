@@ -41,6 +41,17 @@ import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
+// Left-panel grouping: every tool sits in exactly one section, shown in this order. `tags` stay
+// separate and many-to-many - they only drive the command palette's `#tag` filter.
+export const SECTIONS = {
+  INTEL: "intel",
+  PEOPLE: "people",
+  INFRASTRUCTURE: "infrastructure",
+  COMPLIANCE: "compliance",
+  UTILITIES: "utilities",
+};
+export const SECTION_ORDER = Object.values(SECTIONS);
+
 // aliases/tags/accepts/acceptsRouting power the command palette's registry
 // (core/config/commandRegistry.js), derived from this array so the tool catalog can't drift
 // from the palette's own search index — see docs/architecture/command-palette.md.
@@ -50,6 +61,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <NewspaperIcon />,
     path: "/newsfeed",
     moduleId: "newsfeed",
+    section: SECTIONS.INTEL,
     aliases: ["newsfeed", "news", "rss", "feed"],
     tags: ["recon"],
     accepts: [],
@@ -59,6 +71,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <SearchIcon />,
     path: "/ioc-tools",
     moduleId: "ioc_tools",
+    section: SECTIONS.INTEL,
     aliases: ["ioc", "lookup", "ioc lookup", "whois", "domain finder", "bulk lookup", "defang", "ct subdomains"],
     tags: ["ioc", "recon"],
     accepts: [
@@ -101,6 +114,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <MailIcon />,
     path: "/email-analyzer",
     moduleId: "email_analyzer",
+    section: SECTIONS.INTEL,
     aliases: ["email analyzer", "eml", "email header", "phishing email"],
     tags: ["email"],
     accepts: [],
@@ -110,6 +124,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <ImageIcon />,
     path: "/image-tools",
     moduleId: "image_tools",
+    section: SECTIONS.INTEL,
     aliases: ["image tools", "exif", "reverse image search", "metadata"],
     tags: ["image"],
     accepts: [],
@@ -119,6 +134,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <PsychologyIcon />,
     path: "/ai-templates",
     moduleId: "llm_templates",
+    section: SECTIONS.UTILITIES,
     aliases: ["ai templates", "llm templates", "prompt templates", "ai"],
     tags: ["ai"],
     accepts: [],
@@ -128,6 +144,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <CalculateIcon />,
     path: "/cvss-calculator",
     moduleId: "cvss_calculator",
+    section: SECTIONS.UTILITIES,
     aliases: ["cvss", "cvss calculator", "scoring"],
     tags: ["scoring"],
     accepts: [],
@@ -137,6 +154,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <RuleIcon />,
     path: "/rules",
     moduleId: "rule_creator",
+    section: SECTIONS.UTILITIES,
     aliases: ["rules", "sigma", "yara", "snort", "detection rules"],
     tags: ["detection"],
     accepts: [],
@@ -146,6 +164,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <PersonSearchIcon />,
     path: "/username-search",
     moduleId: "username_search",
+    section: SECTIONS.PEOPLE,
     aliases: ["username search", "maigret", "social analyzer", "sherlock"],
     tags: ["identity", "recon"],
     accepts: [],
@@ -155,6 +174,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <MarkEmailReadIcon />,
     path: "/email-search",
     moduleId: "email_search",
+    section: SECTIONS.PEOPLE,
     aliases: ["email search", "mailcat", "find email provider"],
     tags: ["email", "identity"],
     accepts: [],
@@ -164,6 +184,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <RedditIcon />,
     path: "/reddit-search",
     moduleId: "reddit_search",
+    section: SECTIONS.PEOPLE,
     aliases: ["reddit", "reddit search", "rosint"],
     tags: ["identity", "recon"],
     accepts: [],
@@ -173,6 +194,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <TroubleshootIcon />,
     path: "/dork-runner",
     moduleId: "dork_runner",
+    section: SECTIONS.INFRASTRUCTURE,
     aliases: ["dork runner", "google dork", "dork", "osint dork"],
     tags: ["recon"],
     accepts: [IOC_TYPES.DOMAIN, IOC_TYPES.EMAIL],
@@ -182,6 +204,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <GitHubIcon />,
     path: "/git-recon",
     moduleId: "git_recon",
+    section: SECTIONS.PEOPLE,
     aliases: ["git recon", "github recon", "gitcolombo", "commit history"],
     tags: ["recon", "identity"],
     accepts: [],
@@ -191,6 +214,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <ApartmentIcon />,
     path: "/ru-business-check",
     moduleId: "ru_business_check",
+    section: SECTIONS.COMPLIANCE,
     aliases: ["бизнес чек", "инн", "егрюл", "контрагент", "due diligence", "юрлицо", "проверка контрагента"],
     tags: ["compliance", "identity"],
     accepts: [],
@@ -200,6 +224,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <YouTubeIcon />,
     path: "/youtube",
     moduleId: "youtube",
+    section: SECTIONS.PEOPLE,
     aliases: ["youtube", "yt", "video metadata", "youtube metadata"],
     tags: ["recon", "osint"],
     // Not reachable via detectIocType's own priority chain (a YouTube link is still typed as
@@ -212,6 +237,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <RadarIcon />,
     path: "/amass",
     moduleId: "amass",
+    section: SECTIONS.INFRASTRUCTURE,
     aliases: ["amass", "owasp amass", "attack surface mapping", "asn", "netblock"],
     tags: ["recon", "identity"],
     accepts: [IOC_TYPES.DOMAIN],
@@ -221,6 +247,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <SportsEsportsIcon />,
     path: "/steam-recon",
     moduleId: "steam_recon",
+    section: SECTIONS.PEOPLE,
     aliases: ["steam", "steam recon", "steamid", "steam profile", "steamreveal"],
     tags: ["recon", "identity"],
     // Not reachable via detectIocType's own priority chain (a SteamID64/profile URL is still
@@ -233,6 +260,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <InstagramIcon />,
     path: "/instagram-search",
     moduleId: "instagram_search",
+    section: SECTIONS.PEOPLE,
     aliases: ["instagram", "insta", "instagram search", "instagram profile"],
     tags: ["identity", "recon"],
     accepts: [],
@@ -242,6 +270,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <PhoneOutlinedIcon />,
     path: "/phone-search",
     moduleId: "phone_search",
+    section: SECTIONS.PEOPLE,
     aliases: ["phone", "phone search", "phone number", "gophoner"],
     tags: ["recon", "identity"],
     // Not reachable via detectIocType's own priority chain (an E.164 number has no pattern
@@ -254,6 +283,7 @@ const MAIN_MENU_ITEMS_CONFIG = [
     icon: <GavelOutlinedIcon />,
     path: "/sanctions-search",
     moduleId: "sanctions_search",
+    section: SECTIONS.COMPLIANCE,
     aliases: ["sanctions", "ofac", "sdn", "sanctions list", "sanctions check"],
     tags: ["compliance", "identity"],
     // Free-text person/org/vessel name, not a regex-detectable IOC type - reachable via

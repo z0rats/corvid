@@ -1,18 +1,25 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook as rtlRenderHook, waitFor } from '@testing-library/react';
+import { createElement } from 'react';
+import { MemoryRouter, useLocation } from 'react-router';
+import { Provider, createStore } from 'jotai';
 import { useSanctionsSearch } from './useSanctionsSearch';
 import { sanctionsSearchApi } from '../../services/api/sanctionsSearchApi';
 
 vi.mock('../../services/api/sanctionsSearchApi');
 
-let prefillCallback;
-vi.mock('../../../../core/hooks/usePrefillFromQuery', () => ({
-  usePrefillFromQuery: vi.fn((cb) => { prefillCallback = cb; }),
-}));
+afterEach(() => vi.clearAllMocks());
 
-afterEach(() => {
-  vi.clearAllMocks();
-  prefillCallback = undefined;
-});
+// Fresh router + jotai store per test: the query lives in the URL and the result in an atom.
+let location;
+function renderHook(callback, { initialEntry = '/sanctions-search' } = {}) {
+  const store = createStore();
+  const LocationProbe = () => { location = useLocation(); return null; };
+  const wrapper = ({ children }) => createElement(
+    Provider, { store },
+    createElement(MemoryRouter, { initialEntries: [initialEntry] }, children, createElement(LocationProbe)),
+  );
+  return rtlRenderHook(callback, { wrapper });
+}
 
 describe('useSanctionsSearch — schema loading', () => {
   it('loads the available schemas on mount', async () => {
@@ -96,18 +103,36 @@ describe('useSanctionsSearch — runSearch', () => {
   });
 });
 
-describe('useSanctionsSearch — prefill from query', () => {
-  it('sets the query field and immediately runs the search, not just populating the field', async () => {
+describe('useSanctionsSearch — URL-driven query', () => {
+  it('runs the query already in the URL (pivot, reload, bookmark) and fills the field', async () => {
+    sanctionsSearchApi.getSchemas.mockResolvedValue([]);
+    sanctionsSearchApi.search.mockResolvedValue({ matches: [] });
+    const { result } = renderHook(() => useSanctionsSearch(), { initialEntry: '/sanctions-search?q=Jane+Doe' });
+
+    await waitFor(() => expect(sanctionsSearchApi.search).toHaveBeenCalledWith(
+      expect.objectContaining({ query: 'Jane Doe' }),
+    ));
+    expect(result.current.query).toBe('Jane Doe');
+  });
+
+  it('puts a submitted query into the URL', async () => {
     sanctionsSearchApi.getSchemas.mockResolvedValue([]);
     sanctionsSearchApi.search.mockResolvedValue({ matches: [] });
     const { result } = renderHook(() => useSanctionsSearch());
-    await waitFor(() => expect(prefillCallback).toBeDefined());
 
-    await act(async () => prefillCallback('Jane Doe'));
+    await act(async () => result.current.runSearch('Jane Doe'));
 
-    expect(result.current.query).toBe('Jane Doe');
-    expect(sanctionsSearchApi.search).toHaveBeenCalledWith(
-      expect.objectContaining({ query: 'Jane Doe' }),
-    );
+    expect(location.search).toBe('?q=Jane+Doe');
+  });
+
+  it('re-runs when the same query is submitted again', async () => {
+    sanctionsSearchApi.getSchemas.mockResolvedValue([]);
+    sanctionsSearchApi.search.mockResolvedValue({ matches: [] });
+    const { result } = renderHook(() => useSanctionsSearch(), { initialEntry: '/sanctions-search?q=Jane+Doe' });
+    await waitFor(() => expect(sanctionsSearchApi.search).toHaveBeenCalledTimes(1));
+
+    await act(async () => result.current.runSearch());
+
+    expect(sanctionsSearchApi.search).toHaveBeenCalledTimes(2);
   });
 });

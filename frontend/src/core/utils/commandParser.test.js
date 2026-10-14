@@ -87,6 +87,21 @@ describe('parseQuery — recognized value', () => {
     expect(result.matches.map((m) => m.id)).toEqual(['ioc_tools']);
   });
 
+  it('recognizes a defanged indicator and carries it refanged', () => {
+    const ip = parseQuery('185.220.101[.]7', { registry });
+    expect(ip.kind).toBe('value');
+    expect(ip.iocType).toBe(IOC_TYPES.IPV4);
+    expect(ip.value).toBe('185.220.101.7');
+
+    const url = parseQuery('hxxps[://]evil[.]com/login', { registry });
+    expect(url.iocType).toBe(IOC_TYPES.URL);
+    expect(url.value).toBe('https://evil.com/login');
+  });
+
+  it('keeps the defang/fang instant answers working on raw input', () => {
+    expect(parseQuery('fang evil[.]com', { registry }).kind).toBe('instant');
+  });
+
   it('detects a CVE id', () => {
     const result = parseQuery('CVE-2024-3400', { registry });
     expect(result.kind).toBe('value');

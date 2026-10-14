@@ -8,7 +8,6 @@ export const NOTIFICATION_MESSAGES = {
   API_KEY_REMOVED: 'API key removed successfully.',
   API_KEY_ACTIVATED: 'service activated successfully.',
   API_KEY_DEACTIVATED: 'service deactivated successfully.',
-  DARKMODE_UPDATED: 'Dark mode updated successfully.',
   LANGUAGE_UPDATED: 'Language updated successfully.',
   COMMAND_PALETTE_UPDATED: 'Command palette settings updated successfully.',
   MODULE_ENABLED: 'Module enabled successfully.',

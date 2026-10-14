@@ -44,6 +44,14 @@ detection - it's still typeable directly into Steam Recon's own form, just not a
 E.g. `email_search`'s found email → `ioc_lookup`, `ioc_lookup`'s domain result → `domain_finder`.
 The value passes via a `?q=` query param (`core/utils/crossFeatureNav.ts`'s `buildPrefillUrl`);
 the target feature reads and clears it on mount via `core/hooks/usePrefillFromQuery.tsx`.
+Exception: one-shot lookups whose result should survive reload/Back and be bookmarkable keep
+`?q=` as their source of truth instead of clearing it - IOC single lookup (`useUrlQuery`, results
+served from a 15-minute session cache in `single-lookup/utils/lookupCache.js` so revisits don't
+re-spend provider quota), Sanctions Search and YouTube (`useUrlDrivenLookup`). Dork Runner stays
+consume-once, since re-running it on reload is slow and hits the search engine again.
+
+Pasted values are refanged (`core/utils/refang.ts`, bracketed markers only) before type
+detection, in the palette and in IOC single/bulk lookup.
 `core/components/ui/ChainActionButton.jsx` is the reusable trigger.
 
 ## Palette pivot gotcha

@@ -12,6 +12,7 @@ export function buildCommandRegistry(t) {
     icon: item.icon,
     path: item.path,
     moduleId: item.moduleId,
+    section: item.section,
     aliases: item.aliases ?? [],
     tags: item.tags ?? [],
     accepts: item.accepts ?? [],

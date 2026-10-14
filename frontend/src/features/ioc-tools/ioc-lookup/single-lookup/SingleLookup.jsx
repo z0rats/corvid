@@ -20,6 +20,8 @@ export default function SingleLookup() {
     currentIocType,
     snackbarOpen,
     shouldShowTable,
+    refreshKey,
+    bypassCache,
     inputRef,
     handleSubmitSearch,
     handleKeyPress,
@@ -73,7 +75,9 @@ export default function SingleLookup() {
           )}
           <NewsfeedMentionAlert mentions={newsfeedMentions} />
           <ResultTable
+            key={refreshKey}
             ioc={searchValue}
+            bypassCache={bypassCache}
             iocType={currentIocType}
             onSearchComplete={handleSearchComplete}
           />

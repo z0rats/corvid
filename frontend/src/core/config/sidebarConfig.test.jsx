@@ -1,4 +1,4 @@
-import { TAB_ROUTES } from './sidebarConfig';
+import { TAB_ROUTES, SECTION_ORDER, getMainMenuItems } from './sidebarConfig';
 
 const identityT = (key) => key;
 
@@ -33,5 +33,13 @@ describe('TAB_ROUTES — Layout.jsx tab resolution', () => {
   it('has no duplicate or overlapping-ambiguous prefixes', () => {
     const prefixes = TAB_ROUTES.map((route) => route.prefix);
     expect(new Set(prefixes).size).toBe(prefixes.length);
+  });
+});
+
+describe('MAIN_MENU_ITEMS_CONFIG — left panel sections', () => {
+  it('puts every tool in exactly one known section', () => {
+    getMainMenuItems(identityT).forEach((item) => {
+      expect(SECTION_ORDER).toContain(item.section);
+    });
   });
 });

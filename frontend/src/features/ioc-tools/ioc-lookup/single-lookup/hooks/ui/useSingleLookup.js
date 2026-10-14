@@ -1,43 +1,61 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { determineIocType } from '../../../shared/utils/iocDefinitions';
 import { lookupHistoryApi } from '../../services/api/lookupHistoryApi';
 import { createLogger } from '../../../../../../core/utils/logger';
-import { usePrefillFromQuery } from '../../../../../../core/hooks/usePrefillFromQuery';
+import { useUrlQuery } from '../../../../../../core/hooks/useUrlQuery';
+import { refang } from '../../../../../../core/utils/refang';
 
 const logger = createLogger('SingleLookupHistory');
 
+/**
+ * The looked-up IOC lives in the URL (`?q=`), so a lookup survives reload/Back and can be
+ * bookmarked; revisits are served from the session cache in useServiceFetcher rather than
+ * re-querying every provider. Re-submitting the value already shown is an explicit refresh.
+ */
 export function useSingleLookup() {
-  const [searchValue, setSearchValue] = useState('');
-  const [currentIocType, setCurrentIocType] = useState('');
+  const [urlValue, setUrlValue] = useUrlQuery();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [shouldShowTable, setShouldShowTable] = useState(false);
+  // Bumped by re-submitting the current value: remounts the result table and bypasses the cache.
+  const [refresh, setRefresh] = useState({ value: null, count: 0 });
   const inputRef = useRef(null);
 
-  const handleValidation = useCallback((iocInput) => {
-    const trimmedIoc = iocInput.trim();
+  const searchValue = useMemo(() => refang(urlValue), [urlValue]);
+  const detectedType = useMemo(() => (searchValue ? determineIocType(searchValue) : ''), [searchValue]);
+  const isValid = Boolean(detectedType) && detectedType !== 'unknown';
 
-    if (!trimmedIoc) {
-      setShouldShowTable(false);
+  useEffect(() => {
+    if (inputRef.current && inputRef.current.value !== searchValue) {
+      inputRef.current.value = searchValue;
+    }
+    // An unrecognized value arriving via the URL (pivot, bookmark) gets the same feedback as a typed one.
+    if (searchValue && !isValid) setSnackbarOpen(true);
+  }, [searchValue, isValid]);
+
+  const handleValidation = useCallback((iocInput) => {
+    const value = refang(iocInput);
+
+    if (!value) {
       setSnackbarOpen(false);
-      setSearchValue('');
-      setCurrentIocType('');
+      setUrlValue('');
       return false;
     }
 
-    const type = determineIocType(trimmedIoc);
-
-    if (type !== 'unknown') {
-      setSnackbarOpen(false);
-      setSearchValue(trimmedIoc);
-      setCurrentIocType(type);
-      setShouldShowTable(true);
-      return true;
-    } else {
-      setShouldShowTable(false);
+    if (determineIocType(value) === 'unknown') {
       setSnackbarOpen(true);
       return false;
     }
-  }, []);
+
+    setSnackbarOpen(false);
+    if (inputRef.current && inputRef.current.value !== value) {
+      inputRef.current.value = value;
+    }
+    if (value === searchValue) {
+      setRefresh((prev) => ({ value, count: prev.value === value ? prev.count + 1 : 1 }));
+    } else {
+      setUrlValue(value);
+    }
+    return true;
+  }, [searchValue, setUrlValue]);
 
   const handleSubmitSearch = useCallback(() => {
     const inputValue = inputRef.current?.value || '';
@@ -60,18 +78,15 @@ export function useSingleLookup() {
     });
   }, []);
 
-  usePrefillFromQuery(useCallback((value) => {
-    if (inputRef.current) {
-      inputRef.current.value = value;
-    }
-    handleValidation(value);
-  }, [handleValidation]));
+  const refreshCount = refresh.value === searchValue ? refresh.count : 0;
 
   return {
-    searchValue,
-    currentIocType,
+    searchValue: isValid ? searchValue : '',
+    currentIocType: isValid ? detectedType : '',
     snackbarOpen,
-    shouldShowTable,
+    shouldShowTable: isValid,
+    refreshKey: `${searchValue}#${refreshCount}`,
+    bypassCache: refreshCount > 0,
     inputRef,
     handleSubmitSearch,
     handleKeyPress,

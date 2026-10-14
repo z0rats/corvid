@@ -4,7 +4,10 @@
     "form": {
       "errors": {
         "invalidFileType": "Invalid file type. Please drop a CSV, MD, or TXT file.",
-        "fileReadError": "Error reading file: {{fileName}}"
+        "fileReadError": "Error reading file: {{fileName}}",
+        "noServices": "Please select at least one service to perform the lookup.",
+        "noIocs": "Please enter at least one IOC, or check input for valid formatting.",
+        "streamFailed": "Failed to connect or stream results: {{message}}"
       },
       "iocInput": {
         "heading": "IOC Input",

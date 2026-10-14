@@ -7,11 +7,12 @@ import ListSubheader from '@mui/material/ListSubheader';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { buildCommandRegistry } from '../../config/commandRegistry';
+import { SECTION_ORDER } from '../../config/sidebarConfig';
 import { getPinnedToolIds, getRecents, togglePinnedToolId, PINNED_CHANGED_EVENT } from '../../utils/commandPaletteStorage';
 
 /**
@@ -66,18 +67,14 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
     .filter((entry, index, arr) => entry && arr.findIndex((e) => e.id === entry.id) === index)
     .slice(0, 5);
 
-  const groupedByTag = useMemo(() => {
-    const groups = {};
-    visibleRegistry.forEach((entry) => {
-      entry.tags.forEach((tag) => {
-        if (!groups[tag]) groups[tag] = [];
-        groups[tag].push(entry);
-      });
-    });
-    return groups;
-  }, [visibleRegistry]);
+  const sections = useMemo(
+    () => SECTION_ORDER
+      .map((section) => ({ section, entries: visibleRegistry.filter((entry) => entry.section === section) }))
+      .filter(({ entries }) => entries.length > 0),
+    [visibleRegistry],
+  );
 
-  const renderRow = (entry, index, { showUnpin = false } = {}) => (
+  const renderRow = (entry, { showUnpin = false } = {}) => (
     <ListItemButton
       key={entry.id}
       component={Link}
@@ -97,7 +94,7 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
         </ListItemIcon>
       </Tooltip>
       {sidebarOpen && <ListItemText primary={entry.label} />}
-      {sidebarOpen && showUnpin ? (
+      {sidebarOpen && showUnpin && (
         <Tooltip title={t('leftPanel.unpin')}>
           <IconButton
             className="unpin-button"
@@ -109,10 +106,6 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
             <PushPinIcon fontSize="inherit" />
           </IconButton>
         </Tooltip>
-      ) : (
-        sidebarOpen && index !== undefined && index < 9 && (
-          <Chip label={index + 1} size="small" variant="outlined" sx={{ height: 18, fontSize: '0.65rem' }} />
-        )
       )}
     </ListItemButton>
   );
@@ -126,7 +119,7 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
             <ListSubheader disableSticky>{t('leftPanel.pinned')}</ListSubheader>
           ) : null}
         >
-          {pinnedEntries.map((entry, i) => renderRow(entry, i, { showUnpin: true }))}
+          {pinnedEntries.map((entry) => renderRow(entry, { showUnpin: true }))}
         </List>
       )}
 
@@ -136,13 +129,16 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
         </List>
       )}
 
-      {Object.keys(groupedByTag).sort().map((tag) => (
+      {sections.map(({ section, entries }, index) => (
         <List
-          key={tag}
+          key={section}
           dense
-          subheader={sidebarOpen ? <ListSubheader disableSticky>{`#${tag}`}</ListSubheader> : null}
+          subheader={sidebarOpen
+            ? <ListSubheader disableSticky>{t(`leftPanel.sections.${section}`)}</ListSubheader>
+            // Collapsed: no headings fit, so a divider keeps the groups visually apart.
+            : (index > 0 || pinnedEntries.length > 0) && <Divider sx={{ mx: 1, mb: 0.5 }} />}
         >
-          {groupedByTag[tag].map((entry) => renderRow(entry))}
+          {entries.map((entry) => renderRow(entry))}
         </List>
       ))}
     </Box>

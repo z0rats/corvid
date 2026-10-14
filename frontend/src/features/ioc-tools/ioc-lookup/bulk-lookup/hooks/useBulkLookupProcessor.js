@@ -6,6 +6,8 @@ import { SERVICE_DEFINITIONS } from '../../shared/config/serviceConfig';
 import { iocLookupApi } from '../../../shared/services/api/iocLookupApi';
 import { readSseEvents } from '../../../../../core/services/sseStream';
 import { createLogger } from '../../../../../core/utils/logger';
+import { refang } from '../../../../../core/utils/refang';
+import i18n from '../../../../../core/i18n';
 import { bulkLookupStateAtom } from '../state/bulkLookupAtoms';
 
 const logger = createLogger('BulkLookupProcessor');
@@ -133,7 +135,7 @@ export function useBulkLookupProcessor() {
   const performLookup = useCallback(async (iocsInput, selectedServices) => {
     setProcessorError('');
     if (selectedServices.length === 0) {
-      setProcessorError('Please select at least one service to perform the lookup.');
+      setProcessorError(i18n.t('iocTools:bulkLookup.form.errors.noServices'));
       return;
     }
 
@@ -151,11 +153,11 @@ export function useBulkLookupProcessor() {
       Object.values(IOC_TYPES).map(type => [type, []])
     );
 
-    const lines = iocsInput.split(/[ ,\n]+/).map(line => line.trim()).filter(Boolean);
+    const lines = iocsInput.split(/[ ,\n]+/).map(refang).filter(Boolean);
     const uniqueIocs = Array.from(new Set(lines));
 
     if (uniqueIocs.length === 0) {
-      setProcessorError('Please enter at least one IOC, or check input for valid formatting.');
+      setProcessorError(i18n.t('iocTools:bulkLookup.form.errors.noIocs'));
       setLoading(false);
       return;
     }
@@ -184,7 +186,7 @@ export function useBulkLookupProcessor() {
     } catch (err) {
       if (signal.aborted) return;
       logger.error('SSE connection error:', err);
-      setProcessorError(`Failed to connect or stream results: ${err.message}`);
+      setProcessorError(i18n.t('iocTools:bulkLookup.form.errors.streamFailed', { message: err.message }));
     } finally {
       if (!signal.aborted) {
         setLoading(false);

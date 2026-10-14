@@ -1,4 +1,5 @@
 import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
+import { refang } from './refang';
 
 /**
  * Pure, framework-free parsing of the command palette's input grammar (see
@@ -17,6 +18,7 @@ export interface RegistryEntry {
   icon?: unknown;
   path: string;
   moduleId: string;
+  section?: string;
   aliases: string[];
   tags: string[];
   accepts: IocType[];
@@ -351,25 +353,30 @@ export function parseQuery(rawInput?: string | null, ctx: Partial<ParserContext>
   const instant = parseInstantAnswer(input);
   if (instant) return instant;
 
-  const iocType = detectIocType(input);
+  // A defanged indicator pasted from a report (`1.2.3[.]4`, `hxxps[://]...`) is recognized - and
+  // carried to the target tool - in its refanged form.
+  const rawType = detectIocType(input);
+  const refanged = rawType === IOC_TYPES.UNKNOWN ? refang(input) : input;
+  const iocType = refanged === input ? rawType : detectIocType(refanged);
   if (iocType !== IOC_TYPES.UNKNOWN) {
+    const value = refanged;
     const matches = rankToolsForValue(iocType, context.registry);
     // detectIocType classifies a YouTube link (or a steamcommunity.com profile URL) as plain URL
     // (see iocTypeDetection.ts's YOUTUBE_VIDEO_URL/STEAM_PROFILE comments for why that stays
     // true rather than adding a real pattern for either) - so a more specific module match, when
     // one is registered, is surfaced here as an addition on top of the generic URL matches
     // rather than instead of them.
-    const youtubeMatches = iocType === IOC_TYPES.URL && isYoutubeVideoUrl(input)
+    const youtubeMatches = iocType === IOC_TYPES.URL && isYoutubeVideoUrl(value)
       ? rankToolsForValue(IOC_TYPES.YOUTUBE_VIDEO_URL, context.registry)
       : [];
-    const steamMatches = iocType === IOC_TYPES.URL && isSteamProfileTarget(input)
+    const steamMatches = iocType === IOC_TYPES.URL && isSteamProfileTarget(value)
       ? rankToolsForValue(IOC_TYPES.STEAM_PROFILE, context.registry)
       : [];
     const extraMatches = [...youtubeMatches, ...steamMatches];
     const orderedMatches = extraMatches.length > 0
       ? [...extraMatches, ...matches.filter((entry) => !extraMatches.includes(entry))]
       : matches;
-    return { kind: 'value', value: input, iocType, matches: orderedMatches };
+    return { kind: 'value', value, iocType, matches: orderedMatches };
   }
 
   // A bare SteamID64/SteamID3/SteamID2 (no URL wrapper) matches nothing in detectIocType's own

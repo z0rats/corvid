@@ -8,6 +8,7 @@ import api from '../services/baseApi';
 import { useGlobalPaletteShortcuts } from './useGlobalPaletteShortcuts';
 import { usePlaybooks } from './usePlaybooks';
 import { buildCommandRegistry, resolveEntryPath } from '../config/commandRegistry';
+import { useVisibleModuleIds } from './useVisibleModuleIds';
 import {
   parseQuery, VALUE_KINDS, getSelectableResults,
   mergeEmptyStateResults, resolveSelection, createGrammarDispatch, handleGrammarNavKey,
@@ -60,7 +61,11 @@ export function useCommandPalette() {
   const [recents, setRecents] = useState(getRecents);
   const historyPointer = useRef(-1);
 
-  const registry: RegistryEntry[] = useMemo(() => buildCommandRegistry(tCommon), [tCommon]);
+  const visibleModuleIds = useVisibleModuleIds();
+  const registry: RegistryEntry[] = useMemo(
+    () => buildCommandRegistry(tCommon).filter((entry: RegistryEntry) => visibleModuleIds.has(entry.moduleId)),
+    [tCommon, visibleModuleIds],
+  );
 
   const showNotice = useCallback((message: string, severity: NoticeSeverity = 'success') => {
     setNotice({ message, severity });

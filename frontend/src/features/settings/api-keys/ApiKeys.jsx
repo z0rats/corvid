@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router';
 import { useApiKeys } from '../hooks/api/useApiKeys';
 import { useApiKeyFilters } from '../hooks/ui/useFilters';
 import { calculateCompletionPercentage, getConfiguredCount } from '../utils/settingsUtils';
@@ -17,6 +18,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 import ErrorIcon from '@mui/icons-material/Error';
 
 export default function ApiKeys() {
@@ -25,6 +27,14 @@ export default function ApiKeys() {
   const [headerExpanded, setHeaderExpanded] = useState(false);
   const [error, setError] = useState(null);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const focusKey = searchParams.get('service');
+  const clearFocus = () => setSearchParams((prev) => {
+    const next = new URLSearchParams(prev);
+    next.delete('service');
+    return next;
+  }, { replace: true });
+
   const { loading, getServicesConfig } = useApiKeys();
   const {
     searchFilter,
@@ -32,7 +42,7 @@ export default function ApiKeys() {
     filteredServices,
     updateSearchFilter,
     toggleShowOnlyConfigured,
-  } = useApiKeyFilters(servicesConfig);
+  } = useApiKeyFilters(servicesConfig, focusKey);
 
   useEffect(() => {
     let ignore = false;
@@ -94,12 +104,22 @@ export default function ApiKeys() {
 
       <QuotaPanel />
 
-      <ApiKeysFilters
-        searchFilter={searchFilter}
-        showOnlyConfigured={showOnlyConfigured}
-        onSearchChange={updateSearchFilter}
-        onToggleConfigured={toggleShowOnlyConfigured}
-      />
+      {focusKey && servicesConfig[focusKey] ? (
+        <Alert
+          severity="info"
+          sx={{ mb: 3 }}
+          action={<Button color="inherit" size="small" onClick={clearFocus}>{t('apiKeys.showAll')}</Button>}
+        >
+          {t('apiKeys.focusedOn', { name: servicesConfig[focusKey].name })}
+        </Alert>
+      ) : (
+        <ApiKeysFilters
+          searchFilter={searchFilter}
+          showOnlyConfigured={showOnlyConfigured}
+          onSearchChange={updateSearchFilter}
+          onToggleConfigured={toggleShowOnlyConfigured}
+        />
+      )}
 
       <Grid container spacing={3}>
         {filteredServices.map(([serviceKey, service]) => (

@@ -11,6 +11,7 @@ import Link from '@mui/material/Link';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundSitesList from './FoundSitesList';
 import DiscoveredIdentifiers from './DiscoveredIdentifiers';
@@ -50,6 +51,9 @@ export default function HistoryDetail() {
         )}
         summary={t('history.summary', { checked: run.total_sites_checked, found: run.found_count })}
         error={run.status === 'failed' ? run.error_message : null}
+        exportName={exportFileName('username-search', run.username, run.id)}
+        exportData={run}
+        csvRows={run.site_results}
       />
 
       {parentId != null && (

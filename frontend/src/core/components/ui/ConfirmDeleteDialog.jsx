@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -6,6 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 export default function ConfirmDeleteDialog({ open, onClose, onConfirm, title, message }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>{title}</DialogTitle>
@@ -13,8 +15,8 @@ export default function ConfirmDeleteDialog({ open, onClose, onConfirm, title, m
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} variant="outlined">Cancel</Button>
-        <Button onClick={onConfirm} variant="contained" color="error" autoFocus>Delete</Button>
+        <Button onClick={onClose} variant="outlined">{t('actions.cancel')}</Button>
+        <Button onClick={onConfirm} variant="contained" color="error" autoFocus>{t('actions.delete')}</Button>
       </DialogActions>
     </Dialog>
   );

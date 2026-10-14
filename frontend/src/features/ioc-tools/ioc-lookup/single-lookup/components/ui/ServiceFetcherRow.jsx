@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import ServiceResultRow from './ServiceResultRow.jsx';
 import { useServiceFetcher } from '../../hooks/api/useServiceFetcher';
 
-function ServiceFetcherRow({ ioc, iocType, serviceConfigEntry, onResult }) {
+function ServiceFetcherRow({ ioc, iocType, serviceConfigEntry, onResult, bypassCache }) {
   const { t } = useTranslation('iocTools');
-  const { loading, apiResult, displayProps } = useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult);
+  const { loading, apiResult, displayProps } = useServiceFetcher(ioc, iocType, serviceConfigEntry, onResult, bypassCache);
 
   const serviceForChild = useMemo(() => ({
     name: serviceConfigEntry?.name || t('singleLookup.serviceFetcherRow.unknownService'),

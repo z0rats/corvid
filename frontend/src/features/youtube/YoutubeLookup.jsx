@@ -8,7 +8,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 
-import ApiKeyRequiredAlert from './components/ui/ApiKeyRequiredAlert';
+import ApiKeyRequiredAlert from '../../core/components/ui/ApiKeyRequiredAlert';
 import CommentsPanel from './components/ui/CommentsPanel';
 import ThumbnailGrid from './components/ui/ThumbnailGrid';
 import VideoOverviewCard from './components/ui/VideoOverviewCard';
@@ -63,7 +63,7 @@ export default function YoutubeLookup() {
       {result ? (
         <>
           <VideoOverviewCard result={result} />
-          {!result.api_configured && <ApiKeyRequiredAlert message={t('apiKey.notConfigured')} />}
+          {!result.api_configured && <ApiKeyRequiredAlert serviceKey="youtube" message={t('apiKey.notConfigured')} actionLabel={t('apiKey.addKeyAction')} />}
           <VideoStatsCard result={result} />
           <CommentsPanel result={result} />
           <ThumbnailGrid thumbnails={result.thumbnails} />

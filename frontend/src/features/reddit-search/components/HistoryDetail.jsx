@@ -8,6 +8,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import PostingActivityChart from './PostingActivityChart';
 import ResultsList from './ResultsList';
@@ -39,6 +40,9 @@ export default function HistoryDetail() {
         onBack={() => navigate('/reddit-search/history')}
         title={search.username}
         summary={t('history.summary', { count: search.result_count, date: new Date(search.searched_at).toLocaleString() })}
+        exportName={exportFileName('reddit', search.username, search.id)}
+        exportData={search}
+        csvRows={search.results}
       />
 
       <Tabs value={kind} onChange={(_e, value) => setKind(value)} sx={{ mb: 2 }}>

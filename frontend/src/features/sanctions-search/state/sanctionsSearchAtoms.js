@@ -1,6 +1,8 @@
 import { atom } from 'jotai';
 
 export const SANCTIONS_SEARCH_INITIAL_STATE = {
+  // The query the shown result belongs to - lets the URL-driven runner skip re-running it.
+  lastQuery: '',
   result: null,
   loading: false,
   error: null,

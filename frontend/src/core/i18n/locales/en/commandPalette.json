@@ -4,13 +4,32 @@
     "brand": "Corvid · Home",
     "focusHint": "focus — / or ⌘K",
     "pasteHint": "or paste an image (⌘V/Ctrl+V), or drag & drop a file — images open Image Tools, other files are hashed and checked (VirusTotal, etc.)",
-    "recentHint": "recent: {{items}} — keep typing to search further"
+    "recentHint": "recent: {{items}} — keep typing to search further",
+    "recentActivity": "Recent activity",
+    "onboarding": {
+      "title": "No API keys configured yet",
+      "body": "Username, email and phone search, Reddit, sanctions, dork runner, Amass and several IOC sources already work without keys. IOC lookups get much richer with free-tier keys from services like VirusTotal, AbuseIPDB and AlienVault OTX.",
+      "action": "Add keys",
+      "dismiss": "Close"
+    },
+    "activityStatus": {
+      "running": "Running",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    }
   },
   "leftPanel": {
     "pinned": "Pinned",
     "recent": "Recent",
     "unpin": "Unpin",
-    "unpinAria": "Unpin {{label}}"
+    "unpinAria": "Unpin {{label}}",
+    "sections": {
+      "intel": "Threat intel",
+      "people": "People & accounts",
+      "infrastructure": "Infrastructure",
+      "compliance": "Compliance",
+      "utilities": "Utilities"
+    }
   },
   "results": {
     "empty": "No matches"

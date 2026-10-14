@@ -46,3 +46,20 @@ describe('useApiKeyFilters', () => {
     expect(result.current.showOnlyConfigured).toBe(false);
   });
 });
+
+describe('useApiKeyFilters — focused service (?service=)', () => {
+  const services = {
+    steam: { name: 'Steam', available: false },
+    youtube: { name: 'YouTube', available: true },
+  };
+
+  it('narrows to the focused service key', () => {
+    const { result } = renderHook(() => useApiKeyFilters(services, 'steam'));
+    expect(result.current.filteredServices).toEqual([['steam', services.steam]]);
+  });
+
+  it('ignores an unknown focus key', () => {
+    const { result } = renderHook(() => useApiKeyFilters(services, 'nope'));
+    expect(result.current.filteredServices).toHaveLength(2);
+  });
+});

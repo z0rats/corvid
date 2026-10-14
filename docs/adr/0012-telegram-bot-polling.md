@@ -24,8 +24,8 @@ is accepted for v1 given the single-user, low-message-frequency use case; a queu
 per-command concurrency would be premature.
 
 This is the first persistent, gracefully-stoppable background task in this codebase.
-`main.py`'s existing `asyncio.create_task(...)` calls (favicon fetch, blacklist backfill)
-are fire-and-forget and run once at startup; the poll loop instead runs for the life of
+`main.py`'s startup catch-ups (favicon fetch, blacklist backfill, registry dumps) run once,
+sequentially, in a single task; the poll loop instead runs for the life of
 the process, so `core/telegram_bot/service/polling_service.py` keeps its own task handle
 and `stop_bot_polling()` is wired into `handle_application_shutdown` to cancel and await
 it cleanly on container stop.

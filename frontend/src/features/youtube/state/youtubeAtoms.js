@@ -1,6 +1,8 @@
 import { atom } from 'jotai';
 
 export const YOUTUBE_LOOKUP_INITIAL_STATE = {
+  // The URL the shown result belongs to - lets the URL-driven runner skip re-running it.
+  lastQuery: '',
   result: null,
   loading: false,
   error: null,

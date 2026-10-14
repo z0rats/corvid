@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import LinearProgress from '@mui/material/LinearProgress';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import ResultsView from './ResultsView';
 import { gitReconApi } from '../services/api/gitReconApi';
@@ -28,6 +29,9 @@ export default function HistoryDetail() {
         chips={<ScanStatusChip status={search.status} label={t(`history.status.${search.status}`)} />}
         summary={t('history.summary', { mode: t(`form.modes.${search.mode}`), date: new Date(search.searched_at).toLocaleString() })}
         error={search.status === 'failed' ? search.error : null}
+        exportName={exportFileName('git-recon', search.target, search.id)}
+        exportData={search}
+        csvRows={search.result?.persons}
       />
 
       <ResultsView result={search.result} />

@@ -8,15 +8,6 @@ vi.mock('../../../../core/services/baseApi', () => ({
 afterEach(() => vi.clearAllMocks());
 
 describe('settingsApi — general settings', () => {
-  it('updateDarkmode puts the flag as a query param', async () => {
-    api.put.mockResolvedValue({ data: { darkmode: true } });
-
-    const result = await settingsApi.updateDarkmode(true);
-
-    expect(api.put).toHaveBeenCalledWith('/api/settings/general/darkmode?darkmode=true');
-    expect(result).toEqual({ darkmode: true });
-  });
-
   it('updateLanguage puts the language in the body', async () => {
     api.put.mockResolvedValue({ data: { language: 'ru' } });
 
