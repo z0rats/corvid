@@ -179,15 +179,13 @@ def test_validate_environment_variables_flags_default_cors_in_production(monkeyp
     assert any("localhost development default" in e and "CORS" in e for e in errors)
 
 
-def test_validate_environment_variables_flags_default_trusted_hosts_in_production(monkeypatch):
+def test_validate_environment_variables_accepts_wildcard_trusted_hosts_in_production(monkeypatch):
     monkeypatch.setattr(settings, "environment", "production")
     monkeypatch.setattr(settings.api, "debug", False)
     monkeypatch.setattr(settings.api, "cors_origins", ["https://corvid.example"])
-    monkeypatch.setattr(settings.api, "trusted_hosts", ["localhost", "127.0.0.1"])
+    monkeypatch.setattr(settings.api, "trusted_hosts", ["*"])
 
-    errors = validation.validate_environment_variables()
-
-    assert any("Trusted hosts" in e for e in errors)
+    assert validation.validate_environment_variables() == []
 
 
 def test_validate_environment_variables_passes_for_properly_configured_production(monkeypatch):

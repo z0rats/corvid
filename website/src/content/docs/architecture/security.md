@@ -14,7 +14,9 @@ guidance.
 
 No user accounts — the app is single-user. Every `/api/*` route is guarded behind one shared
 bearer token (`API_ACCESS_TOKEN`, or auto-generated and persisted to `data/.access_token` on
-first startup). `/docs`, `/redoc`, and `/openapi.json` are covered too. The healthcheck endpoint
+first startup). `/openapi.json` is covered too; the `/docs` and `/redoc` pages themselves are
+static shells that load it with the token this browser already signed in with (outside
+`ENVIRONMENT=production`, where they're disabled). The healthcheck endpoint
 and the alerts WebSocket handshake are the only exceptions (the WebSocket checks the same token
 via a query param, since browsers can't set a custom header on the handshake). The token can be
 regenerated from the app (Settings → About → Access Token → Regenerate) if it's ever exposed —

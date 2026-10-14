@@ -33,26 +33,16 @@ def _dev_version() -> str:
 class DatabaseSettings(BaseSettings):
     """Database configuration settings"""
 
-    model_config = SettingsConfigDict(env_prefix="DB_", env_file=".env", env_file_encoding="utf-8")
+    # extra="ignore": DB_POOL_RECYCLE (only ever meaningful for the removed non-SQLite path) may
+    # linger in operators' .env files and must not fail startup.
+    model_config = SettingsConfigDict(
+        env_prefix="DB_", env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
-    url: str = Field(default="sqlite:///./data/corvid.db", description="Database URL")
+    url: str = Field(default="sqlite:///./data/corvid.db", description="Database URL (SQLite only)")
     echo: bool = Field(default=False, description="Enable SQLAlchemy query logging")
-    pool_size: int = Field(
-        default=10,
-        description="Database connection pool size, for both SQLite and non-SQLite URLs.",
-    )
-    max_overflow: int = Field(
-        default=20,
-        description="Maximum database connection overflow, for both SQLite and non-SQLite URLs.",
-    )
-    pool_recycle: int = Field(
-        default=3600,
-        description=(
-            "Connection pool recycle time in seconds. Only applies to non-SQLite URLs "
-            "(e.g. postgresql+asyncpg://) - ignored for the SQLite backend, whose local "
-            "connections don't go stale the way a networked DB's can."
-        ),
-    )
+    pool_size: int = Field(default=10, description="Database connection pool size")
+    max_overflow: int = Field(default=20, description="Maximum database connection overflow")
 
 
 class LoggingSettings(BaseSettings):
@@ -88,9 +78,9 @@ class APISettings(BaseSettings):
     cors_origins: list[str] = Field(
         default=["http://localhost:3000"], description="CORS allowed origins"
     )
-    trusted_hosts: list[str] = Field(
-        default=["localhost", "127.0.0.1"], description="Allowed Host header values"
-    )
+    # "*" by default: the bearer token, not the Host header, is what gates the API, and a
+    # strict localhost-only list rejects every request reaching the app by LAN IP or hostname.
+    trusted_hosts: list[str] = Field(default=["*"], description="Allowed Host header values")
     access_token: str = Field(
         default="",
         description=(
@@ -140,6 +130,23 @@ class SchedulerSettings(BaseSettings):
     )
 
 
+class ScanSettings(BaseSettings):
+    """Scan-style feature (core/scans/) configuration settings"""
+
+    model_config = SettingsConfigDict(
+        env_prefix="SCAN_", env_file=".env", env_file_encoding="utf-8"
+    )
+
+    max_concurrent_heavy: int = Field(
+        default=3,
+        ge=1,
+        description=(
+            "Maximum resource-heavy scans (maigret, social-analyzer, user_scanner, amass, "
+            "git_recon clone modes) running at once; further ones wait in a queue"
+        ),
+    )
+
+
 class LLMSettings(BaseSettings):
     """Local LLM provider configuration settings"""
 
@@ -178,6 +185,7 @@ class AppSettings(BaseSettings):
     logging: LoggingSettings = Field(default_factory=LoggingSettings)
     api: APISettings = Field(default_factory=APISettings)
     scheduler: SchedulerSettings = Field(default_factory=SchedulerSettings)
+    scans: ScanSettings = Field(default_factory=ScanSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
 

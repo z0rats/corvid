@@ -3,10 +3,11 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from app.core.config.settings import settings
 
 # Swagger UI/ReDoc load their JS bundle from a CDN and run an inline init
-# script, which a strict script-src would block. Both pages are already
-# gated behind the access token (see access_control.py), have no user-supplied
-# content to inject into, and only exist at all outside production - so they
-# get a relaxed CSP instead of being excluded from it entirely.
+# script, which a strict script-src would block. The pages are static shells
+# with no user-supplied content to inject into (the API description they load,
+# /openapi.json, stays behind the access token - see docs_pages.py), and only
+# exist at all outside production - so they get a relaxed CSP instead of being
+# excluded from it entirely.
 _DOCS_PATH_PREFIXES = ("/docs", "/redoc", "/openapi.json")
 _DOCS_CSP = (
     b"content-security-policy",

@@ -101,15 +101,6 @@ def validate_environment_variables() -> list[str]:
                 "API_CORS_ORIGINS to the actual origin(s) this is served from"
             )
 
-        default_trusted_hosts = ["localhost", "127.0.0.1"]
-        if settings.api.trusted_hosts == default_trusted_hosts:
-            errors.append(
-                "Trusted hosts are still at the localhost development default "
-                f"({default_trusted_hosts}) while ENVIRONMENT=production — set "
-                "API_TRUSTED_HOSTS to the actual host(s) this is served from, or "
-                "requests may be rejected by TrustedHostMiddleware"
-            )
-
     return errors
 
 
