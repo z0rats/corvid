@@ -28,4 +28,14 @@ export const imageUtils = {
     link.click();
     URL.revokeObjectURL(url);
   },
+
+  // Human-readable name for an ISO region ('RS') or language ('sr') code via the
+  // browser's own tables; falls back to the raw code where unsupported.
+  displayName: (code, type, locale = 'en') => {
+    try {
+      return new Intl.DisplayNames([locale], { type, fallback: 'code' }).of(code) || code;
+    } catch {
+      return code;
+    }
+  },
 };

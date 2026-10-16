@@ -125,9 +125,48 @@ class ImageGeolocationAIResult(BaseModel):
     caveats: str | None = Field(
         default=None, description="Model's own caveats about the reliability of this hypothesis"
     )
+    visible_text: list[str] = Field(
+        default_factory=list,
+        description="Every legible piece of text in the photo (signs, shop names, plates, "
+        "phone numbers, URLs), transcribed exactly as written in its original script",
+    )
 
 
-class ImageGeolocationResponse(ImageGeolocationAIResult):
+class TextSignal(BaseModel):
+    """A country/language hint derived deterministically from text visible in the photo."""
+
+    kind: str = Field(
+        ...,
+        description="script, digits, letter, currency, domain, phone or word",
+    )
+    matched: str = Field(..., description="The character, word or number that triggered the hint")
+    source_text: str = Field(..., description="The transcribed line it was found in")
+    countries: list[str] = Field(
+        default_factory=list, description="ISO 3166-1 alpha-2 codes this hint points to"
+    )
+    weak_countries: list[str] = Field(
+        default_factory=list, description="Less likely countries (minorities, shared usage)"
+    )
+    languages: list[str] = Field(default_factory=list, description="ISO 639-1 language codes")
+    strength: str = Field(default="medium", description="strong, medium or weak")
+    note: str | None = Field(default=None, description="Caveat shown alongside the hint")
+
+
+class ImageGeolocationAnalysis(ImageGeolocationAIResult):
+    """The model's output plus the text signals computed from its transcription."""
+
+    text_signals: list[TextSignal] = Field(
+        default_factory=list,
+        description="Hints from the transcribed text, computed by the server (not the model)",
+    )
+    reference_countries: list[str] = Field(
+        default_factory=list,
+        description="ISO codes of the countries whose reference clues the second pass checked "
+        "the photo against; empty if the cross-check did not run",
+    )
+
+
+class ImageGeolocationResponse(ImageGeolocationAnalysis):
     """AI-generated location hypothesis for a photo, with supporting reasoning."""
 
     model_used: str = Field(..., description="ID of the LLM model that produced this analysis")

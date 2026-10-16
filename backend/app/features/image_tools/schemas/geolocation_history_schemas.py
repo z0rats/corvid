@@ -2,7 +2,7 @@ import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .image_schemas import ImageGeolocationAIResult
+from .image_schemas import ImageGeolocationAnalysis
 
 
 class GeolocationSearchSummary(BaseModel):
@@ -25,6 +25,6 @@ class GeolocationSearchSummary(BaseModel):
 class GeolocationSearchDetail(GeolocationSearchSummary):
     """Full detail of a past AI geolocation analysis, including its clue list."""
 
-    result: ImageGeolocationAIResult = Field(
+    result: ImageGeolocationAnalysis = Field(
         ..., description="Candidates, clues, and caveats produced by the analysis"
     )

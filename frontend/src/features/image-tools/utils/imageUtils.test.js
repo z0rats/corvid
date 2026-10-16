@@ -48,3 +48,15 @@ describe('imageUtils.groupExifTags', () => {
     expect(groups.SingleWordTag).toEqual({ SingleWordTag: 'value' });
   });
 });
+
+describe('imageUtils.displayName', () => {
+  it('resolves region and language codes to names', () => {
+    expect(imageUtils.displayName('RS', 'region')).toBe('Serbia');
+    expect(imageUtils.displayName('sr', 'language')).toBe('Serbian');
+  });
+
+  it('falls back to the raw code for unknown or malformed input', () => {
+    expect(imageUtils.displayName('QQ', 'region')).toBe('QQ');
+    expect(imageUtils.displayName('not a code!', 'region')).toBe('not a code!');
+  });
+});

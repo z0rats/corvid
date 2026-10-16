@@ -13,6 +13,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import HistoryIcon from '@mui/icons-material/History';
 import PublicIcon from '@mui/icons-material/Public';
 import GeolocationHistoryList from './GeolocationHistoryList';
+import TextSignalsSection from './TextSignalsSection';
+import { imageUtils } from '../../utils/imageUtils';
 import { useImageGeolocation } from '../../hooks/api/useImageGeolocation';
 import { geolocationHistoryApi } from '../../services/api/geolocationHistoryApi';
 
@@ -25,7 +27,7 @@ function confidenceColor(confidence) {
 }
 
 export default function ImageGeolocationPanel({ file }) {
-  const { t } = useTranslation('imageTools');
+  const { t, i18n } = useTranslation('imageTools');
   const { result, loading, error, hasLlmKey, geolocateImage } = useImageGeolocation();
   const [viewedResult, setViewedResult] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -92,7 +94,14 @@ export default function ImageGeolocationPanel({ file }) {
         </Box>
       )}
 
-      {loading && <LinearProgress sx={{ mt: 1.5 }} />}
+      {loading && (
+        <Box sx={{ mt: 1.5 }}>
+          <LinearProgress />
+          <Typography variant="caption" color="text.secondary">
+            {t('geolocation.loading')}
+          </Typography>
+        </Box>
+      )}
       {error && <Alert severity="error" sx={{ mt: 1.5 }}>{error}</Alert>}
 
       {viewedResult && (
@@ -109,6 +118,15 @@ export default function ImageGeolocationPanel({ file }) {
               <Typography variant="caption" color="text.secondary">
                 {t('geolocation.modelUsed', { model: viewedResult.model_used })}
               </Typography>
+              {viewedResult.reference_countries?.length > 0 && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', width: '100%' }}>
+                  {t('geolocation.crossChecked', {
+                    countries: viewedResult.reference_countries
+                      .map((c) => imageUtils.displayName(c, 'region', i18n.language))
+                      .join(', '),
+                  })}
+                </Typography>
+              )}
               {viewedResult.history_id != null && (
                 <Stack direction="row" spacing={1}>
                   {REPORT_FORMATS.map((fmt) => (
@@ -167,6 +185,11 @@ export default function ImageGeolocationPanel({ file }) {
                 </Typography>
               </Box>
             ))}
+
+            <TextSignalsSection
+              signals={viewedResult.text_signals}
+              visibleText={viewedResult.visible_text}
+            />
 
             {viewedResult.caveats && (
               <Alert severity="info" sx={{ mt: 2 }}>{viewedResult.caveats}</Alert>

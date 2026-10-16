@@ -17,6 +17,9 @@ LABELS: dict[str, str] = {
     "candidates": "Candidate locations",
     "clues": "Visual clues",
     "caveats": "Caveats",
+    "visible_text": "Text read from the photo",
+    "text_signals": "Hints from visible text",
+    "reference_countries": "Cross-checked against reference notes for",
 }
 
 
@@ -53,6 +56,36 @@ def build_sections(search: ImageGeolocationSearch) -> list[ReportSection]:
     )
 
     sections = [search_section, candidates_section, clues_section]
+
+    # Older history rows predate these fields.
+    visible_text = result.get("visible_text") or []
+    if visible_text:
+        sections.append(
+            ReportSection(
+                title=t["visible_text"], rows=[ReportRow("", line) for line in visible_text]
+            )
+        )
+
+    text_signals = result.get("text_signals") or []
+    if text_signals:
+        sections.append(
+            ReportSection(
+                title=t["text_signals"],
+                rows=[
+                    ReportRow(
+                        f"{signal['kind']}: {signal['matched']}",
+                        ", ".join([*signal.get("countries", []), *signal.get("languages", [])]),
+                    )
+                    for signal in text_signals
+                ],
+            )
+        )
+
+    reference_countries = result.get("reference_countries") or []
+    if reference_countries:
+        search_section.rows.append(
+            ReportRow(t["reference_countries"], ", ".join(reference_countries))
+        )
 
     caveats = result.get("caveats")
     if caveats:

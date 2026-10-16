@@ -100,3 +100,35 @@ class TestGenerateGeolocationReport:
         assert filename.startswith("geolocation-1-")
         assert " " not in filename
         assert "/" not in filename
+
+
+def test_report_includes_transcription_text_signals_and_reference_countries():
+    search = _search(
+        result={
+            "candidates": [],
+            "clues": [],
+            "visible_text": ["ПЕКАРА", "+381 11 323 4567"],
+            "text_signals": [
+                {"kind": "phone", "matched": "+381", "countries": ["RS"], "languages": []},
+                {"kind": "letter", "matched": "ђ", "countries": [], "languages": ["sr"]},
+            ],
+            "reference_countries": ["RS", "MK"],
+        }
+    )
+
+    sections = build_sections(search)
+
+    assert [r.value for r in _section(sections, "Text read from the photo").rows] == [
+        "ПЕКАРА",
+        "+381 11 323 4567",
+    ]
+    hints = {r.label: r.value for r in _section(sections, "Hints from visible text").rows}
+    assert hints == {"phone: +381": "RS", "letter: ђ": "sr"}
+    photo = {r.label: r.value for r in _section(sections, "Photo").rows}
+    assert photo["Cross-checked against reference notes for"] == "RS, MK"
+
+
+def test_report_for_an_older_row_without_the_new_fields_omits_those_sections():
+    titles = [s.title for s in build_sections(_search())]
+    assert "Text read from the photo" not in titles
+    assert "Hints from visible text" not in titles

@@ -24,11 +24,30 @@ Google shows its own "no coverage" message when none exists for a spot).
 
 ## AI photo geolocation
 
-Optional, and the only other part of this module that needs a key — see
+Optional, and the only other part of this module that needs an LLM — an OpenAI/Anthropic key or a local Ollama model, no key required for the latter; see
 [AI / LLM Providers](/corvid/architecture/ai-providers/). Sends the uploaded image to the
 configured model (`image_geolocation_model` override, or the default) and returns a geolocation
-hypothesis. Pick a vision-capable model for useful results. Like the rest of the module, nothing
-here is persisted to history — it's a one-shot analysis.
+hypothesis. Pick a vision-capable model for useful results; models pulled into a local Ollama
+server work too if they accept images. Each analysis is saved to a history list with HTML/PDF
+report export.
+
+The model also transcribes any legible text in the photo (signs, plates, phone numbers, prices).
+Corvid then checks that transcription itself against lookup tables, so the "Hints from visible
+text" panel is deterministic rather than model opinion: the script (Thai, Cyrillic, Hangul…),
+non-Western digits, letters unique to a language (ł, ő, ї…), currency marks, country-code domains
+(`.br`), international phone prefixes, and regional shop/street words (`talho`, `strasse`). These
+narrow languages and plausible countries, not borders — minorities, tourists and imported goods
+carry text abroad — and a transcription error produces a wrong hint, so check the photo.
+
+When the first pass names a country that Corvid has reference notes for (driving side, plate
+format, road paint, script, other strong tells), a second model call re-examines the photo against
+those notes for the top candidates and the text hints, and the panel shows which countries were
+cross-checked. This means a recognised-country analysis makes two model calls instead of one; if
+the second call fails, the first result is kept. The notes are general knowledge about typical
+conventions, not proof.
+
+Lookup data derives from [GeoInt](https://github.com/marouane53/GeoINT) (MIT), built on
+GeoNames (CC BY 4.0) and Wikipedia-derived tables (CC BY-SA 4.0).
 
 ## ChronoVerify provenance check
 

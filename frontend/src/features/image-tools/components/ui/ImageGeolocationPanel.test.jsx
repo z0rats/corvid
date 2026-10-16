@@ -89,6 +89,45 @@ describe('ImageGeolocationPanel', () => {
     expect(screen.getByText(/claude-sonnet-4-6/)).toBeInTheDocument();
   });
 
+  it('renders text signals computed from the visible text, and hides the section when empty', () => {
+    const base = {
+      candidates: [{ location: 'Serbia', confidence: 0.6, reasoning: 'clues' }],
+      clues: [],
+      caveats: null,
+      model_used: 'claude-sonnet-4-6',
+      history_id: 3,
+    };
+    useImageGeolocation.mockReturnValue({
+      result: {
+        ...base,
+        text_signals: [
+          { kind: 'phone', matched: '+381', countries: ['RS'], languages: [], note: null },
+        ],
+        reference_countries: ['RS', 'HR'],
+      },
+      loading: false,
+      error: null,
+      hasLlmKey: true,
+      geolocateImage: vi.fn(),
+    });
+
+    const { unmount } = render(<ImageGeolocationPanel file={makeFile()} />);
+    expect(screen.getByText('Hints from visible text')).toBeInTheDocument();
+    expect(screen.getByText('Phone prefix: +381')).toBeInTheDocument();
+    expect(screen.getByText(/Cross-checked against reference notes for: Serbia, Croatia/)).toBeInTheDocument();
+    unmount();
+
+    useImageGeolocation.mockReturnValue({
+      result: { ...base, text_signals: [] },
+      loading: false,
+      error: null,
+      hasLlmKey: true,
+      geolocateImage: vi.fn(),
+    });
+    render(<ImageGeolocationPanel file={makeFile()} />);
+    expect(screen.queryByText('Hints from visible text')).not.toBeInTheDocument();
+  });
+
   it('shows report download buttons once a result has a history_id', () => {
     useImageGeolocation.mockReturnValue({
       result: {
