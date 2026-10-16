@@ -17,9 +17,15 @@ generalSettingsState.debugLabel = 'generalSettingsState';
 export const aiSettingsState = atom({});
 aiSettingsState.debugLabel = 'aiSettingsState';
 
+// True once the backend has discovered at least one model on a local Ollama server -
+// the one LLM source that needs no API key.
+export const hasLocalLlmState = atom(false);
+hasLocalLlmState.debugLabel = 'hasLocalLlmState';
+
+// Whether any LLM is usable: a configured provider key or a local Ollama model.
 export const hasLlmKeyAtom = atom((get) => {
   const keys = get(apiKeysState);
-  return Boolean(keys.openai || keys.anthropic);
+  return Boolean(keys.openai || keys.anthropic || get(hasLocalLlmState));
 });
 hasLlmKeyAtom.debugLabel = 'hasLlmKeyAtom';
 

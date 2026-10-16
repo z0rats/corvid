@@ -28,4 +28,9 @@ export const settingsService = {
     const response = await api.get('/api/settings/ai');
     return response.data;
   },
+
+  async getAvailableModels() {
+    const response = await api.get('/api/settings/ai/available-models');
+    return response.data;
+  },
 };

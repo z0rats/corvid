@@ -8,6 +8,7 @@ import {
   modulesState,
   generalSettingsState,
   aiSettingsState,
+  hasLocalLlmState,
 } from '../../state/atoms';
 
 const logger = createLogger('AppSettings');
@@ -20,6 +21,7 @@ export function useAppSettings() {
   const setModules = useSetAtom(modulesState);
   const setGeneralSettings = useSetAtom(generalSettingsState);
   const setAiSettings = useSetAtom(aiSettingsState);
+  const setHasLocalLlm = useSetAtom(hasLocalLlmState);
 
   useEffect(() => {
     let ignore = false;
@@ -61,7 +63,19 @@ export function useAppSettings() {
       }
     };
 
+    // Separate from the batch above: probing Ollama is best-effort and must not
+    // take the other settings down with it.
+    const fetchLocalLlmAvailability = async () => {
+      try {
+        const { models = [] } = await settingsService.getAvailableModels();
+        if (!ignore) setHasLocalLlm(models.some((model) => model.id.startsWith('ollama:')));
+      } catch (error) {
+        if (!ignore) logger.warn('Could not check for local LLM models:', error);
+      }
+    };
+
     fetchAppSettings();
+    fetchLocalLlmAvailability();
     return () => { ignore = true; };
-  }, [setApiKeys, setGeneralSettings, setModules, setAiSettings]);
+  }, [setApiKeys, setGeneralSettings, setModules, setAiSettings, setHasLocalLlm]);
 }
