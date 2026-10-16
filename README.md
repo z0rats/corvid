@@ -30,6 +30,7 @@ Pulls pre-built images and starts the app at http://localhost:4000 — no auto-u
 - [Keyboard-first navigation](#keyboard-first-navigation)
 - [Notifications](#notifications)
 - [Deploy with docker](#deploy-with-docker)
+- [Contributing & feedback](#contributing--feedback)
 - [Disclaimer](#disclaimer)
 - [License](#license)
 
@@ -250,6 +251,13 @@ the docs site: [Backup & Operational Security](https://z0rats.github.io/corvid/g
 — what's under `data/`, the in-app flow vs. a manual host-level backup, disk-usage expectations,
 and practices worth following for sensitive engagements (isolating the instance, routing through
 Tor/a proxy, key rotation, and more).
+
+## Contributing & feedback
+
+Bug reports and feature requests go to [GitHub issues](https://github.com/z0rats/corvid/issues);
+questions and ideas to [Discussions](https://github.com/z0rats/corvid/discussions). Security
+issues: see [SECURITY.md](SECURITY.md), not a public issue. Pull requests are welcome — see
+[CONTRIBUTING.md](CONTRIBUTING.md) for the process and requirements.
 
 ## Disclaimer
 
