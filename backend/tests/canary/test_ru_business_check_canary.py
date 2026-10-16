@@ -77,6 +77,12 @@ def test_fedresurs_status_and_publications():
     assert result["status_recognized"] is True, (
         f"Федресурс status vocabulary changed: {result['status_text']!r}"
     )
+    if not result["publications_checked"] and any(
+        marker in result["publications_note"] for marker in ("недоступен", "антибот")
+    ):
+        # The publications step swallows FedresursError into a note; an unreachable or
+        # anti-bot-walled fedresurs.ru is the runner's problem, not drift.
+        pytest.skip(f"source not answering us: {result['publications_note']}")
     assert result["publications_checked"] is True, result["publications_note"]
     # The bank publishes hundreds of creditor intents about *other* companies; none may be
     # attributed to the bank itself (role rule).

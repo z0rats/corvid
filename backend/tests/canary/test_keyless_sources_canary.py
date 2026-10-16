@@ -87,8 +87,9 @@ def test_youtube_oembed_metadata():
 
 def test_youtube_page_metadata_scrape():
     meta = live(fetch_page_metadata(YOUTUBE_VIDEO))
-    if not meta:
-        pytest.skip("YouTube served no metadata (consent/anti-bot page)")
+    if not meta or not ({"name", "identifier"} & meta.keys()):
+        # A consent/anti-bot page still carries a <meta name="keywords"> but no itemprop data.
+        pytest.skip("YouTube served no itemprop metadata (consent/anti-bot page)")
 
     assert meta.get("name") == "Me at the zoo"
     assert meta.get("identifier") == "jNQXAC9IVRw"
