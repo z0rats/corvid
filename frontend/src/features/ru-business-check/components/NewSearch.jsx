@@ -10,6 +10,17 @@ import ResultsView from './ResultsView';
 import ReportExportButtons from './ReportExportButtons';
 import { useRuBusinessCheck } from '../hooks/useRuBusinessCheck';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
+import PageHeader from '../../../core/components/ui/PageHeader';
+
+// Russian-only by design, like the rest of this feature's UI (see docs/adr/0014-ru-business-check-source-semantics-and-storage.md).
+const PAGE_DESCRIPTION = [
+  'Проверка контрагента по ИНН или названию: выписка ЕГРЮЛ/ЕГРИП + сверка директора с реестром',
+  'дисквалифицированных лиц и перечнем терроризм/ОМУ (ФедСФМ) + арбитражные дела + проверка на',
+  'активное банкротство (Федресурс) + признаки массовой регистрации/руководителя (Прозрачный',
+  'бизнес) + реестр недобросовестных поставщиков (РНП) + опционально, при указании сайта —',
+  'сверка возраста домена с датой регистрации компании. ФССП автоматически не проверяется',
+  '(капча на каждом запросе) — доступна только ручная проверка по ссылке.',
+].join(' ');
 
 export default function NewSearch() {
   const { result, loading, error, scan, cancelScan } = useRuBusinessCheck();
@@ -19,15 +30,10 @@ export default function NewSearch() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 1 }}>RU Business Check</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Проверка контрагента по ИНН или названию: выписка ЕГРЮЛ/ЕГРИП + сверка директора с
-        реестром дисквалифицированных лиц и перечнем терроризм/ОМУ (ФедСФМ) + арбитражные дела +
-        проверка на активное банкротство (Федресурс) + признаки массовой регистрации/руководителя
-        (Прозрачный бизнес) + реестр недобросовестных поставщиков (РНП) + опционально, при указании
-        сайта — сверка возраста домена с датой регистрации компании. ФССП автоматически не
-        проверяется (капча на каждом запросе) — доступна только ручная проверка по ссылке.
-      </Typography>
+      <PageHeader
+        title="RU Business Check"
+        description={PAGE_DESCRIPTION}
+      />
 
       <ScanForm onScan={scan} disabled={loading} initialQuery={prefillValue} />
 

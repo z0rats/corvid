@@ -9,6 +9,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
+import PageHeader from '../../../core/components/ui/PageHeader';
 
 // Every external source considered for this feature's methodology, automated or not - kept
 // as a plain hardcoded list (not settings/backend-driven) since it's informational and
@@ -141,16 +142,20 @@ const SOURCES = [
   },
 ];
 
+// Russian-only by design, like the rest of this feature's UI (see
+// docs/adr/0014-ru-business-check-source-semantics-and-storage.md).
+const SOURCES_DESCRIPTION = [
+  'Все источники, рассмотренные для методологии RU Business Check — как уже',
+  'автоматизированные, так и нет. Возраст/анализ домена компании сюда не входит —',
+  'эта проверка ведёт в модуль IOC-инструментов (WHOIS, DNS, Certificate Transparency),',
+  'где для этого уже есть отдельная, более полная аналитика.',
+].join(' ');
+
 export default function Sources() {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>Источники</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Все источники, рассмотренные для методологии RU Business Check — как уже
-        автоматизированные, так и нет. Возраст/анализ домена компании сюда не входит —
-        эта проверка ведёт в модуль IOC-инструментов (WHOIS, DNS, Certificate Transparency),
-        где для этого уже есть отдельная, более полная аналитика.
-      </Typography>
+      {/* Feature name as the title: the active tab right above already says "Источники". */}
+      <PageHeader title="RU Business Check" description={SOURCES_DESCRIPTION} />
 
       <TableContainer component={Paper} variant="outlined">
         <Table size="small">

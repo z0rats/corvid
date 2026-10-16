@@ -7,6 +7,7 @@ import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
 
 export default function HistoryList() {
+  const { t: tCommon } = useTranslation();
   const { t } = useTranslation('emailSearch');
   const navigate = useNavigate();
 
@@ -34,6 +35,7 @@ export default function HistoryList() {
 
   return (
     <HistoryTable
+      title={tCommon('nav.emailSearch')}
       columns={columns}
       fetchRows={emailSearchApi.listRuns}
       onDelete={emailSearchApi.deleteRun}

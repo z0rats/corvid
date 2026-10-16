@@ -2,7 +2,7 @@
   "searchPlaceholder": "Поиск инструментов, вставьте IOC или введите > для команд…",
   "startScreen": {
     "brand": "Corvid · Главная",
-    "focusHint": "фокус — / или ⌘K",
+    "focusHint": "фокус — / или {{shortcut}}",
     "pasteHint": "или вставьте изображение (⌘V/Ctrl+V), либо перетащите файл — изображения откроют Image Tools, остальные файлы будут захешированы и проверены (VirusTotal и др.)"
   },
   "leftPanel": {

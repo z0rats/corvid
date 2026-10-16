@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import api from '../services/baseApi';
 import { openSseStream, readSseEvents } from '../services/sseStream';
 import { createLogger } from '../utils/logger';
+import { announceScanLifecycle } from '../utils/scanLifecycleEvent';
 
 const logger = createLogger('ResumableScan');
 
@@ -153,6 +154,7 @@ export function useResumableScan<S extends PhaseScanState>({
       }
       stateRef.current = withQueued(await reduce(stateRef.current, event), event.type === 'queued');
       setState(stateRef.current);
+      announceScanLifecycle(event.type);
     }
   }, [reduce, setState]);
 

@@ -38,6 +38,7 @@ import TileGrid from './CommandPalette/TileGrid';
 import ShortcutSheet from './CommandPalette/ShortcutSheet';
 import RecentActivity from './RecentActivity';
 import ApiKeysOnboardingHint from './ApiKeysOnboardingHint';
+import { MOD_KEY_LABEL } from '../../utils/platformKeys';
 
 // Illustrative example queries — the `display`/`query` halves are literal grammar tokens (see commandParser.ts), not translated
 // prose, same reasoning as BUILTIN_ACTIONS/type: aliases staying English in both locales.
@@ -253,7 +254,7 @@ export default function StartScreen() {
             variant="caption"
             sx={{ fontFamily: '"JetBrains Mono", monospace', color: 'text.secondary' }}
           >
-            {t('startScreen.focusHint')}
+            {t('startScreen.focusHint', { shortcut: `${MOD_KEY_LABEL}K` })}
           </Typography>
         </Box>
 

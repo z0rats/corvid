@@ -41,9 +41,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["Newsfeed"])
 # Mounted without the access-token dependency (see router_registry.get_public_routers): the
-# frontend shows these through a plain <img src>, which can't carry an Authorization header, so
-# behind the gate every icon 401'd - broken images, plus a false "Failed access-token attempts"
-# security alert each time the newsfeed opened. They're public site favicons under random names.
+# frontend shows these through a plain <img src>, which can't carry an Authorization header.
+# They're public site favicons under random names, and the handler only serves that folder.
 icons_router = APIRouter(prefix="/api", tags=["Newsfeed"])
 
 FEED_ICONS_DIR = Path(settings.static_dir) / "feedicons"

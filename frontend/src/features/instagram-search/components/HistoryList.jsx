@@ -8,6 +8,7 @@ import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
 
 export default function HistoryList() {
+  const { t: tCommon } = useTranslation();
   const { t } = useTranslation('instagramSearch');
   const navigate = useNavigate();
 
@@ -41,6 +42,7 @@ export default function HistoryList() {
 
   return (
     <HistoryTable
+      title={tCommon('nav.instagramSearch')}
       columns={columns}
       fetchRows={instagramSearchApi.listHistory}
       onDelete={instagramSearchApi.deleteHistory}

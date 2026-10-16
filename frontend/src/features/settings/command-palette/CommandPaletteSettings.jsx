@@ -9,11 +9,11 @@ import FormHelperText from '@mui/material/FormHelperText';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
 import { generalSettingsState } from '../../../core/state/atoms';
 import { useCommandPaletteSettings } from '../hooks/api/useCommandPaletteSettings';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
 import NotificationSnackbar from '../components/ui/NotificationSnackbar';
+import { SETTINGS_CARD_SX } from '../constants/settingsConstants';
 import { buildCommandRegistry, resolveEntryPath } from '../../../core/config/commandRegistry';
 import { detectIocType } from '../../../core/utils/iocTypeDetection';
 import { buildPrefillUrl } from '../../../core/utils/crossFeatureNav';
@@ -32,7 +32,6 @@ export default function CommandPaletteSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const generalSettings = useAtomValue(generalSettingsState);
-  const theme = useTheme();
 
   const { loading, updateCommandPaletteSettings } = useCommandPaletteSettings();
   const { notification, showNotification, hideNotification } = useNotification();
@@ -40,15 +39,6 @@ export default function CommandPaletteSettings() {
   const registry = useMemo(() => buildCommandRegistry(t), [t]);
   const [playbooks, setPlaybooks] = useState(getPlaybooks);
   const refreshPlaybooks = () => setPlaybooks(getPlaybooks());
-
-  const cardStyle = useMemo(() => ({
-    p: 1,
-    pl: 2,
-    m: 1,
-    boxShadow: '0',
-    backgroundColor: theme.palette.background.card,
-    borderRadius: 1,
-  }), [theme.palette.background.card]);
 
   const applyUpdate = async (updates) => {
     const result = await updateCommandPaletteSettings(updates);
@@ -74,7 +64,7 @@ export default function CommandPaletteSettings() {
 
   return (
     <Box>
-      <Card sx={cardStyle}>
+      <Card sx={SETTINGS_CARD_SX}>
         <Typography variant="h4" component="h2" gutterBottom>
           {t('settings.commandPalette.title')}
         </Typography>
@@ -83,7 +73,7 @@ export default function CommandPaletteSettings() {
         </Typography>
       </Card>
 
-      <Card sx={cardStyle}>
+      <Card sx={SETTINGS_CARD_SX}>
         <Stack spacing={3}>
           <Box>
             <FormControlLabel
@@ -108,7 +98,7 @@ export default function CommandPaletteSettings() {
         </Stack>
       </Card>
 
-      <Card sx={cardStyle}>
+      <Card sx={SETTINGS_CARD_SX}>
         <Typography variant="h5" component="h3" gutterBottom>
           {t('settings.commandPalette.playbooksTitle')}
         </Typography>

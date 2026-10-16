@@ -46,6 +46,23 @@ describe('HistoryTable', () => {
     expect(props.onRowClick).toHaveBeenCalledTimes(1);
   });
 
+  it('shows the page title in every state, including loading and empty', async () => {
+    let resolveRows;
+    renderTable({ title: 'Amass', fetchRows: vi.fn(() => new Promise((r) => { resolveRows = r; })) });
+    expect(screen.getByRole('heading', { name: 'Amass' })).toBeInTheDocument();
+
+    await act(async () => { resolveRows([]); });
+
+    expect(screen.getByText('nothing yet')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Amass' })).toBeInTheDocument();
+  });
+
+  it('renders no title when none is given', async () => {
+    renderTable();
+    await screen.findByText('alice');
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+  });
+
   it('shows an error instead of the empty state when loading fails', async () => {
     renderTable({ fetchRows: vi.fn().mockRejectedValue(new Error('boom')) });
     expect(await screen.findByRole('alert')).toHaveTextContent(/couldn't load history/i);

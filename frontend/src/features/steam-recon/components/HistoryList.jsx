@@ -7,6 +7,7 @@ import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
 
 export default function HistoryList() {
+  const { t: tCommon } = useTranslation();
   const { t } = useTranslation('steamRecon');
   const navigate = useNavigate();
 
@@ -43,6 +44,7 @@ export default function HistoryList() {
 
   return (
     <HistoryTable
+      title={tCommon('nav.steamRecon')}
       columns={columns}
       fetchRows={steamReconApi.listSearches}
       onDelete={steamReconApi.deleteSearch}

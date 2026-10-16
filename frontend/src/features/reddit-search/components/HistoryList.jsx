@@ -5,6 +5,7 @@ import HistoryTable from '../../../core/components/HistoryTable';
 import { redditSearchApi } from '../services/api/redditSearchApi';
 
 export default function HistoryList() {
+  const { t: tCommon } = useTranslation();
   const { t } = useTranslation('redditSearch');
   const navigate = useNavigate();
 
@@ -20,6 +21,7 @@ export default function HistoryList() {
 
   return (
     <HistoryTable
+      title={tCommon('nav.redditSearch')}
       columns={columns}
       fetchRows={redditSearchApi.listHistory}
       onDelete={redditSearchApi.deleteHistory}

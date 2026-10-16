@@ -7,6 +7,7 @@ import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
 
 export default function HistoryList() {
+  const { t: tCommon } = useTranslation();
   const { t } = useTranslation('amass');
   const navigate = useNavigate();
 
@@ -34,6 +35,7 @@ export default function HistoryList() {
 
   return (
     <HistoryTable
+      title={tCommon('nav.amass')}
       columns={columns}
       fetchRows={amassApi.listHistory}
       onDelete={amassApi.deleteHistory}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import Chip from '@mui/material/Chip';
 
@@ -9,6 +10,7 @@ import ScanStatusChip from '../../../core/components/ScanStatusChip';
 const STATUS_LABELS = { running: 'Выполняется', completed: 'Завершено', cancelled: 'Отменено', failed: 'Ошибка' };
 
 export default function HistoryList() {
+  const { t: tCommon } = useTranslation();
   const navigate = useNavigate();
 
   const columns = [
@@ -33,6 +35,7 @@ export default function HistoryList() {
 
   return (
     <HistoryTable
+      title={tCommon('nav.ruBusinessCheck')}
       columns={columns}
       fetchRows={ruBusinessCheckApi.listHistory}
       onDelete={ruBusinessCheckApi.deleteHistory}

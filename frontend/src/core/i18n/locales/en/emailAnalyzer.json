@@ -86,7 +86,7 @@
     "tableAriaLabel": "urls table"
   },
   "welcomeScreen": {
-    "title": "Email Analyzer",
+    "title": "Analyze an .eml file",
     "description1": "Email Analyzer is a module that allows you to analyze .eml files for potential threats. To use the module, simply drag an .eml file into it. The module will then parse the file and perform basic security checks to identify any potential risks.",
     "description2": "It also extracts all indicators of compromise (IOCs) from the file and makes it possible to analyze them using various open source intelligence (OSINT) services. In addition, Email Analyzer generates hash values for every attachment in the file, allowing you to perform a privacy-friendly analysis of these files.",
     "keyFeaturesTitle": "Key Features",

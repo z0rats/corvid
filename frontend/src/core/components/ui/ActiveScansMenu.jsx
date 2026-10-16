@@ -27,8 +27,14 @@ export default function ActiveScansMenu() {
   const [anchorEl, setAnchorEl] = useState(null);
   const { runs, refresh } = useActiveScans();
   const rows = useActivityRows(runs);
+  const hasRows = rows.length > 0;
 
-  if (rows.length === 0) return null;
+  // The button (the popover's anchor) unmounts once the last scan finishes; forget the open state
+  // with it, or the next scan would pop the menu open by itself against a detached node. Adjusted
+  // during render (React's pattern for state derived from a prop change), not in an effect.
+  if (!hasRows && anchorEl) setAnchorEl(null);
+
+  if (!hasRows) return null;
 
   const handleOpen = (event) => {
     setAnchorEl(event.currentTarget);

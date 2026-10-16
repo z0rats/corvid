@@ -12,11 +12,13 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNewOutlined';
 
 import ProfileOverviewCard from './ui/ProfileOverviewCard';
 import SessionModeBanner from './ui/SessionModeBanner';
+import PageHeader from '../../../core/components/ui/PageHeader';
 import WelcomeScreen from './ui/WelcomeScreen';
 import { useInstagramSearch } from '../hooks/ui/useInstagramSearch';
 
 export default function ProfileLookup() {
   const { t } = useTranslation('instagramSearch');
+  const { t: tCommon } = useTranslation();
   const { username, setUsername, result, loading, error, lookupProfile } = useInstagramSearch();
 
   const handleKeyDown = (event) => {
@@ -27,6 +29,7 @@ export default function ProfileLookup() {
 
   return (
     <>
+      <PageHeader title={tCommon('nav.instagramSearch')} />
       <Paper sx={{ p: 2, mb: 2 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField

@@ -4,10 +4,8 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Chip from '@mui/material/Chip';
 import { alpha, useTheme } from '@mui/material/styles';
+import { MOD_KEY_LABEL } from '../../../utils/platformKeys';
 
-// The jump chip is a Cmd/Ctrl+digit shortcut (handleGrammarNavKey) - show the modifier, or a bare
-// "1" reads as "press 1", which just types a digit into the input.
-const JUMP_MODIFIER = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl+';
 
 /** One selectable row in the palette's result list — a registry entry or a which-key suggestion. */
 export default function ResultRow({ item, index, isSelected, onSelect, onActionPanel }) {
@@ -35,7 +33,8 @@ export default function ResultRow({ item, index, isSelected, onSelect, onActionP
       />
       {jumpKey && (
         <Chip
-          label={`${JUMP_MODIFIER}${jumpKey}`}
+          // A Cmd/Ctrl+digit shortcut (handleGrammarNavKey): a bare "1" would read as "press 1".
+          label={`${MOD_KEY_LABEL}${jumpKey}`}
           size="small"
           variant="outlined"
           sx={{ ml: 1, height: 20, fontSize: '0.7rem', fontFamily: 'monospace' }}

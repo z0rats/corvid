@@ -22,6 +22,7 @@ import SearchIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 import ConfirmDeleteDialog from './ui/ConfirmDeleteDialog';
+import PageHeader from './ui/PageHeader';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('HistoryTable');
@@ -48,9 +49,21 @@ function compareValues(a, b) {
  * loaded run is still `running`. Each feature supplies only its column definitions
  * and API calls - see username-search, email-search, git-recon, reddit-search
  * and ioc-tools/single-lookup for usage. A column's `sortValue(row)` overrides the
- * raw `row[key]` used for sorting/filtering (e.g. when `render` formats it).
+ * raw `row[key]` used for sorting/filtering (e.g. when `render` formats it). `title`, when
+ * given, renders the page's PageHeader above it.
  */
-export default function HistoryTable({
+export default function HistoryTable({ title, ...props }) {
+  // Wraps the body rather than living in it: the body has several early returns (loading, empty,
+  // error), and the page title must show in all of them.
+  return (
+    <>
+      {title && <PageHeader title={title} />}
+      <HistoryTableBody {...props} />
+    </>
+  );
+}
+
+function HistoryTableBody({
   columns,
   fetchRows,
   onDelete,

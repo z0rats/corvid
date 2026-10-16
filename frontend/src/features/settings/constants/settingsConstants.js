@@ -32,3 +32,14 @@ export const VALID_MODULE_IDS = [
   'cvss_calculator',
   'rule_creator',
 ];
+
+// Card look shared by the General and Command Palette settings tabs. `bgcolor` takes a palette
+// path, so it follows the active theme without a useTheme()/useMemo per component.
+export const SETTINGS_CARD_SX = {
+  p: 1,
+  pl: 2,
+  m: 1,
+  boxShadow: '0',
+  bgcolor: 'background.card',
+  borderRadius: 1,
+};

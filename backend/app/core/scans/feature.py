@@ -60,43 +60,36 @@ class ScanFeature:
             completed_at_column=self.columns.completed_at_column,
         )
 
+    def _activity_query(self) -> Any:
+        """id/target/status/timestamp of this feature's runs, newest first - the activity-feed
+        row shape both `active_runs` and `recent_activity` build on."""
+        model: Any = self.model
+        return select(
+            model.id, getattr(model, self.target_column), model.status, self.order_by
+        ).order_by(self.order_by.desc())
+
+    def _activity_row(self, id_: int, target: str, status: str, ts: Any) -> dict[str, Any]:
+        return {
+            "feature": self.name,
+            "id": id_,
+            "target": target,
+            "status": status,
+            "timestamp": ts,
+        }
+
     async def active_runs(self, db: AsyncSession) -> list[dict[str, Any]]:
         """This feature's unfinished runs as activity-feed rows, `running` split into
         `queued`/`running` by whether the run is still waiting for a heavy-scan slot."""
         model: Any = self.model
-        target = getattr(model, self.target_column)
-        rows = await db.execute(
-            select(model.id, target, self.order_by)
-            .where(model.status == "running")
-            .order_by(self.order_by.desc())
-        )
+        rows = await db.execute(self._activity_query().where(model.status == "running"))
         return [
-            {
-                "feature": self.name,
-                "id": id_,
-                "target": target_value,
-                "status": "queued" if ScanRun.is_queued(self.model, id_) else "running",
-                "timestamp": ts,
-            }
-            for id_, target_value, ts in rows.all()
+            self._activity_row(
+                id_, target, "queued" if ScanRun.is_queued(self.model, id_) else status, ts
+            )
+            for id_, target, status, ts in rows.all()
         ]
 
     async def recent_activity(self, db: AsyncSession, limit: int) -> list[dict[str, Any]]:
         """This feature's newest runs as plain activity-feed rows, newest first."""
-        model: Any = self.model
-        target = getattr(model, self.target_column)
-        rows = await db.execute(
-            select(model.id, target, model.status, self.order_by)
-            .order_by(self.order_by.desc())
-            .limit(limit)
-        )
-        return [
-            {
-                "feature": self.name,
-                "id": id_,
-                "target": target_value,
-                "status": status,
-                "timestamp": ts,
-            }
-            for id_, target_value, status, ts in rows.all()
-        ]
+        rows = await db.execute(self._activity_query().limit(limit))
+        return [self._activity_row(*row) for row in rows.all()]

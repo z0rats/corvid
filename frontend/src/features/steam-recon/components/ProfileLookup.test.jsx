@@ -57,7 +57,9 @@ describe('ProfileLookup', () => {
     mockHook();
     renderPage();
 
-    expect(screen.getByRole('heading', { name: 'Steam Recon' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Steam Profile Lookup' })).toBeInTheDocument();
+    // The page title is the feature name; the welcome card must not repeat it.
+    expect(screen.getAllByRole('heading', { name: 'Steam Recon' })).toHaveLength(1);
   });
 
   it('disables the lookup button while the field is empty', () => {

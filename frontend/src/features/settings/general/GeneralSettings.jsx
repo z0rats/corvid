@@ -1,4 +1,4 @@
-import { useId, useMemo } from 'react';
+import { useId } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
@@ -11,12 +11,12 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
 import { generalSettingsState, themeModeAtom } from '../../../core/state/atoms';
 import { useGeneralSettings } from '../hooks/api/useGeneralSettings';
 import { useCommandPaletteSettings } from '../hooks/api/useCommandPaletteSettings';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
 import NotificationSnackbar from '../components/ui/NotificationSnackbar';
+import { SETTINGS_CARD_SX } from '../constants/settingsConstants';
 
 const LANGUAGES = ['en', 'ru'];
 const THEMES = ['light', 'dark'];
@@ -49,21 +49,11 @@ function SettingSelect({ label, helper, value, options, optionLabel, onChange, d
  */
 export default function GeneralSettings() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const generalSettings = useAtomValue(generalSettingsState);
   const [themeMode, setThemeMode] = useAtom(themeModeAtom);
   const { loading: languageLoading, updateLanguage } = useGeneralSettings();
   const { loading: paletteLoading, updateCommandPaletteSettings } = useCommandPaletteSettings();
   const { notification, showNotification, hideNotification } = useNotification();
-
-  const cardStyle = useMemo(() => ({
-    p: 1,
-    pl: 2,
-    m: 1,
-    boxShadow: '0',
-    backgroundColor: theme.palette.background.card,
-    borderRadius: 1,
-  }), [theme.palette.background.card]);
 
   const notify = (result) => showNotification(result.message, result.success ? 'success' : 'error');
 
@@ -78,7 +68,7 @@ export default function GeneralSettings() {
 
   return (
     <Box>
-      <Card sx={cardStyle}>
+      <Card sx={SETTINGS_CARD_SX}>
         <Typography variant="h4" component="h2" gutterBottom>
           {t('settings.general.title')}
         </Typography>
@@ -87,7 +77,7 @@ export default function GeneralSettings() {
         </Typography>
       </Card>
 
-      <Card sx={cardStyle}>
+      <Card sx={SETTINGS_CARD_SX}>
         <Stack spacing={3}>
           <SettingSelect
             label={t('settings.general.language')}

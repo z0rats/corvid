@@ -5,7 +5,7 @@
   },
 
   "welcomeScreen": {
-    "title": "Steam Recon",
+    "title": "Steam Profile Lookup",
     "intro": "Enter a SteamID64, SteamID3/2, a steamcommunity.com profile URL, or a vanity name and look it up.",
     "description": "Shows the profile summary, ban record, Steam level and game count, plus deep-links to external lookups. Requires a Steam Web API key under Settings > API Keys."
   },
@@ -51,7 +51,6 @@
   },
 
   "scan": {
-    "pageTitle": "New Steam Recon scan",
     "pageDescription": "Collects the target's friends graph, ranks close friends by mutual-connection weight, aggregates a geolocation hypothesis, and optionally scores a CS2 cheater-probability report.",
     "form": {
       "targetLabel": "Steam ID, profile URL or vanity name",

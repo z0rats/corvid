@@ -10,11 +10,13 @@ import TextField from '@mui/material/TextField';
 
 import ApiKeyRequiredAlert from '../../../core/components/ui/ApiKeyRequiredAlert';
 import ProfileCard from './ProfileCard';
+import PageHeader from '../../../core/components/ui/PageHeader';
 import WelcomeScreen from './WelcomeScreen';
 import { useSteamProfile } from '../hooks/useSteamProfile';
 
 export default function ProfileLookup() {
   const { t } = useTranslation('steamRecon');
+  const { t: tCommon } = useTranslation();
   const { target, setTarget, result, loading, error, errorCode, lookupProfile } = useSteamProfile();
 
   const handleKeyDown = (event) => {
@@ -25,6 +27,7 @@ export default function ProfileLookup() {
 
   return (
     <>
+      <PageHeader title={tCommon('nav.steamRecon')} />
       <Paper sx={{ p: 2, mb: 2 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField

@@ -2,7 +2,7 @@
   "searchPlaceholder": "Search tools, paste an IOC, or type > for actions…",
   "startScreen": {
     "brand": "Corvid · Home",
-    "focusHint": "focus — / or ⌘K",
+    "focusHint": "focus — / or {{shortcut}}",
     "pasteHint": "or paste an image (⌘V/Ctrl+V), or drag & drop a file — images open Image Tools, other files are hashed and checked (VirusTotal, etc.)",
     "recentActivity": "Recent activity",
     "onboarding": {

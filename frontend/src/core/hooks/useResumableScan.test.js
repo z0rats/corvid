@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { useState } from 'react';
 import baseApi from '../services/baseApi';
 import { failedReduce, buildRunningSeed, useResumableScan } from './useResumableScan';
+import { SCAN_LIFECYCLE_EVENT } from '../utils/scanLifecycleEvent';
 
 vi.mock('../services/baseApi', () => ({
   default: { get: vi.fn(), post: vi.fn() },
@@ -179,6 +180,26 @@ describe('useResumableScan — processStream', () => {
     });
 
     expect(result.current.state).toEqual({ phase: 'completed', searchId: 7, checked: 3 });
+  });
+
+  it('announces start and terminal events for the AppBar active-scans indicator', async () => {
+    const listener = vi.fn();
+    window.addEventListener(SCAN_LIFECYCLE_EVENT, listener);
+    const frames = encodeSseFrames([
+      { type: 'started', data: { search_id: 3 } },
+      { type: 'progress', data: { checked: 1 } },
+      { type: 'completed', data: {} },
+    ]);
+    const api = { startScan: vi.fn().mockResolvedValue(makeSseStream(frames)), fetchPersisted: vi.fn() };
+    const { result } = renderHook(() => useHarness({ api, scopeKey: 'process-stream-lifecycle' }));
+
+    await act(async () => {
+      await result.current.startScan({}, buildRunningSeed(baseInitialState, {}));
+    });
+    window.removeEventListener(SCAN_LIFECYCLE_EVENT, listener);
+
+    // started + completed; the progress event in between doesn't count.
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 
   it('skips chunks that are not SSE data frames or fail to parse, without breaking the loop', async () => {

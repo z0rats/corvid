@@ -8,6 +8,7 @@ import ScanStatusChip from '../../../core/components/ScanStatusChip';
 
 
 export default function HistoryList() {
+  const { t: tCommon } = useTranslation();
   const { t } = useTranslation('gitRecon');
   const navigate = useNavigate();
 
@@ -40,6 +41,7 @@ export default function HistoryList() {
 
   return (
     <HistoryTable
+      title={tCommon('nav.gitRecon')}
       columns={columns}
       fetchRows={gitReconApi.listHistory}
       onDelete={gitReconApi.deleteHistory}

@@ -1,6 +1,8 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router";
-import NotFound from '../../core/components/ui/NotFound'
+import { useTranslation } from 'react-i18next';
+import NotFound from '../../core/components/ui/NotFound';
+import PageHeader from '../../core/components/ui/PageHeader';
 
 import Settings from "./settings/Settings";
 import CTISettings from "./settings/CTISettings";
@@ -13,9 +15,11 @@ import Report from "./news-report/Report";
 import Headlines from "./headlines/Headlines";
 
 export default function Newsfeed() {
+  const { t } = useTranslation();
 
   return (
     <>
+      <PageHeader title={t('nav.newsfeed')} />
       <Routes>
         <Route path="/" element={<Navigate to="feed" replace />} />
         <Route path="feed" element={<Feed />} />
@@ -29,6 +33,6 @@ export default function Newsfeed() {
         <Route path="settings/trends" element={<TrendsSettings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-</>
+    </>
   );
 }

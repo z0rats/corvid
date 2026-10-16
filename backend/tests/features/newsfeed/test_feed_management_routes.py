@@ -432,8 +432,8 @@ class TestGetFeedIcon:
         assert response.json()["error_code"] == "FEED_ICON_INVALID_NAME"
 
     def test_is_served_without_an_access_token(self, monkeypatch):
-        # The frontend renders icons via <img src>, which can't send an Authorization header -
-        # behind the gate every icon 401'd and tripped the failed-access-token security alert.
+        # The frontend renders icons via <img src>, which can't send an Authorization header, so
+        # the route must answer anonymously and must not count as a failed access-token attempt.
         from app.core.security import access_control
         from app.utils.router_registry import register_all_routers
 
