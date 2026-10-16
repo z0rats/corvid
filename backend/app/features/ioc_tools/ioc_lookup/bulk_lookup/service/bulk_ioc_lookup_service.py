@@ -190,12 +190,12 @@ async def process_bulk_lookups_with_rate_limiting(
                 "error": "Bulk lookup exceeded the total timeout",
             }
         except Exception as e:
-            logger.error("Error awaiting task for %s/%s: %s", ioc_value, service_name, str(e))
+            logger.error("Error awaiting task for %s/%s: %s", ioc_value, service_name, e)
             yield {
                 "ioc": ioc_value,
                 "service": service_name,
                 "status": LookupStatus.ERROR.value,
-                "error": str(e),
+                "error": "Service lookup failed unexpectedly",
             }
 
     logger.info("Completed rate-limited bulk lookup processing")
