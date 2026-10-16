@@ -4,6 +4,7 @@
 [![CI](https://github.com/z0rats/corvid/actions/workflows/ci.yml/badge.svg)](https://github.com/z0rats/corvid/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/z0rats/corvid/branch/main/graph/badge.svg)](https://codecov.io/gh/z0rats/corvid)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/z0rats/corvid/badge)](https://securityscorecards.dev/viewer/?uri=github.com/z0rats/corvid)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15548/badge)](https://www.bestpractices.dev/projects/15548)
 
 📖 [Documentation](https://z0rats.github.io/corvid/)
 
