@@ -8,13 +8,10 @@ the prompt stays small enough for local models with short context windows.
 
 import json
 import re
-from functools import lru_cache
-from pathlib import Path
+from functools import cache
 
 from ..schemas.image_schemas import GeoCandidate, TextSignal
-from .text_signals_service import country_table
-
-_DATA_DIR = Path(__file__).resolve().parent.parent / "lookup_data"
+from .text_signals_service import DATA_DIR, country_table
 
 # Top candidates whose country is looked up, and the cap on rows sent for the second pass.
 _MAX_CANDIDATES = 3
@@ -42,12 +39,12 @@ _COLUMNS = (
 )
 
 
-@lru_cache(maxsize=1)
+@cache
 def _clues() -> dict[str, dict[str, str]]:
-    return json.loads((_DATA_DIR / "country_clues.json").read_text(encoding="utf-8"))
+    return json.loads((DATA_DIR / "country_clues.json").read_text(encoding="utf-8"))
 
 
-@lru_cache(maxsize=1)
+@cache
 def _name_patterns() -> list[tuple[re.Pattern[str], str]]:
     """(whole-word pattern, ISO) pairs, longest names first so 'Papua New Guinea' wins."""
     names: list[tuple[str, str]] = []

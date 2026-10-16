@@ -362,7 +362,7 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `model_used` | string(200) | no | — | — | ID of the LLM model that produced this analysis |
 | `top_candidate` | string(500) | yes | — | — | Location of the top-ranked candidate, if any |
 | `top_confidence` | float | yes | — | — | Confidence of the top-ranked candidate, if any |
-| `result` | json | no | — | — | Full candidates/clues/caveats payload (ImageGeolocationAIResult) |
+| `result` | json | no | — | — | Full analysis payload (ImageGeolocationAnalysis) |
 | `searched_at` | datetime | no | server: now() | — | When the analysis ran |
 
 ### `instagram_searches`

@@ -37,8 +37,7 @@
     "modelUsed": "Модель: {{model}}",
     "candidates": "Возможные локации",
     "clues": "Визуальные признаки",
-    "caveats": "Оговорки",
-    "noKeyHint": "Настройте API-ключ LLM в Настройках, чтобы включить AI-анализ локации."
+    "caveats": "Оговорки"
   },
   "fileMetadata": {
     "fileProperties": "Свойства файла",

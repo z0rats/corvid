@@ -24,7 +24,7 @@ Google shows its own "no coverage" message when none exists for a spot).
 
 ## AI photo geolocation
 
-Optional, and the only other part of this module that needs an LLM — an OpenAI/Anthropic key or a local Ollama model, no key required for the latter; see
+Optional, and the only other part of this module that needs an LLM — an OpenAI or Anthropic key, or a local Ollama model (no key needed); see
 [AI / LLM Providers](/corvid/architecture/ai-providers/). Sends the uploaded image to the
 configured model (`image_geolocation_model` override, or the default) and returns a geolocation
 hypothesis. Pick a vision-capable model for useful results; models pulled into a local Ollama
@@ -46,8 +46,9 @@ cross-checked. This means a recognised-country analysis makes two model calls in
 the second call fails, the first result is kept. The notes are general knowledge about typical
 conventions, not proof.
 
-Lookup data derives from [GeoInt](https://github.com/marouane53/GeoINT) (MIT), built on
-GeoNames (CC BY 4.0) and Wikipedia-derived tables (CC BY-SA 4.0).
+Lookup data derives from [GeoInt](https://github.com/marouane53/GeoINT) and
+[geo-sleuth](https://github.com/Oldcircle/geo-sleuth) (both MIT), with country facts from
+GeoNames (CC BY 4.0).
 
 ## ChronoVerify provenance check
 

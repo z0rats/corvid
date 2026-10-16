@@ -56,7 +56,6 @@
     "textSignals": "Hints from visible text",
     "textSignalsNote": "Looked up in tables from the text below, not guessed by the model. Hover a hint for where it was found. Scripts and words narrow languages, not borders; a misread character gives a wrong hint.",
     "caveats": "Caveats",
-    "noKeyHint": "Configure an LLM API key in Settings to enable AI location analysis.",
     "historyButton": "History",
     "hideHistoryButton": "Hide history",
     "history": {
@@ -182,7 +181,7 @@
     "pixelsDiffer": "Pixels likely differ (hash distance {{value}})"
   },
   "welcome": {
-    "title": "Image Tools",
+    "title": "Inspect an image",
     "intro1": "Image Tools lets you inspect an image file for OSINT purposes. Upload a picture to see every piece of metadata it carries — camera/device info, capture timestamp, GPS location, and the software used to create or edit it.",
     "intro2": "You can also kick off a reverse image search without any API keys: provide the image's URL (if it has one) to get deep links straight into Google Lens, Yandex, Bing, and TinEye, or use the same buttons to open each engine for a manual upload.",
     "sampleButton": "Try it with a sample photo",

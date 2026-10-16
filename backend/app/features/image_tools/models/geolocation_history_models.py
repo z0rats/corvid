@@ -10,8 +10,9 @@ from app.core.database import Base
 class ImageGeolocationSearch(Base):
     """A single AI photo-geolocation analysis, saved once the model has responded.
 
-    `result` holds the raw `candidates`/`clues`/`caveats` payload (the shape of
-    `ImageGeolocationAIResult`); `top_candidate`/`top_confidence` are denormalized
+    `result` holds the full analysis (the shape of `ImageGeolocationAnalysis`: the model's
+    candidates/clues/caveats/visible text plus the computed text signals and cross-checked
+    reference countries); `top_candidate`/`top_confidence` are denormalized
     from `result.candidates[0]` so the history list can render without parsing JSON.
     """
 
@@ -32,7 +33,7 @@ class ImageGeolocationSearch(Base):
         Float, comment="Confidence of the top-ranked candidate, if any"
     )
     result: Mapped[dict] = mapped_column(
-        JSON, comment="Full candidates/clues/caveats payload (ImageGeolocationAIResult)"
+        JSON, comment="Full analysis payload (ImageGeolocationAnalysis)"
     )
     searched_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), comment="When the analysis ran"

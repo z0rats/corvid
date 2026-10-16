@@ -9,12 +9,13 @@ tourists, diaspora shops and imported goods all carry scripts and words abroad.
 import json
 import re
 import unicodedata
-from functools import cache, lru_cache
+from collections.abc import Sequence
+from functools import cache
 from pathlib import Path
 
-from ..schemas.image_schemas import TextSignal
+from ..schemas.image_schemas import TextSignal, TextSignalKind
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "lookup_data"
+DATA_DIR = Path(__file__).resolve().parent.parent / "lookup_data"
 
 # Cap per kind so one noisy transcription cannot bury the useful hints.
 _MAX_SIGNALS_PER_KIND = 8
@@ -31,17 +32,24 @@ _DOMAIN_RE = re.compile(r"(?:[a-z0-9-]+\.)+([a-z]{2})(?![a-z0-9-])")
 _WORD_RE = re.compile(r"[^\W\d_]+")
 
 
-@lru_cache(maxsize=1)
+@cache
 def _signals_table() -> dict:
-    return json.loads((_DATA_DIR / "text_signals.json").read_text(encoding="utf-8"))
+    return json.loads((DATA_DIR / "text_signals.json").read_text(encoding="utf-8"))
 
 
-@lru_cache(maxsize=1)
+@cache
+def _keys_longest_first(section: str) -> tuple[str, ...]:
+    """A signals-table section's keys, longest first so a more specific name wins a prefix match.
+    Cached: the table never changes at runtime, and this ran once per transcribed line."""
+    return tuple(sorted(_signals_table()[section], key=len, reverse=True))
+
+
+@cache
 def country_table() -> dict[str, dict]:
-    return json.loads((_DATA_DIR / "country_info.json").read_text(encoding="utf-8"))
+    return json.loads((DATA_DIR / "country_info.json").read_text(encoding="utf-8"))
 
 
-@lru_cache(maxsize=1)
+@cache
 def _tld_to_country() -> dict[str, str]:
     return {
         info["tld"].lstrip(".").lower(): iso
@@ -50,7 +58,7 @@ def _tld_to_country() -> dict[str, str]:
     }
 
 
-@lru_cache(maxsize=1)
+@cache
 def _phone_prefixes() -> dict[str, list[str]]:
     """Calling-code digit string -> ISO codes. Entries like '+1-809 and 1-829' list several."""
     prefixes: dict[str, list[str]] = {}
@@ -66,7 +74,7 @@ def _normalize(text: str) -> str:
     return "".join(c for c in decomposed if not unicodedata.combining(c))
 
 
-def _script_of(char: str, keys: list[str]) -> str | None:
+def _script_of(char: str, keys: Sequence[str]) -> str | None:
     name = unicodedata.name(char, "")
     for alias, key in _SCRIPT_NAME_ALIASES.items():
         if name.startswith(alias):
@@ -77,7 +85,7 @@ def _script_of(char: str, keys: list[str]) -> str | None:
     return None
 
 
-def _digit_script_of(char: str, keys: list[str]) -> str | None:
+def _digit_script_of(char: str, keys: Sequence[str]) -> str | None:
     name = unicodedata.name(char, "")
     for key in keys:
         if name.startswith(f"{key} DIGIT"):
@@ -89,11 +97,11 @@ class _Collector:
     """Collects signals, keeping the first occurrence of each (kind, matched) pair."""
 
     def __init__(self) -> None:
-        self._seen: set[tuple[str, str]] = set()
+        self._seen: set[tuple[TextSignalKind, str]] = set()
         self._per_kind: dict[str, int] = {}
         self.signals: list[TextSignal] = []
 
-    def add(self, kind: str, matched: str, source_text: str, **fields) -> None:
+    def add(self, kind: TextSignalKind, matched: str, source_text: str, **fields) -> None:
         key = (kind, matched)
         if key in self._seen or self._per_kind.get(kind, 0) >= _MAX_SIGNALS_PER_KIND:
             return
@@ -106,8 +114,8 @@ class _Collector:
 
 def _scan_characters(line: str, out: _Collector) -> None:
     table = _signals_table()
-    script_keys = sorted(table["scripts"], key=len, reverse=True)
-    digit_keys = sorted(table["digits"], key=len, reverse=True)
+    script_keys = _keys_longest_first("scripts")
+    digit_keys = _keys_longest_first("digits")
     for char in line:
         if char.isdigit():
             digit_key = _digit_script_of(char, digit_keys)
@@ -140,7 +148,6 @@ def _scan_characters(line: str, out: _Collector) -> None:
                 script_key.title(),
                 line,
                 countries=entry.get("countries", []),
-                weak_countries=entry.get("weak_countries", []),
                 strength=entry.get("strength", "medium"),
                 note=entry.get("note"),
             )
@@ -166,7 +173,6 @@ def _scan_currency(line: str, out: _Collector) -> None:
                 pattern,
                 line,
                 countries=entry.get("countries", []),
-                weak_countries=entry.get("weak_countries", []),
                 strength="weak" if len(entry.get("countries", [])) > 4 else "medium",
                 note=entry.get("note"),
             )
@@ -232,4 +238,4 @@ def compute_text_signals(visible_text: list[str]) -> list[TextSignal]:
         _scan_phones(line, out)
         _scan_words(line, out)
     # Most telling first; the sort is stable, so equal strengths keep reading order.
-    return sorted(out.signals, key=lambda s: _STRENGTH_ORDER.get(s.strength, 1))
+    return sorted(out.signals, key=lambda s: _STRENGTH_ORDER[s.strength])

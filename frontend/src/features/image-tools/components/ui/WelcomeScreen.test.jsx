@@ -15,7 +15,7 @@ describe('WelcomeScreen', () => {
   it('renders the intro copy and key feature cards', () => {
     render(<WelcomeScreen onTrySample={vi.fn()} />);
 
-    expect(screen.getByText('Image Tools')).toBeInTheDocument();
+    expect(screen.getByText('Inspect an image')).toBeInTheDocument();
     expect(screen.getByText('Key Features')).toBeInTheDocument();
   });
 

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -132,23 +133,21 @@ class ImageGeolocationAIResult(BaseModel):
     )
 
 
+TextSignalKind = Literal["script", "digits", "letter", "currency", "domain", "phone", "word"]
+TextSignalStrength = Literal["strong", "medium", "weak"]
+
+
 class TextSignal(BaseModel):
     """A country/language hint derived deterministically from text visible in the photo."""
 
-    kind: str = Field(
-        ...,
-        description="script, digits, letter, currency, domain, phone or word",
-    )
+    kind: TextSignalKind = Field(..., description="What kind of text feature triggered the hint")
     matched: str = Field(..., description="The character, word or number that triggered the hint")
     source_text: str = Field(..., description="The transcribed line it was found in")
     countries: list[str] = Field(
         default_factory=list, description="ISO 3166-1 alpha-2 codes this hint points to"
     )
-    weak_countries: list[str] = Field(
-        default_factory=list, description="Less likely countries (minorities, shared usage)"
-    )
     languages: list[str] = Field(default_factory=list, description="ISO 639-1 language codes")
-    strength: str = Field(default="medium", description="strong, medium or weak")
+    strength: TextSignalStrength = Field(default="medium", description="How narrowly it points")
     note: str | None = Field(default=None, description="Caveat shown alongside the hint")
 
 

@@ -29,12 +29,6 @@
     "TJ",
     "MN"
    ],
-   "weak_countries": [
-    "UZ",
-    "MD",
-    "TM",
-    "AZ"
-   ],
    "strength": "medium",
    "note": "Letters separate the languages: see letters (і ї є ґ Ukrainian, ў Belarusian, ђ ћ Serbian, ѓ ќ ѕ Macedonian, ә ғ қ ң ө ұ ү һ Kazakh)."
   },
@@ -53,9 +47,6 @@
   "HEBREW": {
    "countries": [
     "IL"
-   ],
-   "weak_countries": [
-    "PS"
    ],
    "strength": "strong",
    "note": "Hebrew road signs are trilingual (Hebrew, Arabic, English) in Israel; Hebrew alone in the West Bank points to settlements."
@@ -84,16 +75,6 @@
     "IR",
     "AF",
     "PK"
-   ],
-   "weak_countries": [
-    "IL",
-    "TD",
-    "SO",
-    "DJ",
-    "KM",
-    "ER",
-    "CN",
-    "IN"
    ],
    "strength": "medium",
    "note": "Persian, Urdu, Pashto, Kurdish and Uyghur add letters (پ چ ژ گ; ٹ ڈ ڑ ں ے; ښ ږ ځ; ێ ۆ ڵ); Persian/Urdu digits ۴ ۵ ۶ differ from Arabic-Indic ٤ ٥ ٦; the Maghreb writes Western digits."
@@ -255,10 +236,6 @@
     "JP",
     "SG"
    ],
-   "weak_countries": [
-    "MY",
-    "KR"
-   ],
    "strength": "medium",
    "note": "Separate with simplified vs traditional vs Japanese forms (see hanzi)."
   },
@@ -266,11 +243,6 @@
    "countries": [
     "MA",
     "DZ"
-   ],
-   "weak_countries": [
-    "LY",
-    "ML",
-    "NE"
    ],
    "strength": "strong",
    "note": "Morocco writes Tifinagh on official buildings and many road signs; Algeria uses it more rarely."
@@ -1517,13 +1489,6 @@
     "JE",
     "GG",
     "FK"
-   ],
-   "weak_countries": [
-    "EG",
-    "LB",
-    "SY",
-    "SD",
-    "SS"
    ],
    "note": "pound sterling; £ is also used for the Egyptian and Lebanese pound"
   },
