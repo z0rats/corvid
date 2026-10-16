@@ -7,9 +7,9 @@ of repeating this pattern in every subagent's prompt. Pass only the feature-spec
 ## Where things live
 
 - Locale files: `src/core/i18n/locales/<lang>/<namespace>.json` — currently `en` and `ru`.
-- Namespace registry: `src/core/i18n/index.js` — `NAMESPACES` array + the `resources` object in
-  `i18n.init()`. Adding a **new** namespace means importing both locale JSONs there and adding
-  the key to `NAMESPACES`. Adding keys to an **existing** namespace does not touch this file.
+- Namespace registry: `src/core/i18n/index.js` discovers every `locales/<lang>/<namespace>.json`
+  via `import.meta.glob`, naming the namespace after the file. A **new** namespace is just a new
+  JSON file (camelCase name, in `en`; `ru` only when asked) — no registration step.
 - Existing namespaces: `common`, `settings`, `cvssCalculator`, `emailAnalyzer`, `imageTools`,
   `iocTools`, `llmTemplates`, `newsfeed`, `ruleCreator`, `usernameSearch`, `emailSearch`,
   `redditSearch`.
@@ -55,8 +55,7 @@ export default function SomeComponent() {
 
 For each feature translated, report:
 
-- Which namespace(s) touched (existing, or newly added — and if newly added, confirm
-  `src/core/i18n/index.js` was updated).
+- Which namespace(s) touched (existing, or newly added — a new file under `locales/<lang>/`).
 - List of new/changed keys, grouped by JSON file (`en/<ns>.json`, `ru/<ns>.json`).
 - List of component files updated to use `useTranslation`/`t(...)`.
 - Any strings intentionally left untranslated and why (rule 3/4/5 above).

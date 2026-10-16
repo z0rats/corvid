@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { useAtomValue } from 'jotai';
 import Box from '@mui/material/Box';
@@ -8,27 +8,7 @@ import NotFound from "../components/ui/NotFound";
 import ErrorBoundary from '../components/ErrorBoundary';
 import StartScreen from '../components/ui/StartScreen';
 import { generalSettingsState } from '../state/atoms';
-
-const CvssCalculator = lazy(() => import("../../features/cvss-calculator/CvssCalculator"));
-const EmailAnalyzer = lazy(() => import("../../features/email-analyzer/EmailAnalyzer"));
-const ImageTools = lazy(() => import("../../features/image-tools/ImageTools"));
-const IocTools = lazy(() => import("../../features/ioc-tools/IocTools"));
-const Newsfeed = lazy(() => import("../../features/newsfeed/Newsfeed"));
-const Settings = lazy(() => import("../../features/settings/Settings"));
-const RuleCreator = lazy(() => import("../../features/rule-creator/RuleCreator"));
-const AiTemplates = lazy(() => import("../../features/llm-templates/AiTemplates"));
-const UsernameSearch = lazy(() => import("../../features/username-search/UsernameSearch"));
-const EmailSearch = lazy(() => import("../../features/email-search/EmailSearch"));
-const RedditSearch = lazy(() => import("../../features/reddit-search/RedditSearch"));
-const DorkRunner = lazy(() => import("../../features/dork-runner/DorkRunner"));
-const GitRecon = lazy(() => import("../../features/git-recon/GitRecon"));
-const Amass = lazy(() => import("../../features/amass/Amass"));
-const RuBusinessCheck = lazy(() => import("../../features/ru-business-check/RuBusinessCheck"));
-const YoutubeLookup = lazy(() => import("../../features/youtube/YoutubeLookup"));
-const SteamRecon = lazy(() => import("../../features/steam-recon/SteamRecon"));
-const InstagramSearch = lazy(() => import("../../features/instagram-search/InstagramSearch"));
-const PhoneSearch = lazy(() => import("../../features/phone-search/PhoneSearch"));
-const SanctionsSearch = lazy(() => import("../../features/sanctions-search/SanctionsSearch"));
+import { FEATURE_ROUTES } from './featureRoutes';
 
 const LoadingFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -49,26 +29,13 @@ export const AppRoutes = () => {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<IndexRoute />} />
-          <Route path="newsfeed/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><Newsfeed /></Suspense></ErrorBoundary>} />
-          <Route path="settings/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><Settings /></Suspense></ErrorBoundary>} />
-          <Route path="ai-templates/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><AiTemplates /></Suspense></ErrorBoundary>} />
-          <Route path="ioc-tools/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><IocTools /></Suspense></ErrorBoundary>} />
-          <Route path="email-analyzer/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><EmailAnalyzer /></Suspense></ErrorBoundary>} />
-          <Route path="image-tools/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><ImageTools /></Suspense></ErrorBoundary>} />
-          <Route path="cvss-calculator/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><CvssCalculator /></Suspense></ErrorBoundary>} />
-          <Route path="rules/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RuleCreator /></Suspense></ErrorBoundary>} />
-          <Route path="username-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><UsernameSearch /></Suspense></ErrorBoundary>} />
-          <Route path="email-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><EmailSearch /></Suspense></ErrorBoundary>} />
-          <Route path="reddit-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RedditSearch /></Suspense></ErrorBoundary>} />
-          <Route path="dork-runner/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><DorkRunner /></Suspense></ErrorBoundary>} />
-          <Route path="git-recon/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><GitRecon /></Suspense></ErrorBoundary>} />
-          <Route path="amass/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><Amass /></Suspense></ErrorBoundary>} />
-          <Route path="ru-business-check/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><RuBusinessCheck /></Suspense></ErrorBoundary>} />
-          <Route path="youtube/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><YoutubeLookup /></Suspense></ErrorBoundary>} />
-          <Route path="steam-recon/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><SteamRecon /></Suspense></ErrorBoundary>} />
-          <Route path="instagram-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><InstagramSearch /></Suspense></ErrorBoundary>} />
-          <Route path="phone-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><PhoneSearch /></Suspense></ErrorBoundary>} />
-          <Route path="sanctions-search/*" element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><SanctionsSearch /></Suspense></ErrorBoundary>} />
+          {FEATURE_ROUTES.map(({ path, Component }) => (
+            <Route
+              key={path}
+              path={path}
+              element={<ErrorBoundary><Suspense fallback={<LoadingFallback />}><Component /></Suspense></ErrorBoundary>}
+            />
+          ))}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

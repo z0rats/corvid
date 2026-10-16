@@ -9,48 +9,13 @@
 //   3. a Settings tab in SETTINGS_TABS_CONFIG has no matching heading in settings-reference.md.
 
 import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const sidebarConfigPath = path.join(repoRoot, "frontend/src/core/config/sidebarConfig.jsx");
+import { repoRoot, readSidebarSource, extractMainMenuModuleIds } from "./feature-registry.mjs";
+
 const docsFeaturesDir = path.join(repoRoot, "website/src/content/docs/features");
 
-function extractMainMenuModuleIds(source) {
-  const startMarker = "const MAIN_MENU_ITEMS_CONFIG = [";
-  const startIdx = source.indexOf(startMarker);
-  if (startIdx === -1) {
-    throw new Error(`Could not find "${startMarker}" in ${sidebarConfigPath}`);
-  }
-
-  // Walk bracket depth from the array's opening "[" to find its matching close, rather than
-  // assuming a fixed line count - the array's contents (accepts/acceptsRouting) nest their own.
-  const arrayStart = startIdx + startMarker.length - 1;
-  let depth = 0;
-  let endIdx = -1;
-  for (let i = arrayStart; i < source.length; i++) {
-    if (source[i] === "[") depth++;
-    else if (source[i] === "]") {
-      depth--;
-      if (depth === 0) {
-        endIdx = i;
-        break;
-      }
-    }
-  }
-  if (endIdx === -1) {
-    throw new Error(`Could not find the closing bracket for MAIN_MENU_ITEMS_CONFIG in ${sidebarConfigPath}`);
-  }
-
-  const arrayText = source.slice(arrayStart, endIdx + 1);
-  const moduleIds = [...arrayText.matchAll(/moduleId:\s*["']([a-z0-9_]+)["']/g)].map((m) => m[1]);
-  if (moduleIds.length === 0) {
-    throw new Error("Found MAIN_MENU_ITEMS_CONFIG but extracted zero moduleId values - the regex may no longer match its shape.");
-  }
-  return moduleIds;
-}
-
-const source = readFileSync(sidebarConfigPath, "utf8");
+const source = readSidebarSource();
 const moduleIds = extractMainMenuModuleIds(source);
 
 const missing = [];

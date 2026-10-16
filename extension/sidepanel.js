@@ -1,6 +1,6 @@
 const DEFAULT_BASE_URL = 'http://localhost:4000';
 
-// Route names ported by hand from frontend/src/core/config/routes.jsx — kept short since this
+// Route names ported by hand from frontend/src/core/config/featureRoutes.js — kept short since this
 // is just a handful of common entry points, not a mirror of the app's full nav.
 const QUICK_LINKS = [
   { label: 'IOC Lookup', path: 'ioc-tools/lookup' },

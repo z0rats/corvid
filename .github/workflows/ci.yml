@@ -220,6 +220,9 @@ jobs:
       - name: Check every feature has a docs page, and engines/settings tabs are documented
         run: node .github/scripts/check-docs-coverage.mjs
 
+      - name: Check every feature is fully wired (route, router, i18n, history, tabs)
+        run: node .github/scripts/check-feature-completeness.mjs
+
       - name: Check docs/ references resolve
         run: python3 scripts/check_doc_references.py
 
