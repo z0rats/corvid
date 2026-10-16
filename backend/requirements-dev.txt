@@ -95,7 +95,7 @@ asn1crypto==1.5.1
     #   oscrypto
     #   pyhanko
     #   pyhanko-certvalidator
-ast-serialize==0.8.0
+ast-serialize==0.13.0
     # via mypy
 asttokens==3.0.2
     # via
@@ -167,7 +167,7 @@ colour==0.1.5
     # via
     #   -c requirements.txt
     #   mitreattack-python
-coverage==7.15.2
+coverage[toml]==7.15.2
     # via pytest-cov
 cryptography==50.0.0
     # via
@@ -238,7 +238,7 @@ fake-useragent==2.2.0
     # via
     #   -c requirements.txt
     #   requests-html
-fastapi==0.141.1
+fastapi==0.142.2
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -255,7 +255,7 @@ filelock==3.31.0
     # via
     #   -c requirements.txt
     #   tldextract
-flask==3.1.3
+flask[async]==3.1.3
     # via
     #   -c requirements.txt
     #   maigret
@@ -324,7 +324,7 @@ httptools==0.8.0
     # via
     #   -c requirements.txt
     #   uvicorn
-httpx==0.28.1
+httpx[http2]==0.28.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -393,7 +393,7 @@ langdetect==1.0.9
     # via
     #   -c requirements.txt
     #   social-analyzer
-librt==0.15.0
+librt==0.16.0
     # via mypy
 limits==5.8.0
     # via
@@ -407,7 +407,7 @@ loguru==0.7.3
     # via
     #   -c requirements.txt
     #   mitreattack-python
-lxml==6.1.3
+lxml[html-clean]==6.1.3
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -423,7 +423,7 @@ lxml-html-clean==0.4.5
     #   -c requirements.txt
     #   lxml
     #   mailcat-osint
-maigret==0.6.6
+maigret[pdf]==0.6.6
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -459,7 +459,7 @@ mdurl==0.1.2
     # via
     #   -c requirements.txt
     #   markdown-it-py
-mitreattack-python==6.2.0
+mitreattack-python==6.2.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -468,7 +468,7 @@ multidict==6.7.1
     #   -c requirements.txt
     #   aiohttp
     #   yarl
-mypy==2.3.1
+mypy==2.4.0
     # via -r requirements-dev.in
 mypy-extensions==1.1.0
     # via mypy
@@ -497,6 +497,7 @@ openpyxl==3.1.5
 opentelemetry-api==1.44.0
     # via
     #   -c requirements.txt
+    #   fastapi
     #   pydantic-ai-slim
 orderly-set==5.5.0
     # via
@@ -602,7 +603,7 @@ pycparser==3.0
     # via
     #   -c requirements.txt
     #   cffi
-pydantic==2.13.5
+pydantic[email]==2.13.5
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -613,7 +614,7 @@ pydantic==2.13.5
     #   pydantic-ai-slim
     #   pydantic-graph
     #   pydantic-settings
-pydantic-ai-slim==2.51.0
+pydantic-ai-slim[anthropic,openai]==2.53.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -621,7 +622,7 @@ pydantic-core==2.46.5
     # via
     #   -c requirements.txt
     #   pydantic
-pydantic-graph==2.51.0
+pydantic-graph==2.53.0
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -698,7 +699,7 @@ python-multipart==0.0.32
     # via
     #   -c requirements.txt
     #   -r requirements.in
-python-socks==2.8.2
+python-socks[asyncio]==2.8.2
     # via
     #   -c requirements.txt
     #   aiohttp-socks
@@ -716,7 +717,7 @@ pyyaml==6.0.3
     #   newspaper4k
     #   pyhanko
     #   uvicorn
-regex==2026.9.10
+regex==2026.9.29
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -761,7 +762,7 @@ rich==15.0.0
     #   mitreattack-python
     #   typer
     #   user-scanner
-ruff==0.16.9
+ruff==0.16.10
     # via -r requirements-dev.in
 selenium==4.46.0
     # via
@@ -812,7 +813,7 @@ soupsieve==2.10
     #   -c requirements.txt
     #   beautifulsoup4
     #   maigret
-sqlalchemy==2.0.54
+sqlalchemy==2.1.2
     # via
     #   -c requirements.txt
     #   -r requirements.in
@@ -928,7 +929,7 @@ uritools==6.1.2
     # via
     #   -c requirements.txt
     #   pyhanko-certvalidator
-urllib3==2.7.0
+urllib3[socks]==2.7.0
     # via
     #   -c requirements.txt
     #   pyppeteer
@@ -938,7 +939,7 @@ user-scanner==1.5.2.1
     # via
     #   -c requirements.txt
     #   -r requirements.in
-uvicorn==0.54.0
+uvicorn[standard]==0.54.0
     # via
     #   -c requirements.txt
     #   -r requirements.in
