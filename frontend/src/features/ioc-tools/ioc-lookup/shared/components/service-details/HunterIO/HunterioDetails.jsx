@@ -29,8 +29,7 @@ const DetailListItem = ({ primary, secondary, yes, no, notAvailable }) => (
     <ListItemText
       primary={primary}
       secondary={typeof secondary === 'boolean' ? (secondary ? yes : no) : (secondary || notAvailable)}
-      primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-      secondaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
+      slotProps={{ primary: { variant: 'body2', fontWeight: 'medium' }, secondary: { variant: 'body2', color: 'text.secondary' } }}
     />
   </ListItem>
 );

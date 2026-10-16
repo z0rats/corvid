@@ -1,14 +1,11 @@
-import { useId, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
@@ -27,16 +24,15 @@ import PlaybookManage from '../../../core/components/ui/CommandPalette/PlaybookM
 
 /**
  * Settings → Command Palette tab (i18nKey nav.settingsTabs.commandPalette; "Управление" in the
- * Russian locale). Backed by the 3 new GeneralSettings columns
- * (auto_open_on_single_match/start_screen/always_tiles) plus playbook management, which is
- * otherwise only reachable via >playbook:manage in the palette itself.
+ * Russian locale): auto_open_on_single_match plus playbook management, which is otherwise only
+ * reachable via >playbook:manage in the palette itself. The same endpoint's start_screen and
+ * always_tiles columns are edited from Settings → General instead.
  */
 export default function CommandPaletteSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const generalSettings = useAtomValue(generalSettingsState);
   const theme = useTheme();
-  const startScreenSelectId = useId();
 
   const { loading, updateCommandPaletteSettings } = useCommandPaletteSettings();
   const { notification, showNotification, hideNotification } = useNotification();
@@ -63,12 +59,6 @@ export default function CommandPaletteSettings() {
     // Negate the *defaulted* value shown in the switch, not the possibly-undefined raw value —
     // otherwise the first toggle from an unset default silently sends the same value back.
     autoOpenOnSingleMatch: !(generalSettings?.auto_open_on_single_match ?? true),
-  });
-
-  const handleStartScreenChange = (event) => applyUpdate({ startScreen: event.target.value });
-
-  const handleAlwaysTilesChange = () => applyUpdate({
-    alwaysTiles: !(generalSettings?.always_tiles ?? false),
   });
 
   const handleRunPlaybookNow = (name, value) => {
@@ -108,42 +98,6 @@ export default function CommandPaletteSettings() {
             />
             <FormHelperText sx={{ ml: 0 }}>
               {t('settings.commandPalette.autoOpenHelper')}
-            </FormHelperText>
-          </Box>
-
-          <Box>
-            <Typography variant="body1" gutterBottom>
-              {t('settings.commandPalette.startScreen')}
-            </Typography>
-            <FormControl sx={{ minWidth: 200 }}>
-              <Select
-                id={startScreenSelectId}
-                value={generalSettings?.start_screen ?? 'search'}
-                onChange={handleStartScreenChange}
-                disabled={loading}
-                size="small"
-                slotProps={{ htmlInput: { 'aria-label': t('settings.commandPalette.startScreen') } }}
-              >
-                <MenuItem value="search">{t('settings.commandPalette.startScreenOptions.search')}</MenuItem>
-                <MenuItem value="newsfeed">{t('settings.commandPalette.startScreenOptions.newsfeed')}</MenuItem>
-              </Select>
-              <FormHelperText>{t('settings.commandPalette.startScreenHelper')}</FormHelperText>
-            </FormControl>
-          </Box>
-
-          <Box>
-            <FormControlLabel
-              control={(
-                <Switch
-                  checked={generalSettings?.always_tiles ?? false}
-                  onChange={handleAlwaysTilesChange}
-                  disabled={loading}
-                />
-              )}
-              label={t('settings.commandPalette.alwaysTiles')}
-            />
-            <FormHelperText sx={{ ml: 0 }}>
-              {t('settings.commandPalette.alwaysTilesHelper')}
             </FormHelperText>
           </Box>
 

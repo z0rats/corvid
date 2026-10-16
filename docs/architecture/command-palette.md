@@ -22,8 +22,11 @@ internals and cross-feature navigation; the grammar itself is documented in
 ## Start screen
 
 The `/` route renders `StartScreen.jsx` (a lighter, non-modal subset of the same grammar) unless
-Settings → Command Palette's `start_screen` is set to `newsfeed` — three `GeneralSettings`
-columns (`auto_open_on_single_match`, `start_screen`, `always_tiles`) back that settings tab.
+`start_screen` is set to `newsfeed`. Three `GeneralSettings` columns (`auto_open_on_single_match`,
+`start_screen`, `always_tiles`) share one endpoint (`PUT /api/settings/general/command-palette`),
+but the UI splits them: auto-open lives in Settings → Command Palette, while start screen and
+tiles live in Settings → General next to language and theme. The left panel shows only pinned
+tools plus the sections, not recents; the start screen and the palette already surface recents.
 
 ## YouTube URL / Steam profile special-cases
 

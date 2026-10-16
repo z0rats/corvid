@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from app.core.dependencies import ReadSessionDep
 
 from ..schemas.activity_schemas import ActivityItem
-from ..service.activity_service import list_recent_activity
+from ..service.activity_service import list_active_runs, list_recent_activity
 
 router = APIRouter(prefix="/api/activity", tags=["Activity"])
 
@@ -21,3 +21,13 @@ async def get_recent_activity(
     limit: Annotated[int, Query(ge=1, le=200, description="Maximum number of items")] = 50,
 ) -> list[ActivityItem]:
     return [ActivityItem(**item) for item in await list_recent_activity(db, limit)]
+
+
+@router.get(
+    "/active",
+    response_model=list[ActivityItem],
+    summary="Active scans",
+    description="Every scan still running or waiting for a heavy-scan slot, across all features",
+)
+async def get_active_runs(db: ReadSessionDep) -> list[ActivityItem]:
+    return [ActivityItem(**item) for item in await list_active_runs(db)]

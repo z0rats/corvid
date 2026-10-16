@@ -12,8 +12,12 @@ import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
+import Button from '@mui/material/Button';
+import Collapse from '@mui/material/Collapse';
 import { useAtomValue } from 'jotai';
 import SearchIcon from '@mui/icons-material/SearchOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { generalSettingsState } from '../../state/atoms';
 import { buildCommandRegistry, resolveEntryPath } from '../../config/commandRegistry';
 import {
@@ -31,21 +35,28 @@ import { useVisibleModuleIds } from '../../hooks/useVisibleModuleIds';
 import api from '../../services/baseApi';
 import ResultList from './CommandPalette/ResultList';
 import TileGrid from './CommandPalette/TileGrid';
+import ShortcutSheet from './CommandPalette/ShortcutSheet';
 import RecentActivity from './RecentActivity';
 import ApiKeysOnboardingHint from './ApiKeysOnboardingHint';
 
-// Illustrative example queries — literal grammar tokens (see commandParser.ts), not translated
+// Illustrative example queries — the `display`/`query` halves are literal grammar tokens (see commandParser.ts), not translated
 // prose, same reasoning as BUILTIN_ACTIONS/type: aliases staying English in both locales.
 const EXAMPLE_CHIPS = [
-  { label: 'reddit', query: 'reddit' },
-  { label: '185.220.101.7', query: '185.220.101.7' },
-  { label: '0x1f98…f984 (ETH)', query: '0x1f98431c8ad98523631ae4a59f267346ea31f984' },
-  { label: 'defang 185.220.101.7', query: 'defang 185.220.101.7' },
-  { label: '#recon', query: '#recon' },
-  { label: 'type:hash', query: 'type:hash' },
-  { label: '>settings', query: '>settings' },
+  { id: 'ip', display: '185.220.101.7', query: '185.220.101.7' },
+  { id: 'wallet', display: '0x1f98…f984', query: '0x1f98431c8ad98523631ae4a59f267346ea31f984' },
+  { id: 'pivot', display: 'john_doe reddit', query: 'john_doe reddit' },
+  { id: 'defang', display: 'defang 185.220.101.7', query: 'defang 185.220.101.7' },
 ];
-const EXAMPLE_PIVOT_CHIP = { label: 'john_doe reddit', query: 'john_doe reddit' };
+
+// The grammar beyond "type a tool name or a value", spelled out behind a toggle rather than shown
+// as bare tokens (`type:hash`, `>settings`) a first-time user has no way to decode.
+const SYNTAX_ROWS = [
+  { id: 'tag', token: '#tag' },
+  { id: 'type', token: 'type:kind' },
+  { id: 'action', token: '>action' },
+  { id: 'pivot', token: 'value tool' },
+  { id: 'instant', token: 'defang / fang value' },
+];
 
 /**
  * `/` home screen — the search bar re-rendered as a page instead of a modal overlay (see
@@ -71,6 +82,8 @@ export default function StartScreen() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [notice, setNotice] = useState(null); // { message, severity }
   const [isDragOver, setIsDragOver] = useState(false);
+  const [syntaxOpen, setSyntaxOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -96,11 +109,6 @@ export default function StartScreen() {
     if (parsed.kind !== 'empty') return results;
     return mergeEmptyStateResults({ pinnedIds: getPinnedToolIds(), recents: getRecents(), registry });
   }, [parsed.kind, registry, results]);
-
-  const recentNames = useMemo(
-    () => getRecents().map((r) => registry.find((e) => e.id === r.toolId)?.label).filter(Boolean).slice(0, 3),
-    [registry],
-  );
 
   // Host-specific effects — no close()/breadcrumb/recording here, unlike the modal palette's
   // own openEntry/runInstantAnswer/runAction (core/hooks/useCommandPalette.ts): this is a page,
@@ -249,45 +257,13 @@ export default function StartScreen() {
           </Typography>
         </Box>
 
-        <Divider sx={{ mt: 1.5, mb: { xs: 3, sm: 5 } }} />
-
-        <ApiKeysOnboardingHint />
+        <Divider sx={{ mt: 1.5, mb: { xs: 2, sm: 5 } }} />
 
         <Box sx={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: 2, width: '100%', maxWidth: 640, mx: 'auto',
+          gap: 1.5, width: '100%', maxWidth: 640, mx: 'auto',
         }}
         >
-          {query === '' && (
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{
-                rowGap: 1,
-                flexWrap: "wrap",
-                justifyContent: "center"
-              }}>
-              {EXAMPLE_CHIPS.map((chip) => (
-                <Chip
-                  key={chip.label}
-                  label={chip.label}
-                  variant="outlined"
-                  onClick={() => fillExample(chip.query)}
-                  sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.75rem' }}
-                />
-              ))}
-            </Stack>
-          )}
-
-          {query === '' && (
-            <Chip
-              label={EXAMPLE_PIVOT_CHIP.label}
-              variant="outlined"
-              onClick={() => fillExample(EXAMPLE_PIVOT_CHIP.query)}
-              sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.75rem' }}
-            />
-          )}
-
           <Box
             sx={{
               display: 'flex', alignItems: 'center', gap: 1, width: '100%',
@@ -309,22 +285,76 @@ export default function StartScreen() {
             />
           </Box>
 
+          {query === '' && (
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ rowGap: 1, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}
+            >
+              <Typography variant="caption" color="text.secondary">{t('startScreen.examplesLabel')}:</Typography>
+              {EXAMPLE_CHIPS.map((chip) => (
+                <Chip
+                  key={chip.id}
+                  size="small"
+                  variant="outlined"
+                  onClick={() => fillExample(chip.query)}
+                  label={(
+                    <>
+                      {t(`startScreen.examples.${chip.id}`)}
+                      <Box component="span" sx={{ ml: 0.75, color: 'text.secondary', fontFamily: '"JetBrains Mono", monospace' }}>
+                        {chip.display}
+                      </Box>
+                    </>
+                  )}
+                />
+              ))}
+              <Button
+                size="small"
+                onClick={() => setSyntaxOpen((open) => !open)}
+                endIcon={syntaxOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                aria-expanded={syntaxOpen}
+              >
+                {t('startScreen.syntax.toggle')}
+              </Button>
+            </Stack>
+          )}
+
+          <Collapse in={query === '' && syntaxOpen} sx={{ width: '100%' }} unmountOnExit>
+            <Box sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('startScreen.syntax.title')}</Typography>
+              {SYNTAX_ROWS.map((row) => (
+                <Box key={row.id} sx={{ display: 'flex', gap: 2, py: 0.5, alignItems: 'baseline' }}>
+                  <Box
+                    component="code"
+                    sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.8rem', minWidth: 140, flexShrink: 0 }}
+                  >
+                    {row.token}
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">{t(`startScreen.syntax.${row.id}`)}</Typography>
+                </Box>
+              ))}
+              <Button size="small" sx={{ mt: 1 }} onClick={() => setShortcutsOpen(true)}>
+                {t('startScreen.syntax.shortcuts')}
+              </Button>
+            </Box>
+          </Collapse>
+
           <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
             {t('startScreen.pasteHint')}
           </Typography>
 
           {banner && (
-            <Alert severity={banner.severity} variant="outlined" sx={{ mt: 2 }}>
+            <Alert severity={banner.severity} variant="outlined" sx={{ mt: 1, width: '100%' }}>
               {t(banner.i18nKey, banner.params)}
             </Alert>
           )}
-
-          {query === '' && recentNames.length > 0 && (
-            <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
-              {t('startScreen.recentHint', { items: recentNames.join(', ') })}
-            </Typography>
-          )}
         </Box>
+
+        {query === '' && (
+          <Box sx={{ mt: 3 }}>
+            <ApiKeysOnboardingHint />
+          </Box>
+        )}
 
         <Box sx={{ mt: 3, width: '100%', maxWidth: 640, mx: 'auto' }}>
           {['instant', 'action'].includes(parsed.kind) ? (
@@ -341,13 +371,14 @@ export default function StartScreen() {
               results={visibleResults ?? []}
               selectedIndex={selectedIndex}
               onSelect={handleSelect}
-              onActionPanel={() => {}}
             />
           )}
         </Box>
 
         {query === '' && <RecentActivity />}
       </Paper>
+
+      <ShortcutSheet open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
 
       <Snackbar
         open={Boolean(notice)}

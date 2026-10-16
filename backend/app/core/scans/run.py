@@ -330,6 +330,12 @@ class ScanRun:
         return slots
 
     @classmethod
+    def is_queued(cls, model: type, search_id: int) -> bool:
+        """Whether this heavy run is still waiting for a slot. Queued-ness lives only here, in
+        memory - the row itself already says `running` from the moment it's created."""
+        return (model, search_id) in cls._queued
+
+    @classmethod
     async def cancel(cls, model: type, search_id: int) -> bool:
         """Request cancellation of a currently-running scan. Returns False if no
         scan with that (table, id) is currently running (already finished, or

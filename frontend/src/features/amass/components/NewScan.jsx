@@ -11,6 +11,7 @@ import ResultsView from './ResultsView';
 import { useAmass } from '../hooks/useAmass';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 import ScanQueuedNotice from '../../../core/components/ui/ScanQueuedNotice';
+import PageHeader from '../../../core/components/ui/PageHeader';
 
 export default function NewScan() {
   const { t } = useTranslation('amass');
@@ -24,10 +25,7 @@ export default function NewScan() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 1 }}>{t('page.title')}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t('page.description')}
-      </Typography>
+      <PageHeader title={t('page.title')} description={t('page.description')} />
 
       <ScanForm onScan={scan} disabled={loading} initialTarget={prefillValue} />
 

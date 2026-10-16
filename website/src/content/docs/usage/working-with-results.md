@@ -18,7 +18,15 @@ deletes every alert. Routine "scan finished" and watchlist alerts are only creat
 
 The home screen lists your newest runs across every tool that keeps a history — IOC lookups,
 username/email/phone/Reddit/Instagram/Steam searches, Git Recon, Amass, and RU Business Check —
-each linking straight to its saved result. Runs of modules you've disabled are hidden.
+each linking straight to its saved result. Runs of modules you've disabled are hidden. While a
+listed run is still in progress, the list refreshes every few seconds until it finishes.
+
+## Active scans
+
+While any scan is running or waiting in the queue (heavy scans share a concurrency limit), a
+spinning indicator with a count appears in the top bar, next to the alerts bell. Clicking it lists
+each unfinished scan, whether it's **Running** or **Queued**, and links to its live results. The
+indicator disappears once nothing is running; finished scans then show up under alerts.
 
 ## Run history
 

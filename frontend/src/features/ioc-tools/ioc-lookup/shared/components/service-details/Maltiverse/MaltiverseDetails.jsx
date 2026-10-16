@@ -34,8 +34,7 @@ const CharacteristicItem = ({ icon, primary, secondary, yes, no, notAvailable })
     <ListItemText
       primary={primary}
       secondary={typeof secondary === 'boolean' ? (secondary ? yes : no) : (secondary || notAvailable)}
-      primaryTypographyProps={{ variant: 'body2' }}
-      secondaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
+      slotProps={{ primary: { variant: 'body2' }, secondary: { variant: 'body2', color: 'text.secondary' } }}
     />
   </ListItem>
 );

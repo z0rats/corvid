@@ -13,7 +13,7 @@ import Tooltip from '@mui/material/Tooltip';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { buildCommandRegistry } from '../../config/commandRegistry';
 import { SECTION_ORDER } from '../../config/sidebarConfig';
-import { getPinnedToolIds, getRecents, togglePinnedToolId, PINNED_CHANGED_EVENT } from '../../utils/commandPaletteStorage';
+import { getPinnedToolIds, togglePinnedToolId, PINNED_CHANGED_EVENT } from '../../utils/commandPaletteStorage';
 
 /**
  * Global tool catalog — replaces both TopNavMenu (top bar) and the mobile drawer's flat tool
@@ -27,15 +27,13 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
   const { t: tCommon } = useTranslation();
   const location = useLocation();
   const [pinnedIds, setPinnedIds] = useState(getPinnedToolIds);
-  const [recents, setRecents] = useState(getRecents);
 
   const registry = useMemo(() => buildCommandRegistry(tCommon), [tCommon]);
 
   useEffect(() => {
-    // Storage is written synchronously by the palette (pin/recent) before it navigates, so
-    // re-reading on every route change picks up palette-driven changes without a shared store.
+    // Storage is written synchronously by the palette before it navigates, so re-reading on
+    // every route change picks up palette-driven pins without a shared store.
     setPinnedIds(getPinnedToolIds());
-    setRecents(getRecents());
   }, [location.pathname]);
 
   useEffect(() => {
@@ -62,11 +60,6 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
     .map((id) => visibleRegistry.find((e) => e.id === id))
     .filter(Boolean);
 
-  const recentEntries = recents
-    .map((r) => visibleRegistry.find((e) => e.id === r.toolId))
-    .filter((entry, index, arr) => entry && arr.findIndex((e) => e.id === entry.id) === index)
-    .slice(0, 5);
-
   const sections = useMemo(
     () => SECTION_ORDER
       .map((section) => ({ section, entries: visibleRegistry.filter((entry) => entry.section === section) }))
@@ -74,12 +67,15 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
     [visibleRegistry],
   );
 
-  const renderRow = (entry, { showUnpin = false } = {}) => (
+  // Recents deliberately aren't listed here - the start screen and the palette already surface
+  // them, and a third copy of the same tool in this panel only added noise. A pinned row is a
+  // shortcut, so only the tool's own section row shows the active highlight, not both.
+  const renderRow = (entry, { pinned = false } = {}) => (
     <ListItemButton
       key={entry.id}
       component={Link}
       to={entry.path}
-      selected={location.pathname.startsWith(entry.path)}
+      selected={!pinned && location.pathname.startsWith(entry.path)}
       sx={{
         borderRadius: 1,
         mb: 0.5,
@@ -93,8 +89,10 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
           {entry.icon}
         </ListItemIcon>
       </Tooltip>
-      {sidebarOpen && <ListItemText primary={entry.label} />}
-      {sidebarOpen && showUnpin && (
+      {sidebarOpen && (
+        <ListItemText primary={entry.label} slotProps={{ primary: { noWrap: true, title: entry.label } }} />
+      )}
+      {sidebarOpen && pinned && (
         <Tooltip title={t('leftPanel.unpin')}>
           <IconButton
             className="unpin-button"
@@ -119,13 +117,7 @@ export default function LeftPanel({ sidebarOpen, filteredModuleIds }) {
             <ListSubheader disableSticky>{t('leftPanel.pinned')}</ListSubheader>
           ) : null}
         >
-          {pinnedEntries.map((entry) => renderRow(entry, { showUnpin: true }))}
-        </List>
-      )}
-
-      {sidebarOpen && recentEntries.length > 0 && (
-        <List dense subheader={<ListSubheader disableSticky>{t('leftPanel.recent')}</ListSubheader>}>
-          {recentEntries.map((entry) => renderRow(entry))}
+          {pinnedEntries.map((entry) => renderRow(entry, { pinned: true }))}
         </List>
       )}
 

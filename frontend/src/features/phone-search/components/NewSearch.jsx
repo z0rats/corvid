@@ -1,13 +1,13 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 
 import SearchForm from './SearchForm';
 import LiveScanView from './LiveScanView';
 import ToolInfoBanner from './ToolInfoBanner';
 import { usePhoneSearchScan } from '../hooks/usePhoneSearchScan';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
+import PageHeader from '../../../core/components/ui/PageHeader';
 
 export default function NewSearch() {
   const { t } = useTranslation('phoneSearch');
@@ -17,10 +17,7 @@ export default function NewSearch() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 1 }}>{t('page.title')}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t('page.description')}
-      </Typography>
+      <PageHeader title={t('page.title')} description={t('page.description')} />
       <ToolInfoBanner />
       <SearchForm onSearch={scan.startScan} disabled={scan.phase === 'running'} initialPhoneNumber={prefillValue} />
       {scan.phase !== 'idle' && <LiveScanView scan={scan} />}

@@ -38,6 +38,18 @@ async def _non_scan_activity(db: AsyncSession, limit: int) -> list[dict[str, Any
     return items
 
 
+async def list_active_runs(db: AsyncSession) -> list[dict[str, Any]]:
+    """Every scan still running or queued, across all features, newest first - unbounded by
+    recency, unlike the feed below, so a long-running scan never drops out of view."""
+    items: list[dict[str, Any]] = []
+    for feature in all_scan_features():
+        items.extend(await feature.active_runs(db))
+    for item in items:
+        item["timestamp"] = _as_utc(item["timestamp"])
+    items.sort(key=lambda item: item["timestamp"], reverse=True)
+    return items
+
+
 async def list_recent_activity(db: AsyncSession, limit: int) -> list[dict[str, Any]]:
     items = await _non_scan_activity(db, limit)
     for feature in all_scan_features():

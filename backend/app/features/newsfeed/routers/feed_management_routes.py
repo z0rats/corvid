@@ -40,6 +40,11 @@ from app.features.newsfeed.utils.validation import validate_and_process_icon, va
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["Newsfeed"])
+# Mounted without the access-token dependency (see router_registry.get_public_routers): the
+# frontend shows these through a plain <img src>, which can't carry an Authorization header, so
+# behind the gate every icon 401'd - broken images, plus a false "Failed access-token attempts"
+# security alert each time the newsfeed opened. They're public site favicons under random names.
+icons_router = APIRouter(prefix="/api", tags=["Newsfeed"])
 
 FEED_ICONS_DIR = Path(settings.static_dir) / "feedicons"
 _SAFE_ICON_NAME = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -277,7 +282,7 @@ async def delete_custom_feed_route(db: SessionDep, feed_name: str = Query(...)) 
     return {"message": "Feed deleted successfully"}
 
 
-@router.get(
+@icons_router.get(
     "/feedicons/{icon_name}",
     summary="Serve feed icon",
     description="Serve a feed icon by filename, falling back to the default icon if not found",

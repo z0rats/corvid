@@ -1,11 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
-import { hasLlmKeyAtom, themeModeAtom, generalSettingsState } from '../../state/atoms';
+import { hasLlmKeyAtom, themeModeAtom } from '../../state/atoms';
 import { useVisibleModuleIds } from '../../hooks/useVisibleModuleIds';
 import { useThemeManager } from '../../hooks/ui/useThemeManager';
 import { usePersistentState } from '../../hooks/ui/usePersistentState';
-import { useGeneralSettings } from '../../../features/settings/hooks/api/useGeneralSettings';
 import { Outlet, Link, useLocation } from 'react-router';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -25,9 +24,12 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import SearchIcon from '@mui/icons-material/SearchOutlined';
 import HomeIcon from '@mui/icons-material/HomeOutlined';
 import SidebarTabs from '../ui/SidebarTabs';
+import FeatureTabs from '../ui/FeatureTabs';
 import LeftPanel from './LeftPanel';
+import ResizeHandle from './ResizeHandle';
 import CommandPalette from '../ui/CommandPalette/CommandPalette';
 import AlertsMenu from '../ui/AlertsMenu';
+import ActiveScansMenu from '../ui/ActiveScansMenu';
 import { OPEN_COMMAND_PALETTE_EVENT } from '../../hooks/useGlobalPaletteShortcuts';
 import { TAB_ROUTES } from '../../config/sidebarConfig';
 import { useTheme, alpha } from '@mui/material/styles';
@@ -53,10 +55,6 @@ function Layout() {
   const hasLlmKey = useAtomValue(hasLlmKeyAtom);
   const themeMode = useAtomValue(themeModeAtom);
   const { toggleColorMode } = useThemeManager();
-  const generalSettings = useAtomValue(generalSettingsState);
-  const { updateLanguage } = useGeneralSettings();
-  const currentLanguage = generalSettings?.language || 'en';
-  const handleLanguageToggle = () => updateLanguage(currentLanguage === 'en' ? 'ru' : 'en');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = usePersistentState('layout.sidebarOpen', true, isBoolean);
   const [sidebarWidth, setSidebarWidth] = usePersistentState(
@@ -67,7 +65,7 @@ function Layout() {
     'layout.leftPanelWidth', defaultLeftPanelWidth, isWidthBetween(minLeftPanelWidth, maxLeftPanelWidth),
   );
   // Tracks which panel ('leftPanel' | 'sidebar') is being dragged, not just whether — a ref since
-  // it drives a synchronous mousemove listener, not a render.
+  // it drives a synchronous pointermove listener, not a render.
   const resizingPanel = useRef(null);
   const resizeStartX = useRef(0);
   const resizeStartWidth = useRef(0);
@@ -93,7 +91,7 @@ function Layout() {
   };
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handlePointerMove = (e) => {
       const panel = resizingPanel.current;
       if (!panel) return;
       const newWidth = resizeStartWidth.current + (e.clientX - resizeStartX.current);
@@ -104,18 +102,20 @@ function Layout() {
       }
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       if (!resizingPanel.current) return;
       resizingPanel.current = null;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('pointercancel', handlePointerUp);
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+      document.removeEventListener('pointercancel', handlePointerUp);
     };
   }, [setLeftPanelWidth, setSidebarWidth]);
 
@@ -126,7 +126,10 @@ function Layout() {
 
   const filteredModuleIds = useVisibleModuleIds();
 
-  const showSidebar = Boolean(currentTabs);
+  // Only a tab set with nested children (Newsfeed's settings group) gets the side drawer; a flat
+  // one renders as FeatureTabs above the page, so a 2-3 tab feature doesn't cost a whole column.
+  const showSidebar = Boolean(currentTabs?.some((tab) => tab.children?.length));
+  const showFeatureTabs = Boolean(currentTabs) && !showSidebar;
 
   const leftPanelFooterContent = (
     <Box
@@ -190,7 +193,7 @@ function Layout() {
       }}
       >
         <LeftPanel sidebarOpen filteredModuleIds={filteredModuleIds} />
-        {currentTabs && (
+        {showSidebar && (
           <>
             <Divider sx={{ mx: 1 }} />
             <SidebarTabs title="" tabs={currentTabs} sidebarOpen={true} />
@@ -220,11 +223,26 @@ function Layout() {
               component={Link}
               to="/"
               aria-label={t('layout.home')}
-              sx={{ mr: 1 }}
+              sx={{ mr: 0.5 }}
             >
               <HomeIcon />
             </IconButton>
           </Tooltip>
+          <Typography
+            component={Link}
+            to="/"
+            variant="subtitle1"
+            sx={{
+              display: { xs: 'none', sm: 'block' },
+              color: 'inherit',
+              textDecoration: 'none',
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              mr: 1,
+            }}
+          >
+            Corvid
+          </Typography>
 
           {location.pathname === '/' ? (
             // StartScreen (rendered below, at "/") already is a live search input with the same
@@ -273,16 +291,7 @@ function Layout() {
           )}
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto', flexShrink: 0, pl: 2 }}>
-            <Tooltip title={currentLanguage === 'en' ? 'Русский' : 'English'}>
-              <IconButton
-                color="inherit"
-                onClick={handleLanguageToggle}
-                aria-label="toggle language"
-                sx={{ fontSize: '0.8rem', fontWeight: 600 }}
-              >
-                {currentLanguage === 'en' ? 'RU' : 'EN'}
-              </IconButton>
-            </Tooltip>
+            <ActiveScansMenu />
             <AlertsMenu />
             <Tooltip title={themeMode === 'dark' ? t('layout.switchToLightMode') : t('layout.switchToDarkMode')}>
               <IconButton color="inherit" onClick={toggleColorMode} aria-label={t('layout.toggleDarkMode')}>
@@ -337,31 +346,13 @@ function Layout() {
       >
         {leftPanelDrawerContent}
         {leftPanelOpen && (
-          <Box
-            onMouseDown={startResize('leftPanel')}
-            sx={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: 6,
-              cursor: 'col-resize',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              '&::after': {
-                content: '""',
-                width: 2,
-                height: 32,
-                borderRadius: 1,
-                bgcolor: 'divider',
-                transition: 'background-color 0.2s, height 0.2s',
-              },
-              '&:hover::after': {
-                bgcolor: 'primary.main',
-                height: 48,
-              },
-            }}
+          <ResizeHandle
+            label={t('layout.resizeToolPanel')}
+            value={leftPanelWidth}
+            min={minLeftPanelWidth}
+            max={maxLeftPanelWidth}
+            onPointerDown={startResize('leftPanel')}
+            onChange={setLeftPanelWidth}
           />
         )}
       </Drawer>
@@ -401,31 +392,13 @@ function Layout() {
         >
           {drawerContent}
           {sidebarOpen && (
-            <Box
-              onMouseDown={startResize('sidebar')}
-              sx={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                width: 6,
-                cursor: 'col-resize',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                '&::after': {
-                  content: '""',
-                  width: 2,
-                  height: 32,
-                  borderRadius: 1,
-                  bgcolor: 'divider',
-                  transition: 'background-color 0.2s, height 0.2s',
-                },
-                '&:hover::after': {
-                  bgcolor: 'primary.main',
-                  height: 48,
-                },
-              }}
+            <ResizeHandle
+              label={t('layout.resizeSectionPanel')}
+              value={sidebarWidth}
+              min={minDrawerWidth}
+              max={maxDrawerWidth}
+              onPointerDown={startResize('sidebar')}
+              onChange={setSidebarWidth}
             />
           )}
         </Drawer>
@@ -459,6 +432,7 @@ function Layout() {
         }}
       >
         <Toolbar />
+        {showFeatureTabs && <FeatureTabs tabs={currentTabs} />}
         <Outlet />
       </Box>
 

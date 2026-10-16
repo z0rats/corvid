@@ -8,6 +8,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import ScanForm from './ScanForm';
 import ResultsView from './ResultsView';
 import { useInstagramScan } from '../hooks/ui/useInstagramScan';
+import PageHeader from '../../../core/components/ui/PageHeader';
 
 export default function NewScan() {
   const { t } = useTranslation('instagramSearch');
@@ -15,10 +16,7 @@ export default function NewScan() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 1 }}>{t('scanForm.page.title')}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t('scanForm.page.description')}
-      </Typography>
+      <PageHeader title={t('scanForm.page.title')} description={t('scanForm.page.description')} />
 
       <ScanForm onScan={scan} disabled={loading} />
 

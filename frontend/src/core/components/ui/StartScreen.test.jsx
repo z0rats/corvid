@@ -77,4 +77,37 @@ describe('StartScreen', () => {
     expect(screen.queryByText('Reddit Search')).not.toBeInTheDocument();
     expect(screen.getByText('IOC Tools')).toBeInTheDocument();
   });
+
+  it('puts the search input before the example chips', () => {
+    renderStartScreen();
+    const input = screen.getByPlaceholderText(/search tools/i);
+    const example = screen.getByText('IP address');
+    // DOCUMENT_POSITION_FOLLOWING: the example comes after the input in document order.
+    expect(input.compareDocumentPosition(example) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('fills the input from a labelled example chip', async () => {
+    const user = userEvent.setup();
+    renderStartScreen();
+
+    await user.click(screen.getByText('IP address'));
+
+    expect(screen.getByPlaceholderText(/search tools/i)).toHaveValue('185.220.101.7');
+  });
+
+  it('explains the search syntax only once the help toggle is opened', async () => {
+    const user = userEvent.setup();
+    renderStartScreen();
+    expect(screen.queryByText(/list tools by tag/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /search syntax/i }));
+
+    expect(screen.getByText(/list tools by tag/i)).toBeInTheDocument();
+    expect(screen.getByText('type:kind')).toBeInTheDocument();
+  });
+
+  it('shows no row-actions button, since the start screen has no action panel', () => {
+    renderStartScreen();
+    expect(screen.queryByRole('button', { name: 'Row actions' })).not.toBeInTheDocument();
+  });
 });

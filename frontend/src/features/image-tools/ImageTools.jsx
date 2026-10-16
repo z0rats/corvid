@@ -6,6 +6,7 @@ import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import ImageSearchIcon from '@mui/icons-material/ImageSearch';
+import PageHeader from '../../core/components/ui/PageHeader';
 import { useImageAnalysis } from './hooks/api/useImageAnalysis';
 import ImageUploadForm from './components/forms/ImageUploadForm';
 import WelcomeScreen from './components/ui/WelcomeScreen';
@@ -15,6 +16,7 @@ import ImageCompareTool from './components/ui/ImageCompareTool';
 
 export default function ImageTools() {
   const { t } = useTranslation('imageTools');
+  const { t: tCommon } = useTranslation();
   const [imageUrl, setImageUrl] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
@@ -66,6 +68,7 @@ export default function ImageTools() {
 
   return (
     <Box>
+      <PageHeader title={tCommon('nav.imageTools')} />
       <Box sx={{ mb: 2 }}>
         <ImageUploadForm
           onFileUpload={handleFileUpload}

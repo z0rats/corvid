@@ -29,7 +29,7 @@ const CollapsibleSection = ({ title, icon: Icon, children, defaultExpanded = fal
         <ListItemIcon sx={{ minWidth: 36 }}>
           <Icon color="action" />
         </ListItemIcon>
-        <ListItemText primary={title} primaryTypographyProps={{ variant: 'subtitle1', fontWeight: 'medium' }} />
+        <ListItemText primary={title} slotProps={{ primary: { variant: 'subtitle1', fontWeight: 'medium' } }} />
         {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </ListItemButton>
       <Collapse in={expanded} timeout="auto" unmountOnExit>

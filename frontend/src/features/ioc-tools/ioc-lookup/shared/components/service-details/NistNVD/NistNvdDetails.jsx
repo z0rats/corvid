@@ -90,7 +90,7 @@ export default function NistNvdDetails({ result, ioc }) {
               <ListItem>
                 <ListItemIcon sx={{minWidth:36, alignItems:'flex-start'}}><InfoIcon color="action" /></ListItemIcon>
                 <ListItemText
-                    primaryTypographyProps={{variant:'caption', color:'text.secondary'}}
+                    slotProps={{ primary: {variant:'caption', color:'text.secondary'} }}
                     primary={t('providers.nistnvd.referencesDisclaimer')}
                 />
               </ListItem>
@@ -114,7 +114,7 @@ export default function NistNvdDetails({ result, ioc }) {
               <ListItem>
                 <ListItemIcon sx={{minWidth:36, alignItems:'flex-start'}}><InfoIcon color="action" /></ListItemIcon>
                 <ListItemText
-                    primaryTypographyProps={{variant:'caption', color:'text.secondary'}}
+                    slotProps={{ primary: {variant:'caption', color:'text.secondary'} }}
                     primary={t('providers.nistnvd.configurationsDisclaimer')}
                 />
               </ListItem>

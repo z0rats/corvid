@@ -11,6 +11,7 @@ import ResultsView from './ResultsView';
 import { useGitRecon } from '../hooks/useGitRecon';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
 import ScanQueuedNotice from '../../../core/components/ui/ScanQueuedNotice';
+import PageHeader from '../../../core/components/ui/PageHeader';
 
 export default function NewSearch() {
   const { t } = useTranslation('gitRecon');
@@ -29,10 +30,7 @@ export default function NewSearch() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 1 }}>{t('page.title')}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t('page.description')}
-      </Typography>
+      <PageHeader title={t('page.title')} description={t('page.description')} />
 
       <ScanForm
         onScan={scan}

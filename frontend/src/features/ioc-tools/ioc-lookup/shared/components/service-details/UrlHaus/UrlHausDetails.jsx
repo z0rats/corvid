@@ -32,8 +32,7 @@ function Field({ label, value }) {
       <ListItemText
         primary={label}
         secondary={value}
-        primaryTypographyProps={{ variant: 'caption', color: 'text.secondary' }}
-        secondaryTypographyProps={{ variant: 'body2', component: 'div', sx: { wordBreak: 'break-all' } }}
+        slotProps={{ primary: { variant: 'caption', color: 'text.secondary' }, secondary: { variant: 'body2', component: 'div', sx: { wordBreak: 'break-all' } } }}
       />
     </ListItem>
   );
@@ -80,7 +79,7 @@ function PayloadList({ payloads }) {
             <ListItemText
               primary={[payload.filename, payload.file_type, payload.signature].filter(Boolean).join(' · ')}
               secondary={payload.response_sha256}
-              secondaryTypographyProps={{ sx: { wordBreak: 'break-all' } }}
+              slotProps={{ secondary: { sx: { wordBreak: 'break-all' } } }}
             />
           </ListItem>
         ))}

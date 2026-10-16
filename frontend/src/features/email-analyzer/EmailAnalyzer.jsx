@@ -1,11 +1,14 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
+import PageHeader from '../../core/components/ui/PageHeader';
 import { useEmailAnalysis } from './hooks/api/useEmailAnalysis';
 import EmailUploadForm from './components/forms/EmailUploadForm';
 import WelcomeScreen from './components/ui/WelcomeScreen';
 import EmailAnalysisResult from './components/ui/EmailAnalysisResult';
 
 export default function EmailAnalyzer() {
+  const { t } = useTranslation();
   const {
     result,
     isLoading,
@@ -20,6 +23,7 @@ export default function EmailAnalyzer() {
 
   return (
     <Box>
+      <PageHeader title={t('nav.emailAnalyzer')} />
       <Box sx={{ mb: 2 }}>
         <EmailUploadForm
           onFileUpload={handleFileUpload}

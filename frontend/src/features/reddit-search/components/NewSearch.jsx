@@ -15,6 +15,7 @@ import PostingActivityChart from './PostingActivityChart';
 import ResultsList from './ResultsList';
 import { useRedditSearch } from '../hooks/useRedditSearch';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
+import PageHeader from '../../../core/components/ui/PageHeader';
 
 export default function NewSearch() {
   const { t } = useTranslation('redditSearch');
@@ -28,10 +29,7 @@ export default function NewSearch() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 1 }}>{t('page.title')}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t('page.description')}
-      </Typography>
+      <PageHeader title={t('page.title')} description={t('page.description')} />
 
       <SearchForm onSearch={search} disabled={posts.loading || comments.loading} initialUsername={prefillValue} />
 

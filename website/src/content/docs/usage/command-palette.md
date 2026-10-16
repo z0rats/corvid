@@ -30,10 +30,12 @@ storage, not the server.
 
 ## No keyboard handy?
 
-The panel on the left lists every tool, grouped the same way the search tags do — click through
-instead of typing. Press `?` any time for the full shortcut list.
+The panel on the left lists every tool, grouped the same way the search tags do (pinned tools
+first) — click through instead of typing. Press `?` any time for the full shortcut list.
 
 ## Start screen
 
-The `/` route renders a lighter, non-modal version of the same search grammar by default. Under
-**Settings → Command Palette**, you can instead have `/` open straight into the newsfeed.
+The `/` route renders a lighter, non-modal version of the same search grammar by default, with a
+few labelled examples under the input and a **Search syntax** toggle that explains `#tag`,
+`type:kind`, `>action` and pivots. Under **Settings → General**, you can instead have `/` open
+straight into the newsfeed.

@@ -35,6 +35,7 @@
     },
 
     "settingsTabs": {
+      "general": "General",
       "apiKeys": "API Keys",
       "aiSettings": "AI Settings",
       "modules": "Modules",
@@ -125,6 +126,8 @@
   "layout": {
     "openMenu": "Open menu",
     "toggleSidebar": "Toggle sidebar",
+    "resizeToolPanel": "Resize tool panel",
+    "resizeSectionPanel": "Resize section panel",
     "switchToLightMode": "Switch to light mode",
     "switchToDarkMode": "Switch to dark mode",
     "toggleDarkMode": "Toggle dark mode",
@@ -134,11 +137,20 @@
   },
 
   "settings": {
-    "commandPalette": {
-      "title": "Command Palette",
-      "description": "Configure how the search-first command palette (/ or ⌘K) behaves.",
-      "autoOpen": "Auto-open on single match",
-      "autoOpenHelper": "Open the top result automatically when exactly one tool matches what you've typed.",
+    "general": {
+      "title": "General",
+      "description": "Language, appearance, and what the app opens to.",
+      "language": "Language",
+      "languageHelper": "The Russian translation is incomplete - some screens stay in English.",
+      "languageOptions": {
+        "en": "English",
+        "ru": "Русский"
+      },
+      "theme": "Theme",
+      "themeOptions": {
+        "light": "Light",
+        "dark": "Dark"
+      },
       "startScreen": "Start screen",
       "startScreenHelper": "What \"/\" renders with nothing typed yet.",
       "startScreenOptions": {
@@ -146,11 +158,24 @@
         "newsfeed": "Newsfeed"
       },
       "alwaysTiles": "Always use tiles",
-      "alwaysTilesHelper": "Force the touch tile grid even when a keyboard is present.",
+      "alwaysTilesHelper": "Force the touch tile grid even when a keyboard is present."
+    },
+    "commandPalette": {
+      "title": "Command Palette",
+      "description": "Configure how the search-first command palette (/ or ⌘K) behaves.",
+      "autoOpen": "Auto-open on single match",
+      "autoOpenHelper": "Open the top result automatically when exactly one tool matches what you've typed.",
       "recents": "Recents",
       "recentsHelper": "Tools opened and pivoted values, one feed, last 8 — not configurable.",
       "playbooksTitle": "Playbooks"
     }
+  },
+
+  "healthCheck": {
+    "connecting": "Connecting to backend...",
+    "failedTitle": "Connection Failed",
+    "failedBody": "Unable to reach the backend service. Please make sure the server is running and try again.",
+    "retry": "Retry Connection"
   },
 
   "accessGate": {
@@ -168,6 +193,14 @@
   "scanErrors": {
     "tooManyRequests": "Too many requests - wait a minute and try again",
     "serverError": "Server error: {{status}}"
+  },
+  "activeScans": {
+    "title": "Active scans",
+    "ariaLabel": "Active scans, {{count}} unfinished",
+    "status": {
+      "running": "Running",
+      "queued": "Queued"
+    }
   },
   "alerts": {
     "title": "Alerts",

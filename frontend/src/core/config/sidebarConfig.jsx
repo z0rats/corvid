@@ -39,6 +39,7 @@ import RadarIcon from "@mui/icons-material/RadarOutlined";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
+import TuneIcon from "@mui/icons-material/TuneOutlined";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
 // Left-panel grouping: every tool sits in exactly one section, shown in this order. `tags` stay
@@ -394,6 +395,7 @@ const NEWSFEED_TABS_CONFIG = [
 ];
 
 const SETTINGS_TABS_CONFIG = [
+  { i18nKey: "nav.settingsTabs.general", path: "/settings/general", icon: <TuneIcon /> },
   { i18nKey: "nav.settingsTabs.apiKeys", path: "/settings/apikeys", icon: <KeyIcon /> },
   { i18nKey: "nav.settingsTabs.aiSettings", path: "/settings/ai-settings", icon: <PsychologyAltIcon /> },
   { i18nKey: "nav.settingsTabs.modules", path: "/settings/modules", icon: <ViewModuleIcon /> },

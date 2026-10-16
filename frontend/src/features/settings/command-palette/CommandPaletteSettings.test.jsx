@@ -1,6 +1,6 @@
 import React from 'react';
 import { getDefaultStore } from 'jotai';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import CommandPaletteSettings from './CommandPaletteSettings';
@@ -38,12 +38,11 @@ function renderSettings() {
 }
 
 describe('CommandPaletteSettings', () => {
-  it('renders the three settings fields with their defaults', () => {
+  it('renders the auto-open setting with its default', () => {
     renderSettings();
 
     expect(screen.getByText('Command Palette')).toBeInTheDocument();
     expect(screen.getByLabelText(/auto-open on single match/i)).toBeChecked();
-    expect(screen.getByLabelText(/always use tiles/i)).not.toBeChecked();
   });
 
   it('toggling auto-open calls the API with the flipped value', async () => {
@@ -57,26 +56,11 @@ describe('CommandPaletteSettings', () => {
     });
   });
 
-  it('changing the start screen select calls the API', async () => {
-    renderSettings();
-
-    const select = screen.getByRole('combobox');
-    fireEvent.mouseDown(select);
-    const option = await screen.findByRole('option', { name: 'Newsfeed' });
-    fireEvent.click(option);
-
-    await waitFor(() => {
-      expect(settingsApi.updateCommandPaletteSettings).toHaveBeenCalledWith({
-        startScreen: 'newsfeed',
-      });
-    });
-  });
-
   it('shows a success notification after a successful update', async () => {
     const user = userEvent.setup();
     renderSettings();
 
-    await user.click(screen.getByLabelText(/always use tiles/i));
+    await user.click(screen.getByLabelText(/auto-open on single match/i));
 
     expect(await screen.findByText(/updated successfully/i)).toBeInTheDocument();
   });

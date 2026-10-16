@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { formatDistanceToNow } from 'date-fns';
@@ -9,20 +9,16 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import { activityService } from '../../services/api/activityService';
-import { getMainMenuItems } from '../../config/sidebarConfig';
-import { getRunPath } from '../../utils/historyPaths';
-import { useVisibleModuleIds } from '../../hooks/useVisibleModuleIds';
+import { useActivityRows } from '../../hooks/useActivityRows';
 import ScanStatusChip from '../ScanStatusChip';
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('RecentActivity');
 
-// Activity `feature` values that aren't a sidebar moduleId themselves.
-const FEATURE_MODULE = {
-  social_analyzer: 'username_search',
-  threat_actor_usernames: 'username_search',
-  ioc_lookup: 'ioc_tools',
-};
+// Re-fetched on this interval only while a listed run is still unfinished, so a running scan's
+// row flips to its outcome without a page reload - and an idle feed costs no polling at all.
+export const RECENT_ACTIVITY_LIVE_INTERVAL_MS = 5_000;
+const UNFINISHED = new Set(['running', 'queued']);
 
 /**
  * Start screen's "pick up where you left off": the newest runs across every feature with a saved
@@ -30,26 +26,23 @@ const FEATURE_MODULE = {
  */
 export default function RecentActivity({ limit = 8 }) {
   const { t } = useTranslation('commandPalette');
-  const { t: tCommon } = useTranslation();
-  const visibleModuleIds = useVisibleModuleIds();
   const [items, setItems] = useState([]);
+  const hasUnfinished = items.some((item) => UNFINISHED.has(item.status));
 
   useEffect(() => {
     let ignore = false;
-    activityService.listRecent(limit)
+    const load = () => activityService.listRecent(limit)
       .then((data) => { if (!ignore) setItems(data); })
       .catch((err) => logger.warn('Failed to load recent activity:', err));
-    return () => { ignore = true; };
-  }, [limit]);
+    load();
+    const id = hasUnfinished ? setInterval(load, RECENT_ACTIVITY_LIVE_INTERVAL_MS) : null;
+    return () => {
+      ignore = true;
+      if (id) clearInterval(id);
+    };
+  }, [limit, hasUnfinished]);
 
-  const modules = useMemo(
-    () => Object.fromEntries(getMainMenuItems(tCommon).map((item) => [item.moduleId, item])),
-    [tCommon],
-  );
-
-  const rows = items
-    .map((item) => ({ item, module: modules[FEATURE_MODULE[item.feature] ?? item.feature] }))
-    .filter(({ item, module }) => module && visibleModuleIds.has(module.moduleId) && getRunPath(item.feature, item.id));
+  const rows = useActivityRows(items);
 
   if (rows.length === 0) return null;
 
@@ -57,11 +50,11 @@ export default function RecentActivity({ limit = 8 }) {
     <Box sx={{ mt: 4, width: '100%', maxWidth: 640, mx: 'auto' }}>
       <Typography variant="overline" color="text.secondary">{t('startScreen.recentActivity')}</Typography>
       <List dense disablePadding>
-        {rows.map(({ item, module }) => (
+        {rows.map(({ item, module, path }) => (
           <ListItemButton
             key={`${item.feature}-${item.id}`}
             component={Link}
-            to={getRunPath(item.feature, item.id)}
+            to={path}
             sx={{ borderRadius: 1 }}
           >
             <ListItemIcon sx={{ minWidth: 36 }}>{module.icon}</ListItemIcon>

@@ -172,7 +172,7 @@ export default function EmailrepioDetails({ result, ioc }) {
                             <PersonIcon />}
                             </Avatar>
                         </ListItemAvatar>
-                        <ListItemText primaryTypographyProps={{ textTransform: 'capitalize' }} primary={profile} />
+                        <ListItemText slotProps={{ primary: { textTransform: 'capitalize' } }} primary={profile} />
                         </ListItem>
                     ))}
                     </List>

@@ -103,3 +103,44 @@ def test_empty_when_nothing_has_run(client):
 def test_every_scan_feature_target_column_exists():
     for feature in all_scan_features():
         assert hasattr(feature.model, feature.target_column), feature.name
+
+
+def test_active_lists_only_unfinished_runs_and_marks_queued_ones(
+    client, session_factory, monkeypatch
+):
+    from app.core.scans.run import ScanRun
+
+    _seed(
+        session_factory,
+        AmassSearch(domain="done.com", status="completed", searched_at=T0),
+        AmassSearch(domain="busy.com", status="running", searched_at=T0),
+        AmassSearch(
+            domain="waiting.com",
+            status="running",
+            searched_at=T0 + datetime.timedelta(minutes=1),
+        ),
+        MaigretSearch(
+            username="alice",
+            source="maigret",
+            status="running",
+            # Far older than anything the recent feed would still show - must stay listed.
+            started_at=T0 - datetime.timedelta(days=30),
+        ),
+    )
+    # Only the in-memory queue knows a run is waiting rather than running.
+    monkeypatch.setattr(ScanRun, "_queued", {(AmassSearch, 3): object()})
+
+    response = client.get("/api/activity/active")
+
+    assert response.status_code == 200
+    assert [(i["feature"], i["target"], i["status"]) for i in response.json()] == [
+        ("amass", "waiting.com", "queued"),
+        ("amass", "busy.com", "running"),
+        ("username_search", "alice", "running"),
+    ]
+
+
+def test_active_is_empty_with_nothing_running(client, session_factory):
+    _seed(session_factory, AmassSearch(domain="done.com", status="completed", searched_at=T0))
+
+    assert client.get("/api/activity/active").json() == []

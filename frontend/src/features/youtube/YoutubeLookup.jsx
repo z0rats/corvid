@@ -8,6 +8,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 
+import PageHeader from '../../core/components/ui/PageHeader';
 import ApiKeyRequiredAlert from '../../core/components/ui/ApiKeyRequiredAlert';
 import CommentsPanel from './components/ui/CommentsPanel';
 import ThumbnailGrid from './components/ui/ThumbnailGrid';
@@ -18,6 +19,7 @@ import { useYoutubeLookup } from './hooks/ui/useYoutubeLookup';
 
 export default function YoutubeLookup() {
   const { t } = useTranslation('youtube');
+  const { t: tCommon } = useTranslation();
   const { url, setUrl, result, loading, error, lookupVideo } = useYoutubeLookup();
 
   const handleKeyDown = (event) => {
@@ -28,6 +30,7 @@ export default function YoutubeLookup() {
 
   return (
     <>
+      <PageHeader title={tCommon('nav.youtube')} />
       <Paper sx={{ p: 2, mb: 2 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <TextField

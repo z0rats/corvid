@@ -26,8 +26,7 @@ const DetailListItem = ({ icon, primary, secondary, secondaryIsBlock = false, no
     <ListItemText
       primary={primary}
       secondary={secondary || notAvailable}
-      primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-      secondaryTypographyProps={{ variant: 'body2', color: 'text.secondary', component: secondaryIsBlock ? 'div' : 'span' }}
+      slotProps={{ primary: { variant: 'body2', fontWeight: 'medium' }, secondary: { variant: 'body2', color: 'text.secondary', component: secondaryIsBlock ? 'div' : 'span' } }}
     />
   </ListItem>
 );

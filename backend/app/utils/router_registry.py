@@ -66,10 +66,13 @@ def get_public_routers() -> list[APIRouter]:
     - alerts_routes.ws_router: browsers can't attach a custom Authorization
       header to a WebSocket handshake, so it checks the same access token
       itself via a query param instead (see access_control.py, alerts_routes.py).
+    - newsfeed feed icons: loaded via a plain <img src>, which can't send the
+      Authorization header either; they're public site favicons.
     """
     return [
         healthcheck.router,
         alerts_routes.ws_router,
+        feed_management_routes.icons_router,
     ]
 
 

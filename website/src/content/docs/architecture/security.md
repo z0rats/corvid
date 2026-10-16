@@ -16,9 +16,11 @@ No user accounts — the app is single-user. Every `/api/*` route is guarded beh
 bearer token (`API_ACCESS_TOKEN`, or auto-generated and persisted to `data/.access_token` on
 first startup). `/openapi.json` is covered too; the `/docs` and `/redoc` pages themselves are
 static shells that load it with the token this browser already signed in with (outside
-`ENVIRONMENT=production`, where they're disabled). The healthcheck endpoint
-and the alerts WebSocket handshake are the only exceptions (the WebSocket checks the same token
-via a query param, since browsers can't set a custom header on the handshake). The token can be
+`ENVIRONMENT=production`, where they're disabled). The healthcheck endpoint,
+the alerts WebSocket handshake, and newsfeed feed icons are the only exceptions (the WebSocket
+checks the same token via a query param, since browsers can't set a custom header on the
+handshake; feed icons are public site favicons loaded by plain `<img>` tags, which can't send
+one either). The token can be
 regenerated from the app (Settings → About → Access Token → Regenerate) if it's ever exposed —
 this signs out every other tab/device/browser extension immediately, and is unavailable if
 `API_ACCESS_TOKEN` is set (the env var always wins, so a file-based rotation would have no

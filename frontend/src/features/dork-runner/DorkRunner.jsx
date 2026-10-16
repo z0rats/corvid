@@ -13,6 +13,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import PageHeader from '../../core/components/ui/PageHeader';
 import EngineWarningBanner from './components/ui/EngineWarningBanner';
 import ResultsTable from './components/ui/ResultsTable';
 import TemplateSelector from './components/ui/TemplateSelector';
@@ -24,6 +25,7 @@ const ENGINES = ['duckduckgo', 'google', 'bing'];
 
 export default function DorkRunner() {
   const { t } = useTranslation('dorkRunner');
+  const { t: tCommon } = useTranslation();
   const {
     target,
     setTarget,
@@ -48,6 +50,7 @@ export default function DorkRunner() {
 
   return (
     <>
+      <PageHeader title={tCommon('nav.dorkRunner')} />
       <Paper sx={{ p: 2, mb: 2 }}>
         <Stack spacing={2}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

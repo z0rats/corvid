@@ -60,6 +60,27 @@ class ScanFeature:
             completed_at_column=self.columns.completed_at_column,
         )
 
+    async def active_runs(self, db: AsyncSession) -> list[dict[str, Any]]:
+        """This feature's unfinished runs as activity-feed rows, `running` split into
+        `queued`/`running` by whether the run is still waiting for a heavy-scan slot."""
+        model: Any = self.model
+        target = getattr(model, self.target_column)
+        rows = await db.execute(
+            select(model.id, target, self.order_by)
+            .where(model.status == "running")
+            .order_by(self.order_by.desc())
+        )
+        return [
+            {
+                "feature": self.name,
+                "id": id_,
+                "target": target_value,
+                "status": "queued" if ScanRun.is_queued(self.model, id_) else "running",
+                "timestamp": ts,
+            }
+            for id_, target_value, ts in rows.all()
+        ]
+
     async def recent_activity(self, db: AsyncSession, limit: int) -> list[dict[str, Any]]:
         """This feature's newest runs as plain activity-feed rows, newest first."""
         model: Any = self.model

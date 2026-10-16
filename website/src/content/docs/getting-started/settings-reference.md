@@ -5,12 +5,23 @@ sidebar:
   order: 40
 ---
 
-Global settings live under **Settings** (tabs: API Keys, AI Settings, Modules, Command Palette,
-Telegram, Backup, About). They're stored in the database (not in `.env`), so they survive
+Global settings live under **Settings** (tabs: General, API Keys, AI Settings, Modules, Command
+Palette, Telegram, Backup, About). They're stored in the database (not in `.env`), so they survive
 container restarts as long as `data/` is preserved. Newsfeed-specific settings are under
 **Newsfeed → Settings** instead, and a few features keep their own settings on the feature page —
 see [Newsfeed settings](#newsfeed-settings) and [Per-feature settings](#per-feature-settings).
-The dark/light theme and UI language toggles are in the top bar, not in Settings.
+
+## General
+
+App-wide preferences:
+
+- **Language** — English or Russian. The Russian translation is incomplete, so some screens stay
+  in English.
+- **Theme** — light or dark. Also switchable from the sun/moon button in the top bar. Unlike the
+  other settings, this one is stored per browser, not in the database.
+- **Start screen** — what `/` opens to: the search start screen or the newsfeed.
+- **Always use tiles** — render search results as touch-style tiles even when a keyboard is
+  present.
 
 ## API Keys
 
@@ -46,10 +57,9 @@ Dork Runner, Username Search, and Email Search.
 
 ## Command Palette
 
-How the search-first palette (`/` or `⌘K`) behaves: whether a single exact match auto-opens, which
-screen the app opens on (`/`: the search start screen or the newsfeed), whether results always
-render as touch-style tiles, and clearing recent searches. Playbooks recorded in the palette are
-listed here too. See [Command Palette](/corvid/usage/command-palette/) for the grammar.
+How the search-first palette (`/` or `⌘K`) behaves: whether a single exact match auto-opens.
+Playbooks recorded in the palette are listed here too. The start screen and tile options are
+under [General](#general). See [Command Palette](/corvid/usage/command-palette/) for the grammar.
 
 ## Telegram
 

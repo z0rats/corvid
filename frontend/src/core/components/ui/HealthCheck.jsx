@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -9,6 +10,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { useHealthCheck } from '../../hooks/api/useHealthCheck';
 
 function HealthCheck({ children }) {
+  const { t } = useTranslation();
   const { status, handleRetry } = useHealthCheck();
 
   if (status === 'loading') {
@@ -25,7 +27,7 @@ function HealthCheck({ children }) {
       >
         <CircularProgress size={48} thickness={4} />
         <Typography variant="body1" color="text.secondary" sx={{ mt: 3 }}>
-          Connecting to backend...
+          {t('healthCheck.connecting')}
         </Typography>
       </Box>
     );
@@ -83,7 +85,7 @@ function HealthCheck({ children }) {
           </Box>
 
           <Typography variant="h5" sx={{ mb: 1, textAlign: 'center' }}>
-            Connection Failed
+            {t('healthCheck.failedTitle')}
           </Typography>
 
           <Typography
@@ -91,7 +93,7 @@ function HealthCheck({ children }) {
             color="text.secondary"
             sx={{ mb: 4, textAlign: 'center', lineHeight: 1.7 }}
           >
-            Unable to reach the backend service. Please make sure the server is running and try again.
+            {t('healthCheck.failedBody')}
           </Typography>
 
           <Button
@@ -101,7 +103,7 @@ function HealthCheck({ children }) {
             startIcon={<RefreshIcon />}
             fullWidth
           >
-            Retry Connection
+            {t('healthCheck.retry')}
           </Button>
         </Box>
       </Box>

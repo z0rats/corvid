@@ -10,12 +10,14 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 
+import PageHeader from '../../core/components/ui/PageHeader';
 import ResultsTable from './components/ui/ResultsTable';
 import WelcomeScreen from './components/ui/WelcomeScreen';
 import { useSanctionsSearch } from './hooks/ui/useSanctionsSearch';
 
 export default function SanctionsSearch() {
   const { t } = useTranslation('sanctionsSearch');
+  const { t: tCommon } = useTranslation();
   const {
     query,
     setQuery,
@@ -37,39 +39,38 @@ export default function SanctionsSearch() {
 
   return (
     <>
+      <PageHeader title={tCommon('nav.sanctionsSearch')} />
       <Paper sx={{ p: 2, mb: 2 }}>
-        <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              fullWidth
-              size="small"
-              label={t('form.queryLabel')}
-              placeholder={t('form.queryPlaceholder')}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <Select
-              size="small"
-              displayEmpty
-              value={schema}
-              onChange={(e) => setSchema(e.target.value)}
-              sx={{ minWidth: 220 }}
-            >
-              <MenuItem value="">{t('form.allSchemas')}</MenuItem>
-              {schemas.map((schemaOption) => (
-                <MenuItem key={schemaOption} value={schemaOption}>
-                  {schemaOption}
-                </MenuItem>
-              ))}
-            </Select>
-          </Stack>
-
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField
+            fullWidth
+            size="small"
+            label={t('form.queryLabel')}
+            placeholder={t('form.queryPlaceholder')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <Select
+            size="small"
+            displayEmpty
+            value={schema}
+            onChange={(e) => setSchema(e.target.value)}
+            sx={{ minWidth: 220 }}
+          >
+            <MenuItem value="">{t('form.allSchemas')}</MenuItem>
+            {schemas.map((schemaOption) => (
+              <MenuItem key={schemaOption} value={schemaOption}>
+                {schemaOption}
+              </MenuItem>
+            ))}
+          </Select>
           <Box>
             <Button
               variant="contained"
               onClick={() => runSearch()}
               disabled={loading || query.trim().length < minQueryLength}
+              sx={{ whiteSpace: 'nowrap', height: '100%' }}
             >
               {loading ? <CircularProgress size={20} /> : t('form.searchButton')}
             </Button>

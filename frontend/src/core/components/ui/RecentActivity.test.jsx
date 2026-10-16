@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { Provider, createStore } from 'jotai';
-import RecentActivity from './RecentActivity';
+import { act } from 'react';
+import RecentActivity, { RECENT_ACTIVITY_LIVE_INTERVAL_MS } from './RecentActivity';
 import { activityService } from '../../services/api/activityService';
 import { modulesState } from '../../state/atoms';
 
@@ -53,4 +54,39 @@ describe('RecentActivity', () => {
     await Promise.resolve();
     expect(container).toBeEmptyDOMElement();
   });
+
+  it('re-polls while a run is unfinished, so its row flips to the outcome', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      activityService.listRecent
+        .mockResolvedValueOnce([{ feature: 'amass', id: 5, target: 'example.com', status: 'running', timestamp: NOW }])
+        .mockResolvedValue([{ feature: 'amass', id: 5, target: 'example.com', status: 'failed', timestamp: NOW }]);
+      renderActivity();
+      expect(await screen.findByText('Running')).toBeInTheDocument();
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(RECENT_ACTIVITY_LIVE_INTERVAL_MS); });
+
+      expect(await screen.findByText('Failed')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not poll when every run is finished', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      activityService.listRecent.mockResolvedValue([
+        { feature: 'amass', id: 5, target: 'example.com', status: 'completed', timestamp: NOW },
+      ]);
+      renderActivity();
+      await screen.findByText('example.com');
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(RECENT_ACTIVITY_LIVE_INTERVAL_MS * 3); });
+
+      expect(activityService.listRecent).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
+

@@ -40,8 +40,7 @@ const RenderSection = ({ icon, title, content, dense = true, yes, no }) => {
       <ListItemText
         primary={title}
         secondary={secondaryContent}
-        primaryTypographyProps={{ variant: 'caption', fontWeight: 'medium', color: 'text.secondary' }}
-        secondaryTypographyProps={{ variant: 'body2', component: React.isValidElement(content) ? 'div' : 'span', sx:{wordBreak: 'break-all'} }}
+        slotProps={{ primary: { variant: 'caption', fontWeight: 'medium', color: 'text.secondary' }, secondary: { variant: 'body2', component: React.isValidElement(content) ? 'div' : 'span', sx:{wordBreak: 'break-all'} } }}
       />
     </ListItem>
   );

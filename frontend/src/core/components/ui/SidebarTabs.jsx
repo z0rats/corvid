@@ -115,9 +115,11 @@ export default function SidebarTabs({ title, tabs, sidebarOpen }) {
                 >
                   <ListItemText
                     primary={child.label}
-                    primaryTypographyProps={{
-                      fontSize: '0.875rem',
-                      fontWeight: location.pathname === child.path ? 500 : 400,
+                    slotProps={{
+                      primary: {
+                        fontSize: '0.875rem',
+                        fontWeight: location.pathname === child.path ? 500 : 400,
+                      },
                     }}
                     sx={{
                       m: 0,

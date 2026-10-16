@@ -35,7 +35,7 @@ const CollapsibleSection = ({ title, icon: Icon, children, defaultExpanded = fal
         <ListItemIcon sx={{minWidth: 36}}>
           <Icon color="action" />
         </ListItemIcon>
-        <ListItemText primary={title} primaryTypographyProps={{variant: 'subtitle1', fontWeight:'medium'}}/>
+        <ListItemText primary={title} slotProps={{ primary: {variant: 'subtitle1', fontWeight:'medium'} }}/>
         {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
       </ListItemButton>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
@@ -234,7 +234,7 @@ export default function ShodanDetails({ result, ioc }) {
                     <List dense disablePadding>
                         {result.vulns.map((vuln_id) => (
                             <ListItem key={vuln_id} dense disableGutters>
-                                <ListItemText primary={vuln_id} primaryTypographyProps={{variant:'body2', color:'error.main'}}/>
+                                <ListItemText primary={vuln_id} slotProps={{ primary: {variant:'body2', color:'error.main'} }}/>
                             </ListItem>
                         ))}
                     </List>

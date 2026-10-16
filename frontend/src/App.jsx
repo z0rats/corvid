@@ -6,15 +6,22 @@ import { AppRoutes } from "./core/config/routes";
 import { useAppSettings } from "./core/hooks/api/useAppSettings";
 import { useThemeManager } from "./core/hooks/ui/useThemeManager";
 
-function App() {
+// Rendered inside AccessGate, not in App itself: fetched before a token exists, these requests
+// all come back 401, and the backend files every 401 as a "Failed access-token attempts"
+// security alert - so a fresh install's first screen would open on a false alarm.
+function AppSettingsLoader() {
   useAppSettings();
+  return null;
+}
 
+function App() {
   const { theme } = useThemeManager();
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AccessGate>
+        <AppSettingsLoader />
         <HealthCheck>
           <AppRoutes />
         </HealthCheck>

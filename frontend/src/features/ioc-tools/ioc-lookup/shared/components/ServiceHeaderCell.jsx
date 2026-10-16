@@ -24,7 +24,7 @@ function ServiceHeaderCell({ iconSrc, serviceName, avatarStyle, headerProps }) {
       avatar={avatar}
       title={serviceName}
       sx={{ padding: 0 }}
-      titleTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
+      slotProps={{ title: { variant: 'body2', fontWeight: 'medium' } }}
       {...headerProps}
     />
   );

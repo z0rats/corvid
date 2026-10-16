@@ -6,4 +6,10 @@ export const activityService = {
     const response = await api.get('/api/activity', { params: { limit } });
     return response.data;
   },
+
+  /** Every scan still running or queued for a heavy-scan slot, across all features. */
+  async listActive() {
+    const response = await api.get('/api/activity/active');
+    return response.data;
+  },
 };

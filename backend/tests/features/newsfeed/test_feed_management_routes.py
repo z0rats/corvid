@@ -35,6 +35,7 @@ def client(session_factory):
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(feed_management_routes.router)
+    app.include_router(feed_management_routes.icons_router)
     app.dependency_overrides[get_db] = _get_db
     return TestClient(app)
 
@@ -429,3 +430,24 @@ class TestGetFeedIcon:
 
         assert response.status_code == 400
         assert response.json()["error_code"] == "FEED_ICON_INVALID_NAME"
+
+    def test_is_served_without_an_access_token(self, monkeypatch):
+        # The frontend renders icons via <img src>, which can't send an Authorization header -
+        # behind the gate every icon 401'd and tripped the failed-access-token security alert.
+        from app.core.security import access_control
+        from app.utils.router_registry import register_all_routers
+
+        recorded = []
+        monkeypatch.setattr(access_control, "_record_failed_auth", lambda: recorded.append(1))
+        app = FastAPI()
+        register_exception_handlers(app)
+        register_all_routers(app)
+        anonymous = TestClient(app)
+
+        response = anonymous.get("/api/feedicons/does-not-exist.png")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+        assert recorded == []
+        # Sanity check that the gate itself is still on for the rest of the newsfeed API.
+        assert anonymous.get("/api/settings/modules/newsfeed").status_code == 401
