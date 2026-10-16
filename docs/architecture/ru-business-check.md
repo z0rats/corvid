@@ -11,7 +11,7 @@ the verdict semantics, `extra_data` and the local dumps: `docs/adr/0014-*.md`.
 ## Result semantics (read before adding a source)
 
 - **A failed source is "not checked", never "empty".** Every client validates the shape it relies
-  on (`service/source_contract.py`) and raises its own error class on drift; `run_scan_task`
+  on (`service/source_contract.py`, a Russian-language adapter over `core/external_sources/contract.py`) and raises its own error class on drift; `run_scan_task`
   then leaves the source out of `checked_sources`. `tests/.../test_source_contract.py` fails until a
   new `AVAILABLE_SOURCES` entry has a drift case.
 - **`risk_level` can be `incomplete`**: no hard flag, but a `REQUIRED_SOURCES` member (ЕГРЮЛ,
@@ -38,7 +38,7 @@ the verdict semantics, `extra_data` and the local dumps: `docs/adr/0014-*.md`.
 - **Canaries**: `tests/canary/` (`pytest -m canary -o addopts=`, weekly `.github/workflows/canary.yml`)
   calls the real sites; only "didn't answer us" (network, anti-bot, captcha, 401/403/429/451/5xx)
   skips - drift, a JSON endpoint answering HTML, and unexpected empty answers fail
-  (`tests/canary/policy.py`, pinned in `test_source_contract.py`). `kad.arbitr.ru` answers 451 to non-RU networks, so it is normally
+  (`core/external_sources/outcome.py`'s `classify` via `tests/canary/policy.py`, pinned in `test_source_contract.py`). `kad.arbitr.ru` answers 451 to non-RU networks, so it is normally
   skipped.
 
 ## Sources

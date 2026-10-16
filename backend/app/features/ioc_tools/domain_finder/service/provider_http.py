@@ -7,6 +7,9 @@ provider's `code`:
 - `<CODE>_API_ERROR` (the provider's own status) - it answered with an HTTP error
 - `<CODE>_INVALID_RESPONSE` (502) - its body didn't parse (`parse` raised `ValueError`,
   e.g. an HTML error page where JSON was expected)
+- `<CODE>_SCHEMA_DRIFT` (502) - it answered, but not in the shape `parse` expects
+  (`parse` raised a `SourceDriftError`, `core/external_sources/contract.py`); distinct from an
+  empty result, which `parse` returns as `[]`
 - `<CODE>_UNEXPECTED_ERROR` (500) - anything else
 - an `AppHTTPException` raised by `check`/`parse` itself (rate limit, bad key, not found)
   passes through unchanged
@@ -26,6 +29,7 @@ from typing import Any
 import httpx
 
 from app.core.exceptions import AppHTTPException
+from app.core.external_sources.contract import SourceDriftError
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +72,11 @@ async def provider_errors(provider: Provider, subject: str) -> AsyncIterator[Non
         logger.error("HTTP status error from %s for %s: Status %s", provider.name, subject, status)
         raise provider.error(
             status, "API_ERROR", f"{provider.name} returned error: {status}"
+        ) from e
+    except SourceDriftError as e:
+        logger.error("%s changed its response format for %s: %s", provider.name, subject, e)
+        raise provider.error(
+            502, "SCHEMA_DRIFT", f"{provider.name} changed its response format"
         ) from e
     except ValueError as e:
         logger.error("Could not parse %s response for %s: %s", provider.name, subject, e)

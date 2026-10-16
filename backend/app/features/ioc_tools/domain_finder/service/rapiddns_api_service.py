@@ -13,6 +13,7 @@ from html.parser import HTMLParser
 
 import httpx
 
+from app.core.external_sources.contract import SourceDriftError
 from app.features.ioc_tools.domain_finder.service.provider_http import Provider, provider_get
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class _SubdomainTableParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self._in_tbody = False
+        self.saw_tbody = False
         self._in_cell = False
         self._cell_parts: list[str] = []
         self._row: list[str] = []
@@ -41,6 +43,7 @@ class _SubdomainTableParser(HTMLParser):
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag == "tbody":
             self._in_tbody = True
+            self.saw_tbody = True
         elif tag == "tr" and self._in_tbody:
             self._row = []
         elif tag in ("td", "th") and self._in_tbody:
@@ -64,7 +67,9 @@ class _SubdomainTableParser(HTMLParser):
 
 async def fetch_rapiddns_records(domain: str) -> list[tuple[str, str, str]]:
     """Raw (hostname, record_type, address) rows for a domain from RapidDNS. Failures raise
-    `AppHTTPException` (`provider_http`)."""
+    `AppHTTPException` (`provider_http`); a page without the results table, or whose rows are all
+    malformed, is `RAPIDDNS_SCHEMA_DRIFT` (a table with an empty `<tbody>` is a domain with no
+    records)."""
 
     def parse(response: httpx.Response) -> list[tuple[str, str, str]]:
         if not response.text.strip():
@@ -73,6 +78,8 @@ async def fetch_rapiddns_records(domain: str) -> list[tuple[str, str, str]]:
 
         parser = _SubdomainTableParser()
         parser.feed(response.text)
+        if not parser.saw_tbody:
+            raise SourceDriftError(f"{RAPIDDNS.name}: no results table in the page")
 
         records: list[tuple[str, str, str]] = []
         for row in parser.rows:
@@ -83,6 +90,9 @@ async def fetch_rapiddns_records(domain: str) -> list[tuple[str, str, str]]:
             _index, hostname, address, record_type = row[:4]
             if hostname and record_type:
                 records.append((hostname, record_type, address))
+
+        if parser.rows and not records:
+            raise SourceDriftError(f"{RAPIDDNS.name}: no table row has the expected columns")
 
         logger.info("Retrieved %s records from RapidDNS for domain: %s", len(records), domain)
         return records

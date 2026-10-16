@@ -12,6 +12,8 @@ from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.domain_finder.service import rdap_api_service
 from app.features.ioc_tools.domain_finder.service.rdap_api_service import fetch_rdap_domain_data
 
+RDAP_DOMAIN = {"objectClassName": "domain", "ldhName": "EXAMPLE.COM"}
+
 
 def _run(coro):
     return asyncio.run(coro)
@@ -37,12 +39,12 @@ def _patch_safe_get(monkeypatch, result=None, exc=None):
 def test_returns_data_and_answering_server_on_success(monkeypatch):
     _patch_safe_get(
         monkeypatch,
-        result=_response(200, json={"ldhName": "EXAMPLE.COM"}, host="rdap.verisign.com"),
+        result=_response(200, json=RDAP_DOMAIN, host="rdap.verisign.com"),
     )
 
     data, server = _run(fetch_rdap_domain_data("example.com"))
 
-    assert data == {"ldhName": "EXAMPLE.COM"}
+    assert data == RDAP_DOMAIN
     assert server == "rdap.verisign.com"
 
 
@@ -67,7 +69,7 @@ def test_raises_with_upstream_status_on_other_http_errors(monkeypatch):
 
 
 def test_missing_host_header_falls_back_to_unknown(monkeypatch):
-    response = _response(200, json={})
+    response = _response(200, json=RDAP_DOMAIN)
     del response.request.headers["host"]
     _patch_safe_get(monkeypatch, result=response)
 

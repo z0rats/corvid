@@ -12,6 +12,7 @@ import logging
 
 import httpx
 
+from app.core.external_sources.contract import SourceDriftError
 from app.features.ioc_tools.domain_finder.service.provider_http import Provider, provider_get
 
 logger = logging.getLogger(__name__)
@@ -24,10 +25,16 @@ HACKERTARGET = Provider(
 )
 
 
+# The one plain-text answer for "no hosts on file" (verified live: an unknown, private or
+# malformed domain all answer it). Any other `error ...` line is an unknown message -> drift.
+EMPTY_MESSAGES = frozenset({"error invalid host"})
+
+
 async def fetch_hackertarget_hosts(domain: str) -> list[tuple[str, str | None]]:
     """Raw (hostname, ip_address) pairs for a domain from HackerTarget's hostsearch API.
     Failures raise `AppHTTPException` (`provider_http`), plus `HACKERTARGET_RATE_LIMITED`
-    when the free-tier daily quota is hit."""
+    when the free-tier daily quota is hit and `HACKERTARGET_SCHEMA_DRIFT` for a line that is
+    neither a known empty message nor `hostname[,ip]`."""
 
     def parse(response: httpx.Response) -> list[tuple[str, str | None]]:
         text = response.text.strip()
@@ -43,7 +50,7 @@ async def fetch_hackertarget_hosts(domain: str) -> list[tuple[str, str | None]]:
                 "RATE_LIMITED",
                 "HackerTarget free-tier API quota exceeded, try again later",
             )
-        if first_line.startswith("error"):
+        if first_line in EMPTY_MESSAGES:
             # No hosts on file (or an invalid query our own validator already
             # rejects) - not a failure worth surfacing, just nothing found
             logger.info("HackerTarget found no hosts for domain: %s (%s)", domain, first_line)
@@ -53,8 +60,12 @@ async def fetch_hackertarget_hosts(domain: str) -> list[tuple[str, str | None]]:
         for line in text.splitlines():
             hostname, _, ip = line.partition(",")
             hostname = hostname.strip()
-            if hostname:
-                hosts.append((hostname, ip.strip() or None))
+            if not hostname:
+                continue
+            if any(char.isspace() for char in hostname):
+                # A sentence (an unknown `error ...` message) rather than `hostname,ip`
+                raise SourceDriftError(f"{HACKERTARGET.name}: unexpected line {line[:60]!r}")
+            hosts.append((hostname, ip.strip() or None))
 
         logger.info("Retrieved %s hosts from HackerTarget for domain: %s", len(hosts), domain)
         return hosts

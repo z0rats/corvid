@@ -14,6 +14,7 @@ from typing import Any
 import httpx
 
 from app.core.config.settings import settings
+from app.core.external_sources.contract import require_dict, require_fields
 from app.core.security.ssrf_guard import safe_get
 from app.features.ioc_tools.domain_finder.service.provider_http import (
     USER_AGENT,
@@ -34,11 +35,16 @@ RDAP = Provider(
     accept="application/rdap+json, application/json",
 )
 
+# RFC 9083: every RDAP object carries `objectClassName`; the rest `whois_lookup_service` reads
+# (status, nameservers, entities, events) is optional per registry, so isn't required here.
+RDAP_REQUIRED_FIELDS = ("objectClassName",)
+
 
 async def fetch_rdap_domain_data(domain: str) -> tuple[dict[str, Any], str]:
     """RDAP registration data for a domain, following the rdap.org bootstrap redirect:
     `(raw RDAP response, the authoritative RDAP server host that answered)`. Failures raise
-    `AppHTTPException` (`provider_http`), plus `RDAP_NOT_FOUND` for an unknown domain/TLD."""
+    `AppHTTPException` (`provider_http`), plus `RDAP_NOT_FOUND` for an unknown domain/TLD and
+    `RDAP_SCHEMA_DRIFT` for a body that isn't an RDAP object."""
     url = f"{RDAP.base_url}{domain}"
     logger.debug("Fetching RDAP data from bootstrap: %s", url)
 
@@ -57,6 +63,8 @@ async def fetch_rdap_domain_data(domain: str) -> tuple[dict[str, Any], str]:
 
             response.raise_for_status()
             data = response.json()
+            require_dict(data, label=RDAP.name)
+            require_fields(data, RDAP_REQUIRED_FIELDS, label=RDAP.name)
             # `safe_get` pins the connection to a validated IP and rewrites the request's
             # Host header to the real hostname, so recover the authoritative server from
             # there rather than from `response.url` (which holds the pinned IP instead).

@@ -2,15 +2,14 @@
 default newsfeed RSS feeds: "did the source change its response shape or move", not "does our
 code work" (the mocked suite covers that).
 
-Outcome policy, as in the other canary modules: network errors and rate-limit/anti-bot/server
-statuses (403/429/451/5xx) SKIP. Everything else FAILS - notably a 401 from a provider we treat
-as keyless (it started requiring a key, as MalwareBazaar did). Feed redirects are followed, as
-the app's own SSRF-guarded fetch does.
+Outcome policy: `policy.py` (network/403/429/451/5xx skip; everything else fails - notably a
+401 from a provider we treat as keyless, as when MalwareBazaar started requiring a key). Feed
+redirects are followed, as the app's own SSRF-guarded fetch does.
 
-Run: `cd backend && pytest -m canary -o addopts= -q` (see .github/workflows/canary.yml).
+Run: `cd backend && pytest -m canary -o addopts= -q` (see .github/workflows/canary.yml). A failing
+weekly run opens (or comments on) a `canary-failure` GitHub issue; a new source needs an entry in
+`coverage_map.py` (pinned by tests/core/test_canary_coverage.py).
 """
-
-import asyncio
 
 import httpx
 import pytest
@@ -19,19 +18,12 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service import (
     blacklist_refresh_service,
     external_api_clients,
 )
-from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import (
-    ServiceAuthError,
-    ServiceError,
-    ServiceRateLimitError,
-    ServiceUnavailableError,
-    close_client,
-)
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import close_client
 from app.features.newsfeed.utils.default_rss_feeds import DEFAULT_NEWSFEEDS
 from app.features.newsfeed.utils.fetching import _parse_feed_bytes
+from tests.canary.policy import get, live
 
 pytestmark = pytest.mark.canary
-
-_SKIP_STATUSES = {403, 429, 451}
 
 
 async def _with_fresh_client(coro):
@@ -44,21 +36,7 @@ async def _with_fresh_client(coro):
 
 
 def _live(coro):
-    try:
-        return asyncio.run(_with_fresh_client(coro))
-    except (ServiceUnavailableError, ServiceRateLimitError, httpx.TransportError) as exc:
-        pytest.skip(f"source unreachable/rate-limited: {exc!r}")
-    except ServiceAuthError as exc:
-        pytest.fail(f"keyless provider now demands a key: {exc}")
-    except ServiceError as exc:
-        if exc.status_code in _SKIP_STATUSES or exc.status_code >= 500:
-            pytest.skip(f"source not answering us: {exc}")
-        raise
-    except httpx.HTTPStatusError as exc:
-        code = exc.response.status_code
-        if code in _SKIP_STATUSES or code >= 500:
-            pytest.skip(f"source not answering us: HTTP {code}")
-        raise
+    return live(_with_fresh_client(coro))
 
 
 # --- keyless ioc_lookup providers ------------------------------------------------------------
@@ -136,13 +114,9 @@ def test_blacklist_feed_yields_addresses(fetch):
 @pytest.mark.parametrize("feed", DEFAULT_NEWSFEEDS, ids=[f["name"] for f in DEFAULT_NEWSFEEDS])
 def test_default_feed_serves_entries(feed):
     try:
-        response = httpx.get(feed["url"], timeout=30, follow_redirects=True)
-    except httpx.TransportError as exc:
-        pytest.skip(f"network error: {exc!r}")
-    status = response.status_code
-    if status in _SKIP_STATUSES or status >= 500:
-        pytest.skip(f"feed not answering us: HTTP {status}")
-    assert status == 200, f"unexpected HTTP {status} - feed moved? see MOVED_DEFAULT_FEED_URLS"
+        response = get(feed["url"], follow_redirects=True)
+    except httpx.HTTPStatusError as exc:
+        pytest.fail(f"unexpected {exc} - feed moved? see MOVED_DEFAULT_FEED_URLS")
 
     parsed = _parse_feed_bytes(feed["url"], response.content)
     assert parsed.entries, "feed parsed but has no entries"

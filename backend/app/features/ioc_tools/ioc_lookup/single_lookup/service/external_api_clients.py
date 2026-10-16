@@ -10,6 +10,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.settings import settings
+from app.core.external_sources.contract import (
+    SourceDriftError,
+    require_fields,
+    require_list_field,
+)
 from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models import (
     BlacklistedAddress,
     BlacklistSource,
@@ -213,6 +218,8 @@ async def check_libraryofleaks(ioc: str) -> dict[str, Any]:
         },
     )
     result = await handle_response("Library of Leaks", response)
+    # Without these the counts below would silently read as 0 hits - "no leaks found".
+    require_fields(result, ("total", "facets"), label="Library of Leaks", where="response")
 
     collection_facets = result.get("facets", {}).get("collection_id", {}).get("values", [])
     collections = [
@@ -403,6 +410,9 @@ async def _get_kev_catalog() -> dict[str, dict[str, Any]]:
         client = get_client()
         response = await client.get(url=_KEV_CATALOG_URL)
         raw = await handle_response("CISA KEV", response)
+        # An absent list would silently become an empty catalog: "not listed" for every CVE.
+        for entry in require_list_field(raw, "vulnerabilities", label="CISA KEV"):
+            require_fields(entry, ("cveID",), label="CISA KEV", where="catalog entry")
         catalog = {
             entry["cveID"].upper(): entry
             for entry in raw.get("vulnerabilities", [])
@@ -632,6 +642,9 @@ async def _get_openphish_feed() -> tuple[set[str], set[str]]:
             ) from req_err
 
         lines = [line.strip() for line in response.text.splitlines() if line.strip()]
+        if not any(line.startswith(("http://", "https://")) for line in lines):
+            # An HTML page, or an empty file: would read as "not a phishing URL" for everything.
+            raise SourceDriftError("OpenPhish: feed has no URL lines")
         urls = set(lines)
         domains = {hostname.lower() for line in lines if (hostname := urlsplit(line).hostname)}
 

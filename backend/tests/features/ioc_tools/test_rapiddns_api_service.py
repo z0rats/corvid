@@ -83,8 +83,15 @@ def test_returns_empty_list_for_empty_response_body(patch_httpx_transport):
     assert _run(fetch_rapiddns_records("example.com")) == []
 
 
-def test_skips_rows_with_too_few_columns(patch_httpx_transport):
-    malformed_row = "<tr><td>onlyonecolumn</td></tr>"
-    patch_httpx_transport(lambda request: httpx.Response(200, text=_table_html(malformed_row)))
+def test_skips_a_malformed_row_among_good_ones(patch_httpx_transport):
+    html = _table_html(
+        "<tr><td>onlyonecolumn</td></tr>"
+        + ROW_TEMPLATE.format(
+            index=1, hostname="www.example.com", address="93.184.216.34", record_type="A"
+        )
+    )
+    patch_httpx_transport(lambda request: httpx.Response(200, text=html))
 
-    assert _run(fetch_rapiddns_records("example.com")) == []
+    assert _run(fetch_rapiddns_records("example.com")) == [
+        ("www.example.com", "A", "93.184.216.34")
+    ]

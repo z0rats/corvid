@@ -3,10 +3,16 @@ name: Source canaries
 # Weekly live check of external sources (backend/tests/canary/: ru_business_check's registries,
 # the keyless scraped/undocumented ones - Reddit archives, threat-actor usernames, Hudson Rock,
 # YouTube, DuckDuckGo, the OpenSanctions dump - the keyless ioc_lookup providers, the address-
-# blacklist feeds and the default newsfeed RSS feeds): not "does our code work" but "did a
-# source change its response shape, move, or start demanding a key". A failure means a fix.
-# Sources unreachable from a GitHub runner (non-RU IP, rate limits, anti-bot) are skipped, not
-# failed - see the outcome policy in each canary module's docstring.
+# blacklist feeds, the default newsfeed RSS feeds, domain_finder's keyless panels - crt.sh,
+# HackerTarget, RapidDNS, Wayback CDX, RDAP, URLScan - and Nominatim, PyPI, GitHub releases):
+# not "does our code work" but "did a source change its response shape, move, or start demanding
+# a key". A failure means a fix. Sources unreachable from a GitHub runner (non-RU IP, rate limits,
+# anti-bot, 5xx) are skipped, not failed - one outcome policy, backend/tests/canary/policy.py.
+# Reporting: .github/scripts/canary_report.py writes a passed/failed/skipped table, including
+# every skip reason, to the run summary. On any failure it opens a `canary-failure` issue, or
+# comments on the one already open; with the optional TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID repo
+# secrets set, it also sends a short Telegram message. Which sources have a canary at all is
+# pinned by tests/core/test_canary_coverage.py in the normal suite.
 
 on:
   schedule:
@@ -15,6 +21,7 @@ on:
 
 permissions:
   contents: read
+  issues: write # open/comment the canary-failure issue
 
 jobs:
   canary:
@@ -51,4 +58,44 @@ jobs:
         run: uv pip install --system -r requirements-dev.txt
 
       - name: Run source canaries
-        run: pytest -m canary -o addopts= -q -rs
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # the GitHub-releases canary; anonymous limit is too low
+        run: pytest -m canary -o addopts= -q -rs --junitxml=canary-report.xml
+
+      - name: Summarize canary results
+        id: report
+        if: always()
+        run: python ../.github/scripts/canary_report.py canary-report.xml --issue-body canary-issue.md
+
+      - name: Open or update the canary-failure issue
+        if: always() && steps.report.outputs.failed != '' && steps.report.outputs.failed != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create canary-failure --color B60205 \
+            --description "A weekly source canary failed" || true
+          existing=$(gh issue list --label canary-failure --state open --limit 1 \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file canary-issue.md
+          else
+            gh issue create --title "Source canary failure" --label canary-failure \
+              --body-file canary-issue.md
+          fi
+
+      - name: Notify Telegram (optional)
+        if: always() && steps.report.outputs.failed != '' && steps.report.outputs.failed != '0'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FAILED: ${{ steps.report.outputs.failed }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            exit 0
+          fi
+          curl -fsS -o /dev/null "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=Corvid source canaries: ${FAILED} failed. ${RUN_URL}" \
+            || echo "::warning::Telegram notification failed"

@@ -17,6 +17,23 @@ Single + bulk lookups against AbuseIPDB, AlienVault, VirusTotal, Shodan, etc.
   ScamSniffer's phishing-address list, and OpenSanctions' `il_mod_crypto` Israel
   counter-terror-financing export — rather than a per-lookup external call. See
   `blacklist_refresh_service.py`.
+- Live source canaries (`backend/tests/canary/`, weekly `.github/workflows/canary.yml`) cover the
+  keyless providers, the blacklist feeds and domain_finder's keyless panels; one skip/fail policy
+  for all of them lives in `tests/canary/policy.py` (`skip_or_raise`, pinned by
+  `tests/canary_policy/test_policy.py`). `tests/canary/coverage_map.py` maps every external
+  source app-wide - read from the live registries (this `service_registry`, domain_finder's
+  `Provider`s, ru_business_check's `AVAILABLE_SOURCES`, registry dumps, ...) plus the SSRF
+  allowlist's fixed-host files - to a canary or an `Exempt` reason; `tests/core/test_canary_coverage.py`
+  fails the normal suite on an unmapped or stale source. A failing weekly run opens, or comments
+  on, a `canary-failure` GitHub issue (`.github/scripts/canary_report.py` writes the summary).
+- **Source drift vs. empty** (`core/external_sources/`, `docs/adr/0022-external-source-contract.md`):
+  domain_finder's providers raise `SourceDriftError` for a changed response shape, surfaced as
+  `<CODE>_SCHEMA_DRIFT` (502) by `provider_http.provider_errors` - never `[]`; a legitimately empty
+  answer (`[]`, a header-only CDX array, HackerTarget's `error invalid host`, an empty RapidDNS
+  `<tbody>`) still is. ioc_lookup's `ProviderSpec.expects` names the result fields the frontend reads;
+  `ioc_lookup_engine` turns a missing one into `ServiceDriftError` -> `LookupStatus.ERROR` ("X changed
+  its response format"). Gates: `test_domain_provider_contract.py`, `test_provider_expects_gate.py`.
+  `outcome.classify` is the shared exception -> `SourceOutcome` map the canary policy uses.
 
 ## `ioc_extractor`, `ioc_defanger`
 

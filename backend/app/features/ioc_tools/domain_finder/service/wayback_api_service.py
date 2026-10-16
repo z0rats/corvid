@@ -13,6 +13,7 @@ from typing import Any
 
 import httpx
 
+from app.core.external_sources.contract import SourceDriftError
 from app.features.ioc_tools.domain_finder.service.provider_http import Provider, provider_get
 
 logger = logging.getLogger(__name__)
@@ -21,12 +22,20 @@ WAYBACK = Provider(
     name="Wayback Machine", code="WAYBACK", base_url="https://web.archive.org/cdx/search/cdx"
 )
 CDX_LIMIT = 200
+# What `wayback_lookup_service` reads from every capture row.
+CDX_REQUIRED_FIELDS = ("timestamp", "original")
+
+
+def _is_header(row: Any) -> bool:
+    return isinstance(row, list) and all(field in row for field in CDX_REQUIRED_FIELDS)
 
 
 async def fetch_wayback_snapshots(domain: str, path: str | None = None) -> list[dict[str, Any]]:
     """Raw CDX capture rows for a domain (or, with `path`, a single page under it) - one dict
     per capture keyed by the CDX field names (urlkey, timestamp, original, mimetype,
-    statuscode, digest, length). Failures raise `AppHTTPException` (`provider_http`)."""
+    statuscode, digest, length). Failures raise `AppHTTPException` (`provider_http`); a body that
+    isn't a header-led array of equal-width rows is `WAYBACK_SCHEMA_DRIFT`, while `[]` (what CDX
+    answers for an unarchived target) or a header-only array means no captures."""
     target = f"{domain}{path}" if path else domain
     params: dict[str, str | int] = {
         "url": target,
@@ -49,13 +58,20 @@ async def fetch_wayback_snapshots(domain: str, path: str | None = None) -> list[
             return []
 
         rows = response.json()
-        if not rows or len(rows) < 2:
-            # Only the header row (or nothing) - no captures found
+        if not isinstance(rows, list):
+            raise SourceDriftError(f"{WAYBACK.name}: response is not a JSON array")
+        if not rows:
             logger.info("No Wayback captures found for target: %s", target)
             return []
 
         fields = rows[0]
-        entries = [dict(zip(fields, row, strict=True)) for row in rows[1:]]
+        if not _is_header(fields):
+            raise SourceDriftError(f"{WAYBACK.name}: first row is not a field-name header")
+        entries = []
+        for row in rows[1:]:
+            if not isinstance(row, list) or len(row) != len(fields):
+                raise SourceDriftError(f"{WAYBACK.name}: capture row does not match the header")
+            entries.append(dict(zip(fields, row, strict=True)))
         logger.info("Retrieved %s Wayback captures for target: %s", len(entries), target)
         return entries
 

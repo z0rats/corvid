@@ -3,6 +3,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
+from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import ServiceDriftError
+
 ProviderFunc = Callable[..., Awaitable[dict[str, Any]]]
 
 
@@ -43,6 +45,13 @@ class ProviderSpec:
     type_mapping: TypeMapping | None = None
     requires_db: bool = False
     bulk_enabled: bool = True
+    # Top-level fields of the function's result that the frontend's summary/detail components
+    # read. A result missing any of them is the provider having changed its response shape
+    # (`ServiceDriftError`), not "nothing found". Only the fields the UI really reads, so
+    # they're checked against `frontend/.../ioc-lookup/shared/config/serviceConfig.js` and the
+    # provider's detail component. Empty = unchecked (`tests/.../test_provider_expects_gate.py`
+    # makes that an explicit, reasoned choice).
+    expects: tuple[str, ...] = ()
 
     @property
     def required_key_names(self) -> list[str]:
@@ -79,6 +88,18 @@ def build_call_args(
         args.update(extra_args)
 
     return args
+
+
+def verify_expected_fields(spec: ProviderSpec, result: Any) -> None:
+    """Raise `ServiceDriftError` unless `result` is an object carrying every `spec.expects`
+    field. A present-but-null/empty field is data; only an absent key is drift."""
+    if not spec.expects:
+        return
+    if not isinstance(result, dict):
+        raise ServiceDriftError(spec.name, "response is not a JSON object")
+    missing = [field for field in spec.expects if field not in result]
+    if missing:
+        raise ServiceDriftError(spec.name, f"missing: {', '.join(missing)}")
 
 
 def validate_provider_spec(spec: ProviderSpec) -> None:

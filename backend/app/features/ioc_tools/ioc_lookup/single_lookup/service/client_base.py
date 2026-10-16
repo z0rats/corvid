@@ -5,6 +5,8 @@ from typing import Any
 
 import httpx
 
+from app.core.external_sources.contract import SourceDriftError
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
@@ -40,6 +42,16 @@ class ServiceUnavailableError(ServiceError):
 
     def __init__(self, service_name: str, message: str) -> None:
         super().__init__(service_name, message, status_code=503)
+
+
+class ServiceDriftError(ServiceError, SourceDriftError):
+    """Raised when a service answered, but without the fields the UI reads - the provider
+    changed its response shape (`ProviderSpec.expects`). `detail` is what was missing."""
+
+    def __init__(self, service_name: str, detail: str) -> None:
+        super().__init__(
+            service_name, f"{service_name} changed its response format ({detail})", status_code=502
+        )
 
 
 _shared_client: httpx.AsyncClient | None = None

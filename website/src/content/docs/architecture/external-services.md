@@ -13,6 +13,15 @@ article pages, WHOIS/RDAP redirects) is validated by Corvid's own SSRF guard fir
 below (VirusTotal, crt.sh, etc.) never needs that, since only the query value is user-supplied,
 never the host.
 
+## When a source changes its response format
+
+Corvid distinguishes a source that found nothing from one that now answers in a different shape.
+For the Domain Finder panels (crt.sh, Wayback Machine, HackerTarget, RapidDNS, RDAP, URLScan.io)
+a changed format is reported as a `SCHEMA_DRIFT` error instead of an empty result, and for the
+keyless IOC Lookup providers (FFraud, FIRST.org EPSS, URLScan.io, CISA KEV, Library of Leaks,
+OpenPhish) the row shows "changed its response format" instead of an empty card. If you see
+that, the provider changed its API; please open an issue.
+
 ## IOC Lookup
 
 Auto-routed by IOC type; see [IOC Tools → Integrated services](/corvid/features/ioc-tools/) for
@@ -157,3 +166,18 @@ version" pings:
   mailcat-osint) available; a container rebuild is still needed to actually install it.
 - VirusTotal, Shodan, and Hunter.io's own quota endpoints, using the already-configured key — the
   live quota panel under Settings → API Keys.
+
+## Source health checks
+
+A weekly CI job (not part of a running Corvid instance) calls the keyless sources above with
+fixed reference queries and fails when one changes its response shape, moves, or starts demanding
+a key; sources that simply don't answer the CI runner (rate limits, geo blocks, server errors) are
+skipped, with the reason shown in the run summary. Checked today: the keyless IOC lookup providers
+(CISA KEV, FIRST EPSS, OpenPhish, URLScan.io, Library of Leaks, FFraud), the address-blacklist
+feeds, the default newsfeed RSS feeds, the Domain Finder panels (crt.sh, HackerTarget, RapidDNS,
+Wayback Machine, RDAP, URLScan.io), the RU Business Check registries and dumps, the Reddit
+archives, threat-actor usernames, Hudson Rock, YouTube, DuckDuckGo, the OpenSanctions dump,
+Nominatim, PyPI and GitHub releases. A failure opens a GitHub issue in the Corvid repository.
+Every external source the backend calls is listed as either checked or deliberately exempt (for example
+key-only, or probing it would act on a real account), and the test suite fails when a new
+source is added without that decision.

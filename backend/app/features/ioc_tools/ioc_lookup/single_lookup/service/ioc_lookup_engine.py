@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.external_sources.contract import SourceDriftError
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey, get_apikeys
 from app.features.ioc_tools.ioc_lookup.config.rate_limiting_config import (
     get_retry_config,
@@ -28,7 +29,7 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import 
     ServiceUnavailableError,
 )
 
-from .provider_spec import ProviderSpec, build_call_args
+from .provider_spec import ProviderSpec, build_call_args, verify_expected_fields
 from .service_registry import get_all_services, get_service, register_services
 
 logger = logging.getLogger(__name__)
@@ -210,6 +211,17 @@ async def lookup_ioc(
     logger.debug("Calling %s lookup function with args: %s", service_name, list(func_args.keys()))
     try:
         raw_result = await _call_service_with_retry(service_config, func_args, service_name)
+        verify_expected_fields(service_config, raw_result)
+    except SourceDriftError as e:
+        # Before `ServiceError`: `ServiceDriftError` is both. The source answered, just not in
+        # the shape the UI reads - say so, rather than rendering an empty card.
+        message = (
+            e.message
+            if isinstance(e, ServiceError)
+            else (f"{service_config.name} changed its response format ({e})")
+        )
+        logger.error("Response format changed for %s: %s", service_name, message)
+        return _make_error_result(ioc, service_name, LookupStatus.ERROR, message)
     except ServiceRateLimitError as e:
         logger.warning("Rate limit for %s: %s", service_name, e.message)
         return _make_error_result(ioc, service_name, LookupStatus.RATE_LIMITED, e.message)

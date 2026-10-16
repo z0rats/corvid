@@ -1,21 +1,20 @@
 """Live canaries for the keyless, scraped/undocumented sources outside ru_business_check: "did the
 source change its response shape", not "does our code work" (the mocked suite covers that).
 
-Same outcome policy as test_ru_business_check_canary.py: network errors and "not answering us"
-statuses (401/403/429/451/5xx - rate limits, anti-bot, geo blocks from a GitHub runner) SKIP;
-anything else - a JSON endpoint answering HTML, a missing field the parsers rely on - FAILS.
+Outcome policy: `policy.py` - network errors and "not answering us" statuses (403/429/451/5xx -
+rate limits, anti-bot, geo blocks from a GitHub runner) SKIP; anything else - a 401 (the source
+now demands a key), a JSON endpoint answering HTML, a missing field the parsers rely on - FAILS.
 
 Deliberately absent: sources that act on a real account (phone_search's sign-in/recovery
 flows, email_search's mailcat/user_scanner registration checks) - a weekly probe could trigger
 notifications to the account owner - and Instagram, whose anonymous access is rate-limited
 too aggressively for a weekly check to say anything about its schema.
 
-Run: `cd backend && pytest -m canary -o addopts= -q` (see .github/workflows/canary.yml).
+Run: `cd backend && pytest -m canary -o addopts= -q` (see .github/workflows/canary.yml). A failing
+weekly run opens (or comments on) a `canary-failure` GitHub issue; a new source needs an entry in
+`coverage_map.py` (pinned by tests/core/test_canary_coverage.py).
 """
 
-import asyncio
-
-import httpx
 import pytest
 
 from app.core.registry_dumps.common import check_list_floors, download_text, dump_client
@@ -32,40 +31,13 @@ from app.features.username_search.service.threat_actor_usernames_service import 
 )
 from app.features.youtube.service.youtube_oembed_service import fetch_oembed_data
 from app.features.youtube.service.youtube_page_service import fetch_page_metadata
-from tests.canary.policy import UNREACHABLE
+from tests.canary.policy import get, json_body, live
 
 pytestmark = pytest.mark.canary
-
-_NOT_ANSWERING_US = {401, 403, 429, 451}
 
 # Long-lived references: Reddit's CEO account, and the first video ever uploaded to YouTube.
 REDDIT_USER = "spez"
 YOUTUBE_VIDEO = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
-
-
-def _get(url: str, **kwargs) -> httpx.Response:
-    try:
-        response = httpx.get(url, timeout=30, **kwargs)
-    except httpx.TransportError as exc:
-        pytest.skip(f"network error: {exc!r}")
-    if response.status_code in _NOT_ANSWERING_US or response.status_code >= 500:
-        pytest.skip(f"source not answering us: HTTP {response.status_code}")
-    assert response.status_code == 200, f"unexpected HTTP {response.status_code}"
-    return response
-
-
-def _json(response: httpx.Response):
-    try:
-        return response.json()
-    except ValueError:
-        pytest.fail(f"expected JSON, got: {response.text[:200]!r}")
-
-
-def _live(coro):
-    try:
-        return asyncio.run(coro)
-    except httpx.TransportError as exc:
-        pytest.skip(f"network error: {exc!r}")
 
 
 @pytest.mark.parametrize("archive", ["arctic_shift", "pullpush"])
@@ -81,7 +53,7 @@ def test_reddit_archive_returns_the_item_fields_reddit_search_reads(archive):
         cursor_after=None,
     )
     url = urls[0] if archive == "arctic_shift" else urls[1]
-    body = _json(_get(url, headers={"Accept": "application/json"}))
+    body = json_body(get(url, headers={"Accept": "application/json"}))
 
     items = body.get("data")
     assert isinstance(items, list) and items, f"{archive} returned no `data` for u/{REDDIT_USER}"
@@ -90,7 +62,7 @@ def test_reddit_archive_returns_the_item_fields_reddit_search_reads(archive):
 
 
 def test_threat_actor_usernames_search_shape():
-    body = _json(_get(f"{THREAT_ACTOR_BASE_URL}/api/search", params={"q": "admin"}))
+    body = json_body(get(f"{THREAT_ACTOR_BASE_URL}/api/search", params={"q": "admin"}))
 
     results = body.get("results")
     assert isinstance(results, list) and results, "a common handle should match some forum"
@@ -99,7 +71,7 @@ def test_threat_actor_usernames_search_shape():
 
 
 def test_hudson_rock_username_search_shape():
-    body = _json(_get(hudson_rock_service.BASE_URL, params={"username": "test"}))
+    body = json_body(get(hudson_rock_service.BASE_URL, params={"username": "test"}))
 
     assert isinstance(body.get("stealers"), list), "Hudson Rock response lost `stealers`"
     for stealer in body["stealers"]:
@@ -107,14 +79,14 @@ def test_hudson_rock_username_search_shape():
 
 
 def test_youtube_oembed_metadata():
-    data = _live(fetch_oembed_data(YOUTUBE_VIDEO))
+    data = live(fetch_oembed_data(YOUTUBE_VIDEO))
 
     assert data.get("title") == "Me at the zoo"
     assert data.get("author_name")
 
 
 def test_youtube_page_metadata_scrape():
-    meta = _live(fetch_page_metadata(YOUTUBE_VIDEO))
+    meta = live(fetch_page_metadata(YOUTUBE_VIDEO))
     if not meta:
         pytest.skip("YouTube served no metadata (consent/anti-bot page)")
 
@@ -123,7 +95,7 @@ def test_youtube_page_metadata_scrape():
 
 
 def test_duckduckgo_html_results_are_organic_links():
-    results = _live(duckduckgo_engine.search("site:wikipedia.org osint"))
+    results = live(duckduckgo_engine.search("site:wikipedia.org osint"))
     if not results:
         pytest.skip("DuckDuckGo returned no results (likely an anti-bot page for this runner)")
 
@@ -139,12 +111,7 @@ def test_opensanctions_sdn_dump_parses_above_the_floors():
                 client, sanctions_search_service.LIST_URL, sanctions_search_service.SOURCE
             )
 
-    try:
-        text = _live(fetch())
-    except ValueError as exc:
-        if UNREACHABLE.search(str(exc)):
-            pytest.skip(f"source unreachable: {exc}")
-        raise
+    text = live(fetch())
 
     records, total = parse_targets_csv(text)
     check_list_floors(total, len(records), sanctions_search_service.SOURCE)

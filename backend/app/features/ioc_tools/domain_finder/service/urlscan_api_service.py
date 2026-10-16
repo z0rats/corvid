@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 
+from app.core.external_sources.contract import require_dict, require_fields, require_list_field
 from app.features.ioc_tools.domain_finder.config.api_config import (
     URLSCAN_BASE_URL,
     URLSCAN_SEARCH_ENDPOINT,
@@ -24,17 +25,20 @@ URLSCAN = Provider(
     accept=None,
 )
 
+# What the UI and `deduplicate_scan_results` read from every search hit.
+RESULT_FIELDS = ("task", "page")
+
 
 async def fetch_domain_scan_results(domain: str) -> list[dict[str, Any]]:
     """Raw URLScan.io search results for a domain. Failures raise `AppHTTPException`
-    (`provider_http`)."""
+    (`provider_http`); a body without a `results` list is `URLSCAN_SCHEMA_DRIFT` (`[]` is a
+    domain nothing was scanned for)."""
 
     def parse(response: httpx.Response) -> list[dict[str, Any]]:
-        data = response.json()
-        if "results" not in data:
-            logger.warning("No 'results' key in URLScan.io response for domain: %s", domain)
-            return []
-        raw_results = data["results"]
+        data = require_dict(response.json(), label=URLSCAN.name)
+        raw_results = require_list_field(data, "results", label=URLSCAN.name)
+        for result in raw_results:
+            require_fields(result, RESULT_FIELDS, label=URLSCAN.name, where="search hit")
         logger.info(
             "Retrieved %s raw results from URLScan.io for domain: %s", len(raw_results), domain
         )

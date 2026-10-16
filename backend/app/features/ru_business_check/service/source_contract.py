@@ -7,21 +7,25 @@ health). These helpers make a shape mismatch raise the source's own error class 
 so `run_scan_task` records the source as not-checked (it lands in `pending_sources`, and
 `flag_engine` refuses to call the verdict `low`).
 
+A thin Russian-language adapter over `core/external_sources/contract.py` (the shared,
+language-neutral guard; `docs/adr/0022-external-source-contract.md`).
 `tests/features/ru_business_check/test_source_contract.py` pins every source's
 parser to this behaviour structurally.
 """
 
 from typing import Any
 
+from app.core.external_sources import contract
 
-def _fail(error: type[ValueError], label: str, detail: str) -> ValueError:
-    return error(f"{label}: схема ответа изменилась — {detail}")
+RU_MESSAGES = contract.DriftMessages(
+    not_object="{label}: схема ответа изменилась — {where} не JSON-объект",
+    no_list="{label}: схема ответа изменилась — нет списка «{field}» в {where}",
+    no_field="{label}: схема ответа изменилась — нет поля «{field}» в {where}",
+)
 
 
 def require_dict(value: Any, *, error: type[ValueError], label: str, where: str = "ответ") -> dict:
-    if not isinstance(value, dict):
-        raise _fail(error, label, f"{where} не JSON-объект")
-    return value
+    return contract.require_dict(value, error=error, label=label, where=where, messages=RU_MESSAGES)
 
 
 def require_list_field(
@@ -29,11 +33,9 @@ def require_list_field(
 ) -> list:
     """`obj[field]` must exist and be a list - an empty list is a legitimate 'nothing
     found', a missing key or a non-list is drift."""
-    require_dict(obj, error=error, label=label, where=where)
-    value = obj.get(field)
-    if not isinstance(value, list):
-        raise _fail(error, label, f"нет списка «{field}» в {where}")
-    return value
+    return contract.require_list_field(
+        obj, field, error=error, label=label, where=where, messages=RU_MESSAGES
+    )
 
 
 def require_fields(
@@ -41,8 +43,6 @@ def require_fields(
 ) -> dict:
     """Every name in `fields` must be present as a key of `row` (its value may be None -
     a present-but-null field is data, an absent key is drift)."""
-    require_dict(row, error=error, label=label, where=where)
-    for field in fields:
-        if field not in row:
-            raise _fail(error, label, f"нет поля «{field}» в {where}")
-    return row
+    return contract.require_fields(
+        row, fields, error=error, label=label, where=where, messages=RU_MESSAGES
+    )

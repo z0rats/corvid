@@ -104,16 +104,19 @@ def register_services(ioc_lookup_service_module) -> None:
             func=ioc_lookup_service_module.check_ffraud,
             name="FFraud",
             supported_ioc_types=[IOC_TYPES["IPV4"], IOC_TYPES["IPV6"]],
+            expects=("fraud_score", "risk"),
         ),
         "ffraudemail": ProviderSpec(
             func=ioc_lookup_service_module.check_ffraud_email,
             name="FFraud",
             supported_ioc_types=[IOC_TYPES["EMAIL"]],
+            expects=("is_disposable", "community_blacklisted", "valid_format", "safe_domain"),
         ),
         "firstepss": ProviderSpec(
             func=ioc_lookup_service_module.search_first_epss,
             name="FIRST.org EPSS",
             supported_ioc_types=[IOC_TYPES["CVE"]],
+            expects=("data",),
         ),
         "github": ProviderSpec(
             func=ioc_lookup_service_module.search_github,
@@ -285,6 +288,7 @@ def register_services(ioc_lookup_service_module) -> None:
             func=ioc_lookup_service_module.check_urlscan,
             name="URLScan.io",
             supported_ioc_types=_supported_ioc_types("urlscanio"),
+            expects=("results",),
         ),
         "virustotal": ProviderSpec(
             func=ioc_lookup_service_module.check_virustotal,
