@@ -1,14 +1,14 @@
 import { createStore } from 'jotai';
-import { apiKeysState, hasLlmKeyAtom, hasLocalLlmState } from './atoms';
+import { apiKeysState, llmAvailableAtom, availableLlmModelsState } from './atoms';
 
 function hasLlm({ keys = {}, local = false } = {}) {
   const store = createStore();
   store.set(apiKeysState, keys);
-  store.set(hasLocalLlmState, local);
-  return store.get(hasLlmKeyAtom);
+  store.set(availableLlmModelsState, local ? [{ id: 'ollama:llava', name: 'llava', provider: 'Ollama (local)' }] : []);
+  return store.get(llmAvailableAtom);
 }
 
-describe('hasLlmKeyAtom', () => {
+describe('llmAvailableAtom', () => {
   it('is false with no provider key and no local model', () => {
     expect(hasLlm()).toBe(false);
     expect(hasLlm({ keys: { shodan: true } })).toBe(false);
@@ -19,7 +19,7 @@ describe('hasLlmKeyAtom', () => {
     expect(hasLlm({ keys: { anthropic: true } })).toBe(true);
   });
 
-  it('is true with only a local Ollama model and no keys at all', () => {
+  it('is true with only a registry model (e.g. local Ollama) and no keys at all', () => {
     expect(hasLlm({ local: true })).toBe(true);
   });
 });

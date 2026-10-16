@@ -23,7 +23,7 @@ pdfplumber
 pillow
 psutil
 pydantic[email]
-pydantic-ai-slim[anthropic,google,openai]
+pydantic-ai-slim[anthropic,openai]
 pydantic-settings
 python-multipart
 regex

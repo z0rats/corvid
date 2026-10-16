@@ -29,7 +29,7 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import { format } from "date-fns";
 import ReliabilityChip from "../components/ui/ReliabilityChip";
 
-import { hasLlmKeyAtom } from "../../../core/state/atoms";
+import { llmAvailableAtom } from "../../../core/state/atoms";
 import { getFeedIconUrl } from "../utils/urlUtils";
 import AnalyzeSection from "./AnalyzeSection";
 import MitreAttackSection from "./MitreAttackSection";
@@ -59,7 +59,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
   updatingTlp,
 }) {
   const { t } = useTranslation('newsfeed');
-  const hasLlmKey = useAtomValue(hasLlmKeyAtom);
+  const llmAvailable = useAtomValue(llmAvailableAtom);
   const [tlpAnchorEl, setTlpAnchorEl] = useState(null);
   const [analyzeOpen, setAnalyzeOpen] = useState(false);
   const analyzeRef = useRef(null);
@@ -173,7 +173,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
               )}
             </Tooltip>
 
-            {hasLlmKey && (
+            {llmAvailable && (
               <>
                 <Tooltip title={analyzeOpen ? "" : t('feed.article.analyzeUsingAi')} arrow>
                   <ButtonGroup variant="text" disableElevation ref={analyzeRef} size="small">

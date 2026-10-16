@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { hasLlmKeyAtom } from '../../../../core/state/atoms';
+import { llmAvailableAtom } from '../../../../core/state/atoms';
 import { aiAssistantApi } from '../../services/api/aiAssistantApi';
 import { createLogger } from '../../../../core/utils/logger';
 
@@ -9,7 +9,7 @@ const logger = createLogger('AiAnalysis');
 export function useAiAnalysis() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const hasLlmKey = useAtomValue(hasLlmKeyAtom);
+  const llmAvailable = useAtomValue(llmAvailableAtom);
 
   const analyzeMailBody = async (input) => {
     setLoading(true);
@@ -22,5 +22,5 @@ export function useAiAnalysis() {
     setLoading(false);
   };
 
-  return { result, loading, hasLlmKey, analyzeMailBody };
+  return { result, loading, llmAvailable, analyzeMailBody };
 }

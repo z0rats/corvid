@@ -106,11 +106,6 @@ export const settingsApi = {
     return response.data;
   },
 
-  async getAvailableModels() {
-    const response = await api.get('/api/settings/ai/available-models');
-    return response.data;
-  },
-
   // Telegram notification settings API calls
   async getTelegramSettings() {
     const response = await api.get('/api/settings/telegram');

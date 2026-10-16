@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
-import { hasLlmKeyAtom, themeModeAtom } from '../../state/atoms';
+import { llmAvailableAtom, themeModeAtom } from '../../state/atoms';
 import { useVisibleModuleIds } from '../../hooks/useVisibleModuleIds';
 import { useThemeManager } from '../../hooks/ui/useThemeManager';
 import { usePersistentState } from '../../hooks/ui/usePersistentState';
@@ -52,7 +52,7 @@ const isWidthBetween = (min, max) => (value) => Number.isFinite(value) && value 
 function Layout() {
   const { t } = useTranslation();
   const { t: tPalette } = useTranslation('commandPalette');
-  const hasLlmKey = useAtomValue(hasLlmKeyAtom);
+  const llmAvailable = useAtomValue(llmAvailableAtom);
   const themeMode = useAtomValue(themeModeAtom);
   const { toggleColorMode } = useThemeManager();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -121,8 +121,8 @@ function Layout() {
 
   const currentTabs = useMemo(() => {
     const route = TAB_ROUTES.find(({ prefix }) => location.pathname.startsWith(prefix));
-    return route ? route.getTabs(t, { hasLlmKey }) : null;
-  }, [location.pathname, hasLlmKey, t]);
+    return route ? route.getTabs(t, { llmAvailable }) : null;
+  }, [location.pathname, llmAvailable, t]);
 
   const filteredModuleIds = useVisibleModuleIds();
 

@@ -19,13 +19,13 @@ describe('TAB_ROUTES — Layout.jsx tab resolution', () => {
   });
 
   it('hides the AI templates tabs entirely without an LLM key', () => {
-    expect(resolveTabs('/ai-templates/templates', { hasLlmKey: false })).toBeNull();
-    expect(resolveTabs('/ai-templates/templates', { hasLlmKey: true })).not.toBeNull();
+    expect(resolveTabs('/ai-templates/templates', { llmAvailable: false })).toBeNull();
+    expect(resolveTabs('/ai-templates/templates', { llmAvailable: true })).not.toBeNull();
   });
 
   it('hides only the newsfeed report tab without an LLM key', () => {
-    const withoutKey = resolveTabs('/newsfeed/feed', { hasLlmKey: false });
-    const withKey = resolveTabs('/newsfeed/feed', { hasLlmKey: true });
+    const withoutKey = resolveTabs('/newsfeed/feed', { llmAvailable: false });
+    const withKey = resolveTabs('/newsfeed/feed', { llmAvailable: true });
     expect(withoutKey.some((tab) => tab.path === '/newsfeed/report')).toBe(false);
     expect(withKey.some((tab) => tab.path === '/newsfeed/report')).toBe(true);
   });

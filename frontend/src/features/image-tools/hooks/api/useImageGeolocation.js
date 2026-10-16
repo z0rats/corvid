@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { hasLlmKeyAtom } from '../../../../core/state/atoms';
+import { llmAvailableAtom } from '../../../../core/state/atoms';
 import { imageGeolocationApi } from '../../services/api/imageGeolocationApi';
 import { createLogger } from '../../../../core/utils/logger';
 
@@ -10,7 +10,7 @@ export function useImageGeolocation() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const hasLlmKey = useAtomValue(hasLlmKeyAtom);
+  const llmAvailable = useAtomValue(llmAvailableAtom);
 
   const geolocateImage = async (file) => {
     setLoading(true);
@@ -25,5 +25,5 @@ export function useImageGeolocation() {
     setLoading(false);
   };
 
-  return { result, loading, error, hasLlmKey, geolocateImage };
+  return { result, loading, error, llmAvailable, geolocateImage };
 }

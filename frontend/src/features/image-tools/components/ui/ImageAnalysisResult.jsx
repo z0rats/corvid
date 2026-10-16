@@ -18,7 +18,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import { hasLlmKeyAtom } from '../../../../core/state/atoms';
+import { llmAvailableAtom } from '../../../../core/state/atoms';
 import ImagePreview from './ImagePreview';
 import FileMetadata from './FileMetadata';
 import ExifDetails from './ExifDetails';
@@ -41,7 +41,7 @@ export default function ImageAnalysisResult({ result, previewUrl, file }) {
   const { t } = useTranslation('imageTools');
   const theme = useTheme();
   const isNarrow = useMediaQuery(theme.breakpoints.down('md'));
-  const hasLlmKey = useAtomValue(hasLlmKeyAtom);
+  const llmAvailable = useAtomValue(llmAvailableAtom);
   const [activeChapter, setActiveChapter] = useState('general');
   const sectionRefs = useRef({});
 
@@ -57,11 +57,11 @@ export default function ImageAnalysisResult({ result, previewUrl, file }) {
         : []),
       ...(result.gps ? [{ id: 'gps', label: t('chapters.gps'), icon: <PlaceIcon fontSize="small" /> }] : []),
       { id: 'structure', label: t('chapters.structure'), icon: <DataObjectIcon fontSize="small" /> },
-      ...(hasLlmKey ? [{ id: 'geolocation', label: t('chapters.geolocation'), icon: <PublicIcon fontSize="small" /> }] : []),
+      ...(llmAvailable ? [{ id: 'geolocation', label: t('chapters.geolocation'), icon: <PublicIcon fontSize="small" /> }] : []),
       { id: 'removeMetadata', label: t('chapters.removeMetadata'), icon: <DeleteSweepIcon fontSize="small" /> },
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result?.gps, result?.exiftool, hasLlmKey, t]);
+  }, [result?.gps, result?.exiftool, llmAvailable, t]);
 
   const chapterIds = chapters.map((c) => c.id).join(',');
 

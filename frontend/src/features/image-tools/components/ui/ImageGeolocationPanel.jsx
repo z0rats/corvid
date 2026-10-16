@@ -28,7 +28,7 @@ function confidenceColor(confidence) {
 
 export default function ImageGeolocationPanel({ file }) {
   const { t, i18n } = useTranslation('imageTools');
-  const { result, loading, error, hasLlmKey, geolocateImage } = useImageGeolocation();
+  const { result, loading, error, llmAvailable, geolocateImage } = useImageGeolocation();
   const [viewedResult, setViewedResult] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -45,7 +45,7 @@ export default function ImageGeolocationPanel({ file }) {
     setHistoryOpen(false);
   };
 
-  if (!hasLlmKey || !file) {
+  if (!llmAvailable || !file) {
     return null;
   }
 

@@ -27,10 +27,10 @@ function normalizeEmailBody(input) {
 
 export default function ShowAiAnswer({ input }) {
   const { t } = useTranslation('emailAnalyzer');
-  const { result, loading, hasLlmKey, analyzeMailBody } = useAiAnalysis();
+  const { result, loading, llmAvailable, analyzeMailBody } = useAiAnalysis();
   const normalizedInput = useMemo(() => normalizeEmailBody(input), [input]);
 
-  if (!hasLlmKey || !normalizedInput) {
+  if (!llmAvailable || !normalizedInput) {
     return null;
   }
 

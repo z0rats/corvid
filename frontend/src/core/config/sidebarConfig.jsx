@@ -495,16 +495,16 @@ export const getPhoneSearchTabs = (t) => PHONE_SEARCH_TABS_CONFIG.map(item => tr
 // Which sidebar tab set to show for the current route, keyed by path prefix — the single place
 // Layout.jsx needs to consult (`TAB_ROUTES.find(...)`) instead of growing its own if-chain. A
 // tabbed feature registers itself here alongside its own *_TABS_CONFIG above; `context` carries
-// the handful of cross-cutting flags a route's tabs may depend on (currently just `hasLlmKey`).
+// the handful of cross-cutting flags a route's tabs may depend on (currently just `llmAvailable`).
 export const TAB_ROUTES = [
   {
     prefix: "/ai-templates",
-    getTabs: (t, context) => (context.hasLlmKey ? getAiTemplatesTabs(t) : null),
+    getTabs: (t, context) => (context.llmAvailable ? getAiTemplatesTabs(t) : null),
   },
   {
     prefix: "/newsfeed",
     getTabs: (t, context) =>
-      getNewsfeedTabs(t).filter(tab => tab.path !== "/newsfeed/report" || context.hasLlmKey),
+      getNewsfeedTabs(t).filter(tab => tab.path !== "/newsfeed/report" || context.llmAvailable),
   },
   { prefix: "/settings", getTabs: (t) => getSettingsTabs(t) },
   { prefix: "/rules", getTabs: (t) => getRulesTabs(t) },

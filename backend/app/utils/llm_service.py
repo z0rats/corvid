@@ -14,7 +14,7 @@ from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikey
 if TYPE_CHECKING:
     from pydantic_ai.settings import ModelSettings
 
-# pydantic_ai and each provider SDK (openai/anthropic/google-genai) are imported lazily,
+# pydantic_ai and each provider SDK (openai/anthropic) are imported lazily,
 # inside the functions that actually need them, rather than at module level - this module
 # is imported eagerly at app startup (via api_keys_service.py, for invalidate_model_registry_
 # cache), and each of these SDKs costs several hundred ms to a second-plus to import, only
@@ -35,13 +35,11 @@ MODEL_DEFINITIONS: dict[str, tuple[str, str, str]] = {
 PROVIDER_DISPLAY_NAMES: dict[str, str] = {
     "openai": "OpenAI",
     "anthropic": "Anthropic",
-    "google": "Google",
 }
 
 _PROVIDER_KEY_NAMES: dict[str, str] = {
     "openai": "openai",
     "anthropic": "anthropic",
-    "google": "gemini",
 }
 
 _REASONING_MODEL_PREFIXES = ("o1", "o3", "o4", "gpt-5")
@@ -75,11 +73,6 @@ def _create_model(provider: str, model_name: str, api_key: str):
         from pydantic_ai.providers.anthropic import AnthropicProvider
 
         return AnthropicModel(model_name, provider=AnthropicProvider(api_key=api_key))
-    if provider == "google":
-        from pydantic_ai.models.google import GoogleModel
-        from pydantic_ai.providers.google import GoogleProvider
-
-        return GoogleModel(model_name, provider=GoogleProvider(api_key=api_key))
     raise ValueError(f"Unknown provider: {provider}")
 
 

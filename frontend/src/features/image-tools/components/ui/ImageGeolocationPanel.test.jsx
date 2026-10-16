@@ -23,7 +23,7 @@ describe('ImageGeolocationPanel', () => {
 
   it('renders nothing when no LLM API key is configured', () => {
     useImageGeolocation.mockReturnValue({
-      result: null, loading: false, error: null, hasLlmKey: false, geolocateImage: vi.fn(),
+      result: null, loading: false, error: null, llmAvailable: false, geolocateImage: vi.fn(),
     });
 
     const { container } = render(<ImageGeolocationPanel file={makeFile()} />);
@@ -33,7 +33,7 @@ describe('ImageGeolocationPanel', () => {
 
   it('renders nothing when no file has been uploaded yet', () => {
     useImageGeolocation.mockReturnValue({
-      result: null, loading: false, error: null, hasLlmKey: true, geolocateImage: vi.fn(),
+      result: null, loading: false, error: null, llmAvailable: true, geolocateImage: vi.fn(),
     });
 
     const { container } = render(<ImageGeolocationPanel file={null} />);
@@ -44,7 +44,7 @@ describe('ImageGeolocationPanel', () => {
   it('triggers analysis with the uploaded file when the button is clicked', () => {
     const geolocateImage = vi.fn();
     useImageGeolocation.mockReturnValue({
-      result: null, loading: false, error: null, hasLlmKey: true, geolocateImage,
+      result: null, loading: false, error: null, llmAvailable: true, geolocateImage,
     });
     const file = makeFile();
 
@@ -56,7 +56,7 @@ describe('ImageGeolocationPanel', () => {
 
   it('shows the error message on failure', () => {
     useImageGeolocation.mockReturnValue({
-      result: null, loading: false, error: 'No LLM models available', hasLlmKey: true, geolocateImage: vi.fn(),
+      result: null, loading: false, error: 'No LLM models available', llmAvailable: true, geolocateImage: vi.fn(),
     });
 
     render(<ImageGeolocationPanel file={makeFile()} />);
@@ -75,7 +75,7 @@ describe('ImageGeolocationPanel', () => {
       },
       loading: false,
       error: null,
-      hasLlmKey: true,
+      llmAvailable: true,
       geolocateImage: vi.fn(),
     });
 
@@ -107,7 +107,7 @@ describe('ImageGeolocationPanel', () => {
       },
       loading: false,
       error: null,
-      hasLlmKey: true,
+      llmAvailable: true,
       geolocateImage: vi.fn(),
     });
 
@@ -121,7 +121,7 @@ describe('ImageGeolocationPanel', () => {
       result: { ...base, text_signals: [] },
       loading: false,
       error: null,
-      hasLlmKey: true,
+      llmAvailable: true,
       geolocateImage: vi.fn(),
     });
     render(<ImageGeolocationPanel file={makeFile()} />);
@@ -139,7 +139,7 @@ describe('ImageGeolocationPanel', () => {
       },
       loading: false,
       error: null,
-      hasLlmKey: true,
+      llmAvailable: true,
       geolocateImage: vi.fn(),
     });
     geolocationHistoryApi.reportUrl.mockReturnValue('https://corvid.test/report');
@@ -164,7 +164,7 @@ describe('ImageGeolocationPanel', () => {
       },
       loading: false,
       error: null,
-      hasLlmKey: true,
+      llmAvailable: true,
       geolocateImage: vi.fn(),
     });
 
@@ -175,7 +175,7 @@ describe('ImageGeolocationPanel', () => {
 
   it('toggles the history list and loads a selected past analysis', async () => {
     useImageGeolocation.mockReturnValue({
-      result: null, loading: false, error: null, hasLlmKey: true, geolocateImage: vi.fn(),
+      result: null, loading: false, error: null, llmAvailable: true, geolocateImage: vi.fn(),
     });
     geolocationHistoryApi.getSearch.mockResolvedValue({
       id: 7,

@@ -1,6 +1,6 @@
 ---
 title: AI / LLM Providers
-description: Configuring Anthropic, Google, OpenAI, or a local Ollama server for AI features.
+description: Configuring Anthropic, OpenAI, or a local Ollama server for AI features.
 sidebar:
   order: 40
 ---
@@ -11,13 +11,15 @@ on an LLM being configured — these features simply won't produce AI output wit
 
 ## Supported providers
 
-- **Anthropic**, **Google**, **OpenAI** — add the corresponding API key under
-  **Settings → API Keys** to make that provider's models available.
+- **Anthropic**, **OpenAI** — add the corresponding API key under **Settings → API Keys** to
+  make that provider's models available.
 - **Local Ollama** — set `LLM_OLLAMA_BASE_URL` to a running Ollama server's OpenAI-compatible
   endpoint (e.g. `http://host.docker.internal:11434/v1` to reach a host-run Ollama from inside
   the container). No API key needed. Any model already pulled into that Ollama server is
   auto-discovered and shows up alongside the cloud providers. If the server is unreachable, it's
-  silently skipped rather than failing startup.
+  silently skipped rather than failing startup. Starting Ollama or pulling a model while the app
+  is open is picked up without a reload: on opening Settings → AI Settings, or on switching back
+  to the browser tab (at most once every 30 seconds).
 
 ## Choosing models
 

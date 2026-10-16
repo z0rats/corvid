@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAtomValue } from 'jotai';
 import { useTheme } from '@mui/material/styles';
@@ -20,8 +20,7 @@ import { MDXEditor, headingsPlugin, listsPlugin, quotePlugin, thematicBreakPlugi
 import '@mdxeditor/editor/style.css';
 
 import { templatesApi } from '../../services/api/templatesApi';
-import { apiKeysState } from '../../../../core/state/atoms';
-import { AVAILABLE_MODELS } from '../../constants/templateConstants';
+import { availableLlmModelsState } from '../../../../core/state/atoms';
 import { createLogger } from '../../../../core/utils/logger';
 import ResizableTextField from '../ui/ResizableTextField';
 import PayloadFieldsEditor from '../ui/PayloadFieldsEditor';
@@ -46,16 +45,13 @@ function normalizeTemplate(template) {
 export default function EditTemplateDialog({ open, onClose, template, onSave, onDelete: onDeleteSuccess, categories = [] }) {
   const { t } = useTranslation('llmTemplates');
   const theme = useTheme();
-  const apiKeys = useAtomValue(apiKeysState);
   const [tpl, setTpl] = useState(() => template ? normalizeTemplate(template) : null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const availableModels = useMemo(
-    () => AVAILABLE_MODELS.filter(m => apiKeys[m.apiKey]),
-    [apiKeys]
-  );
+  // The backend's live registry, not a hardcoded list: includes local Ollama models.
+  const availableModels = useAtomValue(availableLlmModelsState);
 
   if (!tpl) return null;
 

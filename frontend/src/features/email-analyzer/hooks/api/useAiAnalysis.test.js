@@ -16,18 +16,18 @@ beforeEach(() => setApiKeys({}));
 afterEach(() => vi.clearAllMocks());
 
 describe('useAiAnalysis', () => {
-  it('starts with no result and hasLlmKey false when no LLM key is configured', () => {
+  it('starts with no result and llmAvailable false when no LLM key is configured', () => {
     const { result } = renderHook(() => useAiAnalysis());
 
-    expect(result.current).toMatchObject({ result: null, loading: false, hasLlmKey: false });
+    expect(result.current).toMatchObject({ result: null, loading: false, llmAvailable: false });
   });
 
-  it('reflects hasLlmKey true when an LLM key is configured', () => {
+  it('reflects llmAvailable true when an LLM key is configured', () => {
     setApiKeys({ openai: 'sk-x' });
 
     const { result } = renderHook(() => useAiAnalysis());
 
-    expect(result.current.hasLlmKey).toBe(true);
+    expect(result.current.llmAvailable).toBe(true);
   });
 
   it('analyzeMailBody sets loading then populates the result', async () => {

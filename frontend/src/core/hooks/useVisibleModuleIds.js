@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
-import { enabledModulesMapAtom, hasLlmKeyAtom } from '../state/atoms';
+import { enabledModulesMapAtom, llmAvailableAtom } from '../state/atoms';
 import { getMainMenuItems } from '../config/sidebarConfig';
 
 /**
@@ -10,12 +10,12 @@ import { getMainMenuItems } from '../config/sidebarConfig';
  */
 export function useVisibleModuleIds() {
   const enabledModules = useAtomValue(enabledModulesMapAtom);
-  const hasLlmKey = useAtomValue(hasLlmKeyAtom);
+  const llmAvailable = useAtomValue(llmAvailableAtom);
 
   return useMemo(() => new Set(
     getMainMenuItems((key) => key)
       .filter((item) => (enabledModules[item.moduleId] ?? true)
-        && (item.moduleId !== 'llm_templates' || hasLlmKey))
+        && (item.moduleId !== 'llm_templates' || llmAvailable))
       .map((item) => item.moduleId),
-  ), [enabledModules, hasLlmKey]);
+  ), [enabledModules, llmAvailable]);
 }

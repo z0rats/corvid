@@ -25,8 +25,7 @@ import { useTemplateForm } from '../../hooks/ui/useTemplateForm';
 import { useCategories } from '../../hooks/api/useCategories';
 import { useNotification } from '../../../../core/hooks/ui/useNotification';
 import { isTemplateFormValid } from '../../utils/templateValidation';
-import { apiKeysState } from '../../../../core/state/atoms';
-import { AVAILABLE_MODELS } from '../../constants/templateConstants';
+import { availableLlmModelsState } from '../../../../core/state/atoms';
 import FormSection from '../ui/FormSection';
 import ResizableTextField from '../ui/ResizableTextField';
 import PayloadFieldsEditor from '../ui/PayloadFieldsEditor';
@@ -41,17 +40,14 @@ export default function CreateTemplateForm() {
     payloadFields, staticContexts, webContexts,
   } = useTemplateForm();
   const theme = useTheme();
-  const apiKeys = useAtomValue(apiKeysState);
   const { categories } = useCategories();
   const { notification: snackbar, showNotification: showSnackbar, hideNotification: closeSnackbar } = useNotification();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEngineering, setIsEngineering] = useState(false);
 
-  const availableModels = useMemo(
-    () => AVAILABLE_MODELS.filter(m => apiKeys[m.apiKey]),
-    [apiKeys]
-  );
+  // The backend's live registry, not a hardcoded list: includes local Ollama models.
+  const availableModels = useAtomValue(availableLlmModelsState);
 
   const canEngineer = useMemo(
     () => template.title.trim() && template.description.trim(),

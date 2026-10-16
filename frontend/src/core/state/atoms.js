@@ -17,17 +17,22 @@ generalSettingsState.debugLabel = 'generalSettingsState';
 export const aiSettingsState = atom({});
 aiSettingsState.debugLabel = 'aiSettingsState';
 
-// True once the backend has discovered at least one model on a local Ollama server -
-// the one LLM source that needs no API key.
-export const hasLocalLlmState = atom(false);
-hasLocalLlmState.debugLabel = 'hasLocalLlmState';
+// The backend's model registry (/api/settings/ai/available-models): `{id, name, provider}` for every
+// model usable right now - keyed providers plus any local Ollama model, the one source that needs
+// no key. Model pickers list these; `hasAnyLlmModelState` derives from it.
+export const availableLlmModelsState = atom([]);
+availableLlmModelsState.debugLabel = 'availableLlmModelsState';
 
-// Whether any LLM is usable: a configured provider key or a local Ollama model.
-export const hasLlmKeyAtom = atom((get) => {
+export const hasAnyLlmModelState = atom((get) => get(availableLlmModelsState).length > 0);
+hasAnyLlmModelState.debugLabel = 'hasAnyLlmModelState';
+
+// Whether any LLM is usable. Provider keys (the only keyed providers with models in the backend's
+// MODEL_DEFINITIONS) answer immediately on load; the registry probe covers keyless Ollama.
+export const llmAvailableAtom = atom((get) => {
   const keys = get(apiKeysState);
-  return Boolean(keys.openai || keys.anthropic || get(hasLocalLlmState));
+  return Boolean(keys.openai || keys.anthropic || get(hasAnyLlmModelState));
 });
-hasLlmKeyAtom.debugLabel = 'hasLlmKeyAtom';
+llmAvailableAtom.debugLabel = 'llmAvailableAtom';
 
 export const hasGoogleMapsKeyAtom = atom((get) => Boolean(get(apiKeysState).google_maps));
 hasGoogleMapsKeyAtom.debugLabel = 'hasGoogleMapsKeyAtom';

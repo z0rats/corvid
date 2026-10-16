@@ -1,12 +1,3 @@
-export const AVAILABLE_MODELS = [
-  { id: 'gpt-5', name: 'GPT-5', provider: 'OpenAI', apiKey: 'openai' },
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', apiKey: 'openai' },
-  { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', provider: 'Anthropic', apiKey: 'anthropic' },
-  { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'Anthropic', apiKey: 'anthropic' },
-  { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5', provider: 'Anthropic', apiKey: 'anthropic' },
-  { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', provider: 'Anthropic', apiKey: 'anthropic' },
-];
-
 export const SYSTEM_CATEGORY_IDS = {
   FAVORITES: '00000000-0000-0000-0000-000000000001',
   DEFAULT: '00000000-0000-0000-0000-000000000002',

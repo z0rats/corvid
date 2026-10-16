@@ -24,16 +24,16 @@ describe('useImageGeolocation', () => {
     vi.clearAllMocks();
   });
 
-  it('reports hasLlmKey as false when no LLM API key is configured', () => {
+  it('reports llmAvailable as false when no LLM API key is configured', () => {
     const { result } = renderImageGeolocationHook({});
 
-    expect(result.current.hasLlmKey).toBe(false);
+    expect(result.current.llmAvailable).toBe(false);
   });
 
-  it('reports hasLlmKey as true when an LLM API key is configured', () => {
+  it('reports llmAvailable as true when an LLM API key is configured', () => {
     const { result } = renderImageGeolocationHook();
 
-    expect(result.current.hasLlmKey).toBe(true);
+    expect(result.current.llmAvailable).toBe(true);
   });
 
   it('starts with no result and no error', () => {

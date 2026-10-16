@@ -1,45 +1,47 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import React from 'react';
+import { act, renderHook } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
 import { useAiSettings } from './useAiSettings';
+import { availableLlmModelsState } from '../../../../core/state/atoms';
+import { LLM_MODELS_REPROBE_EVENT } from '../../../../core/utils/llmModelsReprobe';
 import { settingsApi } from '../../services/api/settingsApi';
 
 vi.mock('../../services/api/settingsApi');
 
 afterEach(() => vi.clearAllMocks());
 
+function withStore(store) {
+  return function StoreWrapper({ children }) {
+    return React.createElement(Provider, { store }, children);
+  };
+}
+
 describe('useAiSettings — available models', () => {
-  it('loads available models on mount', async () => {
-    settingsApi.getAvailableModels.mockResolvedValue({ models: ['gpt-4', 'claude'] });
+  it('serves the app-wide registry list rather than fetching its own copy', () => {
+    const store = createStore();
+    const models = [{ id: 'ollama:llava', name: 'llava', provider: 'Ollama (local)' }];
+    store.set(availableLlmModelsState, models);
 
-    const { result } = renderHook(() => useAiSettings());
+    const { result } = renderHook(() => useAiSettings(), { wrapper: withStore(store) });
 
-    await waitFor(() => expect(result.current.availableModels).toEqual(['gpt-4', 'claude']));
+    expect(result.current.availableModels).toEqual(models);
   });
 
-  it('falls back to an empty list when the models response has none', async () => {
-    settingsApi.getAvailableModels.mockResolvedValue({});
+  it('asks the app-wide probe to refresh the list when the screen opens', () => {
+    const listener = vi.fn();
+    window.addEventListener(LLM_MODELS_REPROBE_EVENT, listener);
 
-    const { result } = renderHook(() => useAiSettings());
+    renderHook(() => useAiSettings());
 
-    await waitFor(() => expect(settingsApi.getAvailableModels).toHaveBeenCalled());
-    expect(result.current.availableModels).toEqual([]);
-  });
-
-  it('falls back to an empty list when loading models fails', async () => {
-    settingsApi.getAvailableModels.mockRejectedValue(new Error('down'));
-
-    const { result } = renderHook(() => useAiSettings());
-
-    await waitFor(() => expect(settingsApi.getAvailableModels).toHaveBeenCalled());
-    expect(result.current.availableModels).toEqual([]);
+    window.removeEventListener(LLM_MODELS_REPROBE_EVENT, listener);
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('useAiSettings — updateAiSettings', () => {
   it('updates settings and returns a success message', async () => {
-    settingsApi.getAvailableModels.mockResolvedValue({ models: [] });
     settingsApi.updateAiSettings.mockResolvedValue({ defaultModel: 'claude' });
     const { result } = renderHook(() => useAiSettings());
-    await waitFor(() => expect(settingsApi.getAvailableModels).toHaveBeenCalled());
 
     let returned;
     await act(async () => {
@@ -52,10 +54,8 @@ describe('useAiSettings — updateAiSettings', () => {
   });
 
   it('prefers the response detail message on failure', async () => {
-    settingsApi.getAvailableModels.mockResolvedValue({ models: [] });
     settingsApi.updateAiSettings.mockRejectedValue({ response: { data: { detail: 'Invalid model' } } });
     const { result } = renderHook(() => useAiSettings());
-    await waitFor(() => expect(settingsApi.getAvailableModels).toHaveBeenCalled());
 
     let returned;
     await act(async () => {
@@ -67,10 +67,8 @@ describe('useAiSettings — updateAiSettings', () => {
   });
 
   it('falls back to the generic save-error message', async () => {
-    settingsApi.getAvailableModels.mockResolvedValue({ models: [] });
     settingsApi.updateAiSettings.mockRejectedValue(new Error('boom'));
     const { result } = renderHook(() => useAiSettings());
-    await waitFor(() => expect(settingsApi.getAvailableModels).toHaveBeenCalled());
 
     let returned;
     await act(async () => {

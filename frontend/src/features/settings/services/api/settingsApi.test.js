@@ -143,13 +143,6 @@ describe('settingsApi — ai settings', () => {
     expect(api.put).toHaveBeenCalledWith('/api/settings/ai', { defaultModel: 'claude' });
     expect(result).toEqual({ defaultModel: 'claude' });
   });
-
-  it('getAvailableModels fetches the model list', async () => {
-    api.get.mockResolvedValue({ data: { models: ['gpt-4'] } });
-    const result = await settingsApi.getAvailableModels();
-    expect(api.get).toHaveBeenCalledWith('/api/settings/ai/available-models');
-    expect(result).toEqual({ models: ['gpt-4'] });
-  });
 });
 
 describe('settingsApi — modules', () => {
