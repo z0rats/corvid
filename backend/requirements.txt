@@ -103,7 +103,7 @@ colorama==0.4.6
     # via
     #   maigret
     #   user-scanner
-cryptography==50.0.0
+cryptography==50.0.2
     # via
     #   -r requirements.in
     #   pdfminer-six
@@ -138,7 +138,7 @@ exifread==3.5.1
     # via -r requirements.in
 fake-useragent==2.2.0
     # via requests-html
-fastapi==0.141.1
+fastapi==0.142.2
     # via -r requirements.in
 feedparser==6.0.14
     # via
@@ -148,7 +148,7 @@ feedparser-sgmllib==2.1.0
     # via feedparser
 filelock==3.31.0
     # via tldextract
-flask==3.1.3
+flask[async]==3.1.3
     # via maigret
 frozenlist==1.8.0
     # via
@@ -188,7 +188,7 @@ httpcore2==2.13.1
     # via httpx2
 httptools==0.8.0
     # via uvicorn
-httpx==0.28.1
+httpx[http2]==0.28.1
     # via
     #   -r requirements.in
     #   user-scanner
@@ -238,7 +238,7 @@ limits==5.8.0
     # via slowapi
 logfire-api==4.37.0
     # via pydantic-graph
-lxml==6.1.3
+lxml[html-clean]==6.1.3
     # via
     #   -r requirements.in
     #   lxml-html-clean
@@ -252,7 +252,7 @@ lxml-html-clean==0.4.5
     # via
     #   lxml
     #   mailcat-osint
-maigret==0.6.6
+maigret[pdf]==0.6.6
     # via -r requirements.in
 mailcat-osint==0.1.1
     # via -r requirements.in
@@ -281,13 +281,14 @@ networkx==2.8.8
     #   pyvis
 newspaper4k==0.9.6
     # via -r requirements.in
-numpy==2.4.6
+numpy==2.5.3
     # via -r requirements.in
 openai==3.32.0
     # via pydantic-ai-slim
 opentelemetry-api==1.44.0
     # via
     #   anthropic
+    #   fastapi
     #   pydantic-ai-slim
 oscrypto==1.3.0
     # via pyhanko-certvalidator
@@ -338,7 +339,7 @@ pycountry==26.2.16
     # via maigret
 pycparser==3.0
     # via cffi
-pydantic==2.13.5
+pydantic[email]==2.13.5
     # via
     #   -r requirements.in
     #   anthropic
@@ -348,7 +349,7 @@ pydantic==2.13.5
     #   pydantic-ai-slim
     #   pydantic-graph
     #   pydantic-settings
-pydantic-ai-slim==2.57.0
+pydantic-ai-slim[anthropic,openai]==2.57.0
     # via -r requirements.in
 pydantic-core==2.46.5
     # via pydantic
@@ -396,7 +397,7 @@ python-dotenv==1.2.2
     #   uvicorn
 python-multipart==0.0.32
     # via -r requirements.in
-python-socks==2.8.2
+python-socks[asyncio]==2.8.2
     # via aiohttp-socks
 pyvis==0.3.2
     # via maigret
@@ -405,7 +406,7 @@ pyyaml==6.0.3
     #   newspaper4k
     #   pyhanko
     #   uvicorn
-regex==2026.9.10
+regex==2026.9.29
     # via
     #   -r requirements.in
     #   tiktoken
@@ -463,7 +464,7 @@ soupsieve==2.10
     # via
     #   beautifulsoup4
     #   maigret
-sqlalchemy==2.0.54
+sqlalchemy==2.1.3
     # via
     #   -r requirements.in
     #   alembic
@@ -533,14 +534,14 @@ tzlocal==5.4.4
     #   pyhanko
 uritools==6.1.2
     # via pyhanko-certvalidator
-urllib3==2.8.0
+urllib3[socks]==2.8.0
     # via
     #   pyppeteer
     #   requests
     #   selenium
 user-scanner==1.5.2.1
     # via -r requirements.in
-uvicorn==0.54.0
+uvicorn[standard]==0.54.0
     # via -r requirements.in
 uvloop==0.22.1
     # via uvicorn
