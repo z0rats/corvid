@@ -1,8 +1,9 @@
 # Isolated per-tool venvs for CLI dependencies that conflict with the main backend venv
 
 Two integrations considered - GHunt (built) and bbot (not built; it duplicates subfinder and
-amass) - can't be installed into the main backend venv: `ghunt>=2.3.2` requires `rich<14`, and `bbot==3.0.2` requires `tabulate==0.8.10`, both
-conflicting with the main lock's `mitreattack-python==6.2.0` (`rich==15.0.0`, `tabulate==0.10.0`).
+amass) - pin dependencies the main backend venv can't accept: `ghunt` pins `pillow<11` (no
+prebuilt wheel for the image's Python 3.14) and `rich<14`, which would drag the main lock's Pillow
+12, rich 15 and httpx down to older versions; `bbot==3.0.2` pins `tabulate==0.8.10`.
 This was a shared prerequisite, designed once and reused; GHunt is the first mover.
 
 ## Decision

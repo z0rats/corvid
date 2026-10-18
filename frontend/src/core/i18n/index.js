@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
 // Every locales/<lang>/<namespace>.json is a namespace named after its file, so a new feature's
 // strings need no registration here. `ru` is intentionally partial; missing keys fall back to `en`.
@@ -17,20 +16,41 @@ export const DEFAULT_LANGUAGE = 'en';
 
 export const NAMESPACES = Object.keys(en);
 
+// First-paint language until the server-side setting arrives (useAppSettings): the last language
+// used in this browser, else the browser's own preference. Storage can throw (private mode).
+const LANGUAGE_STORAGE_KEY = 'i18nextLng';
+
+const readStoredLanguage = () => {
+  try {
+    return localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const detectInitialLanguage = (stored, browserLanguages) =>
+  [stored, ...browserLanguages]
+    .map((lang) => lang?.toLowerCase().split('-')[0])
+    .find((lang) => SUPPORTED_LANGUAGES.includes(lang)) ?? DEFAULT_LANGUAGE;
+
+i18n.on('languageChanged', (lang) => {
+  try {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+  } catch {
+    // Not persisted; the server-side setting still applies on next load.
+  }
+});
+
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: { en, ru },
+    lng: detectInitialLanguage(readStoredLanguage(), navigator.languages ?? [navigator.language]),
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: SUPPORTED_LANGUAGES,
     defaultNS: 'common',
     ns: NAMESPACES,
     interpolation: { escapeValue: false },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-    },
   });
 
 export default i18n;

@@ -6,14 +6,6 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
-import Timeline from '@mui/lab/Timeline';
-import TimelineItem from '@mui/lab/TimelineItem';
-import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import TimelineDot from '@mui/lab/TimelineDot';
-import TimelineConnector from '@mui/lab/TimelineConnector';
-import TimelineContent from '@mui/lab/TimelineContent';
-import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
-import { timelineOppositeContentClasses } from '@mui/lab/TimelineOppositeContent';
 import SearchIcon from "@mui/icons-material/SearchOutlined";
 import AnalyticsIcon from "@mui/icons-material/AnalyticsOutlined";
 import ListAltIcon from "@mui/icons-material/ListAltOutlined";
@@ -24,6 +16,25 @@ import { useReportAnalysis } from "../hooks/api/useReportAnalysis";
 import { generateMarkdown, downloadMarkdown } from "../utils/reportUtils";
 import RankingCard from "./components/ui/RankingCard";
 import AnalysisCard from "./components/ui/AnalysisCard";
+
+// A minimal vertical timeline: label column | dot + connectors | content.
+const TimelineConnector = () => <Box sx={{ width: 2, flexGrow: 1, bgcolor: "divider" }} />;
+
+const TimelineDot = ({ children }) => (
+  <Box
+    sx={{
+      display: "flex",
+      p: 0.5,
+      my: 1.5,
+      borderRadius: "50%",
+      bgcolor: "primary.main",
+      color: "primary.contrastText",
+      boxShadow: 1,
+    }}
+  >
+    {children}
+  </Box>
+);
 
 function getTimelineDotIcon(step, stepIndex, DefaultIcon) {
   if (step === stepIndex) return <DefaultIcon />;
@@ -141,7 +152,7 @@ export default function Report() {
 
       <Divider sx={{ mb: 3 }} />
 
-      <Timeline sx={{ [`& .${timelineOppositeContentClasses.root}`]: { flex: 0.18 } }}>
+      <Box sx={{ display: "flex", flexDirection: "column", px: 2, py: 0.75 }}>
         {steps
           .filter((item) => step >= item.stepIndex)
           .map((item, idx, arr) => {
@@ -149,27 +160,24 @@ export default function Report() {
             const DotIcon = getTimelineDotIcon(step, stepIndex, Icon);
 
             return (
-              <TimelineItem key={stepIndex} sx={{ alignItems: "flex-start" }}>
-                <TimelineOppositeContent
-                  sx={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", textAlign: "right" }}
-                  color="text.secondary"
-                >
+              <Box key={stepIndex} sx={{ display: "flex", alignItems: "stretch", minHeight: 70 }}>
+                <Box sx={{ flex: 0.18, px: 2, py: 0.75, textAlign: "right", color: "text.secondary" }}>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>{label}</Typography>
-                </TimelineOppositeContent>
+                </Box>
 
-                <TimelineSeparator>
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   {idx > 0 && <TimelineConnector />}
-                  <TimelineDot color="primary">{DotIcon}</TimelineDot>
+                  <TimelineDot>{DotIcon}</TimelineDot>
                   {idx < arr.length - 1 && <TimelineConnector />}
-                </TimelineSeparator>
+                </Box>
 
-                <TimelineContent sx={{ py: 0, display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
+                <Box sx={{ flex: 1, px: 2, display: "flex", flexDirection: "column", justifyContent: "flex-start" }}>
                   {renderContent()}
-                </TimelineContent>
-              </TimelineItem>
+                </Box>
+              </Box>
             );
           })}
-      </Timeline>
+      </Box>
     </Box>
   );
 }

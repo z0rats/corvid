@@ -3,8 +3,8 @@
 Looks up a Google account's public profile data by email, using
 [mxrch/GHunt](https://github.com/mxrch/GHunt) 2.3.4 shelled out to from `email_search/service/
 ghunt_profile_service.py`. Runs from its own isolated venv (`/opt/tools/ghunt`, not the main
-backend venv - see `docs/adr/0018-isolated-tool-cli-venvs.md`) since `ghunt>=2.3.2` requires
-`rich<14`, conflicting with the main lock's `mitreattack-python`. Explicit-click only, same UX
+backend venv - see `docs/adr/0018-isolated-tool-cli-venvs.md`) since `ghunt` pins
+`pillow<11` and `rich<14`, which would downgrade the main lock's Pillow/rich/httpx. Explicit-click only, same UX
 shape as image-tools' ChronoVerify panel - the request goes out to Google under the analyst's own
 configured account, never automatically.
 

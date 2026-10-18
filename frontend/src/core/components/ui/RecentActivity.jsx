@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelativeTime } from '../../utils/dateFormat';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -60,7 +60,7 @@ export default function RecentActivity({ limit = 8 }) {
             <ListItemIcon sx={{ minWidth: 36 }}>{module.icon}</ListItemIcon>
             <ListItemText
               primary={item.target}
-              secondary={`${module.label} · ${formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}`}
+              secondary={`${module.label} · ${formatRelativeTime(new Date(item.timestamp))}`}
               slotProps={{
                 primary: { noWrap: true, sx: { fontFamily: '"JetBrains Mono", monospace', fontSize: '0.85rem' } },
               }}

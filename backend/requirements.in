@@ -3,6 +3,7 @@ aiosqlite
 alembic
 apscheduler
 beautifulsoup4
+cryptography
 cvss
 dnspython
 exifread
@@ -17,8 +18,8 @@ jinja2
 lxml[html-clean]
 maigret[pdf]
 mailcat-osint
-mitreattack-python
 newspaper4k
+numpy
 pdfplumber
 pillow
 psutil

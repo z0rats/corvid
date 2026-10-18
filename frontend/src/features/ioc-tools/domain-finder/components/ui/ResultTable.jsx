@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { useTranslation } from 'react-i18next';
-import ReactCountryFlag from "react-country-flag";
+import CountryFlag from "../../../../../core/components/ui/CountryFlag";
 import { useDomainSearch } from "../../hooks/api/useDomainSearch";
 import { domainUtils } from "../../utils/domainUtils";
 
@@ -49,7 +49,7 @@ function Row({ row }) {
           </IconButton>
         </TableCell>
         <TableCell>
-          <ReactCountryFlag countryCode={row["page"]["country"]} />
+          <CountryFlag countryCode={row["page"]["country"]} />
           &nbsp;&nbsp;
           {row["task"]["domain"]}
         </TableCell>

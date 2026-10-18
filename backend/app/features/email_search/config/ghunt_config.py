@@ -1,8 +1,8 @@
 """Constants for the GHunt profile lookup (email -> Google account profile).
 
 GHunt lives in its own isolated venv (`/opt/tools/ghunt`, built in `backend/Dockerfile`), not the
-main backend venv - `ghunt>=2.3.2` requires `rich<14`, which conflicts with `mitreattack-python`'s
-pinned `rich==15.0.0`. See docs/adr/0018-isolated-tool-cli-venvs.md for the general pattern and
+main backend venv - `ghunt` pins `pillow<11` and `rich<14`, which would downgrade the main venv's
+Pillow/rich/httpx. See docs/adr/0018-isolated-tool-cli-venvs.md for the general pattern and
 docs/architecture/ghunt.md for this feature's specifics (session format, subprocess isolation,
 exit-code mapping).
 """

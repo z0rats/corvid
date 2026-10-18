@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router';
-import ReactCountryFlag from "react-country-flag";
+import CountryFlag from "../../../../../core/components/ui/CountryFlag";
 import { useDomainPanel } from "../../hooks/useDomainPanel";
 
 import Alert from '@mui/material/Alert';
@@ -55,7 +55,7 @@ function IpRow({ ip, t }) {
     <Box sx={{ borderRadius: 1, bgcolor: 'action.hover', p: 1 }}>
       <Stack direction="row" spacing={1} sx={{ gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
         {ip.country_code && (
-          <ReactCountryFlag countryCode={ip.country_code} title={ip.country || ip.country_code} />
+          <CountryFlag countryCode={ip.country_code} title={ip.country || ip.country_code} />
         )}
         <Chip size="small" variant="filled" label={ip.ip} />
         {ip.asn && (

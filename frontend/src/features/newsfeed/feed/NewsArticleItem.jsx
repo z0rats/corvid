@@ -26,7 +26,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ShieldIcon from '@mui/icons-material/Shield';
-import { format } from "date-fns";
+import { formatDateTime } from "../../../core/utils/dateFormat";
 import ReliabilityChip from "../components/ui/ReliabilityChip";
 
 import { llmAvailableAtom } from "../../../core/state/atoms";
@@ -108,7 +108,7 @@ const NewsArticleItem = React.memo(function NewsArticleItem({
                 <ReliabilityChip grade={reliability} />
               </Stack>
               <Typography variant="body2">
-                {format(new Date(item.date), "MMMM d, yyyy, h:mm a")}
+                {formatDateTime(new Date(item.date))}
               </Typography>
             </Stack>
           </Stack>

@@ -42,8 +42,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build,id=go-build-cache \
     --mount=type=cache,target=/go/pkg/mod,id=go-mod-cache \
     go install -v -trimpath -ldflags="-s -w" github.com/owasp-amass/amass/v5/cmd/ae_isready@v5.1.1
 
-# GHunt in its own isolated venv, not the main one below: `ghunt>=2.3.2` requires `rich<14`,
-# which conflicts with the main venv's pinned `mitreattack-python==6.2.0` (-> `rich==15.0.0`) -
+# GHunt in its own isolated venv, not the main one below: `ghunt` pins `pillow<11` and `rich<14`,
+# which would drag the main venv's Pillow 12 / rich 15 (plus httpx) down to older versions -
 # see docs/adr/0018-isolated-tool-cli-venvs.md for the general pattern this formalizes. Called at
 # runtime via its absolute path (`ghunt_config.GHUNT_BIN`), never through `PATH`, same reasoning
 # as the Go `httpx`/`httpx-probe` rename above. The only stage that needs a C toolchain: GHunt

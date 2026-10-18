@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelativeTime } from '../../utils/dateFormat';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -112,7 +112,7 @@ export default function AlertsMenu() {
                   {alert.message}
                 </Typography>
                 <Typography variant="caption" color="text.disabled">
-                  {formatDistanceToNow(parseTimestamp(alert.timestamp), { addSuffix: true })}
+                  {formatRelativeTime(parseTimestamp(alert.timestamp))}
                 </Typography>
               </ListItemButton>
             ))}

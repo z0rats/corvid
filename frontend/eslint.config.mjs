@@ -1,17 +1,8 @@
-import { createRequire } from 'node:module';
 import js from '@eslint/js';
-import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-
-// `settings.react.version: 'detect'` calls eslint-plugin-react's own
-// auto-detection, which relies on the RuleContext#getFilename() method
-// ESLint 10 removed (react/display-name crashes on every file otherwise).
-// Reading the installed version ourselves sidesteps that broken codepath
-// until eslint-plugin-react ships an ESLint-10-compatible release.
-const { version: reactVersion } = createRequire(import.meta.url)('react/package.json');
 
 // MUI 9's Box/Stack/Grid only read the `sx` prop for styling - the legacy top-level
 // shorthand style props (display, p, m, justifyContent, ...) that older MUI versions
@@ -35,15 +26,37 @@ const muiBoxShorthandPropSelector =
   `JSXOpeningElement[name.name=/^(Box|Stack|Grid)$/] > ` +
   `JSXAttribute[name.name=/^(${MUI_STYLE_SHORTHAND_PROPS.join('|')})$/]`;
 
+// No eslint-plugin-react (~95 transitive packages for a handful of rules): ESLint 10's scope
+// analysis already tracks JSX references, so no-unused-vars/no-undef cover jsx-uses-vars/
+// jsx-no-undef. This selector stands in for react/jsx-key on the common `.map(x => <El/>)` shape.
+const MAP_CALLBACK = `CallExpression[callee.property.name=/^(map|flatMap)$/] > :function`;
+const missingKeySelector = [
+  `${MAP_CALLBACK} > JSXElement > JSXOpeningElement:not(:has(JSXAttribute[name.name="key"]))`,
+  `${MAP_CALLBACK} > BlockStatement > ReturnStatement > JSXElement > JSXOpeningElement:not(:has(JSXAttribute[name.name="key"]))`,
+  `${MAP_CALLBACK} > JSXFragment`,
+  `${MAP_CALLBACK} > BlockStatement > ReturnStatement > JSXFragment`,
+].join(', ');
+
+const restrictedSyntax = [
+  'error',
+  {
+    selector: muiBoxShorthandPropSelector,
+    message:
+      'MUI 9 Box/Stack/Grid no longer apply this as a top-level prop - move it into sx={{ ... }}.',
+  },
+  {
+    selector: missingKeySelector,
+    message: 'Elements returned from .map() need a `key` prop (use <Fragment key=...> instead of <>).',
+  },
+];
+
 export default [
   { ignores: ['build/**', 'node_modules/**', 'coverage/**'] },
-  { settings: { react: { version: reactVersion } } },
   js.configs.recommended,
-  react.configs.flat.recommended,
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
-      ...react.configs.flat.recommended.languageOptions,
+      parserOptions: { ecmaFeatures: { jsx: true } },
       globals: {
         ...globals.browser,
         ...globals.node,
@@ -61,21 +74,13 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      'react/prop-types': 'off',
-      'react/react-in-jsx-scope': 'off',
-      'no-unused-vars': ['error', { args: 'none', ignoreRestSiblings: true, caughtErrors: 'none' }],
+      // Automatic JSX runtime: a leftover `import React` is harmless, not worth a ~300-file diff.
+      'no-unused-vars': ['error', { args: 'none', ignoreRestSiblings: true, caughtErrors: 'none', varsIgnorePattern: '^React$' }],
       // Not caught (or not enforced) under CRA's older eslint-plugin-react-app;
       // pre-existing, deliberate, safe patterns - not worth a wide unrelated diff here.
       'no-prototype-builtins': 'off',
       'no-control-regex': 'off',
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: muiBoxShorthandPropSelector,
-          message:
-            'MUI 9 Box/Stack/Grid no longer apply this as a top-level prop - move it into sx={{ ... }}.',
-        },
-      ],
+      'no-restricted-syntax': restrictedSyntax,
     },
   },
   {
@@ -92,7 +97,7 @@ export default [
   // revisit the type-checked variant once enough of the codebase has migrated.
   ...tseslint.config({
     files: ['**/*.{ts,tsx}'],
-    extends: [...tseslint.configs.recommended, react.configs.flat.recommended],
+    extends: [...tseslint.configs.recommended],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -107,20 +112,11 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      'react/prop-types': 'off',
-      'react/react-in-jsx-scope': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { args: 'none', ignoreRestSiblings: true, caughtErrors: 'none' },
       ],
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: muiBoxShorthandPropSelector,
-          message:
-            'MUI 9 Box/Stack/Grid no longer apply this as a top-level prop - move it into sx={{ ... }}.',
-        },
-      ],
+      'no-restricted-syntax': restrictedSyntax,
     },
   }),
   {

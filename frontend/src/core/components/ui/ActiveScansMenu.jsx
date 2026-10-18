@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { formatDistanceToNow } from 'date-fns';
+import { formatRelativeTime } from '../../utils/dateFormat';
 import Badge from '@mui/material/Badge';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
@@ -84,7 +84,7 @@ export default function ActiveScansMenu() {
               <ListItemIcon sx={{ minWidth: 36 }}>{module.icon}</ListItemIcon>
               <ListItemText
                 primary={item.target}
-                secondary={`${module.label} · ${formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}`}
+                secondary={`${module.label} · ${formatRelativeTime(new Date(item.timestamp))}`}
                 slotProps={{ primary: { noWrap: true, sx: { fontFamily: '"JetBrains Mono", monospace', fontSize: '0.85rem' } } }}
               />
               <ScanStatusChip status={item.status} label={t(`activeScans.status.${item.status}`)} />
