@@ -82,7 +82,7 @@ engine hot-swap; see `docs/adr/0010-backup-restore-design.md` for why. Requires 
 
 ## `alerts/`, `database.py`, `scheduler.py`, `exceptions.py`
 
-`alerts/` is WebSocket alerts (see Access control in AGENTS.md for its token-check exemption)
+`alerts/` is WebSocket alerts (see Access control below for its token-check exemption)
 plus, via `alerts_service.raise_alert`, best-effort Telegram delivery and the shared hook
 points in `scans/run.py`/`scheduler.py` that call it — see
 `docs/architecture/notifications.md`. `database.py`/`exceptions.py` are otherwise
@@ -99,3 +99,51 @@ re-checked on every `/api/healthcheck/detailed` call.
 
 Basic/detailed/`ready`/`live` probes. Detailed status is `"degraded"`, not `"unhealthy"`, when
 only disk is low — a low-disk warning shouldn't read as a hard outage to monitoring.
+
+## Access control (`security/access_control.py`)
+
+No user accounts (single-user tool): every `/api/*` route plus `/openapi.json` is behind one shared
+bearer token (`verify_access_token`, a router-level dependency in `utils/router_registry.py`). The
+token comes from `API_ACCESS_TOKEN` or is auto-generated and persisted to `<data_dir>/.access_token`
+(0600, `persisted_secret.py`), printed once at startup. `POST /api/settings/access-token/regenerate`
+(`core/security/routes.py`, Settings -> About) rotates it immediately, unless `API_ACCESS_TOKEN`
+pins it. `router_registry.get_public_routers()` lists the only unguarded routers: healthcheck, the
+alerts `ws_router` (checks the token via `?token=`, since a WS handshake can't carry a custom
+header) and newsfeed feed icons (`<img src>`, same limitation). `/docs`/`/redoc` are public
+data-free shells that fetch the guarded `/openapi.json` with the SPA's token
+(`core/config/docs_pages.py`, non-production only).
+
+## Security headers
+
+Set in two places, since the backend never sees the SPA's response: `config/security_config.py`'s
+`SecurityHeadersMiddleware` covers `/api/*`, `/docs`, `/redoc`, `/openapi.json` (CSP relaxed for
+`cdn.jsdelivr.net` + an inline init script on `/docs`/`/redoc` only - static shells with no user
+content); `frontend/nginx.conf`'s `location /` sets the same base headers plus a strict CSP for the
+SPA. HSTS is production-only (`ENVIRONMENT=production`), never sent over plain HTTP.
+
+## Log redaction (`config/log_redaction.py`)
+
+`SecretRedactionFilter` is on every logging handler (`logging_config.py`) and scrubs API-key-shaped
+substrings (query params, `Bearer` tokens, IPQualityScore's path-embedded key) from every record.
+Several IOC providers (Hunter.io, Pulsedive, Shodan, Google Safe Browsing, IPQualityScore) put the
+key in the URL and `httpx.HTTPStatusError`'s `str()` embeds it. Pattern-based, so new providers
+are covered.
+
+## File uploads (`utils/file_upload.py`)
+
+Shared read-validate-dispatch shape for upload endpoints (`image_tools`, `email_analyzer`):
+`validate_uploaded_file(file, *, no_file_code, read_error_code, validate_fn)` reads and validates
+against the feature's own `validate_file_upload(filename, size) -> (is_valid, error_code,
+error_message)`, returning raw bytes or raising a 400 `AppHTTPException`.
+`run_file_endpoint(service_fn, *args, error_code, failure_message, value_error_code=None,
+run_in_thread=True)` dispatches the service call (via `asyncio.to_thread` unless
+`run_in_thread=False`, for an already-async `service_fn`) and maps `ValueError`/other exceptions
+to a 422.
+
+## `registry_dumps/`
+
+`common.py`/`scheduler.py`: the shared "download -> validate -> all-or-nothing table replace ->
+provenance row -> staleness-driven refresh" plumbing behind every locally cached list dump
+(`ru_business_check`'s three, `sanctions_search`'s one). A new dump-backed feature adds a thin
+`dump_jobs()`/`register_*_scheduler()` wrapper (see
+`ru_business_check/service/registry_dump_scheduler_service.py`).

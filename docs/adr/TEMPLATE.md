@@ -23,3 +23,7 @@ docs/adr/*.md` lists every one.>
 
 - **<Alternative>** - <why it lost>. One bullet per alternative someone could plausibly propose
   again; a rejection without its reason gets re-proposed.
+
+<!-- A flipped decision is never rewritten in place: the old ADR keeps its number and gets
+`Superseded by NNNN-<slug>.md` as its first line under the title, and the new ADR lists the old
+pick under `## Rejected` with the reason it lost this time. -->

@@ -4,7 +4,21 @@ Deep-dive referenced from AGENTS.md's Backend architecture section.
 
 ## `ioc_lookup`
 
-Single + bulk lookups against AbuseIPDB, AlienVault, VirusTotal, Shodan, etc.
+Single + bulk lookups across IPs, domains, URLs, emails, hashes and CVEs via AbuseIPDB, AlienVault
+OTX, CheckPhish, CrowdSec, CrowdStrike, EmailRep.io, FFraud, GitHub, Google Safe Browsing, HIBP,
+Hudson Rock, Hunter.io, IPQualityScore, LeakIX (IPv4-only, services + leaks per IP), Library of
+Leaks, Maltiverse, MalwareBazaar, Mandiant, NIST NVD, Pulsedive, Reddit, Shodan, ThreatFox,
+Twitter/X, URLhaus (URL/domain/IPv4; ThreatFox, MalwareBazaar and URLhaus share one abuse.ch
+`Auth-Key`), URLScan.io, VirusTotal. The authoritative list is `service_registry.py`. CVEs are enriched
+with CISA KEV and FIRST.org EPSS (KEV and OpenPhish: full feeds cached in-process for an hour).
+API keys are configured per service in app settings (`core/settings/api_keys/`), not `.env`;
+FFraud, URLScan.io, Hudson Rock, KEV, EPSS, OpenPhish and Library of Leaks are keyless.
+
+A new provider needs `website/src/content/docs/features/ioc-tools.md` updated in the same change
+(pre-commit `scripts/check_new_ioc_provider_docs.py` blocks a commit that grows
+`service_registry.py`'s provider count without it). If it takes an API key, its
+`supported_ioc_types` come from `service_config.py`'s matching `ServiceDefinition` rather than
+being re-declared - a signature test fails if the two disagree.
 
 - Single-lookup searches auto-save to history once every queried service responds:
   `POST/GET/DELETE /api/ioc-lookup/history`, persisted as `SingleLookupSearch`/`SingleLookupResult`.

@@ -26,6 +26,9 @@ here only after a bug of that class shipped or nearly shipped - a scar, not a pr
   startup check that derives staleness from the DB (`is_blacklist_stale`), not just an empty table?
 - A new `ScanFeature`: is it in `scan_reconciliation_registry`, so a restart doesn't leave its runs
   `running` forever?
+- `asyncio.gather` over coroutines sharing one `AsyncSession`: concurrent reads happen to work on
+  aiosqlite, concurrent writes/flushes don't (updates are silently lost). Fan out the network part,
+  then write back sequentially (`bulk_fetch_favicons_parallel`).
 
 ## Concurrency and shared state (frontend)
 
@@ -34,11 +37,20 @@ here only after a bug of that class shipped or nearly shipped - a scar, not a pr
 - Can a poll or effect re-trigger itself - reopen a menu, refetch in a loop, keep running after
   unmount?
 - Does every `fetch()` - including SSE streams outside the shared client - carry the access token?
+- A settings field bound to the saved config: does it save per keystroke? That sends every
+  intermediate value and, for a controlled number field, makes decimals untypeable - use
+  `core/components/ui/CommitTextField` (saves on blur/Enter).
 
 ## Untrusted input reaching the network, filesystem or regex engine
 
 - Does a user-supplied URL or host reach an HTTP client other than `ssrf_guard.safe_get`? A new
   fixed-host client belongs on the reviewed allowlist in `test_ssrf_guard_coverage.py`.
+- Does a library get a URL it will fetch itself (`feedparser.parse(url)`, `Article.download()`)?
+  That's urllib, unguarded and following redirects - fetch via `safe_get` and pass it the bytes.
+- A hostname taken from a URL: `urlparse().hostname`, not `netloc`, or `user:pass@` and the port
+  end up in (or instead of) the host.
+- A CSV export: built with `core/utils/exportData.js`'s `toCell`/`toCsv`? A hand-rolled escaper
+  misses formula neutralization, and exported values are often attacker-written text.
 - Does user input reach a subprocess (`git clone`, a CLI tool)? Outside `safe_get`'s reach, so it
   needs its own allowlist (`validate_github_repo_url`).
 - Hostnames, regexes and paths built from input: validated before use? Can a pattern backtrack
