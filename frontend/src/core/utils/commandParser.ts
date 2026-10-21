@@ -549,13 +549,15 @@ export function handleGrammarNavKey(event: KeyboardEvent, { parsed, visibleResul
   dispatch: (decision: SelectionDecision) => void;
 }): boolean {
   const results = visibleResults ?? [];
+  // Cmd/Ctrl+Arrow is the host's query-history shortcut, not list navigation
+  const plainArrow = !event.metaKey && !event.ctrlKey;
 
-  if (event.key === 'ArrowDown') {
+  if (event.key === 'ArrowDown' && plainArrow) {
     event.preventDefault();
     setSelectedIndex((prev) => Math.min(prev + 1, Math.max(results.length - 1, 0)));
     return true;
   }
-  if (event.key === 'ArrowUp') {
+  if (event.key === 'ArrowUp' && plainArrow) {
     event.preventDefault();
     setSelectedIndex((prev) => Math.max(prev - 1, 0));
     return true;

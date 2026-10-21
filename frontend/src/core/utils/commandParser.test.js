@@ -561,6 +561,17 @@ describe('handleGrammarNavKey', () => {
     expect(up.setSelectedIndex.mock.calls[0][0](0)).toBe(0); // clamped at 0
   });
 
+  it('leaves Cmd/Ctrl+Arrow to the host (query history), not list navigation', () => {
+    for (const mods of [{ ctrlKey: true }, { metaKey: true }]) {
+      for (const key of ['ArrowUp', 'ArrowDown']) {
+        const { handled, setSelectedIndex, event } = fire(key, mods);
+        expect(handled).toBe(false);
+        expect(setSelectedIndex).not.toHaveBeenCalled();
+        expect(event.preventDefault).not.toHaveBeenCalled();
+      }
+    }
+  });
+
   it('dispatches resolveSelection on Enter', () => {
     const { handled, dispatch } = fire('Enter');
     expect(handled).toBe(true);
