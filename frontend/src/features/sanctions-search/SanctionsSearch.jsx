@@ -54,6 +54,7 @@ export default function SanctionsSearch() {
           <Select
             size="small"
             displayEmpty
+            inputProps={{ 'aria-label': t('form.schemaLabel') }}
             value={schema}
             onChange={(e) => setSchema(e.target.value)}
             sx={{ minWidth: 220 }}

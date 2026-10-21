@@ -52,6 +52,7 @@
     "loadButton": "Load",
     "searchButton": "Search",
     "loadMore": "Load more",
+    "orderLabel": "Sort order",
     "empty": "No comments found.",
     "truncatedNotice": "Search stopped after scanning a page/result limit - there may be more matches. Load more to keep scanning from where it left off.",
     "order": {

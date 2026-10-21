@@ -65,6 +65,7 @@ export default function DorkRunner() {
             />
             <Select
               size="small"
+              inputProps={{ 'aria-label': t('form.engineLabel') }}
               value={engine}
               onChange={(e) => setEngine(e.target.value)}
               sx={{ minWidth: 250 }}

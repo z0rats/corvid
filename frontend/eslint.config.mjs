@@ -48,6 +48,24 @@ const restrictedSyntax = [
     selector: missingKeySelector,
     message: 'Elements returned from .map() need a `key` prop (use <Fragment key=...> instead of <>).',
   },
+  {
+    // MUI 9's Autocomplete renderInput passes params.slotProps.{input,htmlInput,inputLabel};
+    // the v5-era InputProps/inputProps are gone, and spreading them drops the input's ref and
+    // handlers (typing never reaches onInputChange).
+    selector: "MemberExpression[object.name='params'][property.name=/^(InputProps|inputProps|InputLabelProps)$/]",
+    message: 'MUI 9 Autocomplete: merge into params.slotProps.input / htmlInput / inputLabel instead.',
+  },
+  {
+    // An MUI Select's visible <InputLabel> only names it for assistive tech (and for
+    // getByRole queries) when linked through labelId - otherwise it needs an aria-label.
+    selector:
+      "JSXOpeningElement[name.name='Select']:not(:has(JSXAttribute[name.name=/^(labelId|aria-label|inputProps|native)$/]))",
+    message: 'Give this Select an accessible name: labelId matching its InputLabel id, or inputProps={{ "aria-label": ... }}.',
+  },
+  {
+    selector: "JSXAttribute[name.name='renderTags']",
+    message: 'MUI 9 Autocomplete has no renderTags (silently ignored) - use renderValue(value, getItemProps).',
+  },
 ];
 
 export default [

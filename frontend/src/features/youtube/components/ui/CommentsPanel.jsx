@@ -99,7 +99,7 @@ export default function CommentsPanel({ result }) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <Select size="small" value={order} onChange={(e) => setOrder(e.target.value)} sx={{ minWidth: 150 }}>
+          <Select size="small" inputProps={{ 'aria-label': t('comments.orderLabel') }} value={order} onChange={(e) => setOrder(e.target.value)} sx={{ minWidth: 150 }}>
             <MenuItem value="relevance">{t('comments.order.relevance')}</MenuItem>
             <MenuItem value="time">{t('comments.order.time')}</MenuItem>
           </Select>

@@ -19,7 +19,8 @@
     "targetLabel": "Target",
     "targetPlaceholder": "e.g. example.com, johndoe, user@example.com",
     "runButton": "Run",
-    "templatesLabel": "Dork templates"
+    "templatesLabel": "Dork templates",
+    "engineLabel": "Search engine"
   },
 
   "targetTypes": {

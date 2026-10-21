@@ -14,7 +14,8 @@
     "queryLabel": "Name",
     "queryPlaceholder": "e.g. Jane Doe, Acme Holdings",
     "searchButton": "Search",
-    "allSchemas": "All types"
+    "allSchemas": "All types",
+    "schemaLabel": "Entity type"
   },
 
   "results": {
