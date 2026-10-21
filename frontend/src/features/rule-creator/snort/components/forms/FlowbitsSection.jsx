@@ -51,8 +51,8 @@ export default function FlowbitsSection({ flowbitsList, onFlowbitsChange }) {
       }}>
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('snort.flowbitsSection.actionLabel')}</InputLabel>
-            <Select
+            <InputLabel id="flowbits-section-action-label-label">{t('snort.flowbitsSection.actionLabel')}</InputLabel>
+            <Select labelId="flowbits-section-action-label-label"
               value={currentFlowbit.action}
               label={t('snort.flowbitsSection.actionLabel')}
               onChange={(e) => setCurrentFlowbit(prev => ({ ...prev, action: e.target.value }))}

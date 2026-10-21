@@ -1,4 +1,37 @@
-import { generateUUIDv4, getCurrentDate, exportAsFile, validateRequiredFields } from '../../shared/utils/ruleUtils';
+import { generateUUIDv4, getCurrentDate, exportAsFile, validateRequiredFields, safeFileBase } from '../../shared/utils/ruleUtils';
+
+// Plain YAML only for simple word-like values; anything else (": ", "#", quotes, leading
+// indicators, ...) is single-quoted, with embedded quotes doubled.
+const PLAIN_SCALAR = /^[A-Za-z0-9_][\w./@()-]*( [\w./@()-]+)*$/;
+export const yamlScalar = (value) => {
+  const text = String(value);
+  return PLAIN_SCALAR.test(text) && !/^(true|false|null|yes|no|on|off|~)$/i.test(text)
+    ? text
+    : `'${text.replace(/'/g, "''")}'`;
+};
+
+const yamlList = (key, items) => (
+  items.length > 0 ? `${key}:\n${items.map((item) => `  - ${yamlScalar(item.value)}\n`).join('')}` : ''
+);
+
+/**
+ * The detection condition: a typed custom expression wins; otherwise the chosen
+ * combinator is applied to the search identifiers actually present.
+ */
+export const buildSigmaCondition = (detections, identifiers) => {
+  const custom = detections.filter?.trim();
+  if (custom) return custom;
+  if (identifiers.length === 0) return null;
+  switch (detections.condition) {
+    case 'any':
+      return identifiers.join(' or ');
+    case '1 of them':
+    case 'all of them':
+      return detections.condition;
+    default:
+      return identifiers.join(' and ');
+  }
+};
 
 /**
  * Generate a complete Sigma rule string
@@ -27,85 +60,59 @@ export const generateSigmaRule = (
     throw new Error(validationErrors.join(', '));
   }
 
-  let rule = `title: ${metadata.title}\n`;
-  rule += `id: ${metadata.id}\n`;
-  rule += `status: ${metadata.status}\n`;
-  
-  if (metadata.description) rule += `description: ${metadata.description}\n`;
-  
+  const enumValue = (value) => (value && value !== 'None' ? value.toLowerCase() : null);
+
+  let rule = `title: ${yamlScalar(metadata.title)}\n`;
+  rule += `id: ${yamlScalar(metadata.id)}\n`;
+  const status = enumValue(metadata.status);
+  if (status) rule += `status: ${status}\n`;
+  if (metadata.description) rule += `description: ${yamlScalar(metadata.description)}\n`;
+  rule += yamlList('references', references);
   if (metadata.authors.length > 0) {
-    rule += `authors:\n`;
-    metadata.authors.forEach(author => {
-      rule += `  - ${author.value}\n`;
-    });
+    rule += `author: ${yamlScalar(metadata.authors.map((author) => author.value).join(', '))}\n`;
   }
-  
   if (metadata.date) rule += `date: ${metadata.date}\n`;
   if (metadata.modified) rule += `modified: ${metadata.modified}\n`;
-  if (metadata.license) rule += `license: ${metadata.license}\n`;
-  
-  rule += `level: ${metadata.level}\n`;
-  
-  if (tags.length > 0) {
-    rule += `tags:\n`;
-    tags.forEach(tag => {
-      rule += `  - ${tag.value}\n`;
-    });
-  }
+  rule += yamlList('tags', tags);
 
-  if (references.length > 0) {
-    rule += `references:\n`;
-    references.forEach(ref => {
-      rule += `  - ${ref.value}\n`;
-    });
-  }
-
-  if (falsePositives.length > 0) {
-    rule += `falsepositives:\n`;
-    falsePositives.forEach(fp => {
-      rule += `  - ${fp.value}\n`;
-    });
-  }
-  
   rule += `logsource:\n`;
-  if (logSource.product) rule += `  product: ${logSource.product}\n`;
-  if (logSource.category) rule += `  category: ${logSource.category}\n`;
-  if (logSource.service) rule += `  service: ${logSource.service}\n`;
-  if (logSource.definition) rule += `  definition: ${logSource.definition}\n`;
-  
-  rule += `detection:\n`;
-
-  if (conditionsList.length > 0 || detections.filter || detections.timeframe) {
-    if (conditionsList.length > 0) {
-      rule += `  selection:\n`;
-      conditionsList.forEach(cond => {
-        if (cond.modifier !== 'equals') {
-          rule += `    ${cond.field}|${cond.modifier} ${cond.modifier === 're' ? '' : cond.modifier} "${cond.value}"\n`;
-        } else {
-          rule += `    ${cond.field} ${cond.modifier} "${cond.value}"\n`;
-        }
-      });
-    }
-    
-    if (detections.filter) {
-      rule += `  filter:\n    ${detections.filter}\n`;
-    }
-    
-    if (detections.condition) {
-      rule += `  condition: ${detections.condition}\n`;
-    }
-    
-    if (detections.timeframe) {
-      rule += `  timeframe: ${detections.timeframe}\n`;
-    }
+  for (const key of ['product', 'category', 'service', 'definition']) {
+    if (logSource[key]) rule += `  ${key}: ${yamlScalar(logSource[key])}\n`;
   }
 
-  if (fields.length > 0) {
-    rule += `fields:\n`;
-    fields.forEach(field => {
-      rule += `  - ${field.value}\n`;
+  rule += `detection:\n`;
+  const identifiers = [];
+  if (conditionsList.length > 0) {
+    identifiers.push('selection');
+    // One key per field|modifier; repeated keys become a value list (OR), since YAML keys are unique
+    const grouped = new Map();
+    conditionsList.forEach((cond) => {
+      const key = cond.modifier && cond.modifier !== 'equals' ? `${cond.field}|${cond.modifier}` : cond.field;
+      grouped.set(key, [...(grouped.get(key) || []), cond.value]);
+    });
+    rule += `  selection:\n`;
+    grouped.forEach((values, key) => {
+      if (values.length === 1) {
+        rule += `    ${key}: ${yamlScalar(values[0])}\n`;
+      } else {
+        rule += `    ${key}:\n${values.map((v) => `      - ${yamlScalar(v)}\n`).join('')}`;
+      }
     });
   }
+  const keywords = detections.keywords || [];
+  if (keywords.length > 0) {
+    identifiers.push('keywords');
+    rule += `  keywords:\n${keywords.map((k) => `    - ${yamlScalar(k.value)}\n`).join('')}`;
+  }
+  const condition = buildSigmaCondition(detections, identifiers);
+  if (condition) rule += `  condition: ${condition}\n`;
+  if (detections.timeframe) rule += `  timeframe: ${detections.timeframe}\n`;
+
+  rule += yamlList('fields', fields);
+  rule += yamlList('falsepositives', falsePositives);
+  const level = enumValue(metadata.level);
+  if (level) rule += `level: ${level}\n`;
+  if (metadata.license) rule += `license: ${yamlScalar(metadata.license)}\n`;
 
   return rule;
 };
@@ -116,7 +123,7 @@ export const generateSigmaRule = (
  * @param {string} title - Rule title for filename
  */
 export const exportSigmaRule = (rule, title) => {
-  const filename = `${title.replace(/\s+/g, '_')}.yml`;
+  const filename = `${safeFileBase(title)}.yml`;
   exportAsFile(rule, filename);
 };
 
@@ -152,7 +159,7 @@ export const createInitialLogSource = () => ({
  * @returns {Object} Initial detection object
  */
 export const createInitialDetection = () => ({
-  selection: [],
+  keywords: [],
   filter: '',
   condition: 'all',
   timeframe: '',

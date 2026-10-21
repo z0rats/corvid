@@ -136,8 +136,8 @@ export default function Metadata({ metadata, handleMetadataChange }) {
           alignItems: "center"
         }}> 
           <FormControl fullWidth size="small">
-            <InputLabel>{t('sigma.metadata.levelLabel')}</InputLabel>
-            <Select
+            <InputLabel id="metadata-level-label-label">{t('sigma.metadata.levelLabel')}</InputLabel>
+            <Select labelId="metadata-level-label-label"
               value={metadata.level}
               label={t('sigma.metadata.levelLabel')}
               onChange={(e) => handleMetadataChange((prev) => ({ ...prev, level: e.target.value }))}
@@ -150,8 +150,8 @@ export default function Metadata({ metadata, handleMetadataChange }) {
             </Select>
           </FormControl>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('sigma.metadata.statusLabel')}</InputLabel>
-            <Select
+            <InputLabel id="metadata-status-label-label">{t('sigma.metadata.statusLabel')}</InputLabel>
+            <Select labelId="metadata-status-label-label"
               value={metadata.status}
               label={t('sigma.metadata.statusLabel')}
               onChange={(e) => handleMetadataChange((prev) => ({ ...prev, status: e.target.value }))}

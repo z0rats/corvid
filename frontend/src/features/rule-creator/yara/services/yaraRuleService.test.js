@@ -121,3 +121,34 @@ describe('buildConditionString', () => {
     );
   });
 });
+
+describe('generateYaraRule escaping and regex delimiters', () => {
+  const str = (overrides) => ({ identifier: 's1', type: 'text', value: '', modifiers: [], ...overrides });
+
+  it('text strings and meta values are literal: backslashes and quotes escaped', () => {
+    const rule = generateYaraRule(
+      { ruleName: 'r', description: 'drops "payload" to C:\\Temp' },
+      [str({ value: 'C:\\Windows\\evil "x"\tend' })],
+      { any: true },
+      noTags,
+    );
+    expect(rule).toContain('    description = "drops \\"payload\\" to C:\\\\Temp"\n');
+    expect(rule).toContain('    $s1 = "C:\\\\Windows\\\\evil \\"x\\"\\tend"\n');
+  });
+
+  it('a regex typed with its own slashes (and flags) is not double-wrapped', () => {
+    const rule = generateYaraRule(
+      { ruleName: 'r' },
+      [str({ type: 'regex', value: '/malware[0-9]+/i' }), str({ identifier: 's2', type: 'regex', value: 'bare\\d+', modifiers: ['nocase'] })],
+      {},
+      noTags,
+    );
+    expect(rule).toContain('    $s1 = /malware[0-9]+/i\n');
+    expect(rule).toContain('    $s2 = /bare\\d+/ nocase\n');
+  });
+
+  it('hex strings are left as typed', () => {
+    const rule = generateYaraRule({ ruleName: 'r' }, [str({ type: 'hex', value: '4D 5A 90 00' })], {}, noTags);
+    expect(rule).toContain('    $s1 = { 4D 5A 90 00 }\n');
+  });
+});

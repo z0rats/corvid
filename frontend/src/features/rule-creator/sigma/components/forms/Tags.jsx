@@ -60,8 +60,9 @@ export default function Tags({ tags, handleTagsChange }) {
             variant="outlined"
             placeholder={t('sigma.tags.addPlaceholder')}
             slotProps={{
+              ...params.slotProps,
               input: {
-                ...params.InputProps,
+                ...params.slotProps.input,
                 endAdornment: (
                   <IconButton onClick={handleAddTag} disabled={!tagInput.trim()} size="small" aria-label={t('sigma.tags.addAria')}>
                     <AddCircleIcon fontSize="small" />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -37,6 +37,7 @@ export default function StringsForm({
   onClearError
 }) {
   const { t } = useTranslation('ruleCreator');
+  const selectIdBase = useId();
   const handleFieldChange = (field) => (event) => {
     onCurrentStringChange(field, event.target.value);
     if (errors[field] && onClearError) {
@@ -98,8 +99,9 @@ export default function StringsForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 2 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>{t('yara.stringsForm.typeLabel')}</InputLabel>
+              <InputLabel id={`${selectIdBase}-0`}>{t('yara.stringsForm.typeLabel')}</InputLabel>
               <Select
+                labelId={`${selectIdBase}-0`}
                 value={currentString.type}
                 label={t('yara.stringsForm.typeLabel')}
                 onChange={handleFieldChange('type')}

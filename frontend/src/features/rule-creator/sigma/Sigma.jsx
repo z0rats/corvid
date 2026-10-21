@@ -22,6 +22,7 @@ import FalsePositives from './components/forms/FalsePositives';
 import AccordionSection from '../shared/components/ui/AccordionSection';
 import ActionButtons from '../shared/components/ui/ActionButtons';
 import RulePreview from '../shared/components/ui/RulePreview';
+import RuleDialogs from '../shared/components/ui/RuleDialogs';
 
 export default function Sigma() {
   const { t } = useTranslation('ruleCreator');
@@ -38,6 +39,7 @@ export default function Sigma() {
   const {
     previewOpen, rulePreview,
     handlePreview, handleExport, handleReset, handleClosePreview, isRuleValid,
+    confirmDialog, onConfirmReset, onCancelReset, errorAlert, hideError,
   } = actions;
 
   return (
@@ -89,6 +91,14 @@ export default function Sigma() {
       />
 
       <RulePreview open={previewOpen} onClose={handleClosePreview} rulePreview={rulePreview} title={t('common.preview.sigmaTitle')} />
+
+      <RuleDialogs
+        confirmDialog={confirmDialog}
+        onConfirm={onConfirmReset}
+        onCancel={onCancelReset}
+        errorAlert={errorAlert}
+        onCloseError={hideError}
+      />
     </Box>
   );
 }

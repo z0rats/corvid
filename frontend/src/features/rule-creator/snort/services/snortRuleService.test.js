@@ -206,3 +206,21 @@ describe('createInitialRuleMetadata', () => {
     expect(metadata.updated_at).toBe(today);
   });
 });
+
+describe('generateSnortRule escaping', () => {
+  it('escapes ; " and \\ in msg and content so they cannot end the option early', () => {
+    const rule = generateSnortRule(
+      header,
+      options({ msg: 'Login "admin"; bypass' }),
+      { ...emptyContent, content: [{ value: 'a;b"c\\d|0d 0a|', modifiers: ['nocase'] }] },
+      emptyMetadata,
+    );
+    expect(rule).toContain(String.raw`msg:"Login \"admin\"\; bypass"`);
+    expect(rule).toContain(String.raw`content:"a\;b\"c\\d|0d 0a|"; nocase`);
+  });
+
+  it('keeps PCRE backslashes but escapes its delimiters', () => {
+    const rule = generateSnortRule(header, options(), { ...emptyContent, pcre: [{ pattern: '/\\d+;"x"/i' }] }, emptyMetadata);
+    expect(rule).toContain(String.raw`pcre:"/\d+\;\"x\"/i"`);
+  });
+});

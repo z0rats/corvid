@@ -58,8 +58,8 @@ export default function RuleMetadata({ ruleMetadata, handleRuleMetadataChange })
 
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('snort.ruleMetadata.policyLabel')}</InputLabel>
-            <Select
+            <InputLabel id="rule-metadata-policy-label-label">{t('snort.ruleMetadata.policyLabel')}</InputLabel>
+            <Select labelId="rule-metadata-policy-label-label"
               value={ruleMetadata.policy}
               label={t('snort.ruleMetadata.policyLabel')}
               onChange={(e) => handleChange('policy', e.target.value)}
@@ -76,8 +76,8 @@ export default function RuleMetadata({ ruleMetadata, handleRuleMetadataChange })
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('snort.ruleMetadata.formerCategoryLabel')}</InputLabel>
-            <Select
+            <InputLabel id="rule-metadata-former-category-label-label">{t('snort.ruleMetadata.formerCategoryLabel')}</InputLabel>
+            <Select labelId="rule-metadata-former-category-label-label"
               value={ruleMetadata.former_category}
               label={t('snort.ruleMetadata.formerCategoryLabel')}
               onChange={(e) => handleChange('former_category', e.target.value)}
@@ -94,8 +94,8 @@ export default function RuleMetadata({ ruleMetadata, handleRuleMetadataChange })
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('snort.ruleMetadata.signatureSeverityLabel')}</InputLabel>
-            <Select
+            <InputLabel id="rule-metadata-signature-severity-label-label">{t('snort.ruleMetadata.signatureSeverityLabel')}</InputLabel>
+            <Select labelId="rule-metadata-signature-severity-label-label"
               value={ruleMetadata.signature_severity}
               label={t('snort.ruleMetadata.signatureSeverityLabel')}
               onChange={(e) => handleChange('signature_severity', e.target.value)}
@@ -119,9 +119,9 @@ export default function RuleMetadata({ ruleMetadata, handleRuleMetadataChange })
             renderInput={(params) => (
               <TextField {...params} label={t('snort.ruleMetadata.attackTargetLabel')} placeholder={t('snort.ruleMetadata.attackTargetPlaceholder')} size="small" />
             )}
-            renderTags={(value, getTagProps) =>
+            renderValue={(value, getItemProps) =>
               value.map((option, index) => {
-                const { key, ...tagProps } = getTagProps({ index });
+                const { key, ...tagProps } = getItemProps({ index });
                 return <Chip key={key} variant="outlined" label={option} size="small" {...tagProps} />;
               })
             }
@@ -138,9 +138,9 @@ export default function RuleMetadata({ ruleMetadata, handleRuleMetadataChange })
             renderInput={(params) => (
               <TextField {...params} label={t('snort.ruleMetadata.deploymentLabel')} placeholder={t('snort.ruleMetadata.deploymentPlaceholder')} size="small" />
             )}
-            renderTags={(value, getTagProps) =>
+            renderValue={(value, getItemProps) =>
               value.map((option, index) => {
-                const { key, ...tagProps } = getTagProps({ index });
+                const { key, ...tagProps } = getItemProps({ index });
                 return <Chip key={key} variant="outlined" label={option} size="small" {...tagProps} />;
               })
             }

@@ -11,6 +11,7 @@ import StringsList from './components/ui/StringsList';
 import ConditionsForm from './components/forms/ConditionsForm';
 import ActionButtons from '../shared/components/ui/ActionButtons';
 import RulePreview from '../shared/components/ui/RulePreview';
+import RuleDialogs from '../shared/components/ui/RuleDialogs';
 
 export default function Yara() {
   const { t } = useTranslation('ruleCreator');
@@ -27,6 +28,7 @@ export default function Yara() {
     handleAddString, handleDeleteString, handleAddTag, handleDeleteTag,
     handlePreview, handleClosePreview, handleExport, handleReset,
     isValidForPreview, isValidForExport, canAddString, canAddTag, clearError,
+    confirmDialog, onConfirmReset, onCancelReset, errorAlert, hideError,
   } = actions;
 
   return (
@@ -85,6 +87,14 @@ export default function Yara() {
         onClose={handleClosePreview}
         rulePreview={rulePreview}
         title={t('common.preview.yaraTitle')}
+      />
+
+      <RuleDialogs
+        confirmDialog={confirmDialog}
+        onConfirm={onConfirmReset}
+        onCancel={onCancelReset}
+        errorAlert={errorAlert}
+        onCloseError={hideError}
       />
     </Box>
   );

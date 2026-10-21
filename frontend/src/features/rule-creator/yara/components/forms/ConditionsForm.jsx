@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -28,6 +28,7 @@ export default function ConditionsForm({
   onStringMatchChange
 }) {
   const { t } = useTranslation('ruleCreator');
+  const selectIdBase = useId();
   const handleStringMatchChange = (event) => {
     const value = event.target.value;
     onStringMatchChange(value);
@@ -69,8 +70,9 @@ export default function ConditionsForm({
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, sm: 4 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>{t('yara.conditionsForm.stringMatchLabel')}</InputLabel>
+              <InputLabel id={`${selectIdBase}-0`}>{t('yara.conditionsForm.stringMatchLabel')}</InputLabel>
               <Select
+                labelId={`${selectIdBase}-0`}
                 value={getStringMatchValue()}
                 label={t('yara.conditionsForm.stringMatchLabel')}
                 onChange={handleStringMatchChange}
@@ -96,8 +98,9 @@ export default function ConditionsForm({
           </Grid>
           <Grid size={{ xs: 6, sm: 4 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>{t('yara.conditionsForm.fileTypeLabel')}</InputLabel>
+              <InputLabel id={`${selectIdBase}-1`}>{t('yara.conditionsForm.fileTypeLabel')}</InputLabel>
               <Select
+                labelId={`${selectIdBase}-1`}
                 value={conditions.filetype}
                 label={t('yara.conditionsForm.fileTypeLabel')}
                 onChange={handleFieldChange('filetype')}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
@@ -20,14 +20,20 @@ export default function Detection({
   handleConditionsListChange,
 }) {
   const { t } = useTranslation('ruleCreator');
-  const [keywords, setKeywords] = useState([]);
+  const keywords = detections.keywords;
 
   const handleAddKeyword = (keyword) => {
-    setKeywords((prev) => [...prev, { id: crypto.randomUUID(), value: keyword }]);
+    handleDetectionsChange((prev) => ({
+      ...prev,
+      keywords: [...prev.keywords, { id: crypto.randomUUID(), value: keyword }],
+    }));
   };
 
   const handleDeleteKeyword = (idToDelete) => {
-    setKeywords((prev) => prev.filter((keyword) => keyword.id !== idToDelete));
+    handleDetectionsChange((prev) => ({
+      ...prev,
+      keywords: prev.keywords.filter((keyword) => keyword.id !== idToDelete),
+    }));
   };
 
   const handleAddCondition = (condition) => {
@@ -112,8 +118,8 @@ export default function Detection({
       {/* Condition Selection */}
       {(conditionsList.length > 0 || keywords.length > 0 || detections.filter || detections.timeframe) && (
         <FormControl fullWidth size="small" sx={{ mt: 2 }}>
-          <InputLabel>{t('sigma.detection.conditionLabel')}</InputLabel>
-          <Select
+          <InputLabel id="detection-condition-label-label">{t('sigma.detection.conditionLabel')}</InputLabel>
+          <Select labelId="detection-condition-label-label"
             value={detections.condition}
             label={t('sigma.detection.conditionLabel')}
             onChange={(e) =>

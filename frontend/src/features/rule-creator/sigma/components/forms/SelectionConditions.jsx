@@ -61,8 +61,8 @@ export default function SelectionConditions({ conditionsList, onAddCondition, on
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('sigma.selectionConditions.modifierLabel')}</InputLabel>
-            <Select
+            <InputLabel id="selection-conditions-modifier-label-label">{t('sigma.selectionConditions.modifierLabel')}</InputLabel>
+            <Select labelId="selection-conditions-modifier-label-label"
               value={currentCondition.modifier}
               label={t('sigma.selectionConditions.modifierLabel')}
               onChange={(e) =>

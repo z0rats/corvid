@@ -21,8 +21,8 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, sm: 6, md: 2 }}>
         <FormControl fullWidth size="small">
-          <InputLabel>{t('snort.ruleHeader.actionLabel')}</InputLabel>
-          <Select
+          <InputLabel id="rule-header-action-label-label">{t('snort.ruleHeader.actionLabel')}</InputLabel>
+          <Select labelId="rule-header-action-label-label"
             value={ruleHeader.action}
             label={t('snort.ruleHeader.actionLabel')}
             onChange={(e) => handleChange('action', e.target.value)}
@@ -38,8 +38,8 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
       
       <Grid size={{ xs: 12, sm: 6, md: 2 }}>
         <FormControl fullWidth size="small">
-          <InputLabel>{t('snort.ruleHeader.protocolLabel')}</InputLabel>
-          <Select
+          <InputLabel id="rule-header-protocol-label-label">{t('snort.ruleHeader.protocolLabel')}</InputLabel>
+          <Select labelId="rule-header-protocol-label-label"
             value={ruleHeader.protocol}
             label={t('snort.ruleHeader.protocolLabel')}
             onChange={(e) => handleChange('protocol', e.target.value)}
@@ -79,8 +79,8 @@ export default function RuleHeader({ ruleHeader, handleRuleHeaderChange }) {
 
       <Grid size={{ xs: 6, sm: 3, md: 1 }}>
         <FormControl fullWidth size="small">
-          <InputLabel>{t('snort.ruleHeader.directionLabel')}</InputLabel>
-          <Select
+          <InputLabel id="rule-header-direction-label-label">{t('snort.ruleHeader.directionLabel')}</InputLabel>
+          <Select labelId="rule-header-direction-label-label"
             value={ruleHeader.direction}
             label={t('snort.ruleHeader.directionLabel')}
             onChange={(e) => handleChange('direction', e.target.value)}

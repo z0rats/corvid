@@ -12,7 +12,9 @@
       "close": "Close",
       "copyToClipboard": "Copy to Clipboard",
       "copyToClipboardAria": "Copy to clipboard",
-      "add": "Add"
+      "add": "Add",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
     },
     "preview": {
       "defaultTitle": "Rule Preview",
@@ -89,8 +91,8 @@
       "helpNoSiemLogic": "Don't use SIEM specific logic in your condition.",
       "keywordsHeader": "Keywords",
       "selectionConditionsHeader": "Selection Conditions",
-      "filterLabel": "Filter",
-      "filterPlaceholder": "e.g., selection and some_other_condition",
+      "filterLabel": "Custom condition",
+      "filterPlaceholder": "e.g., selection and not keywords (overrides Condition)",
       "timeframeLabel": "Timeframe",
       "timeframePlaceholder": "e.g., 1h, 30m",
       "conditionLabel": "Condition"

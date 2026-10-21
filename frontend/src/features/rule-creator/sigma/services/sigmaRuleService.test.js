@@ -1,165 +1,159 @@
+import yaml from 'js-yaml';
 import {
   generateSigmaRule,
   createInitialMetadata,
   createInitialLogSource,
   createInitialDetection,
+  yamlScalar,
+  buildSigmaCondition,
 } from './sigmaRuleService';
 
 function _metadata(overrides = {}) {
   return {
     title: 'Suspicious PowerShell',
     id: 'abc-123',
-    status: 'experimental',
+    status: 'Experimental',
     description: '',
     authors: [],
     date: '',
     modified: '',
     license: '',
-    level: 'high',
+    level: 'High',
     ...overrides,
   };
 }
 
+const item = (value) => ({ id: value, value });
+const cond = (field, modifier, value) => ({ id: `${field}${value}`, field, modifier, value });
 const emptyLogSource = { product: '', category: '', service: '', definition: '' };
-const emptyDetections = { filter: '', condition: '', timeframe: '' };
+const detections = (overrides = {}) => ({ keywords: [], filter: '', condition: 'all', timeframe: '', ...overrides });
+
+function generate({
+  metadata = {}, logSource = {}, conditions = [], detection = {}, fields = [], references = [], tags = [], falsePositives = [],
+} = {}) {
+  return generateSigmaRule(
+    _metadata(metadata), { ...emptyLogSource, ...logSource }, conditions, detections(detection),
+    fields, references, tags, falsePositives,
+  );
+}
+
+const parse = (opts) => yaml.load(generate(opts));
 
 describe('generateSigmaRule', () => {
   it('throws when a required metadata field is missing', () => {
-    expect(() =>
-      generateSigmaRule(_metadata({ title: '' }), emptyLogSource, [], emptyDetections, [], [], [], []),
-    ).toThrow('title is required');
+    expect(() => generate({ metadata: { title: '' } })).toThrow('title is required');
   });
 
-  it('renders the required fields plus level for a minimal rule', () => {
-    const rule = generateSigmaRule(
-      _metadata(),
-      emptyLogSource,
-      [],
-      emptyDetections,
-      [],
-      [],
-      [],
-      [],
-    );
-
-    expect(rule).toContain('title: Suspicious PowerShell\n');
-    expect(rule).toContain('id: abc-123\n');
-    expect(rule).toContain('status: experimental\n');
-    expect(rule).toContain('level: high\n');
-    expect(rule).toContain('detection:\n');
+  it('emits spec fields with lower-case status/level', () => {
+    expect(parse()).toEqual({
+      title: 'Suspicious PowerShell',
+      id: 'abc-123',
+      status: 'experimental',
+      level: 'high',
+      logsource: null,
+      detection: null,
+    });
   });
 
-  it('omits optional metadata fields that are empty', () => {
-    const rule = generateSigmaRule(
-      _metadata(),
-      emptyLogSource,
-      [],
-      emptyDetections,
-      [],
-      [],
-      [],
-      [],
-    );
-
-    expect(rule).not.toContain('description:');
-    expect(rule).not.toContain('date:');
-    expect(rule).not.toContain('authors:');
+  it('omits the "None" placeholders and empty optional fields', () => {
+    const rule = generate({ metadata: { status: 'None', level: 'None' } });
+    expect(rule).not.toMatch(/status:|level:|description:|date:|author:/);
   });
 
-  it('lists authors under an authors: block', () => {
-    const rule = generateSigmaRule(
-      _metadata({ authors: [{ value: 'Alice' }, { value: 'Bob' }] }),
-      emptyLogSource,
-      [],
-      emptyDetections,
-      [],
-      [],
-      [],
-      [],
-    );
-
-    expect(rule).toContain('authors:\n  - Alice\n  - Bob\n');
+  it('joins authors into the single `author` field', () => {
+    expect(parse({ metadata: { authors: [item('Alice'), item('Bob')] } }).author).toBe('Alice, Bob');
   });
 
-  it('renders the logsource block only for populated fields', () => {
-    const rule = generateSigmaRule(
-      _metadata(),
-      { product: 'windows', category: 'process_creation', service: '', definition: '' },
-      [],
-      emptyDetections,
-      [],
-      [],
-      [],
-      [],
-    );
-
-    expect(rule).toContain('logsource:\n  product: windows\n  category: process_creation\n');
-    expect(rule).not.toContain('service:');
+  it('quotes values that would otherwise break the YAML', () => {
+    const doc = parse({
+      metadata: { title: 'Mimikatz: sekurlsa #1', description: "it's \"quoted\"", license: 'DRL-1.1' },
+      references: [item('https://example.com/a?b=1#frag')],
+      falsePositives: [item('yes')],
+    });
+    expect(doc.title).toBe('Mimikatz: sekurlsa #1');
+    expect(doc.description).toBe("it's \"quoted\"");
+    expect(doc.references).toEqual(['https://example.com/a?b=1#frag']);
+    expect(doc.falsepositives).toEqual(['yes']); // not coerced to a boolean
+    expect(doc.license).toBe('DRL-1.1');
   });
 
-  it('renders selection conditions with the equals modifier bare', () => {
-    const rule = generateSigmaRule(
-      _metadata(),
-      emptyLogSource,
-      [{ field: 'CommandLine', modifier: 'equals', value: 'evil.exe' }],
-      emptyDetections,
-      [],
-      [],
-      [],
-      [],
-    );
-
-    expect(rule).toContain('  selection:\n    CommandLine equals "evil.exe"\n');
+  it('renders the populated logsource fields', () => {
+    expect(parse({ logSource: { product: 'windows', category: 'process_creation' } }).logsource).toEqual({
+      product: 'windows', category: 'process_creation',
+    });
   });
 
-  it('renders a non-equals modifier with the |modifier suffix', () => {
-    const rule = generateSigmaRule(
-      _metadata(),
-      emptyLogSource,
-      [{ field: 'CommandLine', modifier: 'contains', value: 'evil' }],
-      emptyDetections,
-      [],
-      [],
-      [],
-      [],
-    );
-
-    expect(rule).toContain('CommandLine|contains contains "evil"');
+  it('renders selection conditions as a field|modifier mapping', () => {
+    // Regression: these came out as `CommandLine equals "x"` / `CommandLine|contains contains "x"`.
+    const doc = parse({
+      conditions: [
+        cond('Image', 'endswith', '\\vssadmin.exe'),
+        cond('CommandLine', 'contains', 'delete shadows'),
+        cond('CommandLine', 'contains', 'resize shadowstorage'),
+        cond('User', 'equals', 'NT AUTHORITY\\SYSTEM'),
+      ],
+    });
+    expect(doc.detection).toEqual({
+      selection: {
+        'Image|endswith': '\\vssadmin.exe',
+        'CommandLine|contains': ['delete shadows', 'resize shadowstorage'],
+        User: 'NT AUTHORITY\\SYSTEM',
+      },
+      condition: 'selection',
+    });
   });
 
-  it('includes filter/condition/timeframe when present', () => {
-    const rule = generateSigmaRule(
-      _metadata(),
-      emptyLogSource,
-      [],
-      { filter: 'not test', condition: 'selection and not filter', timeframe: '24h' },
-      [],
-      [],
-      [],
-      [],
-    );
-
-    expect(rule).toContain('  filter:\n    not test\n');
-    expect(rule).toContain('  condition: selection and not filter\n');
-    expect(rule).toContain('  timeframe: 24h\n');
+  it('includes keywords and combines identifiers per the chosen condition', () => {
+    // Regression: keywords lived in component state and never reached the rule.
+    const conditions = [cond('Image', 'equals', 'a.exe')];
+    const keywords = [item('mimikatz'), item('sekurlsa::logonpasswords')];
+    expect(parse({ conditions, detection: { keywords } }).detection).toEqual({
+      selection: { Image: 'a.exe' },
+      keywords: ['mimikatz', 'sekurlsa::logonpasswords'],
+      condition: 'selection and keywords',
+    });
+    expect(parse({ conditions, detection: { keywords, condition: 'any' } }).detection.condition).toBe('selection or keywords');
+    expect(parse({ conditions, detection: { condition: '1 of them' } }).detection.condition).toBe('1 of them');
   });
 
-  it('lists tags, references, falsepositives, and fields in their own blocks', () => {
-    const rule = generateSigmaRule(
-      _metadata(),
-      emptyLogSource,
-      [],
-      emptyDetections,
-      [{ value: 'CommandLine' }],
-      [{ value: 'https://example.com' }],
-      [{ value: 'attack.execution' }],
-      [{ value: 'Admin scripts' }],
-    );
+  it('a custom condition expression overrides the dropdown; timeframe is kept', () => {
+    const doc = parse({
+      conditions: [cond('Image', 'equals', 'a.exe')],
+      detection: { filter: 'selection | count() > 5', timeframe: '24h' },
+    });
+    expect(doc.detection.condition).toBe('selection | count() > 5');
+    expect(doc.detection.timeframe).toBe('24h');
+  });
 
-    expect(rule).toContain('tags:\n  - attack.execution\n');
-    expect(rule).toContain('references:\n  - https://example.com\n');
-    expect(rule).toContain('falsepositives:\n  - Admin scripts\n');
-    expect(rule).toContain('fields:\n  - CommandLine\n');
+  it('lists tags, references, falsepositives and fields', () => {
+    const doc = parse({
+      tags: [item('attack.execution')],
+      references: [item('https://example.com')],
+      falsePositives: [item('Admin scripts')],
+      fields: [item('CommandLine')],
+    });
+    expect(doc.tags).toEqual(['attack.execution']);
+    expect(doc.references).toEqual(['https://example.com']);
+    expect(doc.falsepositives).toEqual(['Admin scripts']);
+    expect(doc.fields).toEqual(['CommandLine']);
+  });
+});
+
+describe('yamlScalar / buildSigmaCondition', () => {
+  it.each([
+    ['plain_word', 'plain_word'],
+    ['two words', 'two words'],
+    ['a: b', "'a: b'"],
+    ["o'brien", "'o''brien'"],
+    ['-leading', "'-leading'"],
+    ['null', "'null'"],
+    ['', "''"],
+  ])('%j -> %s', (input, out) => {
+    expect(yamlScalar(input)).toBe(out);
+  });
+
+  it('no identifiers and no custom expression means no condition', () => {
+    expect(buildSigmaCondition(detections(), [])).toBe(null);
   });
 });
 
@@ -177,22 +171,12 @@ describe('createInitialMetadata', () => {
 
 describe('createInitialLogSource', () => {
   it('returns all-empty fields', () => {
-    expect(createInitialLogSource()).toEqual({
-      product: '',
-      category: '',
-      service: '',
-      definition: '',
-    });
+    expect(createInitialLogSource()).toEqual(emptyLogSource);
   });
 });
 
 describe('createInitialDetection', () => {
-  it('defaults condition to "all" with empty selection/filter/timeframe', () => {
-    expect(createInitialDetection()).toEqual({
-      selection: [],
-      filter: '',
-      condition: 'all',
-      timeframe: '',
-    });
+  it('defaults condition to "all" with no keywords/filter/timeframe', () => {
+    expect(createInitialDetection()).toEqual({ keywords: [], filter: '', condition: 'all', timeframe: '' });
   });
 });

@@ -67,9 +67,9 @@ export default function ContentMatching({ contentList, onContentChange }) {
             renderInput={(params) => (
               <TextField {...params} label={t('snort.contentMatching.modifiersLabel')} placeholder={t('snort.contentMatching.modifiersPlaceholder')} size="small" />
             )}
-            renderTags={(value, getTagProps) =>
+            renderValue={(value, getItemProps) =>
               value.map((option, index) => {
-                const { key, ...tagProps } = getTagProps({ index });
+                const { key, ...tagProps } = getItemProps({ index });
                 return <Chip key={key} variant="outlined" label={option} size="small" {...tagProps} />;
               })
             }

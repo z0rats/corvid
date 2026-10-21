@@ -83,8 +83,8 @@ export default function RuleOptions({ ruleOptions, handleRuleOptionsChange }) {
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('snort.ruleOptions.classTypeLabel')}</InputLabel>
-            <Select
+            <InputLabel id="rule-options-class-type-label-label">{t('snort.ruleOptions.classTypeLabel')}</InputLabel>
+            <Select labelId="rule-options-class-type-label-label"
               value={ruleOptions.classtype}
               label={t('snort.ruleOptions.classTypeLabel')}
               onChange={(e) => handleChange('classtype', e.target.value)}

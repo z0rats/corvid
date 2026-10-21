@@ -47,8 +47,8 @@ export default function ReferencesSection({ references, onReferencesChange }) {
       }}>
         <Grid size={{ xs: 12, sm: 3 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('snort.referencesSection.typeLabel')}</InputLabel>
-            <Select
+            <InputLabel id="references-section-type-label-label">{t('snort.referencesSection.typeLabel')}</InputLabel>
+            <Select labelId="references-section-type-label-label"
               value={currentReference.type}
               label={t('snort.referencesSection.typeLabel')}
               onChange={(e) => setCurrentReference(prev => ({ ...prev, type: e.target.value }))}

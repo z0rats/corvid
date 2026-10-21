@@ -1,5 +1,19 @@
 import { FILE_TYPE_SIGNATURES } from '../constants/yaraConstants';
-import { exportAsFile } from '../../shared/utils/ruleUtils';
+import { exportAsFile, safeFileBase } from '../../shared/utils/ruleUtils';
+
+// Text strings and meta values are literal: escape what YARA's string syntax treats specially.
+const escapeYaraText = (value) => String(value)
+  .replace(/\\/g, '\\\\')
+  .replace(/"/g, '\\"')
+  .replace(/\n/g, '\\n')
+  .replace(/\t/g, '\\t');
+
+// Accept a regex typed with its own delimiters ("/evil[0-9]+/i", as the placeholder shows)
+// as well as a bare pattern, without wrapping it in a second pair of slashes.
+const splitRegex = (value) => {
+  const match = /^\/(.*)\/([is]*)$/s.exec(value);
+  return match ? { body: match[1], flags: match[2] } : { body: value, flags: '' };
+};
 
 export const generateYaraRule = (metadata, strings, conditions, tags) => {
   let rule = `rule ${metadata.ruleName.replace(/\s+/g, '_')}`;
@@ -14,7 +28,7 @@ export const generateYaraRule = (metadata, strings, conditions, tags) => {
   rule += '  meta:\n';
   Object.entries(metadata).forEach(([key, value]) => {
     if (value) {
-      rule += `    ${key} = "${value}"\n`;
+      rule += `    ${key} = "${escapeYaraText(value)}"\n`;
     }
   });
 
@@ -26,9 +40,10 @@ export const generateYaraRule = (metadata, strings, conditions, tags) => {
       if (s.type === 'hex') {
         rule += `    $${s.identifier} = { ${s.value} }${modifierStr}\n`;
       } else if (s.type === 'regex') {
-        rule += `    $${s.identifier} = /${s.value}/${modifierStr}\n`;
+        const { body, flags } = splitRegex(s.value);
+        rule += `    $${s.identifier} = /${body}/${flags}${modifierStr}\n`;
       } else {
-        rule += `    $${s.identifier} = "${s.value}"${modifierStr}\n`;
+        rule += `    $${s.identifier} = "${escapeYaraText(s.value)}"${modifierStr}\n`;
       }
     });
   }
@@ -66,5 +81,5 @@ export const buildConditionString = (conditions) => {
 };
 
 export const exportYaraRule = (rule, filename) => {
-  exportAsFile(rule, `${filename.replace(/\s+/g, '_')}.yar`);
+  exportAsFile(rule, `${safeFileBase(filename)}.yar`);
 };

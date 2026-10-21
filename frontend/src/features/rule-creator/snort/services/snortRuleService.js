@@ -1,4 +1,10 @@
-import { generateSID, getCurrentDate, exportAsFile, validateRequiredFields } from '../../shared/utils/ruleUtils';
+import { generateSID, getCurrentDate, exportAsFile, validateRequiredFields, safeFileBase } from '../../shared/utils/ruleUtils';
+
+// Inside a quoted option, `;` would end the option and `"` the string - Snort requires
+// these (and the escape character itself) to be backslash-escaped.
+const escapeOptionText = (value) => String(value).replace(/[\\";]/g, (ch) => `\\${ch}`);
+// A PCRE's backslashes are regex syntax, so only the option delimiters are escaped.
+const escapePcre = (value) => String(value).replace(/[";]/g, (ch) => `\\${ch}`);
 
 /**
  * Generate a complete Snort rule string
@@ -21,7 +27,7 @@ export const generateSnortRule = (ruleHeader, ruleOptions, ruleContent, ruleMeta
   const options = [];
   
   // Required options
-  options.push(`msg:"${ruleOptions.msg}"`);
+  options.push(`msg:"${escapeOptionText(ruleOptions.msg)}"`);
   options.push(`sid:${ruleOptions.sid}`);
   options.push(`rev:${ruleOptions.rev}`);
 
@@ -31,7 +37,7 @@ export const generateSnortRule = (ruleHeader, ruleOptions, ruleContent, ruleMeta
 
   // Content options
   ruleContent.content.forEach(content => {
-    let contentStr = `content:"${content.value}"`;
+    let contentStr = `content:"${escapeOptionText(content.value)}"`;
     if (content.modifiers && content.modifiers.length > 0) {
       contentStr += `; ${content.modifiers.join('; ')}`;
     }
@@ -40,7 +46,7 @@ export const generateSnortRule = (ruleHeader, ruleOptions, ruleContent, ruleMeta
 
   // PCRE options
   ruleContent.pcre.forEach(pcre => {
-    options.push(`pcre:"${pcre.pattern}"`);
+    options.push(`pcre:"${escapePcre(pcre.pattern)}"`);
   });
 
   // Flowbits options
@@ -104,7 +110,7 @@ export const buildMetadata = (basicMetadata, enhancedMetadata) => {
  * @param {string} sid - Rule SID for filename
  */
 export const exportSnortRule = (rule, sid) => {
-  const filename = `snort_rule_${sid}.rules`;
+  const filename = `snort_rule_${safeFileBase(sid)}.rules`;
   exportAsFile(rule, filename);
 };
 

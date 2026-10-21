@@ -26,6 +26,9 @@ export const generateSID = () => {
  * @param {string} filename - Name of the file
  * @param {string} mimeType - MIME type of the file
  */
+/** A filename-safe base: whitespace and characters Windows/macOS reject become "_". */
+export const safeFileBase = (name) => String(name).trim().replace(/[\s<>:"/\\|?*\x00-\x1f]+/g, '_') || 'rule';
+
 export const exportAsFile = (content, filename, mimeType = 'text/plain') => {
   const blob = new Blob([content], { type: mimeType });
   const url = window.URL.createObjectURL(blob);
