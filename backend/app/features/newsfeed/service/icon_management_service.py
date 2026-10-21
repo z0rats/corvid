@@ -6,6 +6,8 @@ import os
 from PIL import Image
 from sqlalchemy import select, update
 
+from app.features.newsfeed.models.newsfeed_models import generate_icon_id
+
 logger = logging.getLogger(__name__)
 
 ICONS_DIR = "app/static/feedicons"
@@ -124,7 +126,8 @@ async def delete_feed_icon_with_favicon_fallback(db, feed_name: str) -> tuple[bo
         logger.error("Error downloading favicon for %s: %s", feed_name, str(e))
 
     feed.icon = "default.png"
-    feed.icon_id = None
+    # icon_id is NOT NULL: a fresh cache-buster, so the frontend drops the old image
+    feed.icon_id = generate_icon_id()
     await sync_article_icons(db, feed_name, "default.png")
     await db.flush()
     await db.refresh(feed)
@@ -132,8 +135,13 @@ async def delete_feed_icon_with_favicon_fallback(db, feed_name: str) -> tuple[bo
 
 
 async def bulk_fetch_favicons_parallel(db) -> None:
-    """Fetch favicons for all feeds using the default icon, in parallel"""
+    """Fetch favicons for all feeds using the default icon.
+
+    Only the downloads run in parallel: an AsyncSession doesn't support concurrent
+    operations, so each result is written back to `db` one feed at a time.
+    """
     from app.features.newsfeed.crud.newsfeed_settings_crud import get_feeds_with_default_icon
+    from app.features.newsfeed.utils.favicon_downloader import FaviconDownloader
 
     feeds = await get_feeds_with_default_icon(db)
     if not feeds:
@@ -142,16 +150,27 @@ async def bulk_fetch_favicons_parallel(db) -> None:
 
     logger.info("Fetching favicons for %d feeds in parallel...", len(feeds))
 
-    async def _fetch_single(feed_name: str) -> bool:
+    async def _download(url: str) -> str | None:
         try:
-            success, _, _ = await refetch_feed_favicon(db, feed_name)
-            return success
+            success, icon_filename, error = await FaviconDownloader.download_and_save_favicon(url)
         except Exception as e:
-            logger.error("Failed to fetch favicon for %s: %s", feed_name, e)
-            return False
+            logger.error("Failed to fetch favicon from %s: %s", url, e)
+            return None
+        if not (success and icon_filename):
+            logger.debug("No favicon for %s: %s", url, error)
+            return None
+        return icon_filename
 
-    results = await asyncio.gather(*[_fetch_single(feed.name) for feed in feeds])
-    succeeded = sum(1 for r in results if r)
+    icons = await asyncio.gather(*[_download(feed.url) for feed in feeds])
+    succeeded = 0
+    for feed, icon_filename in zip(feeds, icons, strict=True):
+        if icon_filename is None:
+            continue
+        feed.icon = icon_filename
+        feed.icon_id = icon_filename
+        await sync_article_icons(db, feed.name, icon_filename)
+        succeeded += 1
+    await db.flush()
     logger.info("Favicon fetch complete: %d/%d succeeded", succeeded, len(feeds))
 
 

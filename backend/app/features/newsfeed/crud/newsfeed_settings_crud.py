@@ -224,7 +224,7 @@ async def get_feeds_with_default_icon(db: AsyncSession) -> list[NewsfeedSettings
         _active_feed_query().where(
             or_(
                 NewsfeedSettings.icon == "default.png",
-                NewsfeedSettings.icon_id is None,
+                NewsfeedSettings.icon_id.is_(None),
             )
         )
     )

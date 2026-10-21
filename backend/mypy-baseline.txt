@@ -128,7 +128,6 @@ app/features/newsfeed/crud/news_articles_crud.py: Argument 2 to "apply_article_f
 app/features/newsfeed/crud/news_articles_crud.py: Argument 2 to "apply_article_filters" has incompatible type "**dict[str, str | datetime | bool | None]"; expected "str | datetime | None"  [arg-type]
 app/features/newsfeed/crud/news_articles_crud.py: Argument 2 to "apply_article_filters" has incompatible type "**dict[str, str | datetime | bool | None]"; expected "str | datetime | None"  [arg-type]
 app/features/newsfeed/crud/newsfeed_settings_crud.py: Argument 1 to "download_and_save_favicon" of "FaviconDownloader" has incompatible type "AnyHttpUrl"; expected "str"  [arg-type]
-app/features/newsfeed/crud/newsfeed_settings_crud.py: Argument 2 to "or_" has incompatible type "bool"; expected "ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"  [arg-type]
 app/features/newsfeed/crud/trends_blacklist_crud.py: "Result[Any]" has no attribute "rowcount"  [attr-defined]
 app/features/newsfeed/routers/analysis_routes.py: Incompatible return value type (got "dict[Any, Any]", expected "AnalysisResultResponse")  [return-value]
 app/features/newsfeed/routers/analytics_routes.py: Incompatible return value type (got "list[dict[str, Any]] | list[WordFrequencyEntry]", expected "list[WordFrequencyEntry]")  [return-value]
