@@ -1,8 +1,10 @@
+import asyncio
 import io
 import logging
 import mimetypes
 import time
 import uuid
+import warnings
 import xml.sax
 from functools import wraps
 from typing import TypedDict
@@ -11,11 +13,14 @@ from urllib.parse import urlparse
 import feedparser
 from PIL import Image
 
+from app.features.newsfeed.utils.fetching import _fetch_safely
+
 logger = logging.getLogger(__name__)
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/gif"}
 TARGET_IMAGE_SIZE = (64, 64)
+FEED_FETCH_TIMEOUT = 30
 
 
 class FeedInfo(TypedDict):
@@ -91,9 +96,12 @@ def parse_feed_info(feed: feedparser.FeedParserDict) -> FeedInfo | None:
     }
 
 
-@log_execution_time
-def validate_feed(url: str) -> tuple[bool, str | None, FeedInfo | None]:
+async def validate_feed(url: str) -> tuple[bool, str | None, FeedInfo | None]:
     """Validate and parse RSS/Atom feed
+
+    The feed is downloaded through `fetching._fetch_safely` (the SSRF guard) and
+    feedparser only ever sees the bytes - handing feedparser the URL itself would
+    let it fetch via urllib, unguarded and following redirects.
 
     Args:
         url: The feed URL to validate
@@ -111,14 +119,10 @@ def validate_feed(url: str) -> tuple[bool, str | None, FeedInfo | None]:
 
     try:
         logger.info("Attempting to parse feed: %s", url)
-
-        # Suppress encoding warnings from feedparser
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message=".*document declared as.*")
-            warnings.filterwarnings("ignore", message=".*encoding.*")
-            feed = feedparser.parse(str(url), sanitize_html=True)
+        raw = await _fetch_safely(url, FEED_FETCH_TIMEOUT)
+        if raw is None:
+            return False, "Feed URL is unreachable or not allowed", None
+        feed = await asyncio.to_thread(_parse_raw_feed, raw)
 
         # Check for parsing errors, but be more lenient with encoding issues
         if feed.get("bozo", 0) == 1:
@@ -128,7 +132,7 @@ def validate_feed(url: str) -> tuple[bool, str | None, FeedInfo | None]:
                 # Don't fail on encoding warnings, only on serious parsing errors
                 if "encoding" in error_msg.lower() or "declared as" in error_msg.lower():
                     logger.warning("Feed encoding warning (continuing): %s", error_msg)
-                elif isinstance(exception, xml.sax._exceptions.SAXParseException):
+                elif isinstance(exception, xml.sax.SAXParseException):
                     logger.error("Feed parsing failed: XML parsing error: %s", error_msg)
                     return False, f"XML parsing error: {error_msg}", None
                 else:
@@ -151,6 +155,13 @@ def validate_feed(url: str) -> tuple[bool, str | None, FeedInfo | None]:
     except Exception as e:
         logger.error("Unexpected error validating feed: %s", str(e))
         return False, f"Feed validation error: {str(e)}", None
+
+
+def _parse_raw_feed(raw: bytes) -> feedparser.FeedParserDict:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=".*document declared as.*")
+        warnings.filterwarnings("ignore", message=".*encoding.*")
+        return feedparser.parse(raw, sanitize_html=True)
 
 
 def validate_image_metadata(file_content: bytes, original_filename: str) -> tuple[bool, str | None]:

@@ -74,10 +74,12 @@ def _decode_feed_name(encoded_name: str) -> str:
 )
 async def validate_feed_url(feed_data: NewsfeedSettingsCreateSchema) -> FeedValidationResponse:
     """Validate a feed URL before adding it"""
-    is_valid, error_msg, feed_info = validate_feed(str(feed_data.url))
+    is_valid, error_msg, feed_info = await validate_feed(str(feed_data.url))
     if not is_valid:
         raise AppHTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg, error_code="FEED_INVALID_URL"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_msg or "Invalid feed",
+            error_code="FEED_INVALID_URL",
         )
     return FeedValidationResponse(valid=True, feed_info=feed_info)
 
@@ -98,10 +100,12 @@ async def add_custom_feed(
     feed_data: NewsfeedSettingsCreateSchema, db: SessionDep
 ) -> NewsfeedSettingsSchema:
     """Add a new custom feed after validation with automatic favicon download"""
-    is_valid, error_msg, _ = validate_feed(str(feed_data.url))
+    is_valid, error_msg, _ = await validate_feed(str(feed_data.url))
     if not is_valid:
         raise AppHTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg, error_code="FEED_INVALID_URL"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_msg or "Invalid feed",
+            error_code="FEED_INVALID_URL",
         )
 
     if await get_feed_by_name(db, feed_data.name):

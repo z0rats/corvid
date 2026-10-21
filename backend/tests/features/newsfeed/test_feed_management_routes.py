@@ -44,6 +44,13 @@ def _b64(name: str) -> str:
     return base64.b64encode(name.encode("utf-8")).decode("ascii")
 
 
+def _async_result(result):
+    async def _validate(url):
+        return result
+
+    return _validate
+
+
 async def _fake_save_icon(data, icon_id):
     return True, None
 
@@ -53,7 +60,7 @@ class TestValidateFeedUrl:
         monkeypatch.setattr(
             feed_management_routes,
             "validate_feed",
-            lambda url: (True, None, FeedInfo(title="Feed A", entry_count=5)),
+            _async_result((True, None, FeedInfo(title="Feed A", entry_count=5))),
         )
 
         response = client.post(
@@ -68,7 +75,9 @@ class TestValidateFeedUrl:
 
     def test_returns_400_when_invalid(self, client, monkeypatch):
         monkeypatch.setattr(
-            feed_management_routes, "validate_feed", lambda url: (False, "Not an RSS feed", None)
+            feed_management_routes,
+            "validate_feed",
+            _async_result((False, "Not an RSS feed", None)),
         )
 
         response = client.post(
@@ -82,7 +91,9 @@ class TestValidateFeedUrl:
 
 class TestAddCustomFeed:
     def test_creates_a_feed_after_validation(self, client, monkeypatch):
-        monkeypatch.setattr(feed_management_routes, "validate_feed", lambda url: (True, None, None))
+        monkeypatch.setattr(
+            feed_management_routes, "validate_feed", _async_result((True, None, None))
+        )
 
         async def fake_create(db, settings):
             return NewsfeedSettingsSchema.model_validate(
@@ -101,7 +112,9 @@ class TestAddCustomFeed:
 
     def test_rejects_an_invalid_feed_url(self, client, monkeypatch):
         monkeypatch.setattr(
-            feed_management_routes, "validate_feed", lambda url: (False, "unreachable", None)
+            feed_management_routes,
+            "validate_feed",
+            _async_result((False, "unreachable", None)),
         )
 
         response = client.post(
@@ -113,7 +126,9 @@ class TestAddCustomFeed:
         assert response.json()["error_code"] == "FEED_INVALID_URL"
 
     def test_rejects_a_duplicate_feed_name(self, client, session_factory, monkeypatch):
-        monkeypatch.setattr(feed_management_routes, "validate_feed", lambda url: (True, None, None))
+        monkeypatch.setattr(
+            feed_management_routes, "validate_feed", _async_result((True, None, None))
+        )
 
         async def _seed():
             async with session_factory() as db:

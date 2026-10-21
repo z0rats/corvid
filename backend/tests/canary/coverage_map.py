@@ -170,6 +170,7 @@ COVERAGE: dict[str, Covered | Exempt] = {
     "steam:community_locations": Exempt("no-canary-yet"),
     "steam:community_comments": Exempt("no-canary-yet"),
     "telegram": Exempt("needs-key"),
+    "git_recon:github_api": Exempt("no-canary-yet"),
     # --- sources reached through a third-party library, not our own HTTP client ---
     "email_search:mailcat": Exempt("acts-on-account"),
     "email_search:user_scanner": Exempt("acts-on-account"),
@@ -222,6 +223,7 @@ FILE_SOURCES: dict[str, tuple[str, ...]] = {
     "core/registry_dumps/common.py": ("registry_dump:*",),
     "core/settings/telegram/service/telegram_client.py": ("telegram",),
     "features/phone_search/service/phone_search_service.py": ("phone_search:*",),
+    "features/git_recon/service/git_recon_service.py": ("git_recon:github_api",),
 }
 
 # Allowlisted fixed-host files that talk to no source worth a canary, with the reason.

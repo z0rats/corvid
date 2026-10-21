@@ -15,6 +15,7 @@ the target host is fixed/hardcoded (not user-supplied), add it to
 `ALLOWLISTED_FIXED_HOST_FILES` below with a one-line reason.
 """
 
+import ast
 import re
 from pathlib import Path
 
@@ -22,6 +23,7 @@ APP_ROOT = Path(__file__).resolve().parents[2] / "app"
 
 _RAW_CLIENT_RE = re.compile(
     r"httpx\.(?:Async)?Client\(|requests\.(?:get|post|put|delete|patch)\(|aiohttp\.ClientSession\("
+    r"|urllib\.request\.urlopen\("
 )
 _SAFE_GET_IMPORT_RE = re.compile(r"from app\.core\.security\.ssrf_guard import[^\n]*\bsafe_get\b")
 
@@ -98,6 +100,9 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # ever requests its own hardcoded vendor host (login.live.com/amazon.com/facebook.com);
     # only the searched phone number (query/body) is user-supplied, never the host
     "features/phone_search/service/phone_search_service.py",
+    # Git Recon repo discovery: fixed api.github.com URLs from gitcolombo's constants; only
+    # a `validate_github_nickname`-checked login is user-supplied, never the host
+    "features/git_recon/service/git_recon_service.py",
 }
 
 # Implementation module itself, and its own tests
@@ -148,3 +153,65 @@ def test_allowlist_entries_still_exist_and_still_need_the_exemption():
     assert not stale, (
         f"Allowlist entries no longer construct a raw HTTP client, remove them: {stale}"
     )
+
+
+def _self_fetching_calls(tree: ast.AST):
+    """Yield (lineno, reason) for calls into libraries that do their own HTTP fetch
+    (urllib, unguarded, following redirects) when handed a URL instead of bytes."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr == "parse"
+            and isinstance(func.value, ast.Name)
+            and func.value.id == "feedparser"
+            and node.args
+        ):
+            arg = node.args[0]
+            src = ast.unparse(arg)
+            if (
+                (isinstance(arg, ast.Constant) and isinstance(arg.value, str))
+                or "url" in src.lower()
+                or (isinstance(arg, ast.Call) and ast.unparse(arg.func) == "str")
+            ):
+                yield node.lineno, f"feedparser.parse({src}) - pass fetched bytes, not a URL"
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr == "download"
+            and not any(kw.arg == "input_html" for kw in node.keywords)
+            and "article" in ast.unparse(func.value).lower()
+        ):
+            yield node.lineno, "newspaper Article.download() without input_html"
+
+
+def test_self_fetching_libraries_are_only_fed_prefetched_bytes():
+    """feedparser and newspaper will download a URL themselves via urllib, bypassing
+    safe_get entirely - the raw-client regex above can't see that. Fetch through
+    safe_get first and hand them the bytes (see newsfeed/utils/fetching.py)."""
+    offenders = []
+    for rel, path in _iter_source_files():
+        content = path.read_text(encoding="utf-8")
+        if "feedparser" not in content and "newspaper" not in content:
+            continue
+        for lineno, reason in _self_fetching_calls(ast.parse(content)):
+            offenders.append(f"{rel}:{lineno}: {reason}")
+
+    assert not offenders, "Self-fetching library calls bypass safe_get:\n" + "\n".join(offenders)
+
+
+def test_self_fetching_detector_flags_url_arguments():
+    flagged = list(
+        _self_fetching_calls(
+            ast.parse(
+                "feedparser.parse(url)\n"
+                "feedparser.parse(str(x))\n"
+                "feedparser.parse('http://a')\n"
+                "article.download()\n"
+                "feedparser.parse(raw)\n"
+                "article.download(input_html=html)\n"
+            )
+        )
+    )
+    assert [line for line, _ in flagged] == [1, 2, 3, 4]
