@@ -26,9 +26,10 @@ def sanitize_domain_input(domain: str) -> str:
     domain = domain.strip().lower()
 
     # Remove protocol if present
+    # `hostname` (not `netloc`) so userinfo ("user:pass@") and the port never
+    # survive as part of - or instead of - the domain
     if domain.startswith(("http://", "https://")):
-        parsed = urlparse(domain)
-        domain = parsed.netloc or parsed.path
+        domain = urlparse(domain).hostname or ""
         logger.debug("Removed protocol: '%s' -> '%s'", original_domain, domain)
 
     # Remove path, query, and fragment components
@@ -130,8 +131,10 @@ def validate_and_format_domain_for_api(domain: str) -> str:
     logger.debug("Validating and formatting domain: '%s'", domain)
     original_domain = domain
 
-    # Check if this is a search pattern before sanitization
-    is_search_pattern = "*" in domain or "?" in domain
+    # Check if this is a search pattern before sanitization - but a full URL is
+    # never a pattern, its "?" starts a query string
+    is_url = domain.strip().lower().startswith(("http://", "https://"))
+    is_search_pattern = not is_url and ("*" in domain or "?" in domain)
 
     if is_search_pattern:
         # For search patterns, do minimal sanitization to preserve wildcards
