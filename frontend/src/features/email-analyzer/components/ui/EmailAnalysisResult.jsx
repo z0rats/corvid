@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -17,14 +18,20 @@ const logger = createLogger('EmailAnalysisResult');
 const EXPORT_FORMATS = ['html', 'pdf'];
 
 export default function EmailAnalysisResult({ result }) {
-  const { i18n } = useTranslation('emailAnalyzer');
+  const { t, i18n } = useTranslation('emailAnalyzer');
+  const [exportFailed, setExportFailed] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const locale = i18n.language?.startsWith('ru') ? 'ru' : 'en';
 
   if (!result) {
     return null;
   }
 
+  // One export at a time: a slow failure landing after a later success would otherwise flag
+  // the wrong request.
   const handleExport = async (format) => {
+    setExportFailed(false);
+    setExporting(true);
     try {
       const blob = await emailAnalyzerApi.exportReport(result, format, locale);
       const url = window.URL.createObjectURL(blob);
@@ -35,6 +42,9 @@ export default function EmailAnalysisResult({ result }) {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       logger.error('Failed to export email analysis report:', err);
+      setExportFailed(true);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -48,11 +58,18 @@ export default function EmailAnalysisResult({ result }) {
             variant="outlined"
             startIcon={<DownloadIcon />}
             onClick={() => handleExport(fmt)}
+            disabled={exporting}
           >
             {fmt.toUpperCase()}
           </Button>
         ))}
       </Stack>
+
+      {exportFailed && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setExportFailed(false)}>
+          {t('exportFailed')}
+        </Alert>
+      )}
 
       <GeneralInfo
         result={result["basic_info"]}

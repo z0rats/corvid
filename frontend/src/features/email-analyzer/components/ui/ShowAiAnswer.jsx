@@ -4,6 +4,7 @@ import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialOceanic } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -27,7 +28,7 @@ function normalizeEmailBody(input) {
 
 export default function ShowAiAnswer({ input }) {
   const { t } = useTranslation('emailAnalyzer');
-  const { result, loading, llmAvailable, analyzeMailBody } = useAiAnalysis();
+  const { result, loading, error, llmAvailable, analyzeMailBody } = useAiAnalysis();
   const normalizedInput = useMemo(() => normalizeEmailBody(input), [input]);
 
   if (!llmAvailable || !normalizedInput) {
@@ -49,6 +50,12 @@ export default function ShowAiAnswer({ input }) {
       </Box>
 
       {loading && <LinearProgress sx={{ mt: 1 }} />}
+
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {t('showAiAnswer.error')}
+        </Alert>
+      )}
 
       {result && (
         <Grow in>

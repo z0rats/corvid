@@ -52,5 +52,17 @@ describe('useAiAnalysis', () => {
 
     expect(result.current.loading).toBe(false);
     expect(result.current.result).toBeNull();
+    expect(result.current.error).toBe(true);
+  });
+
+  it('clears a previous error when a retry succeeds', async () => {
+    aiAssistantApi.analyzeMailBody.mockRejectedValueOnce(new Error('down')).mockResolvedValueOnce('ok');
+    const { result } = renderHook(() => useAiAnalysis());
+
+    await act(async () => result.current.analyzeMailBody('body text'));
+    await act(async () => result.current.analyzeMailBody('body text'));
+
+    expect(result.current.error).toBe(false);
+    expect(result.current.result).toBe('ok');
   });
 });

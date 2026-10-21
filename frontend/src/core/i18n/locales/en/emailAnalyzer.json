@@ -77,7 +77,8 @@
   },
   "showAiAnswer": {
     "analyzeButton": "Analyze message body with AI",
-    "resultTitle": "AI message-body analysis"
+    "resultTitle": "AI message-body analysis",
+    "error": "AI analysis failed. Please try again."
   },
   "urls": {
     "title": "URLs in body ({{count}})",
@@ -108,5 +109,6 @@
         "description": "Analyze attachments without exposing original files"
       }
     }
-  }
+  },
+  "exportFailed": "Report export failed. Please try again."
 }
