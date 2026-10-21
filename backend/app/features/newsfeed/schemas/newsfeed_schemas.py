@@ -1,7 +1,7 @@
 import datetime
 from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
 IocType = Literal["ips", "md5_hashes", "sha1_hashes", "sha256_hashes", "urls", "domains", "emails"]
 BlacklistType = Literal["word", "ioc"]
@@ -127,6 +127,17 @@ class NewsAnalysisParams(BaseModel):
     custom_focus: list[str] | None = Field(default=None, description="Custom analysis focus areas")
 
 
+_MITRE_URL_PREFIX = "https://attack.mitre.org/"
+
+
+def _mitre_url_or_none(value: str | None) -> str | None:
+    """These URLs come from the LLM's structured output over third-party article text, so a
+    prompt-injected article could make them point anywhere - keep only real ATT&CK links."""
+    if isinstance(value, str) and value.startswith(_MITRE_URL_PREFIX):
+        return value
+    return None
+
+
 class MitreThreatActor(BaseModel):
     """Threat actor identified in the article with optional MITRE ATT&CK mapping"""
 
@@ -135,6 +146,8 @@ class MitreThreatActor(BaseModel):
     mitre_group_id: str | None = Field(default=None, description="MITRE group ID, e.g. G0016")
     mitre_url: str | None = Field(default=None, description="URL to MITRE ATT&CK group page")
     attribution_confidence: Literal["low", "medium", "high"] | None = Field(default=None)
+
+    _restrict_mitre_url = field_validator("mitre_url", mode="before")(_mitre_url_or_none)
 
 
 class MitreSoftware(BaseModel):
@@ -145,6 +158,8 @@ class MitreSoftware(BaseModel):
     mitre_id: str | None = Field(default=None, description="MITRE software ID, e.g. S0154")
     mitre_url: str | None = Field(default=None, description="URL to MITRE ATT&CK software page")
 
+    _restrict_mitre_url = field_validator("mitre_url", mode="before")(_mitre_url_or_none)
+
 
 class MitreTactic(BaseModel):
     """MITRE ATT&CK tactic reference"""
@@ -153,6 +168,8 @@ class MitreTactic(BaseModel):
     id: str = Field(..., description="Tactic ID, e.g. TA0001")
     url: str | None = Field(default=None, description="URL to MITRE ATT&CK tactic page")
 
+    _restrict_url = field_validator("url", mode="before")(_mitre_url_or_none)
+
 
 class MitreTechnique(BaseModel):
     """MITRE ATT&CK technique or sub-technique reference"""
@@ -160,6 +177,8 @@ class MitreTechnique(BaseModel):
     name: str = Field(..., description="Technique name, e.g. Phishing")
     id: str = Field(..., description="Technique ID, e.g. T1566 or T1566.001")
     url: str | None = Field(default=None, description="URL to MITRE ATT&CK technique page")
+
+    _restrict_url = field_validator("url", mode="before")(_mitre_url_or_none)
 
 
 class MitreTTP(BaseModel):

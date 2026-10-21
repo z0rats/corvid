@@ -26,8 +26,14 @@ function parseMitreData(raw) {
   }
 }
 
-function MitreLink({ id, url, children }) {
+// The mapping is LLM output over third-party article text: only ever link to ATT&CK itself
+// (the backend schema enforces the same; this also covers rows stored before it did).
+const MITRE_URL_PREFIX = "https://attack.mitre.org/";
+const mitreUrl = (url) => (typeof url === "string" && url.startsWith(MITRE_URL_PREFIX) ? url : null);
+
+function MitreLink({ id, url: rawUrl, children }) {
   const content = children || id;
+  const url = mitreUrl(rawUrl);
   if (!url) return <>{content}</>;
   return (
     <Link href={url} target="_blank" rel="noopener noreferrer" underline="hover" color="primary.main" sx={{ fontWeight: "inherit" }}>
@@ -260,11 +266,11 @@ export default function MitreAttackSection({ item }) {
   if (!hasActors && !hasSoftware && !hasTargets && !hasTTPs) return null;
 
   const actorItems = (data.threat_actors || []).map((a) => ({
-    key: a.name, name: a.name, url: a.mitre_url, bold: true,
+    key: a.name, name: a.name, url: mitreUrl(a.mitre_url), bold: true,
   }));
 
   const softwareItems = (data.software || []).map((sw) => ({
-    key: sw.name, name: sw.name, url: sw.mitre_url,
+    key: sw.name, name: sw.name, url: mitreUrl(sw.mitre_url),
     suffix: sw.type === "malware" ? "malware" : null,
     color: sw.type === "malware" ? "error" : "default",
   }));
