@@ -31,12 +31,14 @@ async def get_services_configuration(
     try:
         services = get_all_service_definitions()
 
-        if category:
-            services = get_services_by_category(category)
-        if tier:
-            services = get_services_by_tier(tier)
-        if ioc_type:
-            services = get_services_for_ioc_type(ioc_type)
+        # Filters combine (AND): each one narrows what the previous left
+        for selected in (
+            get_services_by_category(category) if category else None,
+            get_services_by_tier(tier) if tier else None,
+            get_services_for_ioc_type(ioc_type) if ioc_type else None,
+        ):
+            if selected is not None:
+                services = {key: svc for key, svc in services.items() if key in selected}
 
         api_keys = await get_apikeys(db)
         api_key_states = {apikey.name: apikey.is_active for apikey in api_keys}

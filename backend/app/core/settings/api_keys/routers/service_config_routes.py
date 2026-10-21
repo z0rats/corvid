@@ -52,19 +52,19 @@ async def get_service_config(service_key: str, db: ReadSessionDep) -> dict[str, 
 @router.get("/api/services/categories", response_model=list[str], tags=["Service Configuration"])
 async def get_service_categories_endpoint() -> list[str]:
     """Get all available service categories."""
-    return await get_service_categories()
+    return get_service_categories()
 
 
 @router.get("/api/services/tiers", response_model=list[str], tags=["Service Configuration"])
 async def get_service_tiers_endpoint() -> list[str]:
     """Get all available service tiers."""
-    return await get_service_tiers()
+    return get_service_tiers()
 
 
 @router.get("/api/services/ioc-types", response_model=list[str], tags=["Service Configuration"])
 async def get_supported_ioc_types_endpoint() -> list[str]:
     """Get all supported IOC types across all services."""
-    return await get_supported_ioc_types()
+    return get_supported_ioc_types()
 
 
 @router.get(
