@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { defangApi } from '../../../shared/services/api/defangApi';
 import { createFallbackResults } from '../../utils/defangerUtils';
 import { createLogger } from '../../../../../core/utils/logger';
+import { toCell } from '../../../../../core/utils/exportData';
 
 const logger = createLogger('Defanger');
 
@@ -48,11 +49,6 @@ export const useDefanger = () => {
       return;
     }
 
-    const escape = (value) => {
-      const str = String(value ?? '');
-      return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
-    };
-
     const processedHeader = operation === 'defang' ? 'Defanged' : 'Fanged';
     const header = ['Original', processedHeader, 'Type(s)', 'Status'];
     const rows = filteredResults.map(r => [
@@ -61,7 +57,7 @@ export const useDefanger = () => {
       r.types.join('; '),
       r.changed ? 'Modified' : 'Unchanged',
     ]);
-    const csv = [header, ...rows].map(row => row.map(escape).join(',')).join('\n');
+    const csv = [header, ...rows].map(row => row.map(toCell).join(',')).join('\n');
 
     const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

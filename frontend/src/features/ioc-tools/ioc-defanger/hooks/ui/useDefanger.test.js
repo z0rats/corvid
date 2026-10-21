@@ -155,3 +155,59 @@ describe('useDefanger — handleClear', () => {
     expect(result.current.hasResults).toBe(false);
   });
 });
+
+describe('useDefanger — exports', () => {
+  const ROWS = [
+    { original: '1.2.3.4', processed: '1[.]2[.]3[.]4', types: ['IP Address'], changed: true },
+    { original: '=HYPERLINK("http://evil","x")', processed: '=HYPERLINK("http://evil","x")', types: [], changed: false },
+    { original: 'a,b', processed: 'a,b', types: ['Text', 'Other'], changed: false },
+  ];
+
+  async function withResults() {
+    defangApi.batchProcessIOCs.mockResolvedValue(ROWS);
+    const hook = renderHook(() => useDefanger());
+    act(() => hook.result.current.handleInputChange('x'));
+    await act(async () => { await hook.result.current.handleProcess(); });
+    return hook.result;
+  }
+
+  async function captureCsv(result) {
+    let blob;
+    URL.createObjectURL = vi.fn((b) => { blob = b; return 'blob:x'; });
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    act(() => result.current.handleDownloadCsv());
+    click.mockRestore();
+    return blob ? (await blob.text()).replace(/^\uFEFF/, '') : null;
+  }
+
+  it('writes a CSV with quoting and neutralized spreadsheet formulas', async () => {
+    const result = await withResults();
+    const lines = (await captureCsv(result)).split('\n');
+    expect(lines[0]).toBe('Original,Defanged,Type(s),Status');
+    expect(lines[1]).toBe('1.2.3.4,1[.]2[.]3[.]4,IP Address,Modified');
+    // Leading "=" is prefixed with ' so Excel shows text instead of evaluating it
+    expect(lines[2]).toBe(`"'=HYPERLINK(""http://evil"",""x"")","'=HYPERLINK(""http://evil"",""x"")",,Unchanged`);
+    expect(lines[3]).toBe('"a,b","a,b",Text; Other,Unchanged');
+    expect(result.current.snackbar).toEqual({ open: true, message: 'CSV downloaded', severity: 'success' });
+  });
+
+  it('respects show-only-changed and warns when nothing is left to export', async () => {
+    const result = await withResults();
+    act(() => result.current.handleToggleShowOnlyChanged(true));
+    expect((await captureCsv(result)).split('\n')).toHaveLength(2);
+
+    act(() => result.current.handleClear());
+    expect(await captureCsv(result)).toBe(null);
+    expect(result.current.snackbar.severity).toBe('warning');
+  });
+
+  it('copy-all joins the visible processed values', async () => {
+    const result = await withResults();
+    act(() => result.current.handleToggleShowOnlyChanged(true));
+    await act(async () => { result.current.handleCopyAllResults(); });
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('1[.]2[.]3[.]4');
+    act(() => result.current.closeSnackbar());
+    expect(result.current.snackbar.open).toBe(false);
+  });
+});

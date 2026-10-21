@@ -5,7 +5,8 @@
 // content (profile names, post titles), so they're neutralized rather than trusted.
 const FORMULA_PREFIX_RE = /^[=+\-@\t\r]/;
 
-function toCell(value) {
+/** One CSV cell: quoted when needed, formula-leading text neutralized. */
+export function toCell(value) {
   if (value === null || value === undefined) return '';
   let text = typeof value === 'object' ? JSON.stringify(value) : String(value);
   if (FORMULA_PREFIX_RE.test(text)) text = `'${text}`;
