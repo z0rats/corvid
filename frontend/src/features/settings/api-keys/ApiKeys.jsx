@@ -26,6 +26,7 @@ export default function ApiKeys() {
   const [servicesConfig, setServicesConfig] = useState({});
   const [headerExpanded, setHeaderExpanded] = useState(false);
   const [error, setError] = useState(null);
+  const [configLoaded, setConfigLoaded] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const focusKey = searchParams.get('service');
@@ -35,7 +36,7 @@ export default function ApiKeys() {
     return next;
   }, { replace: true });
 
-  const { loading, getServicesConfig } = useApiKeys();
+  const { getServicesConfig } = useApiKeys();
   const {
     searchFilter,
     showOnlyConfigured,
@@ -56,13 +57,16 @@ export default function ApiKeys() {
       } else {
         setError(result.message);
       }
+      setConfigLoaded(true);
     };
 
     loadServicesConfig();
     return () => { ignore = true; };
   }, [getServicesConfig]);
 
-  if (loading && Object.keys(servicesConfig).length === 0) {
+  // Gate on the first load finishing, not on `loading`: that starts false, so the page (and its
+  // QuotaPanel fetch) would mount once before the spinner and again after it.
+  if (!configLoaded) {
     return (
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
         <Stack spacing={2} sx={{

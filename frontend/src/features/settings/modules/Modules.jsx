@@ -88,6 +88,7 @@ export default function Modules() {
                       onChange={() => handleModuleToggle(name)}
                       disabled={loading}
                       color="primary"
+                      slotProps={{ input: { 'aria-label': formatModuleName(name) } }}
                     />
                   </Box>
                 </Box>

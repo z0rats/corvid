@@ -50,6 +50,7 @@ function ModelSelector({ label, description, value, models, onChange, disabled, 
       </Box>
       <FormControl sx={{ minWidth: 250 }}>
         <Select
+          inputProps={{ 'aria-label': label }}
           value={value || ''}
           onChange={e => onChange(e.target.value || null)}
           disabled={disabled}
