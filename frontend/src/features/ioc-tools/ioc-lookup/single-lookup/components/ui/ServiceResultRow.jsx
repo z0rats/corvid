@@ -150,7 +150,8 @@ function ServiceResultRow({
     );
   }
 
-  const isExpandDisabled = !DetailComponentToRender && (!result || !!result.error);
+  // An error row stays expandable: its details (e.g. rate-limit reset/retry-after) are the point
+  const isExpandDisabled = !DetailComponentToRender && !result;
 
 
   return (

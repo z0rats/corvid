@@ -156,8 +156,9 @@ export const SERVICE_DEFINITIONS = {
         if (responseData.message?.toLowerCase().includes("not found")) return { summary: "IP not found in CTI", tlp: 'GREEN' };
         const score = responseData.ip_range_score;
         if (score === null || typeof score === 'undefined') return { summary: "Score unavailable", tlp: 'WHITE' };
-        const tlp = scoreTlpMapper(score * 100, { red: 80, amber: 50 });
-        return { summary: `CTI Range Score: ${score}`, tlp, keyMetric: score };
+        // CrowdSec's ip_range_score is on a 0-5 scale
+        const tlp = scoreTlpMapper((score / 5) * 100, { red: 80, amber: 50 });
+        return { summary: `CTI Range Score: ${score}/5`, tlp, keyMetric: score };
     }),
   },
   crowdstrike: {
@@ -376,7 +377,10 @@ export const SERVICE_DEFINITIONS = {
     getSummaryAndTlp: withErrorHandling((responseData) => {
         const status = responseData.query_status;
         if (status === 'hash_not_found') return { summary: "Hash not found", tlp: 'GREEN' };
-        if (status === 'ok') return { summary: `Found: ${responseData.data[0].signature || 'Malware Sample'}`, tlp: 'RED', keyMetric: responseData.data[0].signature };
+        if (status === 'ok') {
+            const signature = responseData.data?.[0]?.signature;
+            return { summary: `Found: ${signature || 'Malware Sample'}`, tlp: 'RED', keyMetric: signature };
+        }
         return { summary: `Status: ${status}`, tlp: 'WHITE' };
     }),
   },
@@ -497,7 +501,10 @@ export const SERVICE_DEFINITIONS = {
     lookupEndpoint: createSingleEndpoint('threatfox'),
     getSummaryAndTlp: withErrorHandling((responseData) => {
         if (responseData.query_status === 'no_result') return { summary: "Not found", tlp: 'GREEN' };
-        if (responseData.query_status === 'ok') return { summary: `Threat: ${responseData.data[0].threat_type}`, tlp: 'RED', keyMetric: responseData.data[0].threat_type };
+        if (responseData.query_status === 'ok') {
+            const threatType = responseData.data?.[0]?.threat_type;
+            return { summary: `Threat: ${threatType || 'unknown'}`, tlp: 'RED', keyMetric: threatType };
+        }
         return { summary: `Status: ${responseData.query_status}`, tlp: 'WHITE' };
     }),
   },
