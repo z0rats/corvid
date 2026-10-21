@@ -46,8 +46,9 @@ export default function ThreatActorTab({
         <Box key={attackType} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
           <Typography sx={{ mr: 2 }}>{attackType}</Typography>
           <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>{t('settings.cti.threatActor.priority')}</InputLabel>
+            <InputLabel id={`cti-priority-${attackType.replace(/\W+/g, '-')}-label`}>{t('settings.cti.threatActor.priority')}</InputLabel>
             <Select
+              labelId={`cti-priority-${attackType.replace(/\W+/g, '-')}-label`}
               value={threatConfig.attack_type_priorities?.[attackType] || ""}
               onChange={(e) => onAttackTypePriorityChange(attackType, e.target.value)}
               label={t('settings.cti.threatActor.priority')}

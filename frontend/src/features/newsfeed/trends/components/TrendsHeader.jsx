@@ -34,8 +34,8 @@ export default function TrendsHeader({ timeRange, onTimeRangeChange, onRefresh }
           gap: 2
         }}>
         <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>{t('trends.header.timeRange')}</InputLabel>
-          <Select value={timeRange} label={t('trends.header.timeRange')} onChange={onTimeRangeChange}>
+          <InputLabel id="trends-header-time-range-label">{t('trends.header.timeRange')}</InputLabel>
+          <Select labelId="trends-header-time-range-label" value={timeRange} label={t('trends.header.timeRange')} onChange={onTimeRangeChange}>
             {TIME_RANGE_OPTIONS.filter((r) => r.value !== "alltime").map((range) => (
               <MenuItem key={range.value} value={range.value}>
                 {range.label}

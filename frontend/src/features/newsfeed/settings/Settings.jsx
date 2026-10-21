@@ -102,8 +102,8 @@ export default function Settings() {
 
           <Box sx={{ maxWidth: SETTINGS.MAX_WIDTH }}>
             <FormControl fullWidth size="small" disabled={saving}>
-              <InputLabel>{t('settings.general.retentionPeriod')}</InputLabel>
-              <Select
+              <InputLabel id="settings-retention-period-label">{t('settings.general.retentionPeriod')}</InputLabel>
+              <Select labelId="settings-retention-period-label"
                 value={config.retention_days}
                 label={t('settings.general.retentionPeriod')}
                 onChange={handleRetentionChange}
@@ -144,8 +144,8 @@ export default function Settings() {
 
             {config.background_fetch_enabled && (
               <FormControl fullWidth size="small" disabled={saving}>
-                <InputLabel>{t('settings.general.fetchInterval')}</InputLabel>
-                <Select
+                <InputLabel id="settings-fetch-interval-label">{t('settings.general.fetchInterval')}</InputLabel>
+                <Select labelId="settings-fetch-interval-label"
                   value={config.fetch_interval_minutes}
                   label={t('settings.general.fetchInterval')}
                   onChange={handleFetchIntervalChange}

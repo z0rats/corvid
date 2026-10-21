@@ -50,8 +50,8 @@ export default function IocStatistics({ timeRange, refreshKey, onSelectArticleId
             {t('trends.ioc.title')}
           </Typography>
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>{t('trends.ioc.type')}</InputLabel>
-            <Select value={selectedIocType} label={t('trends.ioc.type')} onChange={(e) => setSelectedIocType(e.target.value)}>
+            <InputLabel id="ioc-statistics-type-label">{t('trends.ioc.type')}</InputLabel>
+            <Select labelId="ioc-statistics-type-label" value={selectedIocType} label={t('trends.ioc.type')} onChange={(e) => setSelectedIocType(e.target.value)}>
               {IOC_TYPE_SELECT_OPTIONS.map((type) => (
                 <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
               ))}

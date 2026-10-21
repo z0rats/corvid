@@ -61,8 +61,8 @@ export default function Headlines() {
         <TextField label={t('headlines.filterSource')} size="small" value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} />
         <TextField label={t('headlines.filterTitle')} size="small" value={titleFilter} onChange={(e) => setTitleFilter(e.target.value)} />
         <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>{t('headlines.timeRange')}</InputLabel>
-          <Select value={timeFilter} label={t('headlines.timeRange')} onChange={(e) => setTimeFilter(e.target.value)}>
+          <InputLabel id="headlines-time-range-label">{t('headlines.timeRange')}</InputLabel>
+          <Select labelId="headlines-time-range-label" value={timeFilter} label={t('headlines.timeRange')} onChange={(e) => setTimeFilter(e.target.value)}>
             {TIME_RANGE_OPTIONS.map((range) => (
               <MenuItem key={range.value} value={range.value}>
                 {range.label}

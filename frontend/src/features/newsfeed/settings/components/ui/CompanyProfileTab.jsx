@@ -22,8 +22,8 @@ export default function CompanyProfileTab({ ctiSettings, onInputChange, renderAu
         t('settings.cti.companyProfile.industrySelectionPlaceholder')
       )}
       <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel>{t('settings.cti.companyProfile.companySize')}</InputLabel>
-        <Select
+        <InputLabel id="company-profile-tab-company-size-label">{t('settings.cti.companyProfile.companySize')}</InputLabel>
+        <Select labelId="company-profile-tab-company-size-label"
           value={profile.company_size || ""}
           onChange={(e) => onInputChange("company_profile", "company_size", e.target.value)}
         >
