@@ -7,7 +7,6 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
 import Switch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
@@ -17,6 +16,7 @@ import { useNotification } from '../../../core/hooks/ui/useNotification';
 import AppSnackbar from '../../../core/components/ui/AppSnackbar';
 import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { createLogger } from '../../../core/utils/logger';
+import CommitTextField from '../../../core/components/ui/CommitTextField';
 
 const logger = createLogger('UsernameSearchSettings');
 
@@ -123,41 +123,41 @@ export default function Settings() {
         <Divider sx={{ my: 2 }} />
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <CommitTextField
             type="number"
             label={t('settings.timeoutSeconds')}
             helperText={t('settings.timeoutSecondsHelp')}
             value={config.timeout_seconds}
-            onChange={(e) => handleChange('timeout_seconds', Number(e.target.value))}
+            onCommit={(value) => handleChange('timeout_seconds', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 1, max: 120 } }}
           />
-          <TextField
+          <CommitTextField
             type="number"
             label={t('settings.maxConcurrency')}
             helperText={t('settings.maxConcurrencyHelp')}
             value={config.max_concurrency}
-            onChange={(e) => handleChange('max_concurrency', Number(e.target.value))}
+            onCommit={(value) => handleChange('max_concurrency', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 1, max: 500 } }}
           />
-          <TextField
+          <CommitTextField
             type="number"
             label={t('settings.topSitesCount')}
             helperText={t('settings.topSitesCountHelp')}
             value={config.top_sites_count}
-            onChange={(e) => handleChange('top_sites_count', Number(e.target.value))}
+            onCommit={(value) => handleChange('top_sites_count', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 0, max: 10000 } }}
           />
-          <TextField
+          <CommitTextField
             label={t('settings.proxyUrl')}
             helperText={t('settings.proxyUrlHelp')}
             value={config.proxy_url || ''}
-            onChange={(e) => handleChange('proxy_url', e.target.value)}
+            onCommit={(value) => handleChange('proxy_url', value)}
             disabled={saving}
             size="small"
           />
@@ -180,11 +180,11 @@ export default function Settings() {
         </Box>
 
         {config.auto_update_db_enabled && (
-          <TextField
+          <CommitTextField
             type="number"
             label={t('settings.autoUpdateIntervalHours')}
             value={config.auto_update_interval_hours}
-            onChange={(e) => handleChange('auto_update_interval_hours', Number(e.target.value))}
+            onCommit={(value) => handleChange('auto_update_interval_hours', value)}
             disabled={saving}
             size="small"
             fullWidth
@@ -248,22 +248,22 @@ export default function Settings() {
         ) : (
           <>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
+              <CommitTextField
                 type="number"
                 label={t('settings.saTimeoutSeconds')}
                 helperText={t('settings.saTimeoutSecondsHelp')}
                 value={saConfig.timeout_seconds}
-                onChange={(e) => handleSaChange('timeout_seconds', Number(e.target.value))}
+                onCommit={(value) => handleSaChange('timeout_seconds', value)}
                 disabled={saSaving}
                 size="small"
                 slotProps={{ htmlInput: { min: 0, max: 120 } }}
               />
-              <TextField
+              <CommitTextField
                 type="number"
                 label={t('settings.topSitesCount')}
                 helperText={t('settings.topSitesCountHelp')}
                 value={saConfig.top_sites_count}
-                onChange={(e) => handleSaChange('top_sites_count', Number(e.target.value))}
+                onCommit={(value) => handleSaChange('top_sites_count', value)}
                 disabled={saSaving}
                 size="small"
                 slotProps={{ htmlInput: { min: 0 } }}

@@ -5,13 +5,13 @@ import Card from '@mui/material/Card';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
 import { usePhoneSearchSettings } from '../hooks/api/usePhoneSearchSettings';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
 import AppSnackbar from '../../../core/components/ui/AppSnackbar';
 import { createLogger } from '../../../core/utils/logger';
+import CommitTextField from '../../../core/components/ui/CommitTextField';
 
 const logger = createLogger('PhoneSearchSettings');
 
@@ -53,21 +53,21 @@ export default function Settings() {
         <Divider sx={{ my: 2 }} />
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <CommitTextField
             type="number"
             label={t('settings.timeoutSeconds')}
             helperText={t('settings.timeoutSecondsHelp')}
             value={config.timeout_seconds}
-            onChange={(e) => handleChange('timeout_seconds', Number(e.target.value))}
+            onCommit={(value) => handleChange('timeout_seconds', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 1, max: 60 } }}
           />
-          <TextField
+          <CommitTextField
             label={t('settings.proxyUrl')}
             helperText={t('settings.proxyUrlHelp')}
             value={config.proxy_url || ''}
-            onChange={(e) => handleChange('proxy_url', e.target.value)}
+            onCommit={(value) => handleChange('proxy_url', value)}
             disabled={saving}
             size="small"
           />

@@ -4,13 +4,13 @@ import Card from '@mui/material/Card';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
 import { useRuBusinessCheckSettings } from '../hooks/api/useRuBusinessCheckSettings';
 import { useNotification } from '../../../core/hooks/ui/useNotification';
 import AppSnackbar from '../../../core/components/ui/AppSnackbar';
 import { createLogger } from '../../../core/utils/logger';
+import CommitTextField from '../../../core/components/ui/CommitTextField';
 
 const logger = createLogger('RuBusinessCheckSettings');
 
@@ -47,22 +47,22 @@ export default function Settings() {
         <Divider sx={{ my: 2 }} />
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог «свежей регистрации», дней"
             helperText="Ниже этого возраста регистрации срабатывает мягкий флаг"
             value={config.fresh_registration_threshold_days}
-            onChange={(e) => handleChange('fresh_registration_threshold_days', Number(e.target.value))}
+            onCommit={(value) => handleChange('fresh_registration_threshold_days', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 1, max: 3650 } }}
           />
-          <TextField
+          <CommitTextField
             type="number"
             label="Хранение истории, дней"
             helperText="0 = хранить бессрочно. Включает сырые данные источников"
             value={config.history_retention_days}
-            onChange={(e) => handleChange('history_retention_days', Number(e.target.value))}
+            onCommit={(value) => handleChange('history_retention_days', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 0, max: 3650 } }}
@@ -73,32 +73,32 @@ export default function Settings() {
 
         <Typography variant="subtitle1" gutterBottom>Арбитраж</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог «небольшого» иска, ₽"
             helperText="Единичное разрешённое дело как ответчик ниже этой суммы — мягкий флаг"
             value={config.small_claim_amount_threshold}
-            onChange={(e) => handleChange('small_claim_amount_threshold', Number(e.target.value))}
+            onCommit={(value) => handleChange('small_claim_amount_threshold', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 0 } }}
           />
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог «крупного» иска, ₽"
             helperText="Любое дело как ответчик на сумму от этого порога — мягкий флаг"
             value={config.large_claim_amount_threshold}
-            onChange={(e) => handleChange('large_claim_amount_threshold', Number(e.target.value))}
+            onCommit={(value) => handleChange('large_claim_amount_threshold', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 0 } }}
           />
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог количества дел как ответчик"
             helperText="От этого числа дел как ответчик — мягкий флаг, независимо от суммы"
             value={config.multiple_claims_defendant_threshold}
-            onChange={(e) => handleChange('multiple_claims_defendant_threshold', Number(e.target.value))}
+            onCommit={(value) => handleChange('multiple_claims_defendant_threshold', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 1, max: 100 } }}
@@ -109,12 +109,12 @@ export default function Settings() {
 
         <Typography variant="subtitle1" gutterBottom>Прозрачный бизнес</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог «массового адреса», компаний"
             helperText="От этого числа других компаний по тому же адресу — мягкий флаг"
             value={config.mass_address_threshold}
-            onChange={(e) => handleChange('mass_address_threshold', Number(e.target.value))}
+            onCommit={(value) => handleChange('mass_address_threshold', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 1, max: 1000 } }}
@@ -125,32 +125,32 @@ export default function Settings() {
 
         <Typography variant="subtitle1" gutterBottom>Бухгалтерская отчётность (ГИР БО)</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог автономии (капитал / баланс)"
             helperText="Ниже этой доли собственного капитала в балансе — мягкий флаг (по умолчанию 0.1)"
             value={config.equity_ratio_threshold}
-            onChange={(e) => handleChange('equity_ratio_threshold', Number(e.target.value))}
+            onCommit={(value) => handleChange('equity_ratio_threshold', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 0, max: 1, step: 0.05 } }}
           />
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог текущей ликвидности (оборотные / краткосрочные обязательства)"
             helperText="Ниже этого значения — мягкий флаг (по умолчанию 1.0)"
             value={config.current_ratio_threshold}
-            onChange={(e) => handleChange('current_ratio_threshold', Number(e.target.value))}
+            onCommit={(value) => handleChange('current_ratio_threshold', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 0, max: 100, step: 0.1 } }}
           />
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог падения выручки за год (доля от 0 до 1)"
             helperText="Падение выручки больше этой доли — мягкий флаг (по умолчанию 0.5 = 50%)"
             value={config.revenue_drop_threshold}
-            onChange={(e) => handleChange('revenue_drop_threshold', Number(e.target.value))}
+            onCommit={(value) => handleChange('revenue_drop_threshold', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 0, max: 1, step: 0.05 } }}
@@ -161,12 +161,12 @@ export default function Settings() {
 
         <Typography variant="subtitle1" gutterBottom>Возраст домена</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <CommitTextField
             type="number"
             label="Порог разрыва «домен моложе компании», дней"
             helperText="От этого разрыва между регистрацией компании и появлением домена — мягкий флаг"
             value={config.domain_age_mismatch_threshold_days}
-            onChange={(e) => handleChange('domain_age_mismatch_threshold_days', Number(e.target.value))}
+            onCommit={(value) => handleChange('domain_age_mismatch_threshold_days', value)}
             disabled={saving}
             size="small"
             slotProps={{ htmlInput: { min: 1, max: 3650 } }}
