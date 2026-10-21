@@ -333,3 +333,16 @@ export const modifiedSubsequentSystemImpactMetrics = [
     info: "This metric measures the impact to the availability of the SUBSEQUENT SYSTEM(S) resulting from a successfully exploited vulnerability in the user's environment.",
   },
 ];
+
+// Every metric group, for code that needs all of them (export value labels) - one list to
+// extend when a group is added.
+export const METRIC_GROUPS = {
+  exploitabilityMetrics,
+  vulnerableSystemImpactMetrics,
+  subsequentSystemImpactMetrics,
+  threatMetrics,
+  supplementalMetrics,
+  modifiedExploitabilityMetrics,
+  modifiedVulnerableSystemImpactMetrics,
+  modifiedSubsequentSystemImpactMetrics,
+};

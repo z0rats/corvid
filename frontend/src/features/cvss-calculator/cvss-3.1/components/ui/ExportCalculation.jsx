@@ -63,6 +63,9 @@ export default function ExportCalculation({ cvssScores, vectorString }) {
         privilegesRequired: mapMetric('privilegesRequired', metrics.base.privilegesRequired),
         userInteraction: mapMetric('userInteraction', metrics.base.userInteraction),
         scope: mapMetric('scope', metrics.base.scope),
+        confidentialityImpact: mapMetric('confidentialityImpact', metrics.base.confidentialityImpact),
+        integrityImpact: mapMetric('integrityImpact', metrics.base.integrityImpact),
+        availabilityImpact: mapMetric('availabilityImpact', metrics.base.availabilityImpact),
       },
       temporal: {
         temporalScore: round(scores.temporal.temporalScore),
@@ -160,6 +163,7 @@ __________
         <Button
           size="small"
           onClick={handleToggle}
+          aria-label={t('common.exportOptions')}
         >
           <ArrowDropDownIcon />
         </Button>

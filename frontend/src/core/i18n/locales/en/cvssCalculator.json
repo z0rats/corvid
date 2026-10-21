@@ -13,7 +13,8 @@
     "showMetricInfo": "Show metric info",
     "close": "close",
     "exploitabilityMetrics": "Exploitability Metrics",
-    "impactMetrics": "Impact Metrics"
+    "impactMetrics": "Impact Metrics",
+    "exportOptions": "Export options"
   },
   "cvss31": {
     "overallScoreTitle": "Overall CVSS 3.1 Score",
@@ -107,6 +108,8 @@
       "subsequentSystemImpactHeading": "Subsequent System Impact",
       "threatMetricsHeading": "Threat Metrics",
       "threatMetricsDescription": "The Threat metrics measure the current state of exploit techniques or code availability.",
+      "environmentalMetricsHeading": "Environmental Metrics",
+      "supplementalMetricsHeading": "Supplemental Metrics",
       "overallScoreHeading": "Overall Score: {{score}} ({{severity}})",
       "attackVector": "**Attack Vector (AV)**: {{value}}",
       "attackComplexity": "**Attack Complexity (AC)**: {{value}}",
@@ -119,7 +122,24 @@
       "subsequentSystemConfidentiality": "**Confidentiality (SC)**: {{value}}",
       "subsequentSystemIntegrity": "**Integrity (SI)**: {{value}}",
       "subsequentSystemAvailability": "**Availability (SA)**: {{value}}",
-      "exploitMaturity": "**Exploit Maturity (E)**: {{value}}"
+      "exploitMaturity": "**Exploit Maturity (E)**: {{value}}",
+      "safety": "**Safety (S)**: {{value}}",
+      "automatable": "**Automatable (AU)**: {{value}}",
+      "recovery": "**Recovery (R)**: {{value}}",
+      "valueDensity": "**Value Density (V)**: {{value}}",
+      "vulnerabilityResponseEffort": "**Vulnerability Response Effort (RE)**: {{value}}",
+      "providerUrgency": "**Provider Urgency (U)**: {{value}}",
+      "modifiedAttackVector": "**Attack Vector (MAV)**: {{value}}",
+      "modifiedAttackComplexity": "**Attack Complexity (MAC)**: {{value}}",
+      "modifiedAttackRequirements": "**Attack Requirements (MAT)**: {{value}}",
+      "modifiedPrivilegesRequired": "**Privileges Required (MPR)**: {{value}}",
+      "modifiedUserInteraction": "**User Interaction (MUI)**: {{value}}",
+      "modifiedVulnerableSystemConfidentiality": "**Confidentiality (MVC)**: {{value}}",
+      "modifiedVulnerableSystemIntegrity": "**Integrity (MVI)**: {{value}}",
+      "modifiedVulnerableSystemAvailability": "**Availability (MVA)**: {{value}}",
+      "modifiedSubsequentSystemConfidentiality": "**Confidentiality (MSC)**: {{value}}",
+      "modifiedSubsequentSystemIntegrity": "**Integrity (MSI)**: {{value}}",
+      "modifiedSubsequentSystemAvailability": "**Availability (MSA)**: {{value}}"
     }
   },
   "chart": {

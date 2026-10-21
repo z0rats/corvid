@@ -12,9 +12,33 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import { downloadBlob } from "../../../shared/utils/fileUtils";
 import { METRIC_MAPS } from "../../constants/exportMaps";
+import {
+  exploitabilityMetrics,
+  vulnerableSystemImpactMetrics,
+  subsequentSystemImpactMetrics,
+  threatMetrics,
+  supplementalMetrics,
+  modifiedExploitabilityMetrics,
+  modifiedVulnerableSystemImpactMetrics,
+  modifiedSubsequentSystemImpactMetrics,
+} from "../../constants/metricsConfig";
 import { useTranslation } from 'react-i18next';
 
-const mapMetric = (category, value) => METRIC_MAPS[category]?.[value] || "Unknown";
+const BASE_METRICS = [...exploitabilityMetrics, ...vulnerableSystemImpactMetrics, ...subsequentSystemImpactMetrics];
+const ENVIRONMENTAL_METRICS = [
+  ...modifiedExploitabilityMetrics,
+  ...modifiedVulnerableSystemImpactMetrics,
+  ...modifiedSubsequentSystemImpactMetrics,
+];
+
+// Display label of a metric's current value; unset optional metrics read as "Not Defined".
+const metricValueLabel = (key, metrics) => METRIC_MAPS[key]?.[metrics[key] || "X"] || "Unknown";
+
+// metric key -> export field name and i18n key suffix: "attack_vector" -> "attackVector"
+const toExportName = (key) => key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+
+const metricGroupJson = (group, metrics) =>
+  Object.fromEntries(group.map(({ key }) => [toExportName(key), metricValueLabel(key, metrics)]));
 
 export default function ExportCalculation({ metrics, scores, vectorString }) {
   const { t } = useTranslation('cvssCalculator');
@@ -47,27 +71,19 @@ export default function ExportCalculation({ metrics, scores, vectorString }) {
     setOpen(false);
   };
 
+  const metricLines = (group) => group
+    .map(({ key }) => `- ${t(`cvss40.export.${toExportName(key)}`, { value: metricValueLabel(key, metrics) })}`)
+    .join("\n");
+
   function exportCalculationJson() {
     const cvssJson = {
       vectorString: vectorString,
       baseScore: scores?.base_score || 0,
       baseSeverity: scores?.base_severity || t('common.severityNone'),
-      baseMetrics: {
-        attackVector: mapMetric("attack_vector", metrics.attack_vector),
-        attackComplexity: mapMetric("attack_complexity", metrics.attack_complexity),
-        attackRequirements: mapMetric("attack_requirements", metrics.attack_requirements),
-        privilegesRequired: mapMetric("privileges_required", metrics.privileges_required),
-        userInteraction: mapMetric("user_interaction", metrics.user_interaction),
-        vulnerableSystemConfidentiality: mapMetric("vulnerable_system_confidentiality", metrics.vulnerable_system_confidentiality),
-        vulnerableSystemIntegrity: mapMetric("vulnerable_system_integrity", metrics.vulnerable_system_integrity),
-        vulnerableSystemAvailability: mapMetric("vulnerable_system_availability", metrics.vulnerable_system_availability),
-        subsequentSystemConfidentiality: mapMetric("subsequent_system_confidentiality", metrics.subsequent_system_confidentiality),
-        subsequentSystemIntegrity: mapMetric("subsequent_system_integrity", metrics.subsequent_system_integrity),
-        subsequentSystemAvailability: mapMetric("subsequent_system_availability", metrics.subsequent_system_availability),
-      },
-      threatMetrics: {
-        exploitMaturity: mapMetric("exploit_maturity", metrics.exploit_maturity),
-      },
+      baseMetrics: metricGroupJson(BASE_METRICS, metrics),
+      threatMetrics: metricGroupJson(threatMetrics, metrics),
+      environmentalMetrics: metricGroupJson(ENVIRONMENTAL_METRICS, metrics),
+      supplementalMetrics: metricGroupJson(supplementalMetrics, metrics),
     };
 
     const fileData = JSON.stringify(cvssJson, null, 2);
@@ -85,28 +101,41 @@ __________
 ${t('cvss40.export.baseDescription')}
 
 ### ${t('cvss40.export.exploitabilityMetricsHeading')}
-- ${t('cvss40.export.attackVector', { value: mapMetric("attack_vector", metrics.attack_vector) })}
-- ${t('cvss40.export.attackComplexity', { value: mapMetric("attack_complexity", metrics.attack_complexity) })}
-- ${t('cvss40.export.attackRequirements', { value: mapMetric("attack_requirements", metrics.attack_requirements) })}
-- ${t('cvss40.export.privilegesRequired', { value: mapMetric("privileges_required", metrics.privileges_required) })}
-- ${t('cvss40.export.userInteraction', { value: mapMetric("user_interaction", metrics.user_interaction) })}
+${metricLines(exploitabilityMetrics)}
 
 ### ${t('cvss40.export.vulnerableSystemImpactHeading')}
-- ${t('cvss40.export.vulnerableSystemConfidentiality', { value: mapMetric("vulnerable_system_confidentiality", metrics.vulnerable_system_confidentiality) })}
-- ${t('cvss40.export.vulnerableSystemIntegrity', { value: mapMetric("vulnerable_system_integrity", metrics.vulnerable_system_integrity) })}
-- ${t('cvss40.export.vulnerableSystemAvailability', { value: mapMetric("vulnerable_system_availability", metrics.vulnerable_system_availability) })}
+${metricLines(vulnerableSystemImpactMetrics)}
 
 ### ${t('cvss40.export.subsequentSystemImpactHeading')}
-- ${t('cvss40.export.subsequentSystemConfidentiality', { value: mapMetric("subsequent_system_confidentiality", metrics.subsequent_system_confidentiality) })}
-- ${t('cvss40.export.subsequentSystemIntegrity', { value: mapMetric("subsequent_system_integrity", metrics.subsequent_system_integrity) })}
-- ${t('cvss40.export.subsequentSystemAvailability', { value: mapMetric("subsequent_system_availability", metrics.subsequent_system_availability) })}
+${metricLines(subsequentSystemImpactMetrics)}
 
 __________
 
 ## ${t('cvss40.export.threatMetricsHeading')}
 ${t('cvss40.export.threatMetricsDescription')}
 
-- ${t('cvss40.export.exploitMaturity', { value: mapMetric("exploit_maturity", metrics.exploit_maturity) })}
+${metricLines(threatMetrics)}
+
+__________
+
+## ${t('cvss40.export.environmentalMetricsHeading')}
+${t('cvss40.environmental.description')}
+
+### ${t('cvss40.export.exploitabilityMetricsHeading')}
+${metricLines(modifiedExploitabilityMetrics)}
+
+### ${t('cvss40.export.vulnerableSystemImpactHeading')}
+${metricLines(modifiedVulnerableSystemImpactMetrics)}
+
+### ${t('cvss40.export.subsequentSystemImpactHeading')}
+${metricLines(modifiedSubsequentSystemImpactMetrics)}
+
+__________
+
+## ${t('cvss40.export.supplementalMetricsHeading')}
+${t('cvss40.supplemental.description')}
+
+${metricLines(supplementalMetrics)}
 
 __________
 
@@ -126,6 +155,7 @@ __________
         <Button
           size="small"
           onClick={handleToggle}
+          aria-label={t('common.exportOptions')}
         >
           <ArrowDropDownIcon />
         </Button>
