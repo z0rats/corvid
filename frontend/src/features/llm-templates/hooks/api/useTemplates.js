@@ -30,19 +30,16 @@ export function useTemplates() {
     fetchTemplates();
   }, [fetchTemplates]);
 
-  const reorderTemplates = useCallback(async (sourceIndex, destinationIndex) => {
-    const items = Array.from(templates);
-    const [moved] = items.splice(sourceIndex, 1);
-    items.splice(destinationIndex, 0, moved);
-    setTemplates(items);
-
+  // Persists an already-computed full ordering (e.g. one category reordered in place).
+  const saveTemplateOrder = useCallback(async (orderedTemplates) => {
+    setTemplates(orderedTemplates);
     try {
-      await templatesApi.reorderTemplates(items.map(t => t.id));
+      await templatesApi.reorderTemplates(orderedTemplates.map(t => t.id));
     } catch (err) {
       logger.error('Failed to reorder templates:', err);
       fetchTemplates();
     }
-  }, [templates, fetchTemplates]);
+  }, [fetchTemplates]);
 
   const deleteTemplate = useCallback(async (templateId) => {
     try {
@@ -60,7 +57,7 @@ export function useTemplates() {
     loading,
     error,
     fetchTemplates,
-    reorderTemplates,
+    saveTemplateOrder,
     deleteTemplate,
   };
 }

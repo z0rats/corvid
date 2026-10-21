@@ -31,7 +31,7 @@ const MainContent = styled(Box)({
 
 export default function TemplatesView() {
   const { t } = useTranslation('llmTemplates');
-  const { templates, setTemplates, loading, error, fetchTemplates, reorderTemplates, deleteTemplate } = useTemplates();
+  const { templates, setTemplates, loading, error, fetchTemplates, saveTemplateOrder, deleteTemplate } = useTemplates();
   const {
     categories, createCategory, updateCategory, deleteCategory: deleteCategoryApi,
     reorderCategories, moveTemplates, fetchCategories,
@@ -94,15 +94,12 @@ export default function TemplatesView() {
           const [moved] = catTemplates.splice(source.index, 1);
           catTemplates.splice(destination.index, 0, moved);
 
-          // Update local state
+          // The backend numbers templates by their position in the full list, and each
+          // category sorts by that number - so this category's new order, appended after
+          // everything else, is exactly the order to persist.
           const reorderedIds = new Set(catTemplates.map(t => t.id));
           const otherTemplates = templates.filter(t => !reorderedIds.has(t.id));
-          setTemplates([...otherTemplates, ...catTemplates]);
-
-          await reorderTemplates(
-            templates.findIndex(t => t.id === moved.id),
-            destination.index,
-          );
+          await saveTemplateOrder([...otherTemplates, ...catTemplates]);
         } else {
           // Move between categories
           const movedTemplateId = dragResult.draggableId;
@@ -117,7 +114,7 @@ export default function TemplatesView() {
       fetchTemplates();
       fetchCategories();
     }
-  }, [templates, setTemplates, categories, reorderTemplates, reorderCategories, moveTemplates, fetchTemplates, fetchCategories, showSnackbar, t]);
+  }, [templates, setTemplates, categories, saveTemplateOrder, reorderCategories, moveTemplates, fetchTemplates, fetchCategories, showSnackbar, t]);
 
   // --- Template CRUD handlers ---
   const handleDelete = useCallback((tpl) => {

@@ -102,8 +102,8 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
           <Typography variant="subtitle1" gutterBottom>{t('editDialog.basicInfo')}</Typography>
           <ResizableTextField label={t('editDialog.titleLabel')} fullWidth value={tpl.title} onChange={e => updateField('title', e.target.value)} required sx={{ mb: 2 }} />
           <FormControl sx={{ minWidth: 200, mb: 2 }}>
-            <InputLabel>{t('editDialog.modelLabel')}</InputLabel>
-            <Select value={tpl.model} label={t('editDialog.modelLabel')} onChange={e => updateField('model', e.target.value)}>
+            <InputLabel id="edit-template-dialog-model-label-label">{t('editDialog.modelLabel')}</InputLabel>
+            <Select labelId="edit-template-dialog-model-label-label" value={tpl.model} label={t('editDialog.modelLabel')} onChange={e => updateField('model', e.target.value)}>
               {Object.entries(Object.groupBy(availableModels, m => m.provider)).flatMap(([provider, models]) => [
                 <ListSubheader key={provider}>{provider}</ListSubheader>,
                 ...models.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>),
@@ -113,8 +113,8 @@ export default function EditTemplateDialog({ open, onClose, template, onSave, on
           <ResizableTextField label={t('editDialog.descriptionLabel')} fullWidth multiline minRows={2} value={tpl.description} onChange={e => updateField('description', e.target.value)} />
           {categories.length > 0 && (
             <FormControl sx={{ minWidth: 200, mt: 2 }}>
-              <InputLabel>{t('editDialog.groupLabel')}</InputLabel>
-              <Select
+              <InputLabel id="edit-template-dialog-group-label-label">{t('editDialog.groupLabel')}</InputLabel>
+              <Select labelId="edit-template-dialog-group-label-label"
                 value={tpl.category_id || ''}
                 label={t('editDialog.groupLabel')}
                 onChange={e => updateField('category_id', e.target.value)}

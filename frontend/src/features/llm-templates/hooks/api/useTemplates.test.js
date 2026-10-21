@@ -68,7 +68,7 @@ describe('useTemplates', () => {
     expect(result.current.templates).toEqual([{ id: '1' }]);
   });
 
-  it('reorderTemplates reorders optimistically and persists the new order', async () => {
+  it('saveTemplateOrder applies the given order optimistically and persists it', async () => {
     templatesApi.getTemplates.mockResolvedValue([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
     templatesApi.reorderTemplates.mockResolvedValue(undefined);
 
@@ -76,14 +76,14 @@ describe('useTemplates', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
-      await result.current.reorderTemplates(0, 2);
+      await result.current.saveTemplateOrder([{ id: 'b' }, { id: 'c' }, { id: 'a' }]);
     });
 
     expect(result.current.templates.map((t) => t.id)).toEqual(['b', 'c', 'a']);
     expect(templatesApi.reorderTemplates).toHaveBeenCalledWith(['b', 'c', 'a']);
   });
 
-  it('reorderTemplates re-fetches from the server if persisting the order fails', async () => {
+  it('saveTemplateOrder re-fetches from the server if persisting the order fails', async () => {
     templatesApi.getTemplates
       .mockResolvedValueOnce([{ id: 'a' }, { id: 'b' }])
       .mockResolvedValueOnce([{ id: 'a' }, { id: 'b' }]);
@@ -93,7 +93,7 @@ describe('useTemplates', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
-      await result.current.reorderTemplates(0, 1);
+      await result.current.saveTemplateOrder([{ id: 'b' }, { id: 'a' }]);
     });
 
     expect(templatesApi.getTemplates).toHaveBeenCalledTimes(2);

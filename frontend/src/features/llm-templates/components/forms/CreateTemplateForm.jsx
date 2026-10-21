@@ -119,8 +119,8 @@ export default function CreateTemplateForm() {
             sx={{ flex: 1 }}
           />
           <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>{t('createForm.modelLabel')}</InputLabel>
-            <Select value={template.model} label={t('createForm.modelLabel')} onChange={e => updateField('model', e.target.value)}>
+            <InputLabel id="create-template-form-model-label-label">{t('createForm.modelLabel')}</InputLabel>
+            <Select labelId="create-template-form-model-label-label" value={template.model} label={t('createForm.modelLabel')} onChange={e => updateField('model', e.target.value)}>
               {Object.entries(Object.groupBy(availableModels, m => m.provider)).flatMap(([provider, models]) => [
                 <ListSubheader key={provider}>{provider}</ListSubheader>,
                 ...models.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>),
@@ -129,8 +129,8 @@ export default function CreateTemplateForm() {
           </FormControl>
           {categories.length > 0 && (
             <FormControl sx={{ minWidth: 180 }}>
-              <InputLabel>{t('createForm.groupLabel')}</InputLabel>
-              <Select
+              <InputLabel id="create-template-form-group-label-label">{t('createForm.groupLabel')}</InputLabel>
+              <Select labelId="create-template-form-group-label-label"
                 value={template.category_id || ''}
                 label={t('createForm.groupLabel')}
                 onChange={e => updateField('category_id', e.target.value)}
