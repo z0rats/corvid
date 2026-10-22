@@ -145,14 +145,14 @@ class TestSecurityHeaders:
         csp = r.headers["content-security-policy"]
         assert "script-src 'self';" in csp
         assert "unsafe-inline" not in csp.split("script-src")[1].split(";")[0]
-        assert "https://cdn.jsdelivr.net" not in _csp_sources(csp)
+        assert _csp_sources(csp).isdisjoint({"https://cdn.jsdelivr.net"})
         assert r.headers["cache-control"] == "no-store, max-age=0"
         assert r.headers["pragma"] == "no-cache"
 
     @pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
     def test_docs_pages_get_relaxed_csp(self, make_client, path):
         csp = make_client().get(path).headers["content-security-policy"]
-        assert "https://cdn.jsdelivr.net" in _csp_sources(csp)
+        assert _csp_sources(csp) >= {"https://cdn.jsdelivr.net"}
 
     @pytest.mark.parametrize("path", ["/static/a.js", "/feedicons/a.png"])
     def test_static_assets_are_cacheable(self, make_client, path):

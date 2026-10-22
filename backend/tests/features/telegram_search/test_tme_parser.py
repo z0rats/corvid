@@ -70,7 +70,7 @@ class TestProfilePage:
         assert profile.member_count == 83253
         assert profile.online_count is None
         assert profile.description.startswith("Новости о Telegram\n\n")
-        assert "https://t.me/tginfochat" in profile.description_links
+        assert set(profile.description_links) >= {"https://t.me/tginfochat"}
         assert profile.photo_url
 
     def test_group_card_reports_members_and_online(self):

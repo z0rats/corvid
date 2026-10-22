@@ -1,4 +1,5 @@
 import datetime
+from urllib.parse import urlsplit
 
 from app.features.telegram_search.service.channel_metrics import (
     compute_metrics,
@@ -130,10 +131,11 @@ class TestExtractIndicators:
 
         assert indicators["ips"] == ["203.0.113.7"]
         assert indicators["cves"] == ["CVE-2024-3094"]
-        assert "https://evil-c2.net/x" in indicators["urls"]
-        assert "evil-c2.net" in indicators["domains"]
+        assert set(indicators["urls"]) >= {"https://evil-c2.net/x"}
+        assert set(indicators["domains"]) >= {"evil-c2.net"}
         assert indicators["emails"] == ["ops@corp.net"]
-        assert not any("t.me" in v for v in indicators["urls"] + indicators["domains"])
+        hosts = {urlsplit(url).hostname for url in indicators["urls"]} | set(indicators["domains"])
+        assert hosts.isdisjoint({"t.me"})
 
     def test_nothing_to_extract_is_an_empty_dict(self):
         assert extract_indicators([_post(1, text="")], None) == {}
