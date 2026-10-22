@@ -32,6 +32,11 @@ async def _echo(request):
     return PlainTextResponse(f"ok:{len(body)}")
 
 
+def _csp_sources(csp: str) -> set[str]:
+    """Every source token across all CSP directives (directive names dropped)."""
+    return {token for directive in csp.split(";") for token in directive.split()[1:]}
+
+
 def _app(middleware) -> TestClient:
     paths = ["/api/x", "/docs", "/redoc", "/openapi.json", "/static/a.js", "/feedicons/a.png"]
     app = Starlette(routes=[Route(p, _echo, methods=["GET", "POST"]) for p in paths])
@@ -140,14 +145,14 @@ class TestSecurityHeaders:
         csp = r.headers["content-security-policy"]
         assert "script-src 'self';" in csp
         assert "unsafe-inline" not in csp.split("script-src")[1].split(";")[0]
-        assert "cdn.jsdelivr.net" not in csp
+        assert "https://cdn.jsdelivr.net" not in _csp_sources(csp)
         assert r.headers["cache-control"] == "no-store, max-age=0"
         assert r.headers["pragma"] == "no-cache"
 
     @pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
     def test_docs_pages_get_relaxed_csp(self, make_client, path):
         csp = make_client().get(path).headers["content-security-policy"]
-        assert "https://cdn.jsdelivr.net" in csp
+        assert "https://cdn.jsdelivr.net" in _csp_sources(csp)
 
     @pytest.mark.parametrize("path", ["/static/a.js", "/feedicons/a.png"])
     def test_static_assets_are_cacheable(self, make_client, path):
