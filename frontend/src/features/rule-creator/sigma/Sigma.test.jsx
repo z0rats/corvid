@@ -26,7 +26,9 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-describe('Sigma rule builder', () => {
+// Each test drives the whole expanded form synchronously (~1.3s locally); under a loaded CI runner
+// that exceeded the 5s default, so this suite gets the same headroom as the CVSS calculator suites.
+describe('Sigma rule builder', { timeout: 20000 }, () => {
   it('preview/export need a title and an id (the id starts pre-generated)', () => {
     render(<Sigma />);
     expect(screen.getByLabelText('ID *').value).not.toBe('');

@@ -29,7 +29,7 @@ function previewText() {
 beforeEach(() => vi.spyOn(window, 'alert').mockImplementation(() => {}));
 afterEach(() => vi.restoreAllMocks());
 
-describe('Snort rule builder', () => {
+describe('Snort rule builder', { timeout: 20000 }, () => {
   it('needs a message (SID is pre-generated) before preview/export', () => {
     renderExpanded();
     expect(screen.getByLabelText(/^SID/)).not.toHaveValue('');

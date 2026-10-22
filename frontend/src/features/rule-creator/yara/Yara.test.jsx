@@ -25,7 +25,7 @@ function renderExpanded() {
 
 const exportRule = () => captureExport(fireEvent, screen.getByRole('button', { name: 'Export YARA Rule' }));
 
-describe('YARA rule builder', () => {
+describe('YARA rule builder', { timeout: 20000 }, () => {
   it('requires a valid rule name before preview/export', () => {
     renderExpanded();
     expect(screen.getByRole('button', { name: 'Preview Rule' })).toBeDisabled();
