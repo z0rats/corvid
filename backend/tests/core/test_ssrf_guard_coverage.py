@@ -46,9 +46,9 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     # Dork runner: fixed search-engine hosts (DuckDuckGo/Google/Bing); only the
     # dork query string is user-supplied, never the host
     "features/dork_runner/service/engines/base.py",
-    # Quota dashboard: fixed provider hosts (VirusTotal/Shodan/Hunter.io); only
-    # the API key is user-supplied, in query/header, never the host
-    "core/settings/api_keys/service/quota_clients.py",
+    # API key test: fixed provider hosts (account/status/token endpoints); only
+    # the saved keys are user-supplied, in query/header/path/auth, never the host
+    "core/settings/api_keys/service/key_test_clients.py",
     # About-page update check: fixed api.github.com host, no user input at all
     "core/release_check.py",
     # Reverse geocoding: fixed nominatim.openstreetmap.org host; only already-parsed

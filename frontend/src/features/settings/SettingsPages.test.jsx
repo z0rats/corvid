@@ -17,7 +17,9 @@ vi.mock('./services/api/settingsApi', () => ({
     getServicesConfig: vi.fn(),
     getConfiguredApiKeys: vi.fn(),
     getActiveApiKeys: vi.fn(),
-    getQuotaStatus: vi.fn(),
+    testApiKey: vi.fn(),
+    testAllApiKeys: vi.fn(),
+    createApiKey: vi.fn(),
     updateAiSettings: vi.fn(),
     updateModuleStatus: vi.fn(),
   },
@@ -41,6 +43,7 @@ const SERVICES = {
     required_keys: ['shodan'],
     documentation_url: 'https://docs.example/shodan',
     available: false,
+    key_test_exempt_reason: 'Every call spends one request of the daily allowance.',
   },
   urlhaus: {
     name: 'URLhaus',
@@ -79,7 +82,6 @@ beforeEach(() => {
   settingsApi.getServicesConfig.mockResolvedValue(SERVICES);
   settingsApi.getConfiguredApiKeys.mockResolvedValue({ virustotal: true });
   settingsApi.getActiveApiKeys.mockResolvedValue({ virustotal: true });
-  settingsApi.getQuotaStatus.mockResolvedValue([]);
 });
 
 describe('ApiKeys', () => {
@@ -138,51 +140,145 @@ describe('ApiKeys', () => {
   });
 });
 
-describe('QuotaPanel', () => {
-  it('shows usage, remaining-only, unconfigured and failing providers', async () => {
-    settingsApi.getQuotaStatus.mockResolvedValue([
-      { provider: 'VirusTotal', configured: true, used: 250, limit: 500 },
-      { provider: 'Hunter.io', configured: true, remaining: 42 },
-      { provider: 'Shodan', configured: false },
-      { provider: 'GreyNoise', configured: true, error: 'Invalid API key' },
+describe('API key test', () => {
+  it('tests one service and shows the status with its detail and quota', async () => {
+    settingsApi.testApiKey.mockResolvedValue({
+      service: 'virustotal', status: 'ok', http_status: 200, detail: 'The provider accepted the key.',
+      quota: { used: 250, limit: 500, remaining: 250, period: 'daily' },
+    });
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test' }));
+
+    expect(await screen.findByText('OK')).toBeInTheDocument();
+    expect(settingsApi.testApiKey).toHaveBeenCalledWith('virustotal');
+    expect(screen.getByText('250 / 500 used (daily)')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Quota used' })).toHaveAttribute('aria-valuenow', '50');
+  });
+
+  it('shows what to do when a key is rejected', async () => {
+    settingsApi.testApiKey.mockResolvedValue({
+      service: 'virustotal', status: 'rejected', http_status: 401, detail: 'The provider rejected the key.', quota: null,
+    });
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test' }));
+
+    expect(await screen.findByText('Rejected')).toBeInTheDocument();
+    expect(screen.getByText('The provider rejected the key.')).toBeInTheDocument();
+  });
+
+  it('says why a service cannot be tested instead of offering a button', async () => {
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    expect(screen.getByText('Can\'t be tested: Every call spends one request of the daily allowance.')).toBeInTheDocument();
+    // Only VirusTotal (testable) has a button; URLhaus needs no key.
+    expect(screen.getAllByRole('button', { name: 'Test' })).toHaveLength(1);
+  });
+
+  it('checks a key right after it is saved', async () => {
+    settingsApi.getConfiguredApiKeys.mockResolvedValue({});
+    settingsApi.createApiKey.mockResolvedValue({});
+    settingsApi.testApiKey.mockResolvedValue({ service: 'virustotal', status: 'ok', detail: 'ok', quota: null });
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.change(screen.getByLabelText('Virustotal'), { target: { value: 'new-key' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Save API key' })[1]);
+
+    await waitFor(() => expect(settingsApi.testApiKey).toHaveBeenCalledWith('virustotal'));
+    expect(await screen.findByText('OK')).toBeInTheDocument();
+  });
+
+  it('does not auto-check a service that cannot be tested', async () => {
+    settingsApi.getConfiguredApiKeys.mockResolvedValue({});
+    settingsApi.createApiKey.mockResolvedValue({});
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.change(screen.getByLabelText('Shodan'), { target: { value: 'new-key' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Save API key' })[0]);
+
+    await waitFor(() => expect(settingsApi.createApiKey).toHaveBeenCalled());
+    expect(settingsApi.testApiKey).not.toHaveBeenCalled();
+  });
+
+  it('keeps quiet when an after-save check finds the other keys of the service missing', async () => {
+    settingsApi.getConfiguredApiKeys.mockResolvedValue({});
+    settingsApi.createApiKey.mockResolvedValue({});
+    settingsApi.testApiKey.mockResolvedValue({ service: 'virustotal', status: 'not_configured', detail: 'No key is saved.' });
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.change(screen.getByLabelText('Virustotal'), { target: { value: 'new-key' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Save API key' })[1]);
+
+    await waitFor(() => expect(settingsApi.testApiKey).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Test' })).not.toBeDisabled());
+    expect(screen.queryByText('Not configured')).not.toBeInTheDocument();
+  });
+
+  it('does not let an older Test all result overwrite a newer single test', async () => {
+    let finishAll;
+    settingsApi.testAllApiKeys.mockReturnValue(new Promise((resolve) => { finishAll = resolve; }));
+    settingsApi.testApiKey.mockResolvedValue({ service: 'virustotal', status: 'ok', detail: 'ok', quota: null });
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test all' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Test' }));
+    expect(await screen.findByText('OK')).toBeInTheDocument();
+
+    finishAll([{ service: 'virustotal', status: 'rejected', detail: 'stale', quota: null }]);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Test all' })).not.toBeDisabled());
+    expect(screen.getByText('OK')).toBeInTheDocument();
+    expect(screen.queryByText('Rejected')).not.toBeInTheDocument();
+  });
+
+  it('never renders a structured error detail as text', async () => {
+    settingsApi.testAllApiKeys.mockRejectedValue({ response: { data: { detail: [{ msg: 'bad', loc: ['path'] }] } } });
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test all' }));
+
+    expect(await screen.findByText('Couldn\'t run the key check.')).toBeInTheDocument();
+  });
+
+  it('tests all keys at once and puts each result on its card', async () => {
+    settingsApi.testAllApiKeys.mockResolvedValue([
+      { service: 'virustotal', status: 'rate_limited', http_status: 429, detail: 'Out of quota.', quota: null },
     ]);
     renderWithProviders(<ApiKeys />);
-
-    expect(await screen.findByText('250 / 500 used')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: '' })).toHaveAttribute('aria-valuenow', '50');
-    expect(screen.getByText('42 remaining')).toBeInTheDocument();
-    expect(screen.getByText('No API key configured')).toBeInTheDocument();
-    expect(screen.getByText('Invalid API key')).toBeInTheDocument();
-  });
-
-  it('caps the bar at 100% when usage exceeds the limit', async () => {
-    settingsApi.getQuotaStatus.mockResolvedValue([{ provider: 'VirusTotal', configured: true, used: 900, limit: 500 }]);
-    renderWithProviders(<ApiKeys />);
-    await screen.findByText('900 / 500 used');
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
-  });
-
-  it('loads quota once, only after the service list is ready', async () => {
-    renderWithProviders(<ApiKeys />);
-    expect(screen.getByText('Loading service configuration...')).toBeInTheDocument();
-    expect(screen.queryByText('No services found')).not.toBeInTheDocument();
-    expect(settingsApi.getQuotaStatus).not.toHaveBeenCalled();
-
     await screen.findByText('VirusTotal');
-    await waitFor(() => expect(settingsApi.getQuotaStatus).toHaveBeenCalled());
-    expect(settingsApi.getQuotaStatus).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test all' }));
+
+    expect(await screen.findByText('Rate limited')).toBeInTheDocument();
   });
 
-  it('re-fetches on refresh and shows a load error', async () => {
+  it('shows an error when the test-all request itself fails', async () => {
+    settingsApi.testAllApiKeys.mockRejectedValue({ response: { data: { detail: 'Too many requests' } } });
     renderWithProviders(<ApiKeys />);
     await screen.findByText('VirusTotal');
-    await waitFor(() => expect(settingsApi.getQuotaStatus).toHaveBeenCalledTimes(1));
 
-    settingsApi.getQuotaStatus.mockRejectedValue({ response: { data: { detail: 'Quota service down' } } });
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Test all' }));
 
-    expect(await screen.findByText('Quota service down')).toBeInTheDocument();
-    expect(settingsApi.getQuotaStatus).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText('Too many requests')).toBeInTheDocument();
+  });
+
+  it('marks a single test that could not be sent as an error', async () => {
+    settingsApi.testApiKey.mockRejectedValue({});
+    renderWithProviders(<ApiKeys />);
+    await screen.findByText('VirusTotal');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test' }));
+
+    expect(await screen.findByText('Error')).toBeInTheDocument();
+    expect(screen.getByText('Couldn\'t run the key check.')).toBeInTheDocument();
   });
 });
 

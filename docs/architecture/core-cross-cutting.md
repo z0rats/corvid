@@ -19,9 +19,14 @@ Persisted app settings. Each domain (`api_keys`, `ai_settings`, `general`, `keyw
 losing it makes every stored key unrecoverable. Legacy plaintext rows still read fine and get
 encrypted transparently on next save (no migration step needed).
 
-A live quota panel lives at `routers/quota_routes.py`'s `GET /api/services/quota`, hitting
-VirusTotal/Shodan/Hunter.io's own quota endpoints with the stored key — currently the only three
-wired providers that expose one.
+Key test: `routers/key_test_routes.py` (`POST /api/services/{service}/test`, `POST
+/api/services/test`, 10/min) runs `service/key_test_clients.py`'s per-service check on the saved
+key(s) and returns `KeyTestResult` (`ok|rejected|rate_limited|plan_required|unreachable|error|
+not_configured|untestable`, HTTP status, our own `detail`, optional `quota`). A check spends nothing
+from a counted allowance (account/status/token endpoint, or a lookup on a quota-free provider);
+the rest sit in `KEY_TEST_EXEMPT` with a reason, exposed as `key_test_exempt_reason` in the services
+config (`docs/adr/0026-api-key-test-free-calls-only.md`). `test_key_test_registry.py` fails on a
+keyed service in neither. Results are live only; the frontend auto-tests after a save.
 
 ## `security/ssrf_guard.py`
 

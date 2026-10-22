@@ -90,8 +90,15 @@ export const settingsApi = {
     return response.data;
   },
 
-  async getQuotaStatus() {
-    const response = await api.get('/api/services/quota');
+  // Live key checks (docs/adr/0026-api-key-test-free-calls-only.md). A provider failure is a
+  // `status` in the result, not an HTTP error.
+  async testApiKey(serviceKey) {
+    const response = await api.post(`/api/services/${encodeURIComponent(serviceKey)}/test`);
+    return response.data;
+  },
+
+  async testAllApiKeys() {
+    const response = await api.post('/api/services/test');
     return response.data;
   },
 

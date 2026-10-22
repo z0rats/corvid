@@ -63,6 +63,24 @@ def test_redacts_ipqualityscore_path_embedded_key():
     assert "ipqualityscore.com/api/json/ip/***REDACTED***/" in result
 
 
+def test_redacts_ipqualityscore_key_at_the_end_of_the_path():
+    message = "GET https://www.ipqualityscore.com/api/json/account/AbCdEf123456 failed"
+
+    result = _filtered_message(message)
+
+    assert "AbCdEf123456" not in result
+    assert "api/json/account/***REDACTED***" in result
+
+
+def test_redacts_virustotal_user_path_key():
+    message = "GET https://www.virustotal.com/api/v3/users/0123abcdef4567?x=1 -> 401"
+
+    result = _filtered_message(message)
+
+    assert "0123abcdef4567" not in result
+    assert "api/v3/users/***REDACTED***?x=1" in result
+
+
 def test_redacts_a_long_base64_blob():
     # Shaped like a GHunt creds.m value (base64 of cookies/OSIDs/an Android master token) -
     # see docs/architecture/ghunt.md. Not an actual valid creds.m; the filter matches by shape.

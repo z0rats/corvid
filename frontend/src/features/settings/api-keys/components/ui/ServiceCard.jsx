@@ -11,11 +11,19 @@ import { useTheme, alpha } from '@mui/material/styles';
 import { getTierColor, generateKeyDisplayName } from '../../../utils/settingsUtils';
 import ApiKeyInput from '../../../components/forms/ApiKeyInput';
 import GhuntSessionInput from '../../../components/forms/GhuntSessionInput';
+import KeyTestStatus from './KeyTestStatus';
 
-export default function ServiceCard({ serviceKey, service }) {
+export default function ServiceCard({ serviceKey, service, keyTest, keyTesting = false, onTestKey }) {
   const { t } = useTranslation('settings');
   const theme = useTheme();
   const isFullyConfigured = service.available;
+  const exemptReason = service.key_test_exempt_reason;
+  const testKey = onTestKey ? () => onTestKey(serviceKey) : undefined;
+  // Auto-check right after a save. Until every key of a multi-key service is in, the backend
+  // answers not_configured, which useKeyTests drops for an after-save check.
+  const onKeySaved = onTestKey && !exemptReason
+    ? () => onTestKey(serviceKey, { afterSave: true })
+    : undefined;
 
   return (
     <Card elevation={0} sx={{ height: '100%', border: 'none' }}>
@@ -98,9 +106,21 @@ export default function ServiceCard({ serviceKey, service }) {
                   description={keyDisplayName}
                   link={service.documentation_url}
                   relatedKeys={relatedKeys}
+                  onSaved={onKeySaved}
                 />
               );
             })
+          )}
+
+          {service.required_keys.length > 0 && testKey && (
+            <Box sx={{ pt: 3 }}>
+              <KeyTestStatus
+                exemptReason={exemptReason}
+                result={keyTest}
+                testing={keyTesting}
+                onTest={testKey}
+              />
+            </Box>
           )}
         </Stack>
       </CardContent>

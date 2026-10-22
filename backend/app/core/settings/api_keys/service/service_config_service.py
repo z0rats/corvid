@@ -17,6 +17,7 @@ from app.core.settings.api_keys.config.service_config import (
     get_services_for_ioc_type,
 )
 from app.core.settings.api_keys.crud.api_keys_settings_crud import get_apikeys
+from app.core.settings.api_keys.service.key_test_service import key_test_exempt_reason
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ async def get_services_configuration(
             service_dict = service.to_dict()
             service_dict["api_key_status"] = _build_api_key_status(service, api_key_states)
             service_dict["available"] = _calculate_service_availability(service, api_key_states)
+            service_dict["key_test_exempt_reason"] = key_test_exempt_reason(key)
             response[key] = service_dict
 
         logger.info("Retrieved %s service configurations", len(response))
@@ -87,6 +89,7 @@ async def get_single_service_configuration(db: AsyncSession, service_key: str) -
         service_dict = service.to_dict()
         service_dict["api_key_status"] = _build_api_key_status(service, api_key_states)
         service_dict["available"] = _calculate_service_availability(service, api_key_states)
+        service_dict["key_test_exempt_reason"] = key_test_exempt_reason(service_key)
 
         logger.info("Retrieved configuration for service: %s", service_key)
         return service_dict
@@ -175,6 +178,7 @@ async def get_services_for_ioc_type_service(
             service_dict = service.to_dict()
             service_dict["api_key_status"] = _build_api_key_status(service, api_key_states)
             service_dict["available"] = _calculate_service_availability(service, api_key_states)
+            service_dict["key_test_exempt_reason"] = key_test_exempt_reason(key)
             response[key] = service_dict
 
         logger.info("Retrieved %s services for IOC type: %s", len(response), ioc_type)

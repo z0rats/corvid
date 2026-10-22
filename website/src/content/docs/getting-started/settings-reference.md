@@ -28,9 +28,21 @@ App-wide preferences:
 Per-service credentials for the integrated OSINT/threat-intel providers (VirusTotal, Shodan,
 Hunter.io, GitHub, etc.) — see [External Services](/corvid/architecture/external-services/) for
 the full list across every feature. Keys are encrypted at rest before being written to the
-database; see [Security → Secrets at rest](/corvid/architecture/security/#secrets-at-rest). Three providers
-(VirusTotal, Shodan, Hunter.io) additionally expose a live quota panel here, since those are the
-only three whose APIs report remaining quota.
+database; see [Security → Secrets at rest](/corvid/architecture/security/#secrets-at-rest).
+
+**Key check.** Each service card has a **Test** button, and **Test all** at the top checks every
+saved key at once. A key is also checked right after you save it. The result is one of: OK,
+Rejected (wrong, revoked or expired key), Rate limited, Needs a paid plan, Unreachable, or Error;
+hover the chip for details. Where the provider reports it (VirusTotal, Shodan, Hunter.io, GitHub,
+IPQualityScore), the allowance left is shown under the chip. Results aren't saved; reloading the
+page clears them.
+
+A check never spends quota: it uses the provider's account, status or token endpoint, or a fixed
+harmless lookup on providers that have no quota. Services where every call spends credits or a
+daily/monthly allowance (AbuseIPDB, CrowdSec, EmailRep, Censys, CheckPhish, LeakIX, Maltiverse,
+Pulsedive, DNSDumpster, Safe Browsing, Twitter/X, YouTube, Google Maps, ChronoVerify), and the
+Instagram and Google sessions (checking those acts on the account), say "Can't be tested" with the
+reason instead.
 
 Some entries aren't plain API keys but a stored session or credential for a feature: the Google
 account session for Email Search's Google Profile lookup, an imported Instagram browser session,

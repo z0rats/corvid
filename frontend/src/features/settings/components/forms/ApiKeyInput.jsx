@@ -17,7 +17,7 @@ import Typography from '@mui/material/Typography';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import SaveIcon from '@mui/icons-material/Save';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-export default function ApiKeyInput({ name, description, link, relatedKeys = [] }) {
+export default function ApiKeyInput({ name, description, link, relatedKeys = [], onSaved }) {
   const { t } = useTranslation('settings');
   const inputId = useId();
 
@@ -64,6 +64,7 @@ export default function ApiKeyInput({ name, description, link, relatedKeys = [] 
     if (result.success) {
       setKeyStatus(prev => ({ ...prev, existsInBackend: true, isServiceActive: true }));
       showNotification(result.message);
+      onSaved?.();
     } else {
       showNotification(result.message, 'error');
     }

@@ -8,7 +8,7 @@ from app.core.security.access_control import verify_access_token
 from app.core.settings.ai_settings.routers import ai_settings_routes
 from app.core.settings.api_keys.routers import (
     api_keys_settings_routes,
-    quota_routes,
+    key_test_routes,
     service_config_routes,
 )
 from app.core.settings.cti_profile.routers import cti_profile_routes
@@ -91,7 +91,7 @@ def get_settings_routers() -> list[APIRouter]:
         ai_settings_routes.router,
         api_keys_settings_routes.router,
         service_config_routes.router,
-        quota_routes.router,
+        key_test_routes.router,
         general_settings_routes.router,
         newsfeed_settings_routes.router,
         feed_management_routes.router,

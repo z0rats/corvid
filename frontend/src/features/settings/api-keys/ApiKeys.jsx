@@ -8,7 +8,8 @@ import { calculateCompletionPercentage, getConfiguredCount } from '../utils/sett
 import ApiKeysHeader from './components/ui/ApiKeysHeader';
 import ApiKeysFilters from './components/ui/ApiKeysFilters';
 import ServiceCard from './components/ui/ServiceCard';
-import QuotaPanel from './components/ui/QuotaPanel';
+import KeyTestPanel from './components/ui/KeyTestPanel';
+import { useKeyTests } from '../hooks/api/useKeyTests';
 
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -37,6 +38,7 @@ export default function ApiKeys() {
   }, { replace: true });
 
   const { getServicesConfig } = useApiKeys();
+  const keyTests = useKeyTests();
   const {
     searchFilter,
     showOnlyConfigured,
@@ -64,8 +66,8 @@ export default function ApiKeys() {
     return () => { ignore = true; };
   }, [getServicesConfig]);
 
-  // Gate on the first load finishing, not on `loading`: that starts false, so the page (and its
-  // QuotaPanel fetch) would mount once before the spinner and again after it.
+  // Gate on the first load finishing, not on `loading`: that starts false, so the page would
+  // mount once before the spinner and again after it.
   if (!configLoaded) {
     return (
       <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -106,7 +108,11 @@ export default function ApiKeys() {
         onToggle={() => setHeaderExpanded(!headerExpanded)}
       />
 
-      <QuotaPanel />
+      <KeyTestPanel
+        onTestAll={keyTests.testAll}
+        testingAll={keyTests.testingAll}
+        error={keyTests.error}
+      />
 
       {focusKey && servicesConfig[focusKey] ? (
         <Alert
@@ -128,7 +134,13 @@ export default function ApiKeys() {
       <Grid container spacing={3}>
         {filteredServices.map(([serviceKey, service]) => (
           <Grid size={{ xs: 12, lg: 6 }} key={serviceKey}>
-            <ServiceCard serviceKey={serviceKey} service={service} />
+            <ServiceCard
+              serviceKey={serviceKey}
+              service={service}
+              keyTest={keyTests.results[serviceKey]}
+              keyTesting={keyTests.testing.has(serviceKey)}
+              onTestKey={keyTests.testService}
+            />
           </Grid>
         ))}
       </Grid>

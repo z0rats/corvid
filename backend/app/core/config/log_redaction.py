@@ -24,9 +24,11 @@ _QUERY_PARAM_SECRET_RE = re.compile(
     r"(?i)([?&](?:api[_-]?key|apikey|key|token|secret|password|passwd|pwd|access[_-]?token|auth)=)[^&\s\"']+"
 )
 _BEARER_RE = re.compile(r"(?i)(Bearer\s+)[A-Za-z0-9\-_.~+/]+=*")
-# IPQualityScore embeds the key as a URL path segment instead of a query param:
-# https://www.ipqualityscore.com/api/json/ip/<KEY>/<ioc>
-_IPQS_PATH_RE = re.compile(r"(ipqualityscore\.com/api/json/[a-z]+/)[A-Za-z0-9]+(/)")
+# Keys embedded as a URL path segment instead of a query param:
+# https://www.ipqualityscore.com/api/json/ip/<KEY>/<ioc>, .../api/json/account/<KEY> (key test)
+_IPQS_PATH_RE = re.compile(r"(ipqualityscore\.com/api/json/[a-z]+/)[A-Za-z0-9]+")
+# https://www.virustotal.com/api/v3/users/<KEY> (key test: an API key is also a user id there)
+_VIRUSTOTAL_USER_PATH_RE = re.compile(r"(virustotal\.com/api/v3/users/)[^/?#\s\"']+")
 # A long contiguous base64 run - GHunt's `creds.m` content, if it ever ends up somewhere it
 # shouldn't. 80+ chars keeps this from firing on ordinary short tokens already caught above.
 _LONG_BASE64_RE = re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{80,}={0,2}(?![A-Za-z0-9+/=])")
@@ -39,7 +41,8 @@ class SecretRedactionFilter(logging.Filter):
         message = record.getMessage()
         redacted = _QUERY_PARAM_SECRET_RE.sub(r"\1***REDACTED***", message)
         redacted = _BEARER_RE.sub(r"\1***REDACTED***", redacted)
-        redacted = _IPQS_PATH_RE.sub(r"\1***REDACTED***\2", redacted)
+        redacted = _IPQS_PATH_RE.sub(r"\1***REDACTED***", redacted)
+        redacted = _VIRUSTOTAL_USER_PATH_RE.sub(r"\1***REDACTED***", redacted)
         redacted = _LONG_BASE64_RE.sub("***REDACTED***", redacted)
         if redacted != message:
             record.msg = redacted

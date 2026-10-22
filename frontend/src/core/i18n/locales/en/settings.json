@@ -118,14 +118,33 @@
       "regenerateFixedByEnv": "The access token is fixed via the API_ACCESS_TOKEN environment variable and can't be regenerated here - unset it to allow regeneration."
     }
   },
-  "quota": {
-    "title": "API Quota",
-    "description": "Live remaining usage for the providers that expose a quota endpoint (VirusTotal, Shodan, Hunter.io).",
-    "refresh": "Refresh",
-    "notConfigured": "No API key configured",
+  "keyTest": {
+    "title": "Key check",
+    "description": "Checks each saved key against its provider and shows the allowance left where the provider reports it. Checks only use calls that spend no quota; services without one say so on their card. Keys are also checked right after you save them.",
+    "testAll": "Test all",
+    "test": "Test",
+    "requestFailed": "Couldn't run the key check.",
+    "untestable": "Can't be tested: {{reason}}",
     "usedOfLimit": "{{used}} / {{limit}} used",
     "remainingOnly": "{{remaining}} remaining",
-    "loadError": "Failed to load quota status."
+    "quotaUsed": "Quota used",
+    "periods": {
+      "daily": "daily",
+      "monthly": "monthly",
+      "hourly": "hourly",
+      "query_credits": "query credits",
+      "billing_cycle": "this billing cycle"
+    },
+    "statuses": {
+      "ok": "OK",
+      "rejected": "Rejected",
+      "rate_limited": "Rate limited",
+      "plan_required": "Needs a paid plan",
+      "unreachable": "Unreachable",
+      "error": "Error",
+      "not_configured": "Not configured",
+      "untestable": "Not testable"
+    }
   },
   "notifications": {
     "apiKeySaved": "API key configured successfully.",

@@ -175,8 +175,11 @@ version" pings:
   (About page).
 - `pypi.org/pypi/{package}/json` — is a newer version of a vendored tool (Maigret, social-analyzer,
   mailcat-osint) available; a container rebuild is still needed to actually install it.
-- VirusTotal, Shodan, and Hunter.io's own quota endpoints, using the already-configured key — the
-  live quota panel under Settings → API Keys.
+- The key check under Settings → API Keys, using the already-configured key, only when you click
+  **Test** / **Test all** or save a key. It calls each provider's account, status or token endpoint
+  (VirusTotal, Shodan, Hunter.io, GitHub, IPQualityScore, HIBP, AlienVault OTX, Steam, Anthropic,
+  OpenAI, CrowdStrike, Mandiant, Reddit), or a fixed harmless lookup on providers with no quota
+  (NIST NVD, MalwareBazaar, ThreatFox, URLhaus).
 
 ## Source health checks
 

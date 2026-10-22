@@ -121,11 +121,17 @@ describe('settingsApi — api keys', () => {
     expect(result).toEqual({ name: 'ghunt_session', is_active: true });
   });
 
-  it('getQuotaStatus fetches quota data', async () => {
-    api.get.mockResolvedValue({ data: [{ service: 'abuseipdb' }] });
-    const result = await settingsApi.getQuotaStatus();
-    expect(api.get).toHaveBeenCalledWith('/api/services/quota');
-    expect(result).toEqual([{ service: 'abuseipdb' }]);
+  it('testApiKey posts to the per-service test route', async () => {
+    api.post.mockResolvedValue({ data: { service: 'shodan', status: 'ok' } });
+    const result = await settingsApi.testApiKey('shodan');
+    expect(api.post).toHaveBeenCalledWith('/api/services/shodan/test');
+    expect(result.status).toBe('ok');
+  });
+
+  it('testAllApiKeys posts to the test-all route', async () => {
+    api.post.mockResolvedValue({ data: [] });
+    expect(await settingsApi.testAllApiKeys()).toEqual([]);
+    expect(api.post).toHaveBeenCalledWith('/api/services/test');
   });
 });
 

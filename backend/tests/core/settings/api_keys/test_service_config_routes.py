@@ -154,3 +154,13 @@ def test_db_error_maps_to_500_with_code(client, monkeypatch):
     assert r.json()["error_code"] == "SERVICE_CONFIG_DB_ERROR"
     r = client.get("/api/services/for-ioc/IPv4")
     assert r.json()["error_code"] == "SERVICE_CONFIG_DB_ERROR"
+
+
+def test_config_says_which_services_cannot_be_key_tested(client):
+    body = client.get("/api/services/config").json()
+
+    assert body["virustotal"]["key_test_exempt_reason"] is None
+    assert "daily allowance" in body["abuseipdb"]["key_test_exempt_reason"]
+    # Keyed by the config key, not ServiceDefinition.key ("checkphish").
+    assert body["checkphishai"]["key_test_exempt_reason"]
+    assert client.get("/api/services/config/abuseipdb").json()["key_test_exempt_reason"]
