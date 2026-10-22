@@ -6,11 +6,11 @@ from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import WhoisLookupRequest
 from app.features.ioc_tools.domain_finder.service import whois_lookup_service
 from app.features.ioc_tools.domain_finder.service.whois_lookup_service import (
-    _extract_entities,
-    _extract_events,
     _extract_registrar,
     _parse_rdap_date,
     _parse_vcard,
+    extract_rdap_entities,
+    extract_rdap_events,
     perform_whois_lookup,
 )
 
@@ -91,7 +91,7 @@ def test_extract_registrar_returns_none_when_absent():
 
 
 def test_extract_events_maps_action_to_date():
-    events = _extract_events(RDAP_SAMPLE)
+    events = extract_rdap_events(RDAP_SAMPLE)
 
     assert events["registration"] == "1997-09-15T04:00:00Z"
     assert events["expiration"] == "2028-09-14T04:00:00Z"
@@ -99,7 +99,7 @@ def test_extract_events_maps_action_to_date():
 
 
 def test_extract_entities_includes_nested_entities():
-    entities = _extract_entities(RDAP_SAMPLE)
+    entities = extract_rdap_entities(RDAP_SAMPLE)
     roles = {e.role for e in entities}
 
     assert "registrar" in roles

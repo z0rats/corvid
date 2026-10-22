@@ -21,7 +21,9 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models imp
 from app.features.ioc_tools.ioc_lookup.single_lookup.service import external_api_clients
 from app.features.ioc_tools.ioc_lookup.single_lookup.service.client_base import (
     ServiceAuthError,
+    ServiceDriftError,
     ServiceError,
+    ServiceRateLimitError,
 )
 from tests.conftest import run as _run
 
@@ -260,6 +262,146 @@ class TestCheckHudsonrock:
         result = _run(external_api_clients.check_hudsonrock("test@example.com", "email"))
 
         assert result == {"stealers": []}
+
+
+# --- check_internetdb: keyless, its "no data" 404 is an empty result ------
+
+_INTERNETDB_HIT = {
+    "ip": "1.1.1.1",
+    "ports": [53, 443],
+    "hostnames": ["one.one.one.one"],
+    "tags": [],
+    "cpes": ["cpe:/a:cloudflare:cloudflare"],
+    "vulns": ["CVE-2023-0001"],
+}
+
+
+class TestCheckInternetdb:
+    def test_requests_the_ip_path_and_marks_data_present(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json=_INTERNETDB_HIT))
+
+        result = _run(external_api_clients.check_internetdb("1.1.1.1"))
+
+        assert fake.last_call["url"] == "https://internetdb.shodan.io/1.1.1.1"
+        assert result == {**_INTERNETDB_HIT, "no_data": False}
+
+    def test_ipv6_goes_in_the_path_unchanged(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json=_INTERNETDB_HIT))
+
+        _run(external_api_clients.check_internetdb("2606:4700:4700::1111"))
+
+        assert fake.last_call["url"] == "https://internetdb.shodan.io/2606:4700:4700::1111"
+
+    def test_no_information_404_is_an_empty_result_not_an_error(self, monkeypatch):
+        _patch_client(monkeypatch, _response(404, json={"detail": "No information available"}))
+
+        result = _run(external_api_clients.check_internetdb("8.8.4.4"))
+
+        assert result == {
+            "ip": "8.8.4.4",
+            "ports": [],
+            "hostnames": [],
+            "tags": [],
+            "cpes": [],
+            "vulns": [],
+            "no_data": True,
+        }
+
+    @pytest.mark.parametrize("ip", ["10.0.0.5", "192.168.1.1", "fd00::1", "not-an-ip"])
+    def test_a_reserved_ip_is_never_sent(self, monkeypatch, ip):
+        fake = _patch_client(monkeypatch, _response(200, json=_INTERNETDB_HIT))
+
+        result = _run(external_api_clients.check_internetdb(ip))
+
+        assert fake.last_call is None
+        assert result["reserved"] is True
+        assert result["no_data"] is True
+        assert result["ports"] == []
+
+    def test_any_other_404_is_still_an_error(self, monkeypatch):
+        _patch_client(monkeypatch, _response(404, json={"detail": "Endpoint moved"}))
+
+        with pytest.raises(ServiceError) as caught:
+            _run(external_api_clients.check_internetdb("1.1.1.1"))
+
+        assert caught.value.status_code == 404
+
+    def test_429_is_rate_limited(self, monkeypatch):
+        _patch_client(monkeypatch, _response(429))
+
+        with pytest.raises(ServiceRateLimitError):
+            _run(external_api_clients.check_internetdb("1.1.1.1"))
+
+    def test_a_non_object_body_is_drift(self, monkeypatch):
+        _patch_client(monkeypatch, _response(200, json=["not", "an", "object"]))
+
+        with pytest.raises(ServiceDriftError):
+            _run(external_api_clients.check_internetdb("1.1.1.1"))
+
+
+# --- check_leakcheck: keyless, success:false is either "not found" or an error
+
+
+_LEAKCHECK_HIT = {
+    "success": True,
+    "found": 2,
+    "fields": ["username", "password"],
+    "sources": [{"name": "Example.com", "date": "2019-09"}, {"name": "Stealer Logs", "date": ""}],
+}
+
+
+class TestCheckLeakcheck:
+    def test_queries_the_public_endpoint_and_passes_a_hit_through(self, monkeypatch):
+        fake = _patch_client(monkeypatch, _response(200, json=_LEAKCHECK_HIT))
+
+        result = _run(external_api_clients.check_leakcheck("test@example.com"))
+
+        assert fake.last_call["url"] == "https://leakcheck.io/api/public"
+        assert fake.last_call["params"] == {"check": "test@example.com"}
+        assert result == _LEAKCHECK_HIT
+
+    def test_not_found_is_an_empty_result(self, monkeypatch):
+        _patch_client(monkeypatch, _response(200, json={"success": False, "error": "Not found"}))
+
+        result = _run(external_api_clients.check_leakcheck("clean@example.com"))
+
+        assert result == {"found": 0, "fields": [], "sources": []}
+
+    def test_a_rejected_input_is_an_error_with_leakchecks_message(self, monkeypatch):
+        body = {"success": False, "error": "Enter at least 3 characters to search"}
+        _patch_client(monkeypatch, _response(200, json=body))
+
+        with pytest.raises(ServiceError, match="Enter at least 3 characters") as caught:
+            _run(external_api_clients.check_leakcheck("a@b"))
+
+        # LeakCheck's own refusal, not a malformed request from us.
+        assert caught.value.status_code == 502
+
+    def test_a_success_with_zero_found_is_empty_even_without_sources(self, monkeypatch):
+        _patch_client(monkeypatch, _response(200, json={"success": True, "found": 0}))
+
+        result = _run(external_api_clients.check_leakcheck("clean@example.com"))
+
+        assert result == {"found": 0, "fields": [], "sources": []}
+
+    @pytest.mark.parametrize("flag", ["true", 1, None])
+    def test_a_non_boolean_success_flag_is_drift(self, monkeypatch, flag):
+        _patch_client(monkeypatch, _response(200, json={"success": flag, "found": 1}))
+
+        with pytest.raises(ServiceDriftError, match="success"):
+            _run(external_api_clients.check_leakcheck("test@example.com"))
+
+    def test_429_is_rate_limited(self, monkeypatch):
+        _patch_client(monkeypatch, _response(429))
+
+        with pytest.raises(ServiceRateLimitError):
+            _run(external_api_clients.check_leakcheck("test@example.com"))
+
+    def test_a_body_without_a_success_flag_is_drift(self, monkeypatch):
+        _patch_client(monkeypatch, _response(200, json={"result": []}))
+
+        with pytest.raises(ServiceDriftError, match="success"):
+            _run(external_api_clients.check_leakcheck("test@example.com"))
 
 
 # --- check_libraryofleaks: keyless, must never surface raw entity content -

@@ -6,13 +6,35 @@ Deep-dive referenced from AGENTS.md's Backend architecture section.
 
 Single + bulk lookups across IPs, domains, URLs, emails, hashes and CVEs via AbuseIPDB, AlienVault
 OTX, CheckPhish, CrowdSec, CrowdStrike, EmailRep.io, FFraud, GitHub, Google Safe Browsing, HIBP,
-Hudson Rock, Hunter.io, IPQualityScore, LeakIX (IPv4-only, services + leaks per IP), Library of
-Leaks, Maltiverse, MalwareBazaar, Mandiant, NIST NVD, Pulsedive, Reddit, Shodan, ThreatFox,
+Hudson Rock, Hunter.io, IPQualityScore, LeakCheck (email breach sources, Public API), LeakIX
+(IPv4-only, services + leaks per IP), Library of Leaks, Maltiverse, MalwareBazaar, Mandiant, NIST NVD, Pulsedive, Reddit, Shodan, Shodan InternetDB (IPv4/IPv6 ports/CVEs summary), ThreatFox,
 Twitter/X, URLhaus (URL/domain/IPv4; ThreatFox, MalwareBazaar and URLhaus share one abuse.ch
 `Auth-Key`), URLScan.io, VirusTotal. The authoritative list is `service_registry.py`. CVEs are enriched
 with CISA KEV and FIRST.org EPSS (KEV and OpenPhish: full feeds cached in-process for an hour).
 API keys are configured per service in app settings (`core/settings/api_keys/`), not `.env`;
-FFraud, URLScan.io, Hudson Rock, KEV, EPSS, OpenPhish and Library of Leaks are keyless.
+FFraud, URLScan.io, Hudson Rock, KEV, EPSS, OpenPhish, Library of Leaks, InternetDB, LeakCheck,
+Gravatar, IP Geolocation (ipapi.is) and IP RDAP are keyless; Censys takes a free-tier Platform v3
+Personal Access Token (Lookup endpoints only, no `organization_id`, so the free wallet). A keyless "nothing found" that the source signals as an error is normalised in the
+client into an empty result (InternetDB's 404 "No information available" -> `no_data: true`,
+LeakCheck's `success: false, error: "Not found"` -> zero sources, Gravatar's 404 "Profile not
+found" -> `found: false`, Censys/RDAP 404 -> `not_found`/`found: false`).
+
+Providers with real parsing live outside `external_api_clients.py` and are re-exported from it
+(the registry is handed that one module): `censys_client.py` trims a host/web property to the
+card's fields (raw hosts carry full banners, too big for history), maps 401/403-org to
+actionable messages and checks the shape itself (Censys omits empty fields, so absent = none,
+wrong type or a `service_count` without `services` = drift); `ip_context_clients.py` holds IP
+geo and IP RDAP; `gravatar_client.py` holds Gravatar. IP geo, IP RDAP, InternetDB and Censys hosts refuse a
+non-global address (`is_reserved_ip`) before any request and return `reserved: true`.
+`client_base.json_field` reads one field of an error body, for telling a provider's "nothing
+found" 404 apart from a real one. IP RDAP
+follows the `rdap.org/ip/` redirect through `safe_get` (the registry host isn't fixed), reads the
+answering registry from the pinned request's Host header like domain RDAP, and reuses
+`whois_lookup_service`'s entity/event helpers, so an abuse contact nested under the registrant
+(ARIN) is found as well as a top-level one (RIPE). Gravatar's verified accounts carry a service
+and URL but no username; `username_from_account_url` reads it from the URL, returning None for
+an id-shaped URL rather than guessing. `has_avatar` comes from a backend `HEAD` on
+`avatar/<hash>?d=404` (404 = only the default image).
 
 A new provider needs `website/src/content/docs/features/ioc-tools.md` updated in the same change
 (pre-commit `scripts/check_new_ioc_provider_docs.py` blocks a commit that grows

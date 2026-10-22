@@ -35,8 +35,8 @@ async def perform_whois_lookup(whois_request: WhoisLookupRequest) -> WhoisLookup
 
     raw, rdap_server = await fetch_rdap_domain_data(domain)
 
-    entities = _extract_entities(raw)
-    events = _extract_events(raw)
+    entities = extract_rdap_entities(raw)
+    events = extract_rdap_events(raw)
     registrar, registrar_iana_id = _extract_registrar(raw)
     registrant_org = next(
         (e.organization for e in entities if e.role == "registrant" and e.organization), None
@@ -83,7 +83,7 @@ def _parse_vcard(vcard_array: Any) -> dict[str, str]:
     return parsed
 
 
-def _extract_entities(
+def extract_rdap_entities(
     raw: dict[str, Any], _entities: list[dict[str, Any]] | None = None
 ) -> list[WhoisEntity]:
     """Flatten RDAP entities (including nested ones, e.g. an abuse contact under a registrar)"""
@@ -102,11 +102,11 @@ def _extract_entities(
             )
         nested = entity.get("entities")
         if nested:
-            entities.extend(_extract_entities(raw, nested))
+            entities.extend(extract_rdap_entities(raw, nested))
     return entities
 
 
-def _extract_events(raw: dict[str, Any]) -> dict[str, str]:
+def extract_rdap_events(raw: dict[str, Any]) -> dict[str, str]:
     """Map RDAP eventAction -> eventDate (ISO string)"""
     events: dict[str, str] = {}
     for event in raw.get("events") or []:

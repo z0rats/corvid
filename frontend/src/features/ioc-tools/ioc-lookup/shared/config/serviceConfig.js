@@ -11,10 +11,16 @@ import FfraudEmailDetails from '../components/service-details/FFraud/FfraudEmail
 import FirstEpssDetails from '../components/service-details/FirstEpss/FirstEpssDetails';
 import GithubDetails from '../components/service-details/GitHub/GithubDetails';
 import HaveibeenpwndDetails from '../components/service-details/HIBP/HaveibeenpwndDetails';
+import CensysDetails from '../components/service-details/Censys/CensysDetails';
+import GravatarDetails from '../components/service-details/Gravatar/GravatarDetails';
 import HudsonRockDetails from '../components/service-details/HudsonRock/HudsonRockDetails';
 import HunterioDetails from '../components/service-details/HunterIO/HunterioDetails';
+import InternetDbDetails from '../components/service-details/InternetDB/InternetDbDetails';
+import IpGeoDetails from '../components/service-details/IpGeo/IpGeoDetails';
+import IpRdapDetails from '../components/service-details/IpRdap/IpRdapDetails';
 import IpQualityscoreDetails from '../components/service-details/IpQualityScore/IpqualityscoreDetails';
 import LeakixDetails from '../components/service-details/LeakIX/LeakixDetails';
+import LeakCheckDetails from '../components/service-details/LeakCheck/LeakCheckDetails';
 import LibraryOfLeaksDetails from '../components/service-details/LibraryOfLeaks/LibraryOfLeaksDetails';
 import MandiantDetails from '../components/service-details/Mandiant/MandiantDetails';
 import MaltiverseDetails from '../components/service-details/Maltiverse/MaltiverseDetails';
@@ -31,6 +37,7 @@ import VirustotalDetailsComponent from '../components/service-details/Virustotal
 import UrlHausDetails from '../components/service-details/UrlHaus/UrlHausDetails';
 import UrlScanDetails from '../components/service-details/UrlScan/UrlScanDetails';
 import { withErrorHandling, withNoDataCheck, scoreTlpMapper } from '../utils/serviceConfigHelpers';
+import { softwareLabel } from '../utils/detailFormat';
 
 
 /**
@@ -110,6 +117,28 @@ export const SERVICE_DEFINITIONS = {
         }
         const domain = responseData.scamsniffer?.phishing_domain;
         return { summary: `Phishing-associated address (ScamSniffer)${domain ? `: ${domain}` : ''}`, tlp: 'RED', keyMetric: 'ScamSniffer' };
+    })),
+  },
+  censys: {
+    name: 'Censys',
+    icon: 'default_icon',
+    detailComponent: CensysDetails,
+    requiredKeys: ['censys'],
+    supportedIocTypes: ['IPv4', 'IPv6', 'Domain'],
+    lookupEndpoint: createSingleEndpoint('censys'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (responseData.reserved) return { summary: 'Private/reserved address', tlp: 'WHITE' };
+      if (responseData.not_found) return { summary: 'No data on this asset', tlp: 'WHITE' };
+      if (responseData.kind === 'webproperty') {
+        const software = (responseData.software || []).map(softwareLabel);
+        return {
+          summary: software.length ? `Software: ${software.join(', ')}` : 'No software identified',
+          tlp: 'WHITE',
+          keyMetric: software.length,
+        };
+      }
+      const services = responseData.service_count ?? responseData.services?.length ?? 0;
+      return { summary: `${services} service(s)`, tlp: 'WHITE', keyMetric: services };
     })),
   },
   checkphish: {
@@ -282,6 +311,41 @@ export const SERVICE_DEFINITIONS = {
       };
     })),
   },
+  internetdb: {
+    name: 'Shodan InternetDB',
+    icon: 'default_icon',
+    detailComponent: InternetDbDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['IPv4', 'IPv6'],
+    lookupEndpoint: createSingleEndpoint('internetdb'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (responseData.reserved) return { summary: 'Private/reserved address', tlp: 'WHITE' };
+      if (responseData.no_data) return { summary: 'No data on this IP', tlp: 'WHITE' };
+      const ports = responseData.ports?.length || 0;
+      const vulns = responseData.vulns?.length || 0;
+      return {
+        summary: `${ports} open port(s), ${vulns} known CVE(s)`,
+        // AMBER like the keyed Shodan entry: InternetDB's CVEs are inferred from CPEs, unverified.
+        tlp: vulns > 0 ? 'AMBER' : 'GREEN',
+        keyMetric: ports,
+      };
+    })),
+  },
+  gravatar: {
+    name: 'Gravatar',
+    icon: 'default_icon',
+    detailComponent: GravatarDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['Email'],
+    lookupEndpoint: createSingleEndpoint('gravatar'),
+    // Informational, not a verdict: a public profile is a pivot, not a sign of compromise.
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (!responseData.found) return { summary: 'No public profile', tlp: 'WHITE' };
+      const accounts = responseData.verified_accounts?.length || 0;
+      const name = responseData.display_name || 'Unnamed profile';
+      return { summary: `${name}, ${accounts} verified account(s)`, tlp: 'WHITE', keyMetric: accounts };
+    })),
+  },
   hunterio: {
     name: 'Hunter.io',
     icon: 'hunterio_logo_small',
@@ -296,6 +360,34 @@ export const SERVICE_DEFINITIONS = {
         else if (result === 'risky') tlp = 'AMBER';
         return { summary: `Status: ${result}${disposable ? ' (Disposable)' : ''}`, tlp, keyMetric: result };
     }, 'data')),
+  },
+  ip_geo: {
+    name: 'IP Geolocation',
+    icon: 'default_icon',
+    detailComponent: IpGeoDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['IPv4', 'IPv6'],
+    lookupEndpoint: createSingleEndpoint('ip_geo'),
+    // Context only; never feeds a verdict.
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (responseData.reserved) return { summary: 'Private/reserved address', tlp: 'WHITE' };
+      const parts = [responseData.country, responseData.asn].filter(Boolean);
+      return { summary: parts.join(' · ') || 'Location unknown', tlp: 'WHITE' };
+    })),
+  },
+  ip_rdap: {
+    name: 'IP RDAP',
+    icon: 'default_icon',
+    detailComponent: IpRdapDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['IPv4', 'IPv6'],
+    lookupEndpoint: createSingleEndpoint('ip_rdap'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      if (responseData.reserved) return { summary: 'Private/reserved address', tlp: 'WHITE' };
+      if (!responseData.found) return { summary: 'No RDAP record', tlp: 'WHITE' };
+      const parts = [responseData.name, responseData.registry || responseData.registry_server].filter(Boolean);
+      return { summary: parts.join(' · '), tlp: 'WHITE' };
+    })),
   },
   ipqualityscore: {
     name: 'IPQualityScore',
@@ -331,6 +423,19 @@ export const SERVICE_DEFINITIONS = {
         }
         return { summary: `${serviceCount} service(s), no leaks`, tlp: 'GREEN', keyMetric: serviceCount };
     }),
+  },
+  leakcheck: {
+    name: 'LeakCheck',
+    icon: 'default_icon',
+    detailComponent: LeakCheckDetails,
+    requiredKeys: [],
+    supportedIocTypes: ['Email'],
+    lookupEndpoint: createSingleEndpoint('leakcheck'),
+    getSummaryAndTlp: withErrorHandling(withNoDataCheck((responseData) => {
+      const count = responseData.sources?.length || 0;
+      if (count === 0) return { summary: 'Not found in any breach', tlp: 'GREEN' };
+      return { summary: `Found in ${count} breach(es)`, tlp: 'RED', keyMetric: count };
+    })),
   },
   libraryofleaks: {
     name: 'Library of Leaks',

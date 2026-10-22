@@ -32,7 +32,12 @@ _NO_SERVICE_CONFIG_ENTRY = {
     "ffraud",
     "ffraudemail",
     "firstepss",
+    "gravatar",
     "hudsonrock",
+    "internetdb",
+    "ip_geo",
+    "ip_rdap",
+    "leakcheck",
     "libraryofleaks",
     "openphish",
 }

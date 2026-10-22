@@ -142,6 +142,16 @@ async def handle_response(service_name: str, response: httpx.Response) -> dict[s
         ) from json_err
 
 
+def json_field(response: httpx.Response, field: str) -> Any:
+    """`field` of a JSON-object body, or None for a body that isn't one. For telling a
+    provider's "nothing found" error body apart from a real error before `handle_response`."""
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    return body.get(field) if isinstance(body, dict) else None
+
+
 def _require_apikey(service_name: str, apikey: str) -> None:
     """Validate that an API key is present, raising ServiceAuthError if not"""
     if not apikey:

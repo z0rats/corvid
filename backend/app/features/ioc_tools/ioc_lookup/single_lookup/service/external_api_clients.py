@@ -21,8 +21,12 @@ from app.features.ioc_tools.ioc_lookup.single_lookup.models.blacklist_models imp
 )
 from app.features.ioc_tools.ioc_lookup.single_lookup.utils.ioc_utils import normalize_address
 
+# Providers in their own modules, re-exported so the registry (which is handed this module)
+# finds every `check_*` in one place.
+from .censys_client import check_censys  # noqa: F401
 from .client_base import (
     ServiceAuthError,
+    ServiceDriftError,
     ServiceError,
     ServiceUnavailableError,
     _authenticate_oauth,
@@ -30,7 +34,10 @@ from .client_base import (
     _require_credentials,
     get_client,
     handle_response,
+    json_field,
 )
+from .gravatar_client import check_gravatar  # noqa: F401
+from .ip_context_clients import check_ip_geo, check_ip_rdap, is_reserved_ip  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -304,6 +311,40 @@ async def check_hunter(ioc: str, apikey: str) -> dict[str, Any]:
     return await handle_response("Hunter.io", response)
 
 
+INTERNETDB_LIST_FIELDS = ("ports", "hostnames", "tags", "cpes", "vulns")
+_INTERNETDB_NO_DATA = "No information available"
+
+
+def _is_internetdb_no_data(response: httpx.Response) -> bool:
+    return json_field(response, "detail") == _INTERNETDB_NO_DATA
+
+
+async def check_internetdb(ioc: str) -> dict[str, Any]:
+    """Open ports, hostnames, tags, CPEs and known CVEs for an IP from Shodan's free, keyless
+    InternetDB (a weekly-refreshed summary of Shodan's scans, free for non-commercial use).
+
+    An IP Shodan has nothing on answers 404 `{"detail": "No information available"}`; that is
+    returned as an empty result with `no_data` set, not an error. Any other 404 still is one.
+    A private or reserved IP is never sent (`reserved: true`), as with the keyless IP providers."""
+    if is_reserved_ip(ioc):
+        return {
+            "ip": ioc,
+            **{field: [] for field in INTERNETDB_LIST_FIELDS},
+            "no_data": True,
+            "reserved": True,
+        }
+    logger.debug("Checking IP %s with Shodan InternetDB", ioc)
+
+    client = get_client()
+    response = await client.get(url=f"https://internetdb.shodan.io/{ioc}")
+    if response.status_code == 404 and _is_internetdb_no_data(response):
+        return {"ip": ioc, **{field: [] for field in INTERNETDB_LIST_FIELDS}, "no_data": True}
+    result = await handle_response("Shodan InternetDB", response)
+    if not isinstance(result, dict):
+        raise ServiceDriftError("Shodan InternetDB", "response is not a JSON object")
+    return {**result, "no_data": False}
+
+
 async def check_ipqualityscore(ioc: str, apikey: str) -> dict[str, Any]:
     """Perform IP quality and fraud scoring using IPQualityScore API"""
     _require_apikey("IPQualityScore", apikey)
@@ -543,6 +584,39 @@ async def check_shodan(ioc: str, method: str, apikey: str) -> dict[str, Any]:
         url=f"https://api.shodan.io/shodan/{endpoint}/{ioc}", params={"key": apikey}
     )
     return await handle_response("Shodan", response)
+
+
+_LEAKCHECK_NOT_FOUND = "Not found"
+
+
+def _leakcheck_empty() -> dict[str, Any]:
+    return {"found": 0, "fields": [], "sources": []}
+
+
+async def check_leakcheck(ioc: str) -> dict[str, Any]:
+    """Breach sources (name + month) and exposed data categories for an email from LeakCheck's
+    free, keyless Public API (~1 req/s). No passwords or records, only which breaches and which
+    kinds of fields.
+
+    LeakCheck answers 200 either way: `success: false, error: "Not found"` (or a success with
+    `found: 0`) is a clean address, returned as an empty result; any other `success: false`
+    (a rejected input, a quota) is an upstream error carrying LeakCheck's own message. A
+    `success` that isn't a boolean is drift."""
+    logger.debug("Checking email %s with LeakCheck", ioc)
+
+    client = get_client()
+    response = await client.get(url="https://leakcheck.io/api/public", params={"check": ioc})
+    result = await handle_response("LeakCheck", response)
+    if not isinstance(result, dict) or not isinstance(result.get("success"), bool):
+        raise ServiceDriftError("LeakCheck", "no boolean `success` flag")
+    if not result["success"]:
+        error = result.get("error")
+        if error == _LEAKCHECK_NOT_FOUND:
+            return _leakcheck_empty()
+        raise ServiceError("LeakCheck", f"LeakCheck error: {error or 'request rejected'}", 502)
+    if result.get("found") == 0:
+        return _leakcheck_empty()
+    return result
 
 
 async def check_leakix(ioc: str, apikey: str) -> dict[str, Any]:

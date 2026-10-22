@@ -261,3 +261,64 @@ describe('status/listing providers', () => {
     })).toEqual({ summary: '3 scan(s), 2 flagged', tlp: 'RED', keyMetric: '2/3' });
   });
 });
+
+describe('keyless exposure providers', () => {
+  it('InternetDB: no-data is WHITE, a CVE is AMBER, open ports alone are GREEN', () => {
+    expect(verdict('internetdb', { no_data: true, ports: [], vulns: [] })).toEqual({ summary: 'No data on this IP', tlp: 'WHITE' });
+    expect(verdict('internetdb', { no_data: true, reserved: true, ports: [], vulns: [] })).toEqual({
+      summary: 'Private/reserved address', tlp: 'WHITE',
+    });
+    expect(verdict('internetdb', { no_data: false, ports: [80, 443], vulns: ['CVE-2023-0001'] })).toEqual({
+      summary: '2 open port(s), 1 known CVE(s)', tlp: 'AMBER', keyMetric: 2,
+    });
+    expect(tlp('internetdb', { no_data: false, ports: [443], vulns: [] })).toBe('GREEN');
+  });
+
+  it('LeakCheck: not found is GREEN, any breach is RED', () => {
+    expect(verdict('leakcheck', { found: 0, fields: [], sources: [] })).toEqual({ summary: 'Not found in any breach', tlp: 'GREEN' });
+    expect(verdict('leakcheck', { found: 2, fields: [], sources: [{ name: 'a' }, { name: 'b' }] })).toEqual({
+      summary: 'Found in 2 breach(es)', tlp: 'RED', keyMetric: 2,
+    });
+  });
+});
+
+describe('informational context providers', () => {
+  it('IP Geolocation: reserved, then country · ASN, never a verdict colour', () => {
+    expect(verdict('ip_geo', { reserved: true })).toEqual({ summary: 'Private/reserved address', tlp: 'WHITE' });
+    expect(verdict('ip_geo', { reserved: false, country: 'Australia', asn: 'AS13335 Cloudflare, Inc.' })).toEqual({
+      summary: 'Australia · AS13335 Cloudflare, Inc.', tlp: 'WHITE',
+    });
+    expect(verdict('ip_geo', { reserved: false, country: null, asn: null })).toEqual({ summary: 'Location unknown', tlp: 'WHITE' });
+  });
+
+  it('IP RDAP: reserved, not found, then netblock · registry', () => {
+    expect(verdict('ip_rdap', { reserved: true, found: false })).toEqual({ summary: 'Private/reserved address', tlp: 'WHITE' });
+    expect(verdict('ip_rdap', { reserved: false, found: false })).toEqual({ summary: 'No RDAP record', tlp: 'WHITE' });
+    expect(verdict('ip_rdap', { reserved: false, found: true, name: 'RIPE-NCC', registry: 'RIPE NCC', registry_server: 'rdap.db.ripe.net' })).toEqual({
+      summary: 'RIPE-NCC · RIPE NCC', tlp: 'WHITE',
+    });
+    expect(verdict('ip_rdap', { reserved: false, found: true, name: 'X', registry: null, registry_server: 'rdap.example.net' })).toEqual({
+      summary: 'X · rdap.example.net', tlp: 'WHITE',
+    });
+  });
+
+  it('Censys: service count for a host, software for a web property', () => {
+    expect(verdict('censys', { kind: 'host', reserved: true, not_found: true })).toEqual({ summary: 'Private/reserved address', tlp: 'WHITE' });
+    expect(verdict('censys', { kind: 'host', not_found: true })).toEqual({ summary: 'No data on this asset', tlp: 'WHITE' });
+    expect(verdict('censys', { kind: 'host', not_found: false, service_count: 3, services: [] })).toEqual({
+      summary: '3 service(s)', tlp: 'WHITE', keyMetric: 3,
+    });
+    expect(verdict('censys', {
+      kind: 'webproperty',
+      not_found: false,
+      software: [{ vendor: 'cloudflare', product: 'cloudflare' }, { vendor: 'f5', product: 'nginx', version: '1.25' }],
+    })).toEqual({ summary: 'Software: cloudflare, f5 nginx 1.25', tlp: 'WHITE', keyMetric: 2 });
+  });
+
+  it('Gravatar: no profile, then name and verified account count', () => {
+    expect(verdict('gravatar', { found: false })).toEqual({ summary: 'No public profile', tlp: 'WHITE' });
+    expect(verdict('gravatar', { found: true, display_name: 'Beau', verified_accounts: [{}, {}] })).toEqual({
+      summary: 'Beau, 2 verified account(s)', tlp: 'WHITE', keyMetric: 2,
+    });
+  });
+});

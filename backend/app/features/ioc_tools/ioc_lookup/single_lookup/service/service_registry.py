@@ -71,6 +71,23 @@ def register_services(ioc_lookup_service_module) -> None:
             name="CISA KEV",
             supported_ioc_types=[IOC_TYPES["CVE"]],
         ),
+        "censys": ProviderSpec(
+            func=ioc_lookup_service_module.check_censys,
+            name="Censys",
+            supported_ioc_types=_supported_ioc_types("censys"),
+            api_key=ApiKeySpec(setting_name="censys"),
+            type_mapping=TypeMapping(
+                param="asset",
+                values={
+                    IOC_TYPES["IPV4"]: "host",
+                    IOC_TYPES["IPV6"]: "host",
+                    IOC_TYPES["DOMAIN"]: "webproperty",
+                },
+            ),
+            # The client trims Censys' response and checks its shape (`censys_client._optional`);
+            # these are the trimmed result's top-level fields the card reads.
+            expects=("kind", "reserved", "not_found"),
+        ),
         "checkphish": ProviderSpec(
             func=ioc_lookup_service_module.check_checkphish,
             name="CheckPhish",
@@ -130,6 +147,12 @@ def register_services(ioc_lookup_service_module) -> None:
             supported_ioc_types=_supported_ioc_types("haveibeenpwned"),
             api_key=ApiKeySpec(setting_name="hibp_api_key"),
         ),
+        "gravatar": ProviderSpec(
+            func=ioc_lookup_service_module.check_gravatar,
+            name="Gravatar",
+            supported_ioc_types=[IOC_TYPES["EMAIL"]],
+            expects=("found", "display_name", "avatar_url", "has_avatar", "verified_accounts"),
+        ),
         "hudsonrock": ProviderSpec(
             func=ioc_lookup_service_module.check_hudsonrock,
             name="Hudson Rock",
@@ -148,6 +171,32 @@ def register_services(ioc_lookup_service_module) -> None:
             name="Hunter.io",
             supported_ioc_types=_supported_ioc_types("hunterio"),
             api_key=ApiKeySpec(setting_name="hunterio_api_key"),
+        ),
+        "internetdb": ProviderSpec(
+            func=ioc_lookup_service_module.check_internetdb,
+            name="Shodan InternetDB",
+            supported_ioc_types=[IOC_TYPES["IPV4"], IOC_TYPES["IPV6"]],
+            expects=(*ioc_lookup_service_module.INTERNETDB_LIST_FIELDS, "no_data"),
+        ),
+        "ip_geo": ProviderSpec(
+            func=ioc_lookup_service_module.check_ip_geo,
+            name="IP Geolocation",
+            supported_ioc_types=[IOC_TYPES["IPV4"], IOC_TYPES["IPV6"]],
+            expects=("reserved", "country", "city", "asn", "company"),
+        ),
+        "ip_rdap": ProviderSpec(
+            func=ioc_lookup_service_module.check_ip_rdap,
+            name="IP RDAP",
+            supported_ioc_types=[IOC_TYPES["IPV4"], IOC_TYPES["IPV6"]],
+            expects=(
+                "reserved",
+                "found",
+                "name",
+                "cidrs",
+                "abuse_emails",
+                "registry",
+                "registry_server",
+            ),
         ),
         "ipqualityscore": ProviderSpec(
             func=ioc_lookup_service_module.check_ipqualityscore,
@@ -251,6 +300,12 @@ def register_services(ioc_lookup_service_module) -> None:
                     IOC_TYPES["DOMAIN"]: "domain",
                 },
             ),
+        ),
+        "leakcheck": ProviderSpec(
+            func=ioc_lookup_service_module.check_leakcheck,
+            name="LeakCheck",
+            supported_ioc_types=[IOC_TYPES["EMAIL"]],
+            expects=("found", "fields", "sources"),
         ),
         "leakix": ProviderSpec(
             func=ioc_lookup_service_module.check_leakix,

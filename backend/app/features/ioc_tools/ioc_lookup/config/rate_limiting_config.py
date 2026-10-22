@@ -15,10 +15,15 @@ DEFAULT_RATE_LIMITS = {
     "hybrid_analysis": 2.0,  # Hybrid Analysis: 2 req/sec
     "otx": 3.0,  # AlienVault OTX: 3 req/sec
     "threatminer": 2.0,  # ThreatMiner: 2 req/sec
-    "censys": 1.0,  # Censys: 1 req/sec for free tier
+    "censys": 1.0,  # Censys Platform v3 Lookup API, free-tier PAT
     "leakix": 1.0,  # LeakIX: ~1 req/sec free tier
     "greynoise": 2.0,  # GreyNoise: 2 req/sec
     "ipqualityscore": 1.5,  # IPQualityScore: 1.5 req/sec
+    "gravatar": 1.0,  # Gravatar REST v3: keyless tier, low hourly quota
+    "ip_geo": 1.0,  # ipapi.is: ~1,000 keyless requests/day
+    "ip_rdap": 1.0,  # rdap.org bootstrap + RIR servers: shared public infrastructure
+    "internetdb": 2.0,  # Shodan InternetDB: no published limit, kept at the default pace
+    "leakcheck": 1.0,  # LeakCheck Public API: ~1 req/sec, keyless
     "libraryofleaks": 0.5,  # Library of Leaks: shared anonymous quota on a free non-profit service
 }
 

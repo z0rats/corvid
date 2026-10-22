@@ -79,6 +79,51 @@ def test_library_of_leaks_returns_hit_counts():
     assert isinstance(result.get("collections"), list)
 
 
+def test_internetdb_lists_ports_for_a_public_resolver():
+    result = _live(external_api_clients.check_internetdb("1.1.1.1"))
+    assert result.get("no_data") is False
+    assert 443 in result.get("ports", [])
+    for field in ("hostnames", "tags", "cpes", "vulns"):
+        assert isinstance(result.get(field), list), f"InternetDB lost `{field}`"
+
+
+def test_leakcheck_lists_breach_sources_for_a_test_address():
+    # IANA's reserved test address: widely reused in breached sign-up forms, nobody's mailbox.
+    result = _live(external_api_clients.check_leakcheck("test@example.com"))
+    assert result.get("found", 0) > 0
+    assert isinstance(result.get("fields"), list)
+    source = (result.get("sources") or [{}])[0]
+    assert "name" in source and "date" in source
+
+
+def test_ip_geo_locates_a_public_resolver():
+    result = _live(external_api_clients.check_ip_geo("1.1.1.1"))
+    assert result["reserved"] is False
+    assert (result.get("asn") or "").startswith("AS13335")
+    assert result.get("country")
+
+
+def test_ip_rdap_follows_the_bootstrap_to_ripe():
+    # RIPE NCC's own address: proves the rdap.org redirect reaches the right RIR, not ARIN.
+    result = _live(external_api_clients.check_ip_rdap("193.0.6.139"))
+    assert result["found"] is True
+    assert result["registry"] == "RIPE NCC"
+    assert result["registry_server"] == "rdap.db.ripe.net"
+    assert result.get("cidrs"), "RIPE dropped the cidr0_cidrs extension"
+    assert result.get("abuse_emails"), "no abuse contact found in the entities"
+
+
+def test_gravatar_profile_carries_verified_accounts():
+    # Gravatar's own organisation account (not a person's), which has a verified account, so
+    # the account shape the card reads is checked too, not just the profile fields.
+    result = _live(external_api_clients.check_gravatar("gravatar@automattic.com"))
+    assert result["found"] is True
+    assert result.get("display_name")
+    assert result.get("has_avatar") is True, "the d=404 avatar check stopped answering 200"
+    account = (result.get("verified_accounts") or [{}])[0]
+    assert account.get("service") and account.get("url"), "verified account lost service/url"
+
+
 def test_ffraud_ip_lookup():
     result = _live(external_api_clients.check_ffraud("8.8.8.8"))
     assert result.get("success") is True

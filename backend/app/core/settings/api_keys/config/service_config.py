@@ -110,6 +110,20 @@ SERVICE_DEFINITIONS = {
         category=ServiceCategory.SECURITY_SCANNING,
         icon="checkphish_logo_small",
     ),
+    "censys": ServiceDefinition(
+        name="Censys",
+        key="censys",
+        description=(
+            "Internet-wide scan data: services per port for an IP, software stack and "
+            "certificate for a domain. Free account, Personal Access Token."
+        ),
+        documentation_url="https://docs.censys.com/reference/get-started",
+        supported_ioc_types=["IPv4", "IPv6", "Domain"],
+        required_keys=["censys"],
+        tier=ServiceTier.FREEMIUM,
+        category=ServiceCategory.NETWORK_INFRASTRUCTURE,
+        icon="default_icon",
+    ),
     "crowdsec": ServiceDefinition(
         name="CrowdSec",
         key="crowdsec",

@@ -33,6 +33,45 @@ A set of tools for working with indicators of compromise:
   documents' own content — with a link out to review the source material on Library of Leaks
   itself. Bulk lookup isn't offered for it, to stay within the shared anonymous rate limit of
   this free, non-profit service.
+- **Shodan InternetDB** — open ports, hostnames, tags, CPEs and known CVEs for an IPv4 or IPv6
+  address from Shodan's free, keyless InternetDB (a weekly summary of Shodan's scans; free for
+  non-commercial use). An IP Shodan has no data on shows "no data", not an error; each listed CVE
+  is one click away from a CVE lookup. The full Shodan host lookup still needs a Shodan key.
+- **LeakCheck** — which breaches an email address appears in (breach name and month) and which
+  kinds of data were exposed, from LeakCheck's free, keyless Public API. Never the leaked records
+  or passwords themselves. LeakCheck allows about one request per second, so bulk lookups are
+  throttled to that.
+- **IP Geolocation** — country, region, city, coordinates, ASN and owning company for an IPv4 or
+  IPv6 address from ipapi.is's free, keyless HTTPS tier (about 1,000 lookups a day). Geolocation
+  is approximate. It's context only and never changes a verdict.
+- **IP RDAP** — who holds the netblock an IPv4 or IPv6 address is in: netblock name, handle,
+  CIDR and range, registrant, registration dates and the abuse contact. Corvid asks `rdap.org`,
+  which hands the query to whichever regional registry is authoritative (ARIN, RIPE NCC, APNIC,
+  LACNIC or AFRINIC), so a European address gets RIPE's record rather than an ARIN referral. The
+  abuse email is one click away from its own lookup. Unallocated space shows "no RDAP record".
+  No API key needed.
+- **Private and reserved addresses** — IP Geolocation, IP RDAP, Shodan InternetDB and Censys never send a private,
+  loopback, link-local, CGNAT or documentation-range address to anyone; the card says the
+  address is private or reserved instead.
+- **Censys** — for an IP, the services Censys sees on each port (protocol, transport, last
+  scan, TLS certificate subject), with hostnames, ASN and location; for a domain, the software
+  stack Censys identifies on its web property (port 443, falling back to 80), with anything
+  Censys classifies as a WAF highlighted, and that site's certificate. A domain Censys has
+  nothing on uses two lookups from your Censys quota (443, then 80). Needs a free Censys account's Personal Access Token: create one under
+  **API Access** in the Censys Platform user menu and paste it into Settings → API Keys →
+  Censys. The free tier covers these lookups; Censys search needs a paid organization and isn't
+  used. A rejected token shows a "create a new token" message.
+- **Gravatar** — the public Gravatar profile behind an email address (display name, job,
+  company, location, about) and the linked accounts Gravatar has verified (GitHub, X, Mastodon,
+  Instagram and others). Each account links to the profile and offers a username search, and
+  GitHub, Reddit, Instagram and Steam accounts also pivot straight into Git Recon, Reddit Search,
+  Instagram Search or Steam Recon. An account whose URL holds a numeric or opaque id rather than
+  a username (a Facebook `profile.php?id=` link, a Steam `/profiles/` link) gets no username
+  pivot. The avatar is shown only as a link: your browser doesn't load it, so Gravatar isn't
+  told the profile was viewed. If the address has no avatar of its own, the card says so instead
+  of linking Gravatar's default image. The keyless API doesn't return a profile's other links,
+  only verified accounts. An address without a public profile shows "no public profile". No API
+  key needed.
 - **History** — every single-IOC lookup is saved automatically once every queried service has
   responded, so past investigations stay reviewable. Any saved lookup can be exported as an HTML
   or PDF report — see [Reports & Exports](/corvid/architecture/reports/).

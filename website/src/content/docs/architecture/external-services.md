@@ -29,14 +29,20 @@ that, the provider changed its API; please open an issue.
 Auto-routed by IOC type; see [IOC Tools → Integrated services](/corvid/features/ioc-tools/) for
 which provider handles which type.
 
-- **Needs an API key** (Settings → API Keys): AbuseIPDB, AlienVault OTX, CheckPhish, CrowdSec,
+- **Needs an API key** (Settings → API Keys): AbuseIPDB, AlienVault OTX, Censys (free account's
+  Personal Access Token), CheckPhish, CrowdSec,
   CrowdStrike, EmailRep.io, GitHub (optional — raises an otherwise-anonymous rate limit, not
   required), Have I Been Pwned, Hunter.io, IPQualityScore, LeakIX, Maltiverse, MalwareBazaar, Mandiant, NIST NVD,
   Pulsedive, Reddit, Google Safe Browsing, Shodan, ThreatFox, Twitter/X, URLhaus, VirusTotal.
   ThreatFox, URLhaus and MalwareBazaar all take the same free abuse.ch Auth-Key (get one at
   [auth.abuse.ch](https://auth.abuse.ch/)) — paste it into each service's field.
 - **Fully keyless**: Address Blacklist (resolved locally, see below), CISA KEV, FFraud, FIRST.org
-  EPSS, Hudson Rock, Library of Leaks, OpenPhish, URLScan.io.
+  EPSS, Gravatar (`api.gravatar.com` REST v3, profile by SHA-256 of the address), Hudson Rock,
+  IP Geolocation (`api.ipapi.is`, ~1,000 requests/day), IP RDAP (`rdap.org` bootstrap, then the
+  authoritative regional registry), LeakCheck (`leakcheck.io` Public API, ~1 request/second),
+  Library of Leaks, OpenPhish, Shodan InternetDB (`internetdb.shodan.io`, free for
+  non-commercial use), URLScan.io. Private and reserved IPs are never sent to IP Geolocation,
+  IP RDAP, Shodan InternetDB or Censys.
 - **Address Blacklist** resolves instantly from a local table, refreshed daily rather than called
   per lookup, from three free keyless feeds: OFAC's `sanctionslistservice.ofac.treas.gov` (SDN
   digital-currency addresses), ScamSniffer's GitHub-hosted phishing-address database, and
@@ -178,8 +184,9 @@ A weekly CI job (not part of a running Corvid instance) calls the keyless source
 fixed reference queries and fails when one changes its response shape, moves, or starts demanding
 a key; sources that simply don't answer the CI runner (rate limits, geo blocks, server errors) are
 skipped, with the reason shown in the run summary. Checked today: the keyless IOC lookup providers
-(CISA KEV, FIRST EPSS, OpenPhish, URLScan.io, Library of Leaks, FFraud), the address-blacklist
-feeds, the default newsfeed RSS feeds, the Domain Finder panels (crt.sh, HackerTarget, RapidDNS,
+(CISA KEV, FIRST EPSS, OpenPhish, URLScan.io, Library of Leaks, FFraud, Shodan InternetDB,
+LeakCheck, IP Geolocation, IP RDAP, Gravatar), the address-blacklist feeds, the default newsfeed RSS feeds, the Domain Finder panels
+(crt.sh, Cert Spotter, HackerTarget, RapidDNS,
 Wayback Machine, RDAP, URLScan.io), the RU Business Check registries and dumps, the Reddit
 archives, threat-actor usernames, Hudson Rock, YouTube, DuckDuckGo, the OpenSanctions dump,
 Nominatim, PyPI and GitHub releases. A failure opens a GitHub issue in the Corvid repository.
