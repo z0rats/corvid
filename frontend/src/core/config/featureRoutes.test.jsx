@@ -24,6 +24,7 @@ describe('FEATURE_ROUTES', () => {
       'instagram-search/*',
       'phone-search/*',
       'sanctions-search/*',
+      'investigations/*',
     ]);
   });
 

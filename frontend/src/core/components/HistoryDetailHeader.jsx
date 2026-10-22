@@ -6,6 +6,7 @@ import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/DownloadOutlined';
 import { downloadCsv, downloadJson } from '../utils/exportData';
+import AddToInvestigationButton from './AddToInvestigationButton';
 
 /**
  * Shared header for "history" detail views: back button + title + chips,
@@ -14,12 +15,16 @@ import { downloadCsv, downloadJson } from '../utils/exportData';
  *
  * `exportName` turns on client-side export: JSON of the whole `exportData` record, plus CSV of
  * `csvRows` (the feature's main findings table) when it has any.
+ *
+ * `runRef` (`{ feature, id }`, the backend's activity-feed feature name) adds "Add to
+ * investigation" - only for features with a backend RunSource (app/utils/run_source_registry.py).
  */
 export default function HistoryDetailHeader({
-  onBack, title, chips, summary, error, exportName, exportData, csvRows,
+  onBack, title, chips, summary, error, exportName, exportData, csvRows, runRef,
 }) {
   const { t } = useTranslation();
   const canExport = Boolean(exportName && exportData);
+  const canInvestigate = runRef?.id != null;
 
   return (
     <>
@@ -29,12 +34,15 @@ export default function HistoryDetailHeader({
         </IconButton>
         <Typography variant="h5" sx={{ wordBreak: 'break-word' }}>{title}</Typography>
         {chips}
-        {canExport && (
-          <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
-            <Button size="small" variant="outlined" startIcon={<DownloadIcon />} onClick={() => downloadJson(exportData, exportName)}>
-              JSON
-            </Button>
-            {csvRows?.length > 0 && (
+        {(canExport || canInvestigate) && (
+          <Box sx={{ display: 'flex', gap: 1, ml: 'auto', flexWrap: 'wrap' }}>
+            {canInvestigate && <AddToInvestigationButton feature={runRef.feature} runId={runRef.id} />}
+            {canExport && (
+              <Button size="small" variant="outlined" startIcon={<DownloadIcon />} onClick={() => downloadJson(exportData, exportName)}>
+                JSON
+              </Button>
+            )}
+            {canExport && csvRows?.length > 0 && (
               <Button size="small" variant="outlined" startIcon={<DownloadIcon />} onClick={() => downloadCsv(csvRows, exportName)}>
                 CSV
               </Button>

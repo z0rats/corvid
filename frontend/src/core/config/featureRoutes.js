@@ -20,6 +20,7 @@ const SteamRecon = lazy(() => import("../../features/steam-recon/SteamRecon"));
 const InstagramSearch = lazy(() => import("../../features/instagram-search/InstagramSearch"));
 const PhoneSearch = lazy(() => import("../../features/phone-search/PhoneSearch"));
 const SanctionsSearch = lazy(() => import("../../features/sanctions-search/SanctionsSearch"));
+const Investigations = lazy(() => import("../../features/investigations/Investigations"));
 
 /** Every lazy feature page, mounted under the layout at `path`. */
 export const FEATURE_ROUTES = [
@@ -43,4 +44,5 @@ export const FEATURE_ROUTES = [
   { path: 'instagram-search/*', Component: InstagramSearch },
   { path: 'phone-search/*', Component: PhoneSearch },
   { path: 'sanctions-search/*', Component: SanctionsSearch },
+  { path: 'investigations/*', Component: Investigations },
 ];

@@ -40,6 +40,7 @@ import InstagramIcon from "@mui/icons-material/Instagram";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import TuneIcon from "@mui/icons-material/TuneOutlined";
+import HubIcon from "@mui/icons-material/HubOutlined";
 import { IOC_TYPES } from "../utils/iocTypeDetection";
 
 // Left-panel grouping: every tool sits in exactly one section, shown in this order. `tags` stay
@@ -289,6 +290,17 @@ const MAIN_MENU_ITEMS_CONFIG = [
     tags: ["compliance", "identity"],
     // Free-text person/org/vessel name, not a regex-detectable IOC type - reachable via
     // rankIdentityFallback's "identity" tag instead of a matched accepts[] type.
+    accepts: [],
+  },
+  {
+    i18nKey: "nav.investigations",
+    icon: <HubIcon />,
+    path: "/investigations",
+    moduleId: "investigations",
+    section: SECTIONS.INTEL,
+    aliases: ["investigations", "investigation", "case", "cases", "entity graph", "link graph", "report"],
+    tags: ["report"],
+    // A workspace over other features' runs, not a search box - takes no pivot value.
     accepts: [],
   },
 ];

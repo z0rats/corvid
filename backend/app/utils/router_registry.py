@@ -32,6 +32,7 @@ from app.features.email_search.routers import email_search_routes, ghunt_profile
 from app.features.git_recon.routers import git_recon_routes
 from app.features.image_tools.routers import geolocation_history_routes, image_routes
 from app.features.instagram_search.routers import instagram_scan_routes, instagram_search_routes
+from app.features.investigations.routers import investigation_routes
 from app.features.ioc_tools.domain_finder.routers import domain_routes
 from app.features.ioc_tools.ioc_defanger.routers import internal_defang_routes
 from app.features.ioc_tools.ioc_extractor.routers import internal_ioc_extractor_routes
@@ -142,6 +143,7 @@ def get_feature_routers() -> list[APIRouter]:
         instagram_search_routes.router,
         instagram_scan_routes.router,
         activity_routes.router,
+        investigation_routes.router,
     ]
 
 

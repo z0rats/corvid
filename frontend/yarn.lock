@@ -4018,6 +4018,7 @@ __metadata:
     "@vitejs/plugin-react": "npm:^6.1.1"
     "@vitest/coverage-v8": "npm:^5.0.0"
     axios: "npm:1.20.0"
+    cytoscape: "npm:3.34.3"
     d3-scale-chromatic: "npm:^3.1.0"
     eslint: "npm:^10.11.0"
     eslint-plugin-react-hooks: "npm:^7.1.1"
@@ -4103,6 +4104,13 @@ __metadata:
   version: 3.2.3
   resolution: "csstype@npm:3.2.3"
   checksum: 10c0/cd29c51e70fa822f1cecd8641a1445bed7063697469d35633b516e60fe8c1bde04b08f6c5b6022136bb669b64c63d4173af54864510fbb4ee23281801841a3ce
+  languageName: node
+  linkType: hard
+
+"cytoscape@npm:3.34.3":
+  version: 3.34.3
+  resolution: "cytoscape@npm:3.34.3"
+  checksum: 10c0/953ef85160d4a5b1a7e47af4039e66b81d4e6d00b39d6e1f4387c4563cdc4cb4480e91e8f7f6b5fbda05bf3d8019792b514a809ed1e4d1c2a5b16827b4c4a315
   languageName: node
   linkType: hard
 

@@ -53,6 +53,7 @@ export default function HistoryDetail() {
         exportName={exportFileName('username-search', run.username, run.id)}
         exportData={run}
         csvRows={run.site_results}
+        runRef={{ feature: 'username_search', id: run.id }}
       />
 
       {parentId != null && (

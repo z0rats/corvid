@@ -1,0 +1,93 @@
+{
+  "page": {
+    "description": "Collect runs from different features into one investigation, export them as a single report, and see how their results connect."
+  },
+
+  "list": {
+    "nameLabel": "New investigation name",
+    "createButton": "Create",
+    "empty": "No investigations yet. Create one here, or use \"Add to investigation\" on any IOC lookup, username search, email search or Reddit search result.",
+    "headers": {
+      "name": "Name",
+      "items": "Runs",
+      "updated": "Updated",
+      "actions": "Actions"
+    },
+    "confirmDeleteTitle": "Delete this investigation?",
+    "confirmDeleteMessage": "Its item list and notes are removed. The runs themselves stay in each feature's history.",
+    "loadFailed": "Couldn't load investigations.",
+    "createFailed": "Couldn't create the investigation.",
+    "deleteFailed": "Couldn't delete the investigation."
+  },
+
+  "detail": {
+    "notFound": "Investigation not found.",
+    "nameLabel": "Name",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Hypotheses, context, next steps…",
+    "saveNotes": "Save notes",
+    "created": "Created {{date}}",
+    "saveFailed": "Couldn't save the change.",
+    "deleteButton": "Delete",
+    "tabs": {
+      "items": "Runs ({{count}})",
+      "graph": "Graph"
+    }
+  },
+
+  "items": {
+    "empty": "No runs yet. Open a result in IOC lookup, username search, email search or Reddit search history and use \"Add to investigation\".",
+    "headers": {
+      "feature": "Feature",
+      "target": "Target",
+      "added": "Added",
+      "note": "Note",
+      "actions": "Actions"
+    },
+    "notePlaceholder": "Add a note",
+    "missing": "Run deleted",
+    "missingTooltip": "This run was deleted from its feature's history. Its target and note are kept; its results are no longer available.",
+    "remove": "Remove from investigation",
+    "removeFailed": "Couldn't remove the run."
+  },
+
+  "graph": {
+    "loadFailed": "Couldn't load the graph.",
+    "empty": "No entities to show. Add runs to this investigation, or widen the type filter.",
+    "truncated": "Showing the {{shown}} most connected of {{total}} entities. Filter by type to see the rest.",
+    "filterLabel": "Entity types",
+    "allTypes": "All",
+    "fit": "Fit to view",
+    "relayout": "Re-run layout",
+    "exportPng": "Export PNG",
+    "legendRoot": "Bold border: a run in this investigation was about it",
+    "types": {
+      "ip": "IP",
+      "domain": "Domain",
+      "url": "URL",
+      "email": "Email",
+      "hash": "Hash",
+      "cve": "CVE",
+      "wallet": "Wallet",
+      "username": "Username",
+      "account": "Account",
+      "breach": "Breach",
+      "asn": "ASN",
+      "netblock": "Netblock",
+      "subreddit": "Subreddit"
+    },
+    "panel": {
+      "close": "Close",
+      "links": "{{count}} links",
+      "foundBy": "Found by",
+      "pivot": "Look up in",
+      "open": "Open link",
+      "pivots": {
+        "iocLookup": "IOC Lookup",
+        "usernameSearch": "Username Search",
+        "emailSearch": "Email Search",
+        "redditSearch": "Reddit Search"
+      }
+    }
+  }
+}

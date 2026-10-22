@@ -20,14 +20,24 @@ def _as_utc(value: datetime.datetime) -> datetime.datetime:
     return value if value.tzinfo else value.replace(tzinfo=datetime.UTC)
 
 
-async def _non_scan_activity(db: AsyncSession, limit: int) -> list[dict[str, Any]]:
-    """Histories that aren't `ScanFeature`s (no running/failed lifecycle - always completed)."""
-    sources: list[tuple[str, Any, Any, Any]] = [
-        ("ioc_lookup", SingleLookupSearch, SingleLookupSearch.ioc, SingleLookupSearch.searched_at),
-        ("reddit_search", RedditSearch, RedditSearch.username, RedditSearch.searched_at),
+# Histories that aren't `ScanFeature`s (no running/failed lifecycle - always completed):
+# (feature, model, target column, timestamp column).
+_NON_SCAN_SOURCES: list[tuple[str, Any, Any, Any]] = [
+    ("ioc_lookup", SingleLookupSearch, SingleLookupSearch.ioc, SingleLookupSearch.searched_at),
+    ("reddit_search", RedditSearch, RedditSearch.username, RedditSearch.searched_at),
+]
+
+
+def activity_feature_names() -> list[str]:
+    """Every feature name the feed can return - what investigations' run-source gate checks."""
+    return [feature.name for feature in all_scan_features()] + [
+        feature for feature, *_ in _NON_SCAN_SOURCES
     ]
+
+
+async def _non_scan_activity(db: AsyncSession, limit: int) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
-    for feature, model, target, timestamp in sources:
+    for feature, model, target, timestamp in _NON_SCAN_SOURCES:
         rows = await db.execute(
             select(model.id, target, timestamp).order_by(timestamp.desc()).limit(limit)
         )

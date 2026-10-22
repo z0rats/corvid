@@ -30,6 +30,7 @@ export default function HistoryDetail() {
         title={search.ioc}
         chips={<Chip size="small" label={search.ioc_type} variant="outlined" />}
         summary={new Date(search.searched_at).toLocaleString()}
+        runRef={{ feature: 'ioc_lookup', id: search.id }}
       />
 
       <ApiDownloadButtons

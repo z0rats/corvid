@@ -57,13 +57,14 @@ Features (`backend/app/features/`):
 - `reddit_search/` — a user's full history incl. removed content (Arctic Shift + PullPush). Deep-dive: `docs/architecture/reddit-search.md`.
 - `dork_runner/` — parameterized dork templates, DuckDuckGo by default. Deep-dive: `docs/architecture/dork-runner.md`.
 - `youtube/` — video metadata (keyless) plus counts/comments with a Data API key. Deep-dive: `docs/architecture/youtube.md`.
-- `instagram_search/` — profile metadata via `instaloader` plus a followers/posts scan; optional imported session cookie, never a password. Deep-dive: `docs/architecture/instagram-search.md`.
+- `instagram_search/` — profile metadata via `instaloader` plus a followers/posts scan. Deep-dive: `docs/architecture/instagram-search.md`.
 - `git_recon/` — gitcolombo in-process; `git clone` subprocess gated by `validate_github_repo_url`. Deep-dive: `docs/architecture/git-recon.md`.
 - `amass/` — OWASP Amass v5 with its engine as a background subprocess (`docs/adr/0013-amass-engine-in-container.md`). Deep-dive: `docs/architecture/amass.md`.
 - `ru_business_check/` — Russian due diligence by ИНН/name: live registries plus scheduled dumps into one risk engine; a failed or drifted source is "not checked", never empty; Russian-only UI by design. Deep-dive: `docs/architecture/ru-business-check.md`.
 - `sanctions_search/` — free-text search over the full OFAC SDN list from a local OpenSanctions dump (`docs/adr/0017-sanctions-search-opensanctions-and-in-house-matching.md`).
 - `steam_recon/` — profile lookup plus friends-graph scan, Steam Web API key required, clean-room heuristics (`docs/adr/0015-steam-recon-clean-room-and-heuristic-scoring.md`). Deep-dive: `docs/architecture/steam-recon.md`.
-- `activity/` — read-only `GET /api/activity` (newest runs across every `ScanFeature` plus IOC-lookup/Reddit history, start screen) and `GET /api/activity/active` (unfinished runs, AppBar indicator).
+- `investigations/` — named `(feature, run_id)` lists with notes, one combined report, and an entity graph derived per request; a feature joins via a `RunSource` (`core/run_sources/`, `core/entities/`) in `utils/run_source_registry.py` (test-enforced). Deep-dive: `docs/architecture/investigations.md`.
+- `activity/` — read-only `GET /api/activity` (newest runs of every feature with history, start screen) and `/active` (unfinished runs, AppBar indicator).
 
 ## Frontend architecture
 

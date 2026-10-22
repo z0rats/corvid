@@ -41,6 +41,30 @@ erDiagram
 
 ```mermaid
 erDiagram
+    investigation_items {
+        int id PK "NOT NULL. Surrogate primary key"
+        int investigation_id FK "NOT NULL. Owning Investigation.id"
+        string(50) feature "NOT NULL. Activity-feed feature name, e.g. 'ioc_lookup', 'username_search'"
+        int run_id "NOT NULL. Id of the run in that feature's own table. Deliberately not a foreign key (it points into a different table per feature): the run may be deleted from history, leaving a tombstone readers must tolerate"
+        string(2000) target "NOT NULL. What the run was about (username, IOC, ...) when added, kept for tombstones"
+        text note "Analyst note on this item"
+        datetime added_at "NOT NULL. When the run was added to the investigation"
+        datetime created_at "NOT NULL. When this row was created"
+        datetime updated_at "NOT NULL. When this row was last updated"
+    }
+    investigations {
+        int id PK "NOT NULL. Surrogate primary key"
+        string(200) name "NOT NULL. Analyst-given name"
+        text notes "Free-text analyst notes"
+        datetime created_at "NOT NULL. When this row was created"
+        datetime updated_at "NOT NULL. When this row was last updated"
+    }
+
+    investigations ||--|{ investigation_items : "investigation_id -> id, ondelete=CASCADE"
+```
+
+```mermaid
+erDiagram
     maigret_searches {
         int id PK "NOT NULL. Surrogate primary key"
         string(100) username "NOT NULL. Username searched"
@@ -382,6 +406,30 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 | `result` | json | yes | — | — | Full items list blob (shape depends on scan_type) - no normalized child table, same pattern as GitReconSearch.result |
 
 - CHECK `ck_instagram_searches_status`: `status IN ('running', 'completed', 'cancelled', 'failed')`
+
+### `investigation_items`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `investigation_id` | int | no | — | FK | Owning Investigation.id |
+| `feature` | string(50) | no | — | — | Activity-feed feature name, e.g. 'ioc_lookup', 'username_search' |
+| `run_id` | int | no | — | — | Id of the run in that feature's own table. Deliberately not a foreign key (it points into a different table per feature): the run may be deleted from history, leaving a tombstone readers must tolerate |
+| `target` | string(2000) | no | — | — | What the run was about (username, IOC, ...) when added, kept for tombstones |
+| `note` | text | yes | — | — | Analyst note on this item |
+| `added_at` | datetime | no | server: now() | — | When the run was added to the investigation |
+| `created_at` | datetime | no | server: now() | — | When this row was created |
+| `updated_at` | datetime | no | server: now() | — | When this row was last updated |
+
+### `investigations`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `name` | string(200) | no | — | — | Analyst-given name |
+| `notes` | text | yes | — | — | Free-text analyst notes |
+| `created_at` | datetime | no | server: now() | — | When this row was created |
+| `updated_at` | datetime | no | server: now() | — | When this row was last updated |
 
 ### `keywords`
 

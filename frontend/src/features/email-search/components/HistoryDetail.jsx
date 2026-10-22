@@ -27,6 +27,7 @@ export default function HistoryDetail() {
       <HistoryDetailHeader
         onBack={() => navigate('/email-search/history')}
         title={run.username}
+        runRef={{ feature: 'email_search', id: run.id }}
         chips={(
           <>
             <Chip size="small" label={t(`form.source.${run.source ?? 'mailcat'}.label`)} />

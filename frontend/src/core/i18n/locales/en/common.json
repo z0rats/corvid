@@ -120,7 +120,9 @@
       "settings": "Settings"
     },
 
-    "sanctionsSearch": "Sanctions Search"
+    "sanctionsSearch": "Sanctions Search",
+
+    "investigations": "Investigations"
   },
 
   "layout": {
@@ -229,6 +231,19 @@
     "filterPlaceholder": "Filter loaded runs",
     "noMatches": "No runs match this filter.",
     "loadMore": "Load older runs"
+  },
+  "investigations": {
+    "addButton": "Add to investigation",
+    "newInvestigation": "New investigation…",
+    "nameLabel": "Name",
+    "createAndAdd": "Create and add",
+    "alreadyAdded": "Already added",
+    "added": "Added to \"{{name}}\"",
+    "addFailed": "Couldn't add this run to the investigation.",
+    "loadFailed": "Couldn't load investigations."
+  },
+  "download": {
+    "failed": "Download failed - check that the backend is reachable."
   },
   "scanQueue": {
     "waiting": "Queued: other heavy scans are using all slots. This scan starts automatically when one finishes; you can cancel it meanwhile."

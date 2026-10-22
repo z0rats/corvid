@@ -43,6 +43,7 @@ export default function HistoryDetail() {
         exportName={exportFileName('reddit', search.username, search.id)}
         exportData={search}
         csvRows={search.results}
+        runRef={{ feature: 'reddit_search', id: search.id }}
       />
 
       <Tabs value={kind} onChange={(_e, value) => setKind(value)} sx={{ mb: 2 }}>

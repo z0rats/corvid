@@ -15,7 +15,7 @@ an updated stack, and has since diverged substantially._
 
 If your daily routine is a wall of browser tabs — VirusTotal in one, Shodan in another, three more for a username or a phishing domain — Corvid replaces that wall with a single keyboard-first search bar. Paste an IP, domain, hash, email, or username and it's routed to the right tools automatically; type a tool name to jump straight to it.
 
-Corvid is self-hostable and built for single-user operation: it runs in one Docker container on your own infrastructure, so investigation data and API keys never pass through a third-party SaaS. It's a workbench, not a data warehouse — no long-term case management, just fast, on-demand IOC lookups, email/image forensics, phishing-domain discovery, identity correlation (Reddit, GitHub, usernames), and detection-rule authoring, with generative AI wired in to speed up analysis and write-ups along the way.
+Corvid is self-hostable and built for single-user operation: it runs in one Docker container on your own infrastructure, so investigation data and API keys never pass through a third-party SaaS. It's a workbench, not a data warehouse — no case-management system, just fast, on-demand IOC lookups, email/image forensics, phishing-domain discovery, identity correlation (Reddit, GitHub, usernames), and detection-rule authoring, with generative AI wired in to speed up analysis and write-ups along the way.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/z0rats/corvid/main/install.sh | bash
@@ -88,6 +88,11 @@ Score a vulnerability with CVSS 3.1 or 4.0 and export it. →
 ### Detection Rules
 A GUI for creating Sigma, Yara, and Snort/Suricata rules. →
 [Docs](https://z0rats.github.io/corvid/features/rule-creator/)
+
+### Investigations
+Group runs from IOC Lookup, Username, Email and Reddit Search into one named investigation with
+notes, export it as a single HTML/PDF report, and see how their results connect in an entity
+graph. → [Docs](https://z0rats.github.io/corvid/features/investigations/)
 
 ### Reddit Search
 A Reddit user's full post/comment history, including removed/deleted content, no API key
