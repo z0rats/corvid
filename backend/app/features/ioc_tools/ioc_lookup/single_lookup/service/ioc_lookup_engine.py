@@ -45,20 +45,22 @@ _rate_limiters: dict[str, dict[str, Any]] = defaultdict(
 
 
 async def apply_rate_limit(service_name: str) -> None:
-    """Sleep as needed so calls to a given service stay within its configured requests/sec."""
-    rate_limit = get_service_rate_limit(service_name)
-    min_interval = 1.0 / rate_limit
+    """Sleep as needed so calls to a given service stay within its configured requests/sec.
+
+    Each call reserves the next free slot (`last_request` + interval) *before* sleeping, with no
+    await between reading and writing it, so concurrent callers (bulk lookup runs several at
+    once) queue up one interval apart instead of all waking at the same moment."""
+    min_interval = 1.0 / get_service_rate_limit(service_name)
 
     limiter = _rate_limiters[service_name]
-    time_since_last = time.time() - limiter["last_request"]
-
-    if time_since_last < min_interval:
-        sleep_time = min_interval - time_since_last
-        logger.debug("Rate limiting %s: sleeping for %ss", service_name, sleep_time)
-        await asyncio.sleep(sleep_time)
-
-    limiter["last_request"] = time.time()
+    now = time.time()
+    slot = max(now, limiter["last_request"] + min_interval)
+    limiter["last_request"] = slot
     limiter["request_count"] += 1
+
+    if slot > now:
+        logger.debug("Rate limiting %s: sleeping for %ss", service_name, slot - now)
+        await asyncio.sleep(slot - now)
 
 
 async def _sleep_before_retry(delay: float) -> None:

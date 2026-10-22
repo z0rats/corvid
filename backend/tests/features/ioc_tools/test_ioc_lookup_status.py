@@ -143,8 +143,32 @@ class TestApplyRateLimitPacesPerService:
         _run(engine.apply_rate_limit("svc"))
 
         assert sleeps == [pytest.approx(0.4)]
-        assert engine._rate_limiters["svc"]["last_request"] == pytest.approx(100.1)
+        # The reserved slot, not the moment of the call.
+        assert engine._rate_limiters["svc"]["last_request"] == pytest.approx(100.5)
         assert engine._rate_limiters["svc"]["request_count"] == 1
+
+    def test_concurrent_callers_are_spaced_one_interval_apart(self, monkeypatch):
+        # Regression: every concurrent caller read the same `last_request`, slept the same
+        # amount and fired together - bulk lookup ignored a 1 req/s limit.
+        monkeypatch.setattr(engine, "apply_rate_limit", _real_apply_rate_limit)
+        engine.reset_rate_limiters()
+        monkeypatch.setattr(engine, "get_service_rate_limit", lambda name: 1.0)
+        monkeypatch.setattr(engine.time, "time", lambda: 100.0)
+
+        sleeps = []
+
+        async def fake_sleep(seconds):
+            sleeps.append(seconds)
+
+        monkeypatch.setattr(engine.asyncio, "sleep", fake_sleep)
+
+        async def burst():
+            await asyncio.gather(*(engine.apply_rate_limit("svc") for _ in range(3)))
+
+        _run(burst())
+
+        assert sorted(sleeps) == [pytest.approx(1.0), pytest.approx(2.0)]
+        assert engine._rate_limiters["svc"]["request_count"] == 3
 
     def test_no_sleep_once_interval_has_elapsed(self, monkeypatch):
         monkeypatch.setattr(engine, "apply_rate_limit", _real_apply_rate_limit)
