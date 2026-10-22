@@ -68,6 +68,35 @@ const restrictedSyntax = [
   },
 ];
 
+// Every /api/* route but a few public ones needs the access token's Authorization header, which a
+// URL built from baseURL (an <a href>, window.open, <img src>) can't send - the browser gets a 401.
+// Downloads go through core/services/apiDownload.js (or ApiDownloadButtons) instead.
+// baseURL is '' in production, so a bare '/api/...' literal (or template) in an href/src or a
+// window.open() call is the same 401 - matched too.
+const API_PATH = '/^\\/api\\//';
+const API_URL_SELECTOR = [
+  "ImportSpecifier[imported.name='baseURL']",
+  "MemberExpression[object.property.name='defaults'][property.name='baseURL']",
+  `JSXAttribute[name.name=/^(href|src)$/] Literal[value=${API_PATH}]`,
+  `JSXAttribute[name.name=/^(href|src)$/] TemplateElement[value.raw=${API_PATH}]`,
+  `CallExpression[callee.property.name='open'] > Literal[value=${API_PATH}]`,
+  `CallExpression[callee.property.name='open'] > TemplateLiteral > TemplateElement[value.raw=${API_PATH}]`,
+].join(', ');
+const restrictedSyntaxWithApiUrls = [...restrictedSyntax];
+restrictedSyntax.push({
+  selector: API_URL_SELECTOR,
+  message:
+    'A URL built from baseURL carries no Authorization header and 401s - download via core/services/apiDownload.js (downloadFromApi / ApiDownloadButtons).',
+});
+// Reviewed exceptions: sseStream sends the header itself via fetch(); feed icons are a public
+// router (router_registry.get_public_routers). Tests mock baseApi.
+const API_URL_ALLOWED_FILES = [
+  'src/core/services/baseApi.*',
+  'src/core/services/sseStream.ts',
+  'src/features/newsfeed/utils/urlUtils.js',
+  '**/*.test.{js,jsx,ts,tsx}',
+];
+
 export default [
   { ignores: ['build/**', 'node_modules/**', 'coverage/**'] },
   js.configs.recommended,
@@ -146,5 +175,9 @@ export default [
         ...globals.vitest,
       },
     },
+  },
+  {
+    files: API_URL_ALLOWED_FILES,
+    rules: { 'no-restricted-syntax': restrictedSyntaxWithApiUrls },
   },
 ];

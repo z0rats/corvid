@@ -1,5 +1,5 @@
 import { lookupHistoryApi } from './lookupHistoryApi';
-import api, { baseURL } from '../../../../../../core/services/baseApi';
+import api from '../../../../../../core/services/baseApi';
 
 vi.mock('../../../../../../core/services/baseApi', () => ({
   default: { post: vi.fn(), get: vi.fn(), delete: vi.fn() },
@@ -62,9 +62,12 @@ describe('lookupHistoryApi.deleteSearch', () => {
   });
 });
 
-describe('lookupHistoryApi.reportUrl', () => {
-  it('builds the report URL with format and locale query params', () => {
-    const url = lookupHistoryApi.reportUrl(5, 'pdf', 'en');
-    expect(url).toBe(`${baseURL}/api/ioc-lookup/history/5/report?format=pdf&locale=en`);
+describe('lookupHistoryApi.reportRequest', () => {
+  it('describes the report download for the authenticated client', () => {
+    expect(lookupHistoryApi.reportRequest(5, 'pdf', 'en')).toEqual({
+      path: '/api/ioc-lookup/history/5/report',
+      params: { format: 'pdf', locale: 'en' },
+      fallbackName: 'ioc-lookup-5.pdf',
+    });
   });
 });

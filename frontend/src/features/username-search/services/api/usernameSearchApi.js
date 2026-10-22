@@ -1,4 +1,4 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
+import api from '../../../../core/services/baseApi';
 
 export const usernameSearchApi = {
   async checkHudsonRock(username, { signal } = {}) {
@@ -45,8 +45,12 @@ export const usernameSearchApi = {
     await api.delete(`/api/username-search/runs/${searchId}`);
   },
 
-  exportUrl(searchId, format) {
-    return `${baseURL}/api/username-search/runs/${searchId}/export/${format}`;
+  /** For core's ApiDownloadButtons, which downloads it through the authenticated client. */
+  exportRequest(searchId, format) {
+    return {
+      path: `/api/username-search/runs/${searchId}/export/${format}`,
+      fallbackName: `username-search-${searchId}.${format}`,
+    };
   },
 
   async getConfig() {

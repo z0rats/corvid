@@ -3,12 +3,10 @@ import { useParams, useNavigate } from 'react-router';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import LinearProgress from '@mui/material/LinearProgress';
-import DownloadIcon from '@mui/icons-material/Download';
 
 import HistoryDetailHeader from '../../../../../../core/components/HistoryDetailHeader';
+import ApiDownloadButtons from '../../../../../../core/components/ui/ApiDownloadButtons';
 import { useHistoryDetail } from '../../../../../../core/hooks/useHistoryDetail';
 import HistoryResultTable from './HistoryResultTable';
 import { lookupHistoryApi } from '../../services/api/lookupHistoryApi';
@@ -34,21 +32,11 @@ export default function HistoryDetail() {
         summary={new Date(search.searched_at).toLocaleString()}
       />
 
-      <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
-        {EXPORT_FORMATS.map((fmt) => (
-          <Button
-            key={fmt}
-            size="small"
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            component="a"
-            href={lookupHistoryApi.reportUrl(search.id, fmt, locale)}
-            download
-          >
-            {fmt.toUpperCase()}
-          </Button>
-        ))}
-      </Stack>
+      <ApiDownloadButtons
+        formats={EXPORT_FORMATS}
+        request={(fmt) => lookupHistoryApi.reportRequest(search.id, fmt, locale)}
+        sx={{ mb: 2 }}
+      />
 
       <HistoryResultTable ioc={search.ioc} iocType={search.ioc_type} results={search.results} />
     </Box>

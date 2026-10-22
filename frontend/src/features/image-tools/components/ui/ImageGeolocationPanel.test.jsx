@@ -142,15 +142,14 @@ describe('ImageGeolocationPanel', () => {
       llmAvailable: true,
       geolocateImage: vi.fn(),
     });
-    geolocationHistoryApi.reportUrl.mockReturnValue('https://corvid.test/report');
+    geolocationHistoryApi.reportRequest.mockImplementation((id, fmt) => ({ path: `/r/${id}`, params: { format: fmt } }));
 
     render(<ImageGeolocationPanel file={makeFile()} />);
 
-    expect(screen.getByRole('link', { name: 'HTML' })).toHaveAttribute(
-      'href',
-      'https://corvid.test/report'
-    );
-    expect(screen.getByRole('link', { name: 'PDF' })).toBeInTheDocument();
+    // Buttons, not <a href> links: an href can't carry the access token.
+    expect(screen.queryByRole('link', { name: 'HTML' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'HTML' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'PDF' })).toBeInTheDocument();
   });
 
   it('does not show report download buttons without a history_id', () => {
@@ -170,7 +169,7 @@ describe('ImageGeolocationPanel', () => {
 
     render(<ImageGeolocationPanel file={makeFile()} />);
 
-    expect(screen.queryByRole('link', { name: 'HTML' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'HTML' })).not.toBeInTheDocument();
   });
 
   it('toggles the history list and loads a selected past analysis', async () => {

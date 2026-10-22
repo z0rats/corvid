@@ -9,9 +9,9 @@ import Grow from '@mui/material/Grow';
 import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import DownloadIcon from '@mui/icons-material/Download';
 import HistoryIcon from '@mui/icons-material/History';
 import PublicIcon from '@mui/icons-material/Public';
+import ApiDownloadButtons from '../../../../core/components/ui/ApiDownloadButtons';
 import GeolocationHistoryList from './GeolocationHistoryList';
 import TextSignalsSection from './TextSignalsSection';
 import { imageUtils } from '../../utils/imageUtils';
@@ -128,21 +128,10 @@ export default function ImageGeolocationPanel({ file }) {
                 </Typography>
               )}
               {viewedResult.history_id != null && (
-                <Stack direction="row" spacing={1}>
-                  {REPORT_FORMATS.map((fmt) => (
-                    <Button
-                      key={fmt}
-                      size="small"
-                      variant="outlined"
-                      startIcon={<DownloadIcon />}
-                      component="a"
-                      href={geolocationHistoryApi.reportUrl(viewedResult.history_id, fmt)}
-                      download
-                    >
-                      {fmt.toUpperCase()}
-                    </Button>
-                  ))}
-                </Stack>
+                <ApiDownloadButtons
+                  formats={REPORT_FORMATS}
+                  request={(fmt) => geolocationHistoryApi.reportRequest(viewedResult.history_id, fmt)}
+                />
               )}
             </Box>
 

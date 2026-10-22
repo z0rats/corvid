@@ -1,5 +1,5 @@
 import { geolocationHistoryApi } from './geolocationHistoryApi';
-import api, { baseURL } from '../../../../core/services/baseApi';
+import api from '../../../../core/services/baseApi';
 
 vi.mock('../../../../core/services/baseApi', () => ({
   default: { get: vi.fn(), delete: vi.fn() },
@@ -51,9 +51,12 @@ describe('geolocationHistoryApi.deleteSearch', () => {
   });
 });
 
-describe('geolocationHistoryApi.reportUrl', () => {
-  it('builds the report URL with a format query param', () => {
-    const url = geolocationHistoryApi.reportUrl(5, 'pdf');
-    expect(url).toBe(`${baseURL}/api/image/geolocate/history/5/report?format=pdf`);
+describe('geolocationHistoryApi.reportRequest', () => {
+  it('describes the report download for the authenticated client', () => {
+    expect(geolocationHistoryApi.reportRequest(5, 'pdf')).toEqual({
+      path: '/api/image/geolocate/history/5/report',
+      params: { format: 'pdf' },
+      fallbackName: 'image-geolocation-5.pdf',
+    });
   });
 });

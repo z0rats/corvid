@@ -37,6 +37,9 @@ here only after a bug of that class shipped or nearly shipped - a scar, not a pr
 - Can a poll or effect re-trigger itself - reopen a menu, refetch in a loop, keep running after
   unmount?
 - Does every `fetch()` - including SSE streams outside the shared client - carry the access token?
+- A download or link to `/api/*` (`<a href>`, `window.open`, `<img src>`): it can't send the token
+  and 401s. Use `core/services/apiDownload.js` / `ApiDownloadButtons`; ESLint flags a `baseURL`
+  import outside its reviewed allowlist (`eslint.config.mjs`).
 - A settings field bound to the saved config: does it save per keystroke? That sends every
   intermediate value and, for a controlled number field, makes decimals untypeable - use
   `core/components/ui/CommitTextField` (saves on blur/Enter).

@@ -6,11 +6,10 @@ import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import LinearProgress from '@mui/material/LinearProgress';
-import Button from '@mui/material/Button';
 import Link from '@mui/material/Link';
-import DownloadIcon from '@mui/icons-material/Download';
 
 import HistoryDetailHeader from '../../../core/components/HistoryDetailHeader';
+import ApiDownloadButtons from '../../../core/components/ui/ApiDownloadButtons';
 import { exportFileName } from '../../../core/utils/exportData';
 import { useHistoryDetail } from '../../../core/hooks/useHistoryDetail';
 import FoundSitesList from './FoundSitesList';
@@ -76,21 +75,11 @@ export default function HistoryDetail() {
       )}
 
       {run.has_export && (
-        <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
-          {EXPORT_FORMATS.map((fmt) => (
-            <Button
-              key={fmt}
-              size="small"
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              component="a"
-              href={usernameSearchApi.exportUrl(run.id, fmt)}
-              download
-            >
-              {fmt.toUpperCase()}
-            </Button>
-          ))}
-        </Stack>
+        <ApiDownloadButtons
+          formats={EXPORT_FORMATS}
+          request={(fmt) => usernameSearchApi.exportRequest(run.id, fmt)}
+          sx={{ mb: 2 }}
+        />
       )}
 
       <HudsonRockStatusChip result={hudsonRockResult} />

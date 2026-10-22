@@ -1,4 +1,4 @@
-import api, { baseURL } from '../../../../../../core/services/baseApi';
+import api from '../../../../../../core/services/baseApi';
 
 export const lookupHistoryApi = {
   async saveSearch(ioc, iocType, results) {
@@ -20,7 +20,12 @@ export const lookupHistoryApi = {
     await api.delete(`/api/ioc-lookup/history/${searchId}`);
   },
 
-  reportUrl(searchId, format, locale) {
-    return `${baseURL}/api/ioc-lookup/history/${searchId}/report?format=${format}&locale=${locale}`;
+  /** For core's ApiDownloadButtons, which downloads it through the authenticated client. */
+  reportRequest(searchId, format, locale) {
+    return {
+      path: `/api/ioc-lookup/history/${searchId}/report`,
+      params: { format, locale },
+      fallbackName: `ioc-lookup-${searchId}.${format}`,
+    };
   },
 };

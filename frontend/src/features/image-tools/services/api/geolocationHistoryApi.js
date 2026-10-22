@@ -1,4 +1,4 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
+import api from '../../../../core/services/baseApi';
 
 export const geolocationHistoryApi = {
   async listSearches(skip = 0, limit = 100) {
@@ -15,7 +15,12 @@ export const geolocationHistoryApi = {
     await api.delete(`/api/image/geolocate/history/${searchId}`);
   },
 
-  reportUrl(searchId, format) {
-    return `${baseURL}/api/image/geolocate/history/${searchId}/report?format=${format}`;
+  /** For core's ApiDownloadButtons, which downloads it through the authenticated client. */
+  reportRequest(searchId, format) {
+    return {
+      path: `/api/image/geolocate/history/${searchId}/report`,
+      params: { format },
+      fallbackName: `image-geolocation-${searchId}.${format}`,
+    };
   },
 };

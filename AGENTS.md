@@ -89,9 +89,10 @@ Features (`backend/app/features/`):
 - **Scans:** one `core/scans/feature.py` `ScanFeature` per scan table, history routes via `core/scans/routes.py`'s `add_run_routes`, registered in `utils/scan_reconciliation_registry.py` (test-enforced; else runs stay `running` after a restart) with a `target_column`. Heavy runs pass `heavy=True` and start subprocesses inside `run_work`. Frontend: `core/hooks/useResumableScan`, `core/components/HistoryTable`/`HistoryDetailHeader`. All SSE via `core/scans/sse.py`'s `sse_stream` / `core/services/sseStream.ts`. Deep-dive: `docs/architecture/scan-lifecycle.md`.
 - **Notifications:** a new notification-worthy event calls `core/alerts/service/alerts_service.py`'s `raise_alert()` (in-app bell, polled - `docs/adr/0020-alerts-inbox-polling.md` - plus optional Telegram). Deep-dive: `docs/architecture/notifications.md`.
 - **Secrets in logs:** `core/config/log_redaction.py`'s filter scrubs key-shaped substrings on every handler, pattern-based, so new providers are covered.
+- **Downloads:** never an `<a href>` to `/api/*` (no token, 401) - `core/services/apiDownload.js` / `ApiDownloadButtons`; ESLint enforces.
 - **Uploads:** new upload endpoints use `core/utils/file_upload.py`'s `validate_uploaded_file` / `run_file_endpoint` rather than their own try/except.
 - **Security headers:** backend `SecurityHeadersMiddleware` for `/api/*` and docs pages, `frontend/nginx.conf` for the SPA - change both. HSTS production-only.
-- **Timestamps:** new models mix in `core/models/mixins.py`'s `TimestampMixin` (`created_at`/`updated_at`); domain times (`started_at`, `fetched_at`) keep their own names.
+- **Timestamps:** new models mix in `core/models/mixins.py`'s `TimestampMixin` (`created_at`/`updated_at`); domain times (`started_at`, `fetched_at`) keep their own names. Scan-run tables are exempt: their `started_at`/`completed_at` already cover it.
 - **Lock files:** `backend/requirements.txt` / `requirements-dev.txt` are compiled with `uv pip compile` from their `.in`, never hand-edited (`docs/architecture/tooling.md`).
 
 ## Useful commands

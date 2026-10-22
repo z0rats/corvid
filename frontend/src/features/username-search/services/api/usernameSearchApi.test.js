@@ -1,4 +1,4 @@
-import api, { baseURL } from '../../../../core/services/baseApi';
+import api from '../../../../core/services/baseApi';
 import { usernameSearchApi } from './usernameSearchApi';
 
 vi.mock('../../../../core/services/baseApi', () => ({
@@ -112,11 +112,12 @@ describe('usernameSearchApi.deleteRun', () => {
   });
 });
 
-describe('usernameSearchApi.exportUrl', () => {
-  it('builds the export download URL for the given format', () => {
-    const url = usernameSearchApi.exportUrl('search-1', 'pdf');
-
-    expect(url).toBe(`${baseURL}/api/username-search/runs/search-1/export/pdf`);
+describe('usernameSearchApi.exportRequest', () => {
+  it('describes the export download for the authenticated client', () => {
+    expect(usernameSearchApi.exportRequest('search-1', 'pdf')).toEqual({
+      path: '/api/username-search/runs/search-1/export/pdf',
+      fallbackName: 'username-search-search-1.pdf',
+    });
   });
 });
 
