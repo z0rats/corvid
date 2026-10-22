@@ -51,6 +51,19 @@ doesn't start a scan. Suggestions are generated in the browser with no lookups, 
 than findings, and a hit under a variant still needs manual verification — different people share
 handles.
 
+## Usernames from an email
+
+An email address in the box gets a separate row, **Usernames from this email**: the mailbox name
+as-is, the same without a `+tag` (`j.doe+news@…` → `j.doe`), the dotless form for Gmail and
+Googlemail only (Gmail ignores dots, so `j.doe@gmail.com` and `jdoe@gmail.com` are one mailbox),
+and separator changes of a `first.last` name (`j_doe`, `jdoe`, `j-doe`). Candidates shorter than
+three characters, or with characters other than letters, digits, `.`, `_` and `-`, are dropped. Unlike the variants above, clicking one of these starts a search
+with the selected modules straight away, and the email stays in the box so you can try the next.
+
+An email sent here from elsewhere (for example the command palette's `j.doe@gmail.com username`)
+lands in the box the same way and doesn't start a scan on its own, since a whole address is rarely
+anyone's username.
+
 ## Patterns
 
 When you know part of a handle's structure, write it as a pattern instead — any `[` in the box

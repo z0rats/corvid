@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router';
 import UsernameSearch from './UsernameSearch';
 import { useUsernameSearchScan } from './hooks/useUsernameSearchScan';
 import { usernameSearchApi } from './services/api/usernameSearchApi';
@@ -52,6 +53,40 @@ describe('UsernameSearch — cross-feature prefill (command palette pivot)', () 
     renderUsernameSearch(['/username-search?q=john_doe&parent=abc']);
 
     expect(startScan).toHaveBeenCalledWith('john_doe', { parentSearchId: undefined, pivotSource: undefined });
+  });
+
+  it('starts nothing for an email and offers its username candidates as one-click searches', async () => {
+    renderUsernameSearch(['/username-search?q=J.Doe%2Bx%40gmail.com']);
+
+    expect(startScan).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/username/i).value).toBe('J.Doe+x@gmail.com');
+    ['j.doe', 'jdoe', 'j_doe', 'j-doe'].forEach((handle) => expect(screen.getByText(handle)).toBeTruthy());
+
+    fireEvent.click(screen.getByText('jdoe'));
+
+    expect(startScan).toHaveBeenCalledWith('jdoe', expect.objectContaining({ tags: [] }));
+  });
+
+  it('takes a pivot that arrives while the page is already open', () => {
+    function PivotButton() {
+      const navigate = useNavigate();
+      return <button type="button" onClick={() => navigate('/username-search/new?q=j.doe%40gmail.com')}>pivot</button>;
+    }
+    render(
+      <MemoryRouter initialEntries={['/username-search/new']}>
+        <PivotButton />
+        <Routes>
+          <Route path="username-search/*" element={<UsernameSearch />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'typed' } });
+
+    fireEvent.click(screen.getByText('pivot'));
+
+    expect(screen.getByLabelText(/username/i).value).toBe('j.doe@gmail.com');
+    expect(screen.getByText('jdoe')).toBeTruthy();
+    expect(startScan).not.toHaveBeenCalled();
   });
 
   it('leaves the field empty and does not search with no prefill value', () => {

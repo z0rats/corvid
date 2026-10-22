@@ -68,3 +68,34 @@ describe('SearchForm pattern mode', () => {
     expect(searchButton().disabled).toBe(false);
   });
 });
+
+describe('SearchForm email candidates', () => {
+  it('offers the usernames behind a typed email and searches one in a click', () => {
+    const onSearch = vi.fn();
+    render(<SearchForm onSearch={onSearch} />);
+
+    type('j.doe@outlook.com');
+
+    expect(screen.getByText(/Usernames from this email/)).toBeTruthy();
+    fireEvent.click(screen.getByText('j.doe'));
+    expect(onSearch).toHaveBeenCalledWith('j.doe', { modules: ['maigret'], tags: [] });
+    // The click searches; it doesn't replace the email in the box.
+    expect(screen.getByLabelText('Username').value).toBe('j.doe@outlook.com');
+  });
+
+  it('does not repeat a candidate among the generic guesses', () => {
+    render(<SearchForm onSearch={() => {}} />);
+
+    type('john.smith@gmail.com');
+
+    expect(screen.getAllByText('johnsmith')).toHaveLength(1);
+  });
+
+  it('shows no candidates for a plain username', () => {
+    render(<SearchForm onSearch={() => {}} />);
+
+    type('johnsmith');
+
+    expect(screen.queryByText(/Usernames from this email/)).toBeNull();
+  });
+});

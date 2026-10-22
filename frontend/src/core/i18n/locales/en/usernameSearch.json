@@ -39,6 +39,14 @@
     "patternShowing": "Pattern matches {{total}} handles, showing the first {{shown}}",
     "patternTooBroad": "Pattern matches more than {{max}} handles - narrow it down",
     "patternSyntax": "Pattern problem: {{detail}}. Use [abc], [a-z], [0-9]{0-2}; escape a literal bracket with \\[",
+    "emailCandidatesLabel": "Usernames from this email",
+    "emailCandidatesHint": "Click to search one with the selected modules",
+    "emailCandidateReason": {
+      "exact": "the mailbox name as-is",
+      "untagged": "mailbox name without its +tag",
+      "gmailDots": "Gmail ignores dots: same mailbox",
+      "separator": "separator change (a guess)"
+    },
     "variantReason": {
       "separator": "separator change",
       "digits": "trailing digits / year",

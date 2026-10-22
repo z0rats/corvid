@@ -90,7 +90,9 @@ Frontend: the site check has its own state (`site_check` source in `scanAtoms.js
 `scanPath: 'scan/site-check'` on `useResumableScan`) so it never collides with a Maigret scan.
 History carries a pivot across navigation as `?q=&parent=&site=&src=`
 (`crossFeatureNav.PREFILL_CONTEXT_PARAMS`, cleared with `q` by `usePrefillFromQuery`; a param not
-listed there is silently dropped).
+listed there is silently dropped). An email `?q=` is the one value that doesn't auto-run: it only
+fills the box, and `SearchForm` offers `utils/emailUsernames.ts` candidates (exact, minus `+tag`,
+Gmail dotless, separator changes; no per-provider table) as one-click searches.
 
 ## Report export
 

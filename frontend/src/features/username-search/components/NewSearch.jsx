@@ -9,6 +9,7 @@ import ToolInfoBanner from './ToolInfoBanner';
 import { useUsernameSearchScan } from '../hooks/useUsernameSearchScan';
 import { useHudsonRockCheck } from '../hooks/api/useHudsonRockCheck';
 import { usePrefillFromQuery } from '../../../core/hooks/usePrefillFromQuery';
+import { parseEmail } from '../utils/emailUsernames';
 import PageHeader from '../../../core/components/ui/PageHeader';
 
 export default function NewSearch() {
@@ -74,7 +75,16 @@ export default function NewSearch() {
   // the user with several parallel scans.
   // A pivot from run history also carries its run (`parent`), the site to check it on (`site`) and
   // a label (`src`) - see usePrefillFromQuery.
-  const prefillValue = usePrefillFromQuery(useCallback((value, { parent, site, src }) => {
+  // Each incoming value remounts SearchForm with it in the box - a pivot can arrive while this
+  // page is already open, and SearchForm only reads `initialUsername` on mount. Kept in state
+  // because `?q=` is stripped from the URL right after it's consumed.
+  const [formSeed, setFormSeed] = useState({ value: null, generation: 0 });
+
+  // An email starts nothing: maigret on a whole address finds next to nothing, so it only lands
+  // in the box, where SearchForm offers its username candidates as one-click searches.
+  usePrefillFromQuery(useCallback((value, { parent, site, src }) => {
+    setFormSeed((prev) => ({ value, generation: prev.generation + 1 }));
+    if (parseEmail(value)) return;
     const parentSearchId = Number.parseInt(parent, 10) > 0 ? Number.parseInt(parent, 10) : undefined;
     const pivotSource = src || undefined;
     if (site) {
@@ -102,7 +112,12 @@ export default function NewSearch() {
     <Box>
       <PageHeader title={t('page.title')} />
       <ToolInfoBanner />
-      <SearchForm onSearch={handleSearch} disabled={anyScanRunning} initialUsername={prefillValue} />
+      <SearchForm
+        key={formSeed.generation}
+        onSearch={handleSearch}
+        disabled={anyScanRunning}
+        initialUsername={formSeed.value}
+      />
       {sourceOrder.map((key) => panelsBySource[key]())}
     </Box>
   );

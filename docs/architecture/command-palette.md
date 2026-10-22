@@ -72,3 +72,6 @@ successful navigation:
 
 `{Reddit,Username,Email,GitRecon}Search.test.jsx` regression-test this pattern; a new
 identity-style feature should add its own copy of the test.
+
+Exception: `username-search` doesn't auto-run an email value. It only fills the box, where
+`SearchForm` shows `utils/emailUsernames.ts` candidates as one-click searches.

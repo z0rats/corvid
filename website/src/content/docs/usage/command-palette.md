@@ -14,7 +14,10 @@ Corvid is built around a single search bar instead of hunting through menus. Pre
   (`1.2.3[.]4`, `hxxps[://]evil[.]com`) are refanged automatically.
 - **Value + tool pivot** — combine both (`john_doe reddit`) to open that tool with the value
   already filled in and the search triggered. Works for any single-value "identity" lookup:
-  Reddit Search, Username Search, Email Search, and Git Recon's nickname mode.
+  Reddit Search, Username Search, Email Search, and Git Recon's nickname mode. One exception: an
+  email sent to Username Search (`j.doe@gmail.com username`) only fills the box, and the page offers
+  [usernames from that email](/corvid/features/username-search/#usernames-from-an-email) to search
+  in one click.
 - **`#tag`** — filter by tag, e.g. `#recon`, `#ioc`.
 - **`type:kind`** — filter by IOC type, e.g. `type:email`.
 - **`>action`** — quick actions, e.g. `>settings`, `>theme`.

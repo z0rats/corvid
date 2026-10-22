@@ -16,6 +16,7 @@ import { usernameSearchApi } from '../services/api/usernameSearchApi';
 import { createLogger } from '../../../core/utils/logger';
 import { generateUsernameVariants } from '../utils/usernameVariants';
 import { expandPattern, isPattern, MAX_PATTERN_TOTAL, unescapeLiterals } from '../utils/usernamePatterns';
+import { emailUsernameCandidates } from '../utils/emailUsernames';
 
 const logger = createLogger('UsernameSearchForm');
 
@@ -44,7 +45,14 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
   // `[...]` in the box switches it to pattern mode: candidates to pick from instead of heuristic guesses.
   const patternMode = isPattern(username);
   const pattern = useMemo(() => (patternMode ? expandPattern(username) : null), [patternMode, username]);
-  const variants = useMemo(() => (patternMode ? [] : generateUsernameVariants(username)), [patternMode, username]);
+  // An email in the box (typed, or chained in via ?q=): offer its local-part handles as one-click
+  // searches, and keep the generic guesses below from repeating them.
+  const emailCandidates = useMemo(() => emailUsernameCandidates(username), [username]);
+  const variants = useMemo(() => {
+    if (patternMode) return [];
+    const taken = new Set(emailCandidates.map(({ value }) => value));
+    return generateUsernameVariants(username).filter(({ value }) => !taken.has(value));
+  }, [patternMode, username, emailCandidates]);
 
   useEffect(() => {
     let ignore = false;
@@ -60,11 +68,18 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
     ));
   };
 
+  const selectedTags = () => (modules.includes('maigret') ? tags : undefined);
+
+  const searchCandidate = (value) => {
+    if (modules.length === 0) return;
+    onSearch(value, { modules, tags: selectedTags() });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = username.trim();
     if (!trimmed || modules.length === 0 || patternMode) return;
-    onSearch(unescapeLiterals(trimmed), { modules, tags: modules.includes('maigret') ? tags : undefined });
+    onSearch(unescapeLiterals(trimmed), { modules, tags: selectedTags() });
   };
 
   return (
@@ -150,6 +165,28 @@ export default function SearchForm({ onSearch, disabled, initialUsername }) {
                 : t('form.patternSyntax', { detail: pattern.detail })}
             </Typography>
           )}
+        </Box>
+      )}
+      {emailCandidates.length > 0 && (
+        <Box sx={{ mt: 1.5 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+            {t('form.emailCandidatesLabel')} — {t('form.emailCandidatesHint')}
+          </Typography>
+          <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+            {emailCandidates.map(({ value, reason }) => (
+              <Tooltip key={value} title={t(`form.emailCandidateReason.${reason}`)}>
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  icon={<SearchIcon />}
+                  label={value}
+                  onClick={() => searchCandidate(value)}
+                  disabled={disabled || modules.length === 0}
+                />
+              </Tooltip>
+            ))}
+          </Stack>
         </Box>
       )}
       {variants.length > 0 && (
