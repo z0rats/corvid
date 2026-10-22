@@ -51,9 +51,14 @@ A set of tools for working with indicators of compromise:
   beyond URLScan.io's own.
 - **WHOIS/RDAP** — via the public `rdap.org` bootstrap redirector. No historical snapshots (no
   API key needed).
-- **Certificate Transparency subdomain enumeration** — via crt.sh's public JSON log mirror,
-  deduping SAN entries across all matching certificates; each discovered subdomain is one click
-  away from re-running the Domain Finder typosquat search against it. No API key needed.
+- **Certificate Transparency subdomain enumeration** — via crt.sh's public JSON log mirror and
+  SSLMate's Cert Spotter, queried together and merged into one deduplicated subdomain list; each
+  discovered subdomain is one click away from re-running the Domain Finder typosquat search
+  against it. The panel shows one line per source. A source that failed says "not checked"
+  rather than reading as "no subdomains", and the panel only fails when both do, so CT results
+  still come back while crt.sh is overloaded. Cert Spotter's keyless tier allows only a few
+  queries an hour, so Corvid reads one page (about 80 of the newest certificates) and says when
+  more exist. No API key needed.
 - **HackerTarget subdomains** — passive subdomain enumeration via HackerTarget's free
   `hostsearch` API, resolved IP alongside each hostname; same one-click re-scan as the
   Certificate Transparency panel. No API key needed (free-tier daily quota).

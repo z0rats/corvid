@@ -10,6 +10,24 @@ import DnsIcon from "@mui/icons-material/DnsOutlined";
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
+// One line per CT source: what it found, or that it was not checked - a failed source is
+// never read as "no subdomains".
+function sourceLine(t, source) {
+  if (!source.ok) {
+    return t('domainFinder.ctSubdomains.sourceFailed', {
+      name: source.name,
+      error: source.error,
+      code: source.error_code,
+    });
+  }
+  const key = source.truncated ? 'sourceTruncated' : 'sourceOk';
+  return t(`domainFinder.ctSubdomains.${key}`, {
+    name: source.name,
+    count: source.subdomain_count,
+    certificates: source.certificate_count,
+  });
+}
+
 export default function CtSubdomainsPanel({ domain, onScanSubdomain }) {
   const { t } = useTranslation('iocTools');
   const panel = useDomainPanel('ct-subdomains', domain);
@@ -46,9 +64,16 @@ export default function CtSubdomainsPanel({ domain, onScanSubdomain }) {
           </Stack>
         )}
 
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-          {t('domainFinder.ctSubdomains.certificateCount', { count: data.total_certificates })}
-        </Typography>
+        {(data.sources ?? []).map((source) => (
+          <Typography
+            key={source.name}
+            variant="caption"
+            color={source.ok ? 'text.secondary' : 'warning.main'}
+            sx={{ display: 'block', mt: 1 }}
+          >
+            {sourceLine(t, source)}
+          </Typography>
+        ))}
       </CardContent>
     </Card>
   );

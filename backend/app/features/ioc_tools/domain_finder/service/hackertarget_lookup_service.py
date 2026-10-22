@@ -14,6 +14,7 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
 from app.features.ioc_tools.domain_finder.service.hackertarget_api_service import (
     fetch_hackertarget_hosts,
 )
+from app.features.ioc_tools.domain_finder.utils.subdomain_utils import subdomains_of
 
 logger = logging.getLogger(__name__)
 
@@ -38,15 +39,10 @@ async def perform_hackertarget_lookup(
 
     raw_hosts = await fetch_hackertarget_hosts(domain)
 
-    subdomains: set[str] = set()
-    hosts: list[HackerTargetHost] = []
-    for hostname, ip in raw_hosts:
-        normalized = hostname.lower()
-        # HackerTarget occasionally returns hosts unrelated to the queried domain
-        # for a near-miss query, so only keep names that actually belong to it
-        if normalized == domain or normalized.endswith(f".{domain}"):
-            subdomains.add(normalized)
-        hosts.append(HackerTargetHost(hostname=hostname, ip_address=ip))
+    # HackerTarget occasionally returns hosts unrelated to the queried domain for a near-miss
+    # query, so only names that actually belong to it count as subdomains
+    subdomains = subdomains_of((hostname for hostname, _ in raw_hosts), domain)
+    hosts = [HackerTargetHost(hostname=hostname, ip_address=ip) for hostname, ip in raw_hosts]
 
     response = HackerTargetSubdomainsResponse(
         domain=domain,

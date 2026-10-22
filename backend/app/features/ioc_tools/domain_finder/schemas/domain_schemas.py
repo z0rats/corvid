@@ -155,18 +155,37 @@ class CtCertificate(BaseModel):
     not_after: datetime | None = Field(default=None, description="Certificate validity end date")
 
 
+class CtSourceStatus(BaseModel):
+    """How one Certificate Transparency source answered. A failed source is "not checked",
+    not "nothing found": `ok` is false and `error`/`error_code` say why."""
+
+    name: str = Field(..., description="Source name, e.g. 'crt.sh' or 'Cert Spotter'")
+    ok: bool = Field(..., description="Whether the source answered")
+    subdomain_count: int = Field(default=0, ge=0, description="Subdomains this source found")
+    certificate_count: int = Field(default=0, ge=0, description="Certificate entries it returned")
+    truncated: bool = Field(
+        default=False, description="The source has more certificates than were read"
+    )
+    error: str | None = Field(default=None, description="Why the source failed")
+    error_code: str | None = Field(default=None, description="Machine-readable failure code")
+
+
 class CtSubdomainsResponse(BaseModel):
     """Response model for Certificate Transparency subdomain enumeration"""
 
     domain: str = Field(..., description="The domain that was looked up")
     subdomains: list[str] = Field(
-        default_factory=list, description="Deduplicated, sorted subdomains found in CT logs"
+        default_factory=list,
+        description="Deduplicated, sorted subdomains found across every CT source that answered",
+    )
+    sources: list[CtSourceStatus] = Field(
+        default_factory=list, description="Per-source outcome, one entry per CT source queried"
     )
     certificates: list[CtCertificate] = Field(
-        default_factory=list, description="Certificate log entries backing the subdomain list"
+        default_factory=list, description="crt.sh certificate log entries (crt.sh only)"
     )
     total_certificates: int = Field(
-        ..., description="Total number of certificate log entries found", ge=0
+        ..., description="Number of crt.sh certificate log entries in `certificates`", ge=0
     )
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(UTC),

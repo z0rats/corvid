@@ -60,7 +60,13 @@ URLScan.io-based typosquat/phishing domain discovery, `/api/domain/lookup`.
 Sibling panels on the same page, all keyless:
 - WHOIS/RDAP via `rdap.org`'s bootstrap redirector.
 - DNS records via dnspython, plus reverse-DNS for resolved IPs.
-- Certificate Transparency subdomain enumeration via crt.sh's public JSON mirror.
+- Certificate Transparency subdomain enumeration via crt.sh's public JSON mirror and Cert
+  Spotter, queried concurrently by `ct_subdomains_service.py` and merged into one list with a
+  per-source `sources` status (`ok`, counts, `truncated`, `error_code`). One source failing is a
+  "not checked" line in the panel; only both failing fails the panel (`CT_ALL_SOURCES_FAILED`).
+  Cert Spotter reads one page (its keyless quota is a few queries an hour). The `certificates`
+  detail stays crt.sh-only. Every subdomain source filters through `utils/subdomain_utils.py`'s
+  `subdomains_of`.
 
 A fourth panel, DNSDumpster (`/api/domain/dnsdumpster`), enriches with ASN/geo/PTR/HTTP(S)
 banner data per host but needs its own free-tier API key from `dnsdumpster.com`, configured
@@ -71,8 +77,8 @@ Further panels: HackerTarget/RapidDNS/subfinder subdomain enumeration,
 WebCheck's SSL/security-headers/DNSSEC/blocklist checks, Wayback Machine history, Temporal
 Analysis.
 
-Backend: every third-party provider panel (crt.sh, RapidDNS, HackerTarget, Wayback, URLScan,
-DNSDumpster) calls its provider through `service/provider_http.py`'s `provider_get(Provider,
+Backend: every third-party provider panel (crt.sh, Cert Spotter, RapidDNS, HackerTarget, Wayback,
+URLScan, DNSDumpster) calls its provider through `service/provider_http.py`'s `provider_get(Provider,
 path, parse=..., check=...)`, which owns the client, headers, timeout and the one error mapping
 (`<CODE>_TIMEOUT`/`_CONNECTION_ERROR`/`_API_ERROR`/`_INVALID_RESPONSE`/`_UNEXPECTED_ERROR`); a
 provider module keeps only its `parse` and provider-specific statuses. `provider_get` only

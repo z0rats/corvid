@@ -212,8 +212,7 @@
       "title": "Поддомены из журналов Certificate Transparency",
       "errorPrefix": "Ошибка запроса Certificate Transparency:",
       "noSubdomains": "В журналах Certificate Transparency поддомены не найдены.",
-      "scanSubdomain": "Проверить этот поддомен",
-      "certificateCount": "Найдено сертификатов: {{count}} (crt.sh)"
+      "scanSubdomain": "Проверить этот поддомен"
     },
     "welcomeScreen": {
       "title": "Domain Finder",

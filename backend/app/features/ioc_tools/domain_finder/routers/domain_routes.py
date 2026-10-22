@@ -180,8 +180,9 @@ _add_panel_routes(
     service=lambda *args: perform_ct_subdomains_lookup(*args),
     summary="Enumerate subdomains via Certificate Transparency logs",
     description=(
-        "Query crt.sh's Certificate Transparency log mirror to enumerate "
-        "subdomains and cert issuance history for a domain"
+        "Query Certificate Transparency logs (crt.sh and Cert Spotter, concurrently) to "
+        "enumerate subdomains for a domain, with a per-source status; fails only when every "
+        "source does"
     ),
 )
 

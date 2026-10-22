@@ -22,6 +22,9 @@ from app.core import release_check
 from app.core.exceptions import AppHTTPException
 from app.core.utils.pypi_version_check import fetch_latest_pypi_version
 from app.features.image_tools.service.reverse_geocode_service import _fetch_nominatim
+from app.features.ioc_tools.domain_finder.service.certspotter_api_service import (
+    fetch_certspotter_issuances,
+)
 from app.features.ioc_tools.domain_finder.service.crtsh_api_service import (
     fetch_crtsh_certificates,
 )
@@ -71,6 +74,14 @@ def test_crtsh_certificates_carry_the_fields_ct_subdomains_reads():
     assert isinstance(entries, list) and entries, f"crt.sh returned no certificates for {DOMAIN}"
     for field in ("id", "issuer_name", "common_name", "name_value", "not_before", "not_after"):
         assert entries[0].get(field), f"crt.sh entries lost `{field}`"
+
+
+def test_certspotter_issuances_carry_dns_names():
+    page = live(fetch_certspotter_issuances(DOMAIN))
+
+    assert page.issuances, f"Cert Spotter returned no issuances for {DOMAIN}"
+    assert all(isinstance(issuance["dns_names"], list) for issuance in page.issuances)
+    assert any(DOMAIN in issuance["dns_names"] for issuance in page.issuances)
 
 
 def test_hackertarget_hostsearch_lines_are_host_ip_pairs():

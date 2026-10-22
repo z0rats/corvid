@@ -25,7 +25,11 @@ const URLSCAN_ROW = {
 const PANELS = {
   whois: { registrar: 'NameCheap, Inc.', creation_date: '2020-01-01', nameservers: ['ns1.example.net'], statuses: ['clientTransferProhibited'], rdap_server: 'rdap.example' },
   dns: { records: { A: ['93.184.216.34'], MX: ['mx.example.com'] }, reverse_dns: { '93.184.216.34': ['edge.example.net'] } },
-  'ct-subdomains': { subdomains: ['mail.example.com', 'vpn.example.com'], total_certificates: 7 },
+  'ct-subdomains': {
+    subdomains: ['mail.example.com', 'vpn.example.com'],
+    sources: [{ name: 'crt.sh', ok: true, subdomain_count: 2, certificate_count: 7, truncated: false }],
+    total_certificates: 7,
+  },
   'hackertarget-subdomains': { subdomains: [], total_hosts: 0 },
   'rapiddns-subdomains': { subdomains: ['dev.example.com'], total_records: 1 },
   wayback: { snapshots: [], total_snapshots: 0 },

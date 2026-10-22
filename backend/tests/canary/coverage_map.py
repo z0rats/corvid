@@ -93,6 +93,7 @@ COVERAGE: dict[str, Covered | Exempt] = {
     "domain_finder:CRTSH": _test(
         _DOMAIN, "test_crtsh_certificates_carry_the_fields_ct_subdomains_reads"
     ),
+    "domain_finder:CERTSPOTTER": _test(_DOMAIN, "test_certspotter_issuances_carry_dns_names"),
     "domain_finder:DNSDUMPSTER": Exempt("needs-key"),
     "domain_finder:HACKERTARGET": _test(
         _DOMAIN, "test_hackertarget_hostsearch_lines_are_host_ip_pairs"

@@ -16,10 +16,12 @@ never the host.
 ## When a source changes its response format
 
 Corvid distinguishes a source that found nothing from one that now answers in a different shape.
-For the Domain Finder panels (crt.sh, Wayback Machine, HackerTarget, RapidDNS, RDAP, URLScan.io)
+For the Domain Finder panels (crt.sh, Cert Spotter, Wayback Machine, HackerTarget, RapidDNS, RDAP,
+URLScan.io)
 a changed format is reported as a `SCHEMA_DRIFT` error instead of an empty result, and for the
 keyless IOC Lookup providers (FFraud, FIRST.org EPSS, URLScan.io, CISA KEV, Library of Leaks,
-OpenPhish) the row shows "changed its response format" instead of an empty card. If you see
+OpenPhish, Shodan InternetDB, LeakCheck, IP Geolocation, IP RDAP, Gravatar), as well as Censys,
+the row shows "changed its response format" instead of an empty card. If you see
 that, the provider changed its API; please open an issue.
 
 ## IOC Lookup
@@ -50,6 +52,9 @@ which provider handles which type.
 
 - **crt.sh** — Certificate Transparency log search, also used for subdomain enumeration via SAN
   entries. Keyless.
+- **Cert Spotter** (`api.certspotter.com`) — SSLMate's Certificate Transparency issuances API,
+  queried alongside crt.sh for the same subdomain panel. Keyless; the unauthenticated tier allows
+  only a few queries an hour, so one page is read per lookup.
 - **rdap.org** — RDAP bootstrap redirector for WHOIS-style domain registration data. Keyless.
 - **DNSDumpster** (`api.dnsdumpster.com`) — DNS/ASN/geo/PTR/HTTP-banner enrichment. Needs its own
   free-tier key (capped at 50 records/lookup); configured under Settings → API Keys.

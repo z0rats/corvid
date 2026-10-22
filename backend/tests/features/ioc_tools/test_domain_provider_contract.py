@@ -19,6 +19,10 @@ from app.core.exceptions import AppHTTPException
 from app.core.external_sources.contract import SourceDriftError
 from app.features.ioc_tools.domain_finder import service as service_package
 from app.features.ioc_tools.domain_finder.service import rdap_api_service
+from app.features.ioc_tools.domain_finder.service.certspotter_api_service import (
+    CertSpotterPage,
+    fetch_certspotter_issuances,
+)
 from app.features.ioc_tools.domain_finder.service.crtsh_api_service import fetch_crtsh_certificates
 from app.features.ioc_tools.domain_finder.service.hackertarget_api_service import (
     fetch_hackertarget_hosts,
@@ -60,6 +64,17 @@ DRIFT_CASES = {
             {"json": [{"id": 1}]},  # no name_value
         ],
         empty=[{"json": []}, {"content": b""}],
+    ),
+    "CERTSPOTTER": Case(
+        fetch=fetch_certspotter_issuances,
+        drifted=[
+            {"json": {"code": "unexpected", "message": "x"}},
+            {"json": [{"id": "1"}]},  # no dns_names
+            {"json": [{"id": "1", "dns_names": "example.com"}]},  # dns_names not a list
+            {"json": [{"id": "1", "dns_names": [{"name": "example.com"}]}]},  # not strings
+        ],
+        empty=[{"json": []}],
+        empty_result=CertSpotterPage(issuances=[], truncated=False),
     ),
     "WAYBACK": Case(
         fetch=lambda d: fetch_wayback_snapshots(d),

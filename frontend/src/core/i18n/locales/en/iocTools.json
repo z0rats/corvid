@@ -236,7 +236,9 @@
       "errorPrefix": "Certificate Transparency lookup failed:",
       "noSubdomains": "No subdomains found in Certificate Transparency logs.",
       "scanSubdomain": "Scan this subdomain",
-      "certificateCount": "{{count}} certificate(s) found on crt.sh"
+      "sourceOk": "{{name}}: {{count}} subdomain(s) from {{certificates}} certificate(s)",
+      "sourceTruncated": "{{name}}: {{count}} subdomain(s) from the newest {{certificates}} certificate(s), more exist",
+      "sourceFailed": "{{name}}: not checked ({{error}}, {{code}})"
     },
     "hackertarget": {
       "title": "HackerTarget subdomains",

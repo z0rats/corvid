@@ -14,6 +14,7 @@ from app.features.ioc_tools.domain_finder.schemas.domain_schemas import (
 from app.features.ioc_tools.domain_finder.service.rapiddns_api_service import (
     fetch_rapiddns_records,
 )
+from app.features.ioc_tools.domain_finder.utils.subdomain_utils import subdomains_of
 
 logger = logging.getLogger(__name__)
 
@@ -38,15 +39,13 @@ async def perform_rapiddns_lookup(
 
     raw_records = await fetch_rapiddns_records(domain)
 
-    subdomains: set[str] = set()
-    records: list[RapidDnsRecord] = []
-    for hostname, record_type, address in raw_records:
-        normalized = hostname.lower()
-        # RapidDNS's table can include hosts unrelated to the queried domain
-        # (e.g. same-IP entries), so only count names that actually belong to it
-        if normalized == domain or normalized.endswith(f".{domain}"):
-            subdomains.add(normalized)
-        records.append(RapidDnsRecord(hostname=hostname, record_type=record_type, address=address))
+    # RapidDNS's table can include hosts unrelated to the queried domain (e.g. same-IP
+    # entries), so only names that actually belong to it count as subdomains
+    subdomains = subdomains_of((hostname for hostname, _, _ in raw_records), domain)
+    records = [
+        RapidDnsRecord(hostname=hostname, record_type=record_type, address=address)
+        for hostname, record_type, address in raw_records
+    ]
 
     response = RapidDnsSubdomainsResponse(
         domain=domain,

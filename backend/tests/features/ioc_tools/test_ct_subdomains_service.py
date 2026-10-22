@@ -5,6 +5,7 @@ import pytest
 from app.core.exceptions import AppHTTPException
 from app.features.ioc_tools.domain_finder.schemas.domain_schemas import CtSubdomainsRequest
 from app.features.ioc_tools.domain_finder.service import ct_subdomains_service
+from app.features.ioc_tools.domain_finder.service.certspotter_api_service import CertSpotterPage
 from app.features.ioc_tools.domain_finder.service.ct_subdomains_service import (
     _parse_crtsh_date,
     perform_ct_subdomains_lookup,
@@ -38,6 +39,14 @@ CRTSH_SAMPLE = [
     },
 ]
 
+CERTSPOTTER_PAGE = CertSpotterPage(
+    issuances=[
+        {"id": "1", "dns_names": ["example.com", "*.mail.example.com", "example.org"]},
+        {"id": "2", "dns_names": ["MAIL.example.com"]},
+    ],
+    truncated=True,
+)
+
 
 def test_parse_crtsh_date_parses_naive_iso8601():
     parsed = _parse_crtsh_date("2024-01-15T00:00:00")
@@ -51,13 +60,35 @@ def test_parse_crtsh_date_returns_none_for_missing_or_invalid():
     assert _parse_crtsh_date("not-a-date") is None
 
 
+def _serve(monkeypatch, crtsh=None, certspotter=None):
+    """Stub both CT sources (empty by default); an exception value is raised instead."""
+
+    def fake(value):
+        async def fetch(domain):
+            if isinstance(value, BaseException):
+                raise value
+            return value
+
+        return fetch
+
+    crtsh = [] if crtsh is None else crtsh
+    certspotter = CertSpotterPage(issuances=[]) if certspotter is None else certspotter
+    monkeypatch.setattr(ct_subdomains_service, "fetch_crtsh_certificates", fake(crtsh))
+    monkeypatch.setattr(ct_subdomains_service, "fetch_certspotter_issuances", fake(certspotter))
+
+
+def _lookup(domain="example.com"):
+    return asyncio.run(perform_ct_subdomains_lookup(CtSubdomainsRequest(domain=domain)))
+
+
+def _error(code, status=504):
+    return AppHTTPException(status_code=status, detail=f"{code} detail", error_code=code)
+
+
 def test_perform_ct_subdomains_lookup_dedupes_and_filters_unrelated_names(monkeypatch):
-    async def fake_fetch(domain):
-        return CRTSH_SAMPLE
+    _serve(monkeypatch, crtsh=CRTSH_SAMPLE)
 
-    monkeypatch.setattr(ct_subdomains_service, "fetch_crtsh_certificates", fake_fetch)
-
-    result = asyncio.run(perform_ct_subdomains_lookup(CtSubdomainsRequest(domain="example.com")))
+    result = _lookup()
 
     assert result.domain == "example.com"
     assert result.subdomains == [
@@ -72,40 +103,105 @@ def test_perform_ct_subdomains_lookup_dedupes_and_filters_unrelated_names(monkey
 
 
 def test_perform_ct_subdomains_lookup_strips_wildcard_prefix(monkeypatch):
-    async def fake_fetch(domain):
-        return [CRTSH_SAMPLE[1]]
+    _serve(monkeypatch, crtsh=[CRTSH_SAMPLE[1]])
 
-    monkeypatch.setattr(ct_subdomains_service, "fetch_crtsh_certificates", fake_fetch)
-
-    result = asyncio.run(perform_ct_subdomains_lookup(CtSubdomainsRequest(domain="example.com")))
-
-    assert result.subdomains == ["dev.example.com"]
+    assert _lookup().subdomains == ["dev.example.com"]
 
 
 def test_perform_ct_subdomains_lookup_handles_empty_response(monkeypatch):
-    async def fake_fetch(domain):
-        return []
+    _serve(monkeypatch)
 
-    monkeypatch.setattr(ct_subdomains_service, "fetch_crtsh_certificates", fake_fetch)
-
-    result = asyncio.run(
-        perform_ct_subdomains_lookup(CtSubdomainsRequest(domain="doesnotexist.example"))
-    )
+    result = _lookup("doesnotexist.example")
 
     assert result.subdomains == []
     assert result.total_certificates == 0
+    assert [(s.name, s.ok, s.subdomain_count) for s in result.sources] == [
+        ("crt.sh", True, 0),
+        ("Cert Spotter", True, 0),
+    ]
 
 
-def test_perform_ct_subdomains_lookup_propagates_fetch_errors(monkeypatch):
-    async def fake_fetch(domain):
-        raise AppHTTPException(status_code=504, detail="timeout", error_code="CRTSH_TIMEOUT")
+def test_merges_both_sources_and_counts_each(monkeypatch):
+    _serve(monkeypatch, crtsh=CRTSH_SAMPLE, certspotter=CERTSPOTTER_PAGE)
 
-    monkeypatch.setattr(ct_subdomains_service, "fetch_crtsh_certificates", fake_fetch)
+    result = _lookup()
+
+    assert result.subdomains == [
+        "api.example.com",
+        "dev.example.com",
+        "example.com",
+        "mail.example.com",
+        "www.example.com",
+    ]
+    crtsh, certspotter = result.sources
+    assert (crtsh.name, crtsh.ok, crtsh.subdomain_count, crtsh.certificate_count) == (
+        "crt.sh",
+        True,
+        4,
+        3,
+    )
+    assert (certspotter.name, certspotter.subdomain_count, certspotter.certificate_count) == (
+        "Cert Spotter",
+        2,
+        2,
+    )
+    assert certspotter.truncated is True
+    # The per-certificate detail stays crt.sh-only.
+    assert result.total_certificates == 3
+
+
+def test_crtsh_down_still_returns_cert_spotter_subdomains(monkeypatch):
+    _serve(monkeypatch, crtsh=_error("CRTSH_TIMEOUT"), certspotter=CERTSPOTTER_PAGE)
+
+    result = _lookup()
+
+    assert result.subdomains == ["example.com", "mail.example.com"]
+    crtsh, certspotter = result.sources
+    assert crtsh.ok is False
+    assert crtsh.error_code == "CRTSH_TIMEOUT"
+    assert crtsh.error == "CRTSH_TIMEOUT detail"
+    assert certspotter.ok is True
+    assert result.certificates == []
+
+
+def test_cert_spotter_down_still_returns_crtsh_subdomains(monkeypatch):
+    _serve(
+        monkeypatch,
+        crtsh=CRTSH_SAMPLE,
+        certspotter=_error("CERTSPOTTER_RATE_LIMITED", status=429),
+    )
+
+    result = _lookup()
+
+    assert len(result.subdomains) == 4
+    assert result.sources[1].ok is False
+    assert result.sources[1].error_code == "CERTSPOTTER_RATE_LIMITED"
+
+
+def test_both_sources_down_fails_the_lookup_naming_both(monkeypatch):
+    _serve(
+        monkeypatch,
+        crtsh=_error("CRTSH_TIMEOUT"),
+        certspotter=_error("CERTSPOTTER_SCHEMA_DRIFT", status=502),
+    )
 
     with pytest.raises(AppHTTPException) as exc_info:
-        asyncio.run(perform_ct_subdomains_lookup(CtSubdomainsRequest(domain="example.com")))
+        _lookup()
 
-    assert exc_info.value.status_code == 504
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.error_code == "CT_ALL_SOURCES_FAILED"
+    assert "crt.sh: CRTSH_TIMEOUT detail" in exc_info.value.detail
+    assert "Cert Spotter: CERTSPOTTER_SCHEMA_DRIFT detail" in exc_info.value.detail
+    # Each source's own code survives into the combined error.
+    assert "(CRTSH_TIMEOUT)" in exc_info.value.detail
+    assert "(CERTSPOTTER_SCHEMA_DRIFT)" in exc_info.value.detail
+
+
+def test_an_unexpected_exception_is_not_swallowed_as_a_failed_source(monkeypatch):
+    _serve(monkeypatch, crtsh=RuntimeError("bug"))
+
+    with pytest.raises(RuntimeError, match="bug"):
+        _lookup()
 
 
 def test_ct_subdomains_request_rejects_wildcard_patterns():
