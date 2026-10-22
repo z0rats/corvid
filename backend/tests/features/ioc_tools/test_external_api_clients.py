@@ -453,3 +453,31 @@ class TestCheckBlacklist:
         result = _run(_scenario())
         assert result["matched"] is False
         assert result["opensanctions"] is None
+
+
+# --- check_mandiant: OAuth token exchange with HTTP Basic auth -----------
+
+
+class _MandiantClient:
+    def __init__(self):
+        self.posts: list[dict] = []
+
+    async def post(self, url, **kwargs):
+        self.posts.append({"url": url, **kwargs})
+        body = {"access_token": "tok"} if url.endswith("/token") else {"indicators": []}
+        return _response(200, json=body)
+
+
+def test_mandiant_sends_the_key_pair_as_basic_auth_not_form_fields(monkeypatch):
+    from app.features.ioc_tools.ioc_lookup.single_lookup.service import client_base
+
+    fake = _MandiantClient()
+    monkeypatch.setattr(client_base, "get_client", lambda: fake)
+    monkeypatch.setattr(external_api_clients, "get_client", lambda: fake)
+
+    _run(external_api_clients.check_mandiant("1.1.1.1", "ipv4", "key", "secret"))
+
+    token, lookup = fake.posts
+    assert token["auth"] == ("key", "secret")
+    assert token["data"] == {"grant_type": "client_credentials"}
+    assert lookup["headers"]["Authorization"] == "Bearer tok"

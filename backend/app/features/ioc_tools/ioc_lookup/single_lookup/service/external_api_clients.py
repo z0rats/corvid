@@ -347,14 +347,13 @@ async def check_mandiant(ioc: str, ioc_type: str, api_key: str, api_secret: str)
     _require_credentials("Mandiant", api_key=api_key, api_secret=api_secret)
     logger.debug("Authenticating with Mandiant")
 
+    # The token endpoint takes the key pair as HTTP Basic auth only; credentials in the form
+    # body get a 400 "Unexpected Auth Header: not Basic".
     access_token = await _authenticate_oauth(
         "Mandiant",
         "https://api.intelligence.mandiant.com/token",
-        data={
-            "grant_type": "client_credentials",
-            "client_id": api_key,
-            "client_secret": api_secret,
-        },
+        data={"grant_type": "client_credentials"},
+        auth=(api_key, api_secret),
     )
 
     logger.debug("Looking up %s %s with Mandiant", ioc_type, ioc)
