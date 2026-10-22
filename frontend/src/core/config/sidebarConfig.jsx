@@ -258,6 +258,19 @@ const MAIN_MENU_ITEMS_CONFIG = [
     accepts: [IOC_TYPES.STEAM_PROFILE],
   },
   {
+    i18nKey: "nav.telegramSearch",
+    icon: <TelegramIcon />,
+    path: "/telegram-search",
+    moduleId: "telegram_search",
+    section: SECTIONS.PEOPLE,
+    aliases: ["telegram", "telegram channel", "telegram group", "tg", "t.me", "channel analytics"],
+    tags: ["identity", "recon", "telegram"],
+    // A t.me link is injected by commandParser.ts via isTelegramChannelTarget(input), see
+    // iocTypeDetection.ts's TELEGRAM_CHANNEL comment; a bare @name reaches this tool through the
+    // identity fallback, where the `telegram` tag ranks it first.
+    accepts: [IOC_TYPES.TELEGRAM_CHANNEL],
+  },
+  {
     i18nKey: "nav.instagramSearch",
     icon: <InstagramIcon />,
     path: "/instagram-search",
@@ -474,6 +487,11 @@ const INSTAGRAM_SEARCH_TABS_CONFIG = [
   { i18nKey: "nav.instagramSearchTabs.history", path: "/instagram-search/history", icon: <HistoryIcon /> },
 ];
 
+const TELEGRAM_SEARCH_TABS_CONFIG = [
+  { i18nKey: "nav.telegramSearchTabs.newScan", path: "/telegram-search/new", icon: <TelegramIcon /> },
+  { i18nKey: "nav.telegramSearchTabs.history", path: "/telegram-search/history", icon: <HistoryIcon /> },
+];
+
 const PHONE_SEARCH_TABS_CONFIG = [
   { i18nKey: "nav.phoneSearchTabs.newSearch", path: "/phone-search/new", icon: <PhoneOutlinedIcon /> },
   { i18nKey: "nav.phoneSearchTabs.history", path: "/phone-search/history", icon: <HistoryIcon /> },
@@ -502,6 +520,7 @@ export const getAmassTabs = (t) => AMASS_TABS_CONFIG.map(item => translateItem(t
 export const getRuBusinessCheckTabs = (t) => RU_BUSINESS_CHECK_TABS_CONFIG.map(item => translateItem(t, item));
 export const getSteamReconTabs = (t) => STEAM_RECON_TABS_CONFIG.map(item => translateItem(t, item));
 export const getInstagramSearchTabs = (t) => INSTAGRAM_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
+export const getTelegramSearchTabs = (t) => TELEGRAM_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 export const getPhoneSearchTabs = (t) => PHONE_SEARCH_TABS_CONFIG.map(item => translateItem(t, item));
 
 // Which sidebar tab set to show for the current route, keyed by path prefix — the single place
@@ -531,4 +550,5 @@ export const TAB_ROUTES = [
   { prefix: "/ru-business-check", getTabs: (t) => getRuBusinessCheckTabs(t) },
   { prefix: "/steam-recon", getTabs: (t) => getSteamReconTabs(t) },
   { prefix: "/instagram-search", getTabs: (t) => getInstagramSearchTabs(t) },
+  { prefix: "/telegram-search", getTabs: (t) => getTelegramSearchTabs(t) },
 ];

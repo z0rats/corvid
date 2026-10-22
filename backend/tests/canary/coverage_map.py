@@ -177,12 +177,17 @@ COVERAGE: dict[str, Covered | Exempt] = {
     "steam:community_locations": Exempt("no-canary-yet"),
     "steam:community_comments": Exempt("no-canary-yet"),
     "telegram": Exempt("needs-key"),
+    "telegram_web:profile": _test(_KEYLESS, "test_telegram_profile_card_shape"),
+    "telegram_web:preview": _test(_KEYLESS, "test_telegram_channel_preview_shape"),
     "git_recon:github_api": Exempt("no-canary-yet"),
     # --- sources reached through a third-party library, not our own HTTP client ---
     "email_search:mailcat": Exempt("acts-on-account"),
     "email_search:user_scanner": Exempt("acts-on-account"),
     "email_search:ghunt": Exempt("acts-on-account"),
     "instagram": Exempt("best-effort-anti-bot"),
+    # Only reached by the API key test (the LLM calls themselves go through pydantic-ai).
+    "llm:anthropic": Exempt("needs-key"),
+    "llm:openai": Exempt("needs-key"),
 }
 
 # Every file in test_ssrf_guard_coverage.ALLOWLISTED_FIXED_HOST_FILES -> the source ids it
@@ -230,6 +235,10 @@ FILE_SOURCES: dict[str, tuple[str, ...]] = {
     "features/steam_recon/service/steam_api_client.py": ("steam:web_api",),
     "features/steam_recon/service/steam_locations_service.py": ("steam:community_locations",),
     "features/steam_recon/service/steam_comments_service.py": ("steam:community_comments",),
+    "features/telegram_search/service/tme_client.py": (
+        "telegram_web:profile",
+        "telegram_web:preview",
+    ),
     "features/ru_business_check/service/egrul_service.py": ("ru_business_check:egrul",),
     "features/ru_business_check/service/disqualified_persons_service.py": (
         "ru_business_check:disqualified_persons",

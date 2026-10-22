@@ -11,6 +11,7 @@ const HISTORY_PATHS = {
   ru_business_check: '/ru-business-check/history',
   steam_recon: '/steam-recon/history',
   instagram_search: '/instagram-search/history',
+  telegram_search: '/telegram-search/history',
   phone_search: '/phone-search/history',
   reddit_search: '/reddit-search/history',
   ioc_lookup: '/ioc-tools/lookup/history',

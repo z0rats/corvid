@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, isYoutubeVideoUrl } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, isTelegramChannelTarget, isYoutubeVideoUrl } from './iocTypeDetection';
 
 // Shared with the backend's test_ioc_type_detection.py via
 // testdata/ioc-type-detection-cases.json at the repo root, so the two implementations
@@ -156,5 +156,43 @@ describe('isPhoneNumberTarget', () => {
 
   it('stays unknown in detectIocType, same treatment as SteamID64', () => {
     expect(detectIocType('+15551234567')).toBe(IOC_TYPES.UNKNOWN);
+  });
+});
+
+describe('isTelegramChannelTarget', () => {
+  it.each([
+    't.me/durov',
+    'https://t.me/durov',
+    'https://t.me/s/durov',
+    'https://t.me/durov/531',
+    'https://t.me/s/durov?before=300',
+    'http://www.t.me/Durov',
+    'telegram.me/durov',
+    'https://telegram.dog/durov',
+    'tg://resolve?domain=durov',
+    '  https://t.me/durov  ',
+  ])('accepts %s', (value) => {
+    expect(isTelegramChannelTarget(value)).toBe(true);
+  });
+
+  it.each([
+    '',
+    'durov', // a bare name is intentionally not auto-detected
+    '@durov', // nor an @handle - every platform's handle shape
+    'https://t.me/',
+    'https://t.me/+AbCdEf123', // private invite
+    'https://t.me/joinchat/AbCdEf123',
+    'https://t.me/c/1234567/89',
+    'https://t.me/addstickers/pack',
+    'https://t.me/abc', // too short for a username
+    'https://t.me.evil.example/durov',
+    'https://example.com/durov',
+    'tg://resolve?domain=',
+  ])('rejects %j', (value) => {
+    expect(isTelegramChannelTarget(value)).toBe(false);
+  });
+
+  it('is not part of detectIocType - a t.me link stays a plain URL there', () => {
+    expect(detectIocType('https://t.me/durov')).toBe(IOC_TYPES.URL);
   });
 });

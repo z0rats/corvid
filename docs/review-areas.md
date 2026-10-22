@@ -63,6 +63,9 @@ here only after a bug of that class shipped or nearly shipped - a scar, not a pr
 
 - A parser reads a third-party response: does a renamed or missing field raise `SourceDriftError`,
   or silently read as an empty result (`.get(...) or []`)?
+- HTML scraper: a CSS selector that matches nothing is the scraping form of `.get(...) or []`. When
+  a list selector finds zero items, does the parser check the page for signs that items exist
+  (a pagination cursor, a non-empty container) and raise drift instead of returning "empty"?
 - Is the legitimately-empty answer verified against the real source, not assumed?
 - New source: drift and empty test cases (or a reasoned exemption), `ProviderSpec.expects` for
   `ioc_lookup`, and a `Covered`/`Exempt` entry in `tests/canary/coverage_map.py`?

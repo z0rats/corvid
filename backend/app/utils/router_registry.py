@@ -56,6 +56,7 @@ from app.features.reddit_search.routers import reddit_search_routes
 from app.features.ru_business_check.routers import ru_business_check_routes
 from app.features.sanctions_search.routers import sanctions_search_routes
 from app.features.steam_recon.routers import steam_recon_routes
+from app.features.telegram_search.routers import telegram_search_routes
 from app.features.username_search.routers import username_search_routes
 from app.features.youtube.routers import youtube_routes
 
@@ -142,6 +143,7 @@ def get_feature_routers() -> list[APIRouter]:
         steam_recon_routes.router,
         instagram_search_routes.router,
         instagram_scan_routes.router,
+        telegram_search_routes.router,
         activity_routes.router,
         investigation_routes.router,
     ]

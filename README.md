@@ -151,6 +151,12 @@ posts with persisted history. An optional imported browser-session cookie unlock
 password, and required for followers/followees; automated access violates Instagram's ToS either
 way, so use a disposable account. → [Docs](https://z0rats.github.io/corvid/features/instagram-search/)
 
+### Telegram Channels
+Profile a public Telegram channel or group from `@name` or a `t.me` link: subscribers, creation
+date, posting rate, views, forwarded share, the channels it reposts and mentions, and indicators
+from its recent posts, each one click from a follow-up lookup. Keyless, no Telegram account. →
+[Docs](https://z0rats.github.io/corvid/features/telegram-search/)
+
 ### YouTube
 Look up a YouTube video's metadata from its URL — title, channel, description, duration,
 thumbnails at every resolution — with no API key. An optional YouTube Data API key adds view/like

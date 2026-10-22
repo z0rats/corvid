@@ -72,6 +72,9 @@ ALLOWLISTED_FIXED_HOST_FILES = {
     "features/steam_recon/service/steam_api_client.py",
     "features/steam_recon/service/steam_locations_service.py",
     "features/steam_recon/service/steam_comments_service.py",
+    # Telegram channel analytics: fixed t.me host; only an already-normalized channel
+    # username (validated against Telegram's username charset) is ever in the path
+    "features/telegram_search/service/tme_client.py",
     # RU Business Check: fixed egrul.nalog.ru / service.nalog.ru / kad.arbitr.ru hosts
     # (official registry/court-case services); only the ИНН/name/ФИО query value is
     # user-supplied, never the host

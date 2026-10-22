@@ -18,6 +18,7 @@ const RuBusinessCheck = lazy(() => import("../../features/ru-business-check/RuBu
 const YoutubeLookup = lazy(() => import("../../features/youtube/YoutubeLookup"));
 const SteamRecon = lazy(() => import("../../features/steam-recon/SteamRecon"));
 const InstagramSearch = lazy(() => import("../../features/instagram-search/InstagramSearch"));
+const TelegramSearch = lazy(() => import("../../features/telegram-search/TelegramSearch"));
 const PhoneSearch = lazy(() => import("../../features/phone-search/PhoneSearch"));
 const SanctionsSearch = lazy(() => import("../../features/sanctions-search/SanctionsSearch"));
 const Investigations = lazy(() => import("../../features/investigations/Investigations"));
@@ -42,6 +43,7 @@ export const FEATURE_ROUTES = [
   { path: 'youtube/*', Component: YoutubeLookup },
   { path: 'steam-recon/*', Component: SteamRecon },
   { path: 'instagram-search/*', Component: InstagramSearch },
+  { path: 'telegram-search/*', Component: TelegramSearch },
   { path: 'phone-search/*', Component: PhoneSearch },
   { path: 'sanctions-search/*', Component: SanctionsSearch },
   { path: 'investigations/*', Component: Investigations },

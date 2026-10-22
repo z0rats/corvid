@@ -43,6 +43,10 @@ export const IOC_TYPES = {
   // of the backend-synced fixture either) - commandParser.ts's isPhoneNumberTarget() injects this
   // type itself, the same way isSteamProfileTarget() does for a bare SteamID64.
   PHONE_NUMBER: 'PhoneNumber',
+  // Same treatment again: a t.me/telegram.me channel link classifies as plain URL (or, without a
+  // scheme, as nothing) - commandParser.ts's isTelegramChannelTarget() injects this type itself.
+  // A bare @name is deliberately not detected (it is every platform's handle shape).
+  TELEGRAM_CHANNEL: 'TelegramChannel',
   UNKNOWN: 'unknown',
 } as const;
 
@@ -217,4 +221,39 @@ export function isSteamProfileTarget(value?: string | null): boolean {
   const text = (value ?? '').trim();
   if (!text) return false;
   return isValidSteamId64(text) || isValidSteamIdShorthand(text) || isSteamProfileUrl(text);
+}
+
+const TELEGRAM_HOSTS = ['t.me', 'www.t.me', 'telegram.me', 'www.telegram.me', 'telegram.dog'];
+const TELEGRAM_USERNAME_RE = /^[a-z][a-z0-9_]{3,31}$/i;
+// First path segments of t.me links that are not a channel (invites, sticker packs, share links).
+const TELEGRAM_RESERVED_PATHS = new Set([
+  'addemoji', 'addlist', 'addstickers', 'addtheme', 'bg', 'boost', 'c', 'iv', 'joinchat', 'login',
+  'proxy', 'setlanguage', 'share', 'socks',
+]);
+
+/**
+ * Whether `value` is a public Telegram channel/group link - `t.me/<name>`, `t.me/s/<name>`,
+ * `t.me/<name>/<post>`, `telegram.me/<name>` or `tg://resolve?domain=<name>` - a JS mirror of
+ * backend/app/features/telegram_search/utils/channel_name.py's `normalize_channel` minus its
+ * bare-name and `@name` cases (too ambiguous for global detection). Private invite links
+ * (`t.me/+...`, `t.me/joinchat/...`) are not channels it can analyze, so they don't match.
+ */
+export function isTelegramChannelTarget(value?: string | null): boolean {
+  const text = (value ?? '').trim();
+  if (!text) return false;
+  let parsed: URL;
+  try {
+    parsed = new URL(text.includes('://') ? text : `https://${text}`);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol === 'tg:') {
+    return TELEGRAM_USERNAME_RE.test(parsed.searchParams.get('domain') ?? '');
+  }
+  if (!TELEGRAM_HOSTS.includes(parsed.hostname.toLowerCase())) return false;
+  const segments = parsed.pathname.split('/').filter(Boolean);
+  if (segments[0] === 's') segments.shift();
+  const [name] = segments;
+  if (!name || TELEGRAM_RESERVED_PATHS.has(name.toLowerCase())) return false;
+  return TELEGRAM_USERNAME_RE.test(name);
 }

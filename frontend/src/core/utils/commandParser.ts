@@ -1,4 +1,4 @@
-import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
+import { detectIocType, IOC_TYPES, isPhoneNumberTarget, isSteamProfileTarget, isTelegramChannelTarget, isYoutubeVideoUrl, type IocType } from './iocTypeDetection';
 import { refang } from './refang';
 
 /**
@@ -48,6 +48,7 @@ export const TYPE_TOKEN_ALIASES: Record<string, IocType[]> = {
   youtube: [IOC_TYPES.YOUTUBE_VIDEO_URL],
   steam: [IOC_TYPES.STEAM_PROFILE],
   phone: [IOC_TYPES.PHONE_NUMBER],
+  telegram: [IOC_TYPES.TELEGRAM_CHANNEL],
   md5: [IOC_TYPES.MD5],
   sha1: [IOC_TYPES.SHA1],
   sha256: [IOC_TYPES.SHA256],
@@ -311,15 +312,20 @@ function parsePivot(input: string, ctx: ParserContext): PivotParsed | null {
  * than a dead-end "no matches" (Corvid's original behavior), offer the registry's `identity`-
  * tagged tools as pivot targets, à la Alfred/Raycast's fallback web-search actions. The only real
  * ranking signal available for an arbitrary string is a loose shape check — an `@` promotes
- * email-search, since nothing else in the identity group is email-shaped; beyond that, a bare
- * username-like token (e.g. a Reddit vs. GitHub handle) is equally plausible for every remaining
- * candidate, so there's nothing left to rank on and registry order stands.
+ * email-search, since nothing else in the identity group is email-shaped, and a leading `@` on an
+ * otherwise bare handle (`@durov`) promotes the `telegram`-tagged tool, Telegram's own handle
+ * notation; beyond that, a bare username-like token (e.g. a Reddit vs. GitHub handle) is equally
+ * plausible for every remaining candidate, so there's nothing left to rank on and registry order
+ * stands.
  */
+const AT_HANDLE_RE = /^@[A-Za-z][A-Za-z0-9_]{3,31}$/;
+
 function rankIdentityFallback(value: string, registry: RegistryEntry[]): RegistryEntry[] {
   const candidates = registry.filter((entry) => entry.tags.includes('identity'));
   if (candidates.length === 0) return [];
   if (!value.includes('@')) return candidates;
-  return [...candidates].sort((a, b) => Number(b.tags.includes('email')) - Number(a.tags.includes('email')));
+  const promoted = AT_HANDLE_RE.test(value) ? 'telegram' : 'email';
+  return [...candidates].sort((a, b) => Number(b.tags.includes(promoted)) - Number(a.tags.includes(promoted)));
 }
 
 export type SelectableResult = { type: 'suggestion'; value: string } | { type: 'entry'; entry: RegistryEntry };
@@ -372,7 +378,10 @@ export function parseQuery(rawInput?: string | null, ctx: Partial<ParserContext>
     const steamMatches = iocType === IOC_TYPES.URL && isSteamProfileTarget(value)
       ? rankToolsForValue(IOC_TYPES.STEAM_PROFILE, context.registry)
       : [];
-    const extraMatches = [...youtubeMatches, ...steamMatches];
+    const telegramMatches = iocType === IOC_TYPES.URL && isTelegramChannelTarget(value)
+      ? rankToolsForValue(IOC_TYPES.TELEGRAM_CHANNEL, context.registry)
+      : [];
+    const extraMatches = [...youtubeMatches, ...steamMatches, ...telegramMatches];
     const orderedMatches = extraMatches.length > 0
       ? [...extraMatches, ...matches.filter((entry) => !extraMatches.includes(entry))]
       : matches;
@@ -387,6 +396,15 @@ export function parseQuery(rawInput?: string | null, ctx: Partial<ParserContext>
     const matches = rankToolsForValue(IOC_TYPES.STEAM_PROFILE, context.registry);
     if (matches.length > 0) {
       return { kind: 'value', value: input, iocType: IOC_TYPES.STEAM_PROFILE, matches };
+    }
+  }
+
+  // A scheme-less `t.me/name` link is neither a URL nor a domain to detectIocType, so like a bare
+  // SteamID64 it needs its own primary classification.
+  if (isTelegramChannelTarget(input)) {
+    const matches = rankToolsForValue(IOC_TYPES.TELEGRAM_CHANNEL, context.registry);
+    if (matches.length > 0) {
+      return { kind: 'value', value: input, iocType: IOC_TYPES.TELEGRAM_CHANNEL, matches };
     }
   }
 

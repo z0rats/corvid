@@ -106,6 +106,12 @@
       "history": "History"
     },
 
+    "telegramSearch": "Telegram Channels",
+    "telegramSearchTabs": {
+      "newScan": "New Scan",
+      "history": "History"
+    },
+
     "instagramSearch": "Instagram Search",
     "instagramSearchTabs": {
       "profile": "Profile Lookup",

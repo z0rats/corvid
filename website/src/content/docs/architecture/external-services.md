@@ -122,6 +122,13 @@ which provider handles which type.
   cookie (`instagram_session` key, a JSON object, never a password) unlocks data anonymous
   lookups can't reach. Automated access violates Instagram's ToS either way.
 
+## Telegram Channels
+
+- **Telegram web pages** (`t.me/<name>` and the `t.me/s/<name>` message preview) — a public
+  channel's or group's card and its newest posts. Keyless and unofficial HTML: a layout change
+  makes the scan fail as "schema changed" rather than return an empty channel. No Telegram
+  account or API is used. The profile photo is linked, not fetched.
+
 ## Newsfeed
 
 - RSS feeds and full-article text are fetched from whatever feed/article URLs are configured —

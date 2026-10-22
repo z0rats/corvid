@@ -1,0 +1,122 @@
+{
+  "page": {
+    "description": "Profile a public Telegram channel or group: subscribers, activity, reposted sources, mentioned channels and indicators from its recent posts. Keyless, no Telegram account."
+  },
+
+  "form": {
+    "targetLabel": "Channel or group",
+    "targetPlaceholder": "e.g. @durov, durov or https://t.me/s/durov",
+    "maxPostsLabel": "Posts to sample",
+    "maxPostsHelper": "Newest posts from the channel's public web preview, about {{count}} requests to t.me.",
+    "startButton": "Analyze"
+  },
+
+  "progress": {
+    "profile": "Reading the channel card...",
+    "profile_done": "Found {{title}}, reading posts...",
+    "posts": "Sampled {{sampled}} of {{target}} posts",
+    "created": "Looking up the creation date...",
+    "analyzing": "Computing metrics...",
+    "cancelButton": "Cancel"
+  },
+
+  "scan": {
+    "failed": "Scan failed: {{error}}",
+    "cancelled": "Cancelled - showing the posts sampled so far",
+    "completed": "Scan complete"
+  },
+
+  "overview": {
+    "kind": {
+      "channel": "Channel",
+      "group": "Group",
+      "unknown": "Chat"
+    },
+    "verified": "Verified by Telegram",
+    "subscribers": "Subscribers",
+    "members": "Members",
+    "online": "Online now",
+    "created": "Created",
+    "counter": "{{name}}",
+    "photo": "Photo",
+    "openPhoto": "Open",
+    "noPreview": "This channel has its web preview turned off, so Telegram shows no posts without an account - only the card above is available.",
+    "noPreviewGroup": "Groups have no public web preview - only the card above is available without a Telegram account."
+  },
+
+  "activity": {
+    "title": "Activity",
+    "basis_one": "Based on {{count}} sampled post, {{from}} - {{to}}.",
+    "basis_other": "Based on {{count}} sampled posts, {{from}} - {{to}}.",
+    "lastPost": "Last post",
+    "postsPerDay": "Posts per day",
+    "avgViews": "Average views",
+    "medianViews": "median {{value}}",
+    "viewsToMembers": "Views / subscribers",
+    "viewsToMembersHint": "far above 100% or far below 5% is worth a look",
+    "forwarded": "Forwarded posts",
+    "forwardedCount_one": "{{count}} post",
+    "forwardedCount_other": "{{count}} posts",
+    "media": "Posts with media"
+  },
+
+  "network": {
+    "title": "Related channels",
+    "forwardSources": "Most reposted sources",
+    "mentions": "Most mentioned channels",
+    "clickToScan": "click a linked one to analyze it",
+    "hiddenSender": "Hidden sender",
+    "hiddenSenderHint": "The original sender hides forward attribution",
+    "privateSource": "A private channel or a user - Telegram shows the name but no link"
+  },
+
+  "indicators": {
+    "title": "Indicators",
+    "hint": "Extracted from the sampled posts and the description (Telegram's own links excluded). Click one to send it to IOC tools.",
+    "types": {
+      "domains": "Domains",
+      "urls": "URLs",
+      "ips": "IP addresses",
+      "emails": "Emails",
+      "cves": "CVEs",
+      "md5": "MD5",
+      "sha1": "SHA1",
+      "sha256": "SHA256"
+    }
+  },
+
+  "posts": {
+    "topTitle": "Most viewed posts",
+    "sampledTitle_one": "Sampled post ({{count}})",
+    "sampledTitle_other": "Sampled posts ({{count}})",
+    "headers": {
+      "post": "Post",
+      "date": "Date",
+      "views": "Views",
+      "text": "Text"
+    },
+    "media": "Has media",
+    "forwardedFrom": "Forwarded from {{name}}"
+  },
+
+  "history": {
+    "empty": "No channel scans yet.",
+    "notFound": "Scan not found.",
+    "summary_one": "{{count}} post sampled · {{date}}",
+    "summary_other": "{{count}} posts sampled · {{date}}",
+    "headers": {
+      "channel": "Channel",
+      "status": "Status",
+      "members": "Subscribers",
+      "posts": "Posts",
+      "started": "Started",
+      "actions": "Actions"
+    },
+    "status": {
+      "running": "Running",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    }
+  }
+}

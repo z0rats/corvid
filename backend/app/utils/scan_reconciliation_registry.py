@@ -9,6 +9,7 @@ from app.features.instagram_search.crud.instagram_search_crud import INSTAGRAM_S
 from app.features.phone_search.crud.phone_search_crud import PHONE_SEARCH_SCANS
 from app.features.ru_business_check.crud.ru_business_check_crud import RU_BUSINESS_CHECK_SCANS
 from app.features.steam_recon.crud.steam_recon_crud import STEAM_RECON_SCANS
+from app.features.telegram_search.crud.telegram_search_crud import TELEGRAM_SEARCH_SCANS
 from app.features.username_search.crud.username_search_crud import USERNAME_SEARCH_SCANS
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ _SCAN_FEATURES = [
     AMASS_SCANS,
     STEAM_RECON_SCANS,
     INSTAGRAM_SCANS,
+    TELEGRAM_SEARCH_SCANS,
 ]
 
 

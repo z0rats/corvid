@@ -797,6 +797,26 @@ Every column of every table, straight from `Base.metadata` - type, nullability, 
 
 - CHECK `ck_steam_recon_searches_status`: `status IN ('running', 'completed', 'cancelled', 'failed')`
 
+### `telegram_channel_searches`
+
+| Column | Type | Nullable | Default | Key | Comment |
+|---|---|---|---|---|---|
+| `id` | int | no | — | PK | Surrogate primary key |
+| `target` | string(200) | no | — | — | Raw input (@name, name or t.me link) as the user entered it |
+| `channel` | string(32) | no | — | — | Normalized lowercase channel username |
+| `title` | string(255) | yes | — | — | Channel title at scan time |
+| `kind` | string(16) | yes | — | — | channel, group or unknown, from the t.me card |
+| `member_count` | int | yes | — | — | Subscribers (channel) or members (group) at scan time |
+| `status` | string(20) | no | 'running' | — | running, completed, cancelled, or failed |
+| `error_message` | string(1000) | yes | — | — | Error detail if status is failed |
+| `max_posts` | int | no | — | — | Post sample size requested |
+| `posts_sampled` | int | no | 0 | — | Posts actually read from the web preview |
+| `started_at` | datetime | no | server: now() | — | When the scan started |
+| `completed_at` | datetime | yes | — | — | When the scan finished, if it has |
+| `result` | json | yes | — | — | Full result blob: profile, metrics, top_posts, posts, indicators |
+
+- CHECK `ck_telegram_channel_searches_status`: `status IN ('running', 'completed', 'cancelled', 'failed')`
+
 ### `telegram_settings`
 
 | Column | Type | Nullable | Default | Key | Comment |

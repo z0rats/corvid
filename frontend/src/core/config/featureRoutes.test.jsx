@@ -22,6 +22,7 @@ describe('FEATURE_ROUTES', () => {
       'youtube/*',
       'steam-recon/*',
       'instagram-search/*',
+      'telegram-search/*',
       'phone-search/*',
       'sanctions-search/*',
       'investigations/*',

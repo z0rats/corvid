@@ -63,6 +63,7 @@ Features (`backend/app/features/`):
 - `ru_business_check/` — Russian due diligence by ИНН/name: live registries plus scheduled dumps into one risk engine; a failed or drifted source is "not checked", never empty; Russian-only UI by design. Deep-dive: `docs/architecture/ru-business-check.md`.
 - `sanctions_search/` — free-text search over the full OFAC SDN list from a local OpenSanctions dump (`docs/adr/0017-sanctions-search-opensanctions-and-in-house-matching.md`).
 - `steam_recon/` — profile lookup plus friends-graph scan, Steam Web API key required, clean-room heuristics (`docs/adr/0015-steam-recon-clean-room-and-heuristic-scoring.md`). Deep-dive: `docs/architecture/steam-recon.md`.
+- `telegram_search/` — public channel/group analytics from keyless `t.me` pages, no account (`docs/adr/0029-telegram-channel-analytics-web-preview.md`). Deep-dive: `docs/architecture/telegram-search.md`.
 - `investigations/` — named `(feature, run_id)` lists with notes, one combined report, and an entity graph derived per request; a feature joins via a `RunSource` (`core/run_sources/`, `core/entities/`) in `utils/run_source_registry.py` (test-enforced). Deep-dive: `docs/architecture/investigations.md`.
 - `activity/` — read-only `GET /api/activity` (newest runs of every feature with history, start screen) and `/active` (unfinished runs, AppBar indicator).
 

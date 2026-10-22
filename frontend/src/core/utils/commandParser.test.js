@@ -600,3 +600,47 @@ describe('handleGrammarNavKey', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 });
+
+describe('parseQuery — Telegram channels', () => {
+  const telegram = {
+    id: 'telegram_search', label: 'Telegram Channels', path: '/telegram-search',
+    aliases: ['telegram', 'tg'], tags: ['identity', 'recon', 'telegram'],
+    accepts: [IOC_TYPES.TELEGRAM_CHANNEL], acceptsRouting: {},
+  };
+  const email = {
+    id: 'email_search', label: 'Email Search', path: '/email-search',
+    aliases: ['email search'], tags: ['email', 'identity'], accepts: [], acceptsRouting: {},
+  };
+  const withTelegram = [...registry, email, telegram];
+
+  it('a t.me URL is still typed as URL but surfaces telegram_search first', () => {
+    const result = parseQuery('https://t.me/s/durov', { registry: withTelegram });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.URL);
+    expect(result.matches[0].id).toBe('telegram_search');
+  });
+
+  it('a scheme-less t.me link is classified as TelegramChannel directly', () => {
+    const result = parseQuery('t.me/durov', { registry: withTelegram });
+    expect(result.kind).toBe('value');
+    expect(result.iocType).toBe(IOC_TYPES.TELEGRAM_CHANNEL);
+    expect(result.matches.map((m) => m.id)).toEqual(['telegram_search']);
+  });
+
+  it('a bare @handle falls back to identity tools with telegram_search first', () => {
+    const result = parseQuery('@durov', { registry: withTelegram });
+    expect(result.kind).toBe('fallback');
+    expect(result.matches[0].id).toBe('telegram_search');
+  });
+
+  it('an email-shaped value still promotes email_search, not telegram', () => {
+    const result = parseQuery('durov@', { registry: withTelegram });
+    expect(result.kind).toBe('fallback');
+    expect(result.matches[0].id).toBe('email_search');
+  });
+
+  it('`type:telegram` filters to the telegram tool', () => {
+    const result = parseQuery('type:telegram', { registry: withTelegram });
+    expect(result.matches.map((m) => m.id)).toEqual(['telegram_search']);
+  });
+});

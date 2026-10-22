@@ -22,6 +22,11 @@ from app.features.dork_runner.service.engines import duckduckgo_engine
 from app.features.reddit_search.service.reddit_search_service import _build_urls
 from app.features.sanctions_search.service import sanctions_search_service
 from app.features.sanctions_search.service.opensanctions_csv_parser import parse_targets_csv
+from app.features.telegram_search.config.telegram_search_config import TME_BASE_URL, USER_AGENT
+from app.features.telegram_search.service.tme_parser import (
+    parse_preview_page,
+    parse_profile_page,
+)
 from app.features.username_search.service import hudson_rock_service
 from app.features.username_search.service.threat_actor_usernames_service import (
     BASE_URL as THREAT_ACTOR_BASE_URL,
@@ -38,6 +43,8 @@ pytestmark = pytest.mark.canary
 # Long-lived references: Reddit's CEO account, and the first video ever uploaded to YouTube.
 REDDIT_USER = "spez"
 YOUTUBE_VIDEO = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+# Telegram's founder's channel: public, preview enabled, posting since 2015.
+TELEGRAM_CHANNEL = "durov"
 
 
 @pytest.mark.parametrize("archive", ["arctic_shift", "pullpush"])
@@ -118,3 +125,33 @@ def test_opensanctions_sdn_dump_parses_above_the_floors():
     check_list_floors(total, len(records), sanctions_search_service.SOURCE)
     for field in ("opensanctions_id", "name", "schema"):
         assert records[0].get(field), f"OpenSanctions CSV lost `{field}`"
+
+
+def _tme(path: str):
+    return get(f"{TME_BASE_URL}{path}", headers={"User-Agent": USER_AGENT})
+
+
+def test_telegram_profile_card_shape():
+    profile = parse_profile_page(_tme(f"/{TELEGRAM_CHANNEL}").text)
+
+    assert profile is not None, f"t.me/{TELEGRAM_CHANNEL} reads as a missing channel"
+    assert profile.kind == "channel"
+    assert profile.title
+    assert profile.member_count and profile.member_count > 1_000_000
+
+
+def test_telegram_channel_preview_shape():
+    response = _tme(f"/s/{TELEGRAM_CHANNEL}")
+    assert not response.is_redirect, "t.me/s preview redirected - preview turned off or moved"
+    page = parse_preview_page(response.text)
+
+    assert page.posts, "the preview page parsed to no posts"
+    assert page.older_cursor is not None, "no rel=prev cursor to page back through"
+    for post in page.posts:
+        assert post.date is not None, f"post {post.id} has no date"
+        assert post.views is not None, f"post {post.id} has no view count"
+
+    first = parse_preview_page(_tme(f"/s/{TELEGRAM_CHANNEL}?before=2").text)
+    assert [p.id for p in first.posts] == [1] and first.posts[0].is_service, (
+        "post #1 is no longer the 'Channel created' service message"
+    )
