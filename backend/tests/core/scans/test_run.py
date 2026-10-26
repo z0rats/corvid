@@ -372,9 +372,13 @@ class TestTableNamespacing:
             assert cancellable_b.cancel_called is True
             assert cancellable_a.cancel_called is False
 
+            # Finish one at a time: both terminal writes share this fixture's single
+            # StaticPool connection, and SQLAlchemy 2.1 refuses to commit one session
+            # while the other's statement is open on it. The app's real pool gives each
+            # session its own connection; the collision under test is the cancel above.
             release_a.set()
-            release_b.set()
             await task_a
+            release_b.set()
             await task_b
 
         _run(_scenario())
