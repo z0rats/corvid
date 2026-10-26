@@ -51,6 +51,20 @@ class TestParseMsp:
             "removed_at": None,
         }
 
+    def test_an_answer_without_data_but_with_zero_row_count_is_not_listed(self):
+        # The live empty answer since 2026-10: no `data` key at all (trimmed capture).
+        live_empty = {
+            "dtQueryEnd": "26.10.2026 21:46:42",
+            "dtQueryBegin": "26.10.2026 21:46:42",
+            "queryTime": 1,
+            "rowCount": 0,
+            "rowLimit": 0,
+            "pageNav": {"pages": [["1", None]]},
+        }
+        result = parse_msp(live_empty, "7707083893")
+        assert result["checked"] is True
+        assert result["found"] is False
+
     def test_a_fuzzy_row_with_another_inn_is_not_a_match(self):
         assert parse_msp(FIXTURE, "7707083893")["found"] is False
 
@@ -69,6 +83,10 @@ class TestParseMsp:
         [
             None,
             {},
+            {"rowCount": 2},
+            {"rowCount": "0"},
+            {"rowCount": False},
+            {"data": None, "rowCount": 0},
             {"data": "x"},
             {"data": [{"inn": IP_INN}]},
             {"data": [{**FIXTURE["data"][0], "category": 9}]},

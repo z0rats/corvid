@@ -5,14 +5,15 @@ Fixed host, only the ИНН is user-supplied - never the host - so this intentio
 go through app.core.security.ssrf_guard.safe_get (see
 backend/tests/core/test_ssrf_guard_coverage.py's ALLOWLISTED_FIXED_HOST_FILES).
 
-**Verified against live captures - 2026-09-28, via this environment's own network access.**
+**Verified against live captures - 2026-09-28, re-confirmed 2026-10-26.**
 Keyless: `GET /search-proc.json?query=<ИНН>` -> `{"data": [row...], "rowCount": N, ...}`.
 Each row: `inn`, `category`, `is_active`, `nptype` (`UL`/`IP`), `isnew`, `dtregistry`
 (`DD.MM.YYYY HH:MM:SS`), optional `dtregistryout`, `name_ex`, `okved1`. The meaning of the
 coded fields is taken from the site's own page script (`RSMP_CATEGORY`, `search.js`):
 `category` 0 "не является субъектом МСП" / 1 микро / 2 малое / 3 среднее; `is_active` false
-= struck from the register (`dtregistryout`); `isnew` = "вновь созданный". `data: []` is the
-normal answer for any entity that isn't a МСП (every large company).
+= struck from the register (`dtregistryout`); `isnew` = "вновь созданный". An empty answer
+(any entity that isn't a МСП, e.g. every large company) is `rowCount: 0` with no `data` key at
+all (re-verified 2026-10-26; it used to be `data: []`, which is still accepted).
 
 This is a *fact* panel, not a risk source: no flag is derived from МСП status.
 """
@@ -53,9 +54,23 @@ def _date_part(value: object) -> str | None:
     return None
 
 
+def _is_empty_answer(response: object) -> bool:
+    """The register omits `data` when nothing matched; only an explicit `rowCount: 0`
+    makes that a legitimate empty answer - a missing `data` with no row count is drift."""
+    return (
+        isinstance(response, dict)
+        and "data" not in response
+        and type(response.get("rowCount")) is int
+        and response["rowCount"] == 0
+    )
+
+
 def parse_msp(response: object, inn: str) -> dict:
     """Pure function: the search response -> the panel's result. Raises `MspError` on drift."""
-    rows = require_list_field(response, "data", error=MspError, label=SOURCE_LABEL)
+    if _is_empty_answer(response):
+        rows = []
+    else:
+        rows = require_list_field(response, "data", error=MspError, label=SOURCE_LABEL)
     row = None
     for candidate in rows:
         require_fields(
