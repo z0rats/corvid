@@ -62,6 +62,8 @@ pytestmark = pytest.mark.canary
 BANK_INN = "7707083893"
 # АО «ДИКСИ ЮГ»: publishes statements in ГИР БО.
 RETAILER_INN = "5036045205"
+# An ООО listed in the МСП register since 2016 (also the unit-test fixture's legal entity).
+MSP_LISTED_INN = "5404016083"
 
 
 def test_egrul_extract_has_the_fields_the_parser_and_flags_use():
@@ -141,10 +143,19 @@ def test_fedsfm_list_answers_with_the_expected_shape():
 
 
 def test_msp_register_answers_with_the_expected_shape():
-    # A large company is normally not a МСП: `data: []` is fine; drift raises.
-    result, raw = live(fetch_msp_status(BANK_INN, is_individual=False))
+    # A large company is normally not a МСП: an empty answer is fine; drift raises.
+    result, _ = live(fetch_msp_status(BANK_INN, is_individual=False))
     assert result["checked"] is True
-    assert '"data"' in raw
+    assert result["found"] is False
+
+
+def test_msp_register_row_shape_for_a_listed_business():
+    # A long-registered микропредприятие (since 2016) - exercises the row parser, which the
+    # empty answer above never reaches.
+    result, _ = live(fetch_msp_status(MSP_LISTED_INN, is_individual=False))
+    assert result["found"] is True, "the reference МСП business is no longer in the register"
+    assert result["category_code"] in (1, 2, 3)
+    assert result["registered_at"]
 
 
 def test_disqualified_dump_meta_and_csv_shape():

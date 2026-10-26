@@ -81,7 +81,7 @@ DRIFTED_PAYLOADS = {
     "disqualified_persons": "<html>captcha</html>",
     "fedsfm": {"IsError": False, "recordsTotal": 3},
     "gir_bo": {"content": None},
-    "msp": {"rowCount": 0},
+    "msp": {"rowCount": 2},
     "ofac_sdn": "1,ONLY,THREE\n",
     "pb_nalog": {"ul": {}, "ip": {"data": []}},
     "zakupki_rnp": "<html>stub</html>",
