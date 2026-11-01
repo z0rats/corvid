@@ -32,5 +32,5 @@ requests
 slowapi
 social-analyzer
 sqlalchemy
-user-scanner==1.5.2.1
+user-scanner==1.5.2.3
 uvicorn[standard]
