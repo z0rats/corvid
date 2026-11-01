@@ -13,7 +13,7 @@ gitcolombo
 greenlet
 html2text
 httpx
-instaloader==4.15.3
+instaloader==4.15.4
 jinja2
 lxml[html-clean]
 maigret[pdf]
