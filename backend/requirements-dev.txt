@@ -841,7 +841,7 @@ urllib3[socks]==2.8.0
     #   pyppeteer
     #   requests
     #   selenium
-user-scanner==1.5.2.1
+user-scanner==1.5.2.3
     # via
     #   -c requirements.txt
     #   -r requirements.in
